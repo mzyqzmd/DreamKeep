@@ -1,0 +1,16 @@
+{
+    "name": "_DreamKeep.Data",
+    "rootNamespace": "_DreamKeep.Data",
+    "references": [
+        "GUID:743064110a38ee743a411dd0c576ab58"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
