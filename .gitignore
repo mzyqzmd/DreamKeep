@@ -73,3 +73,44 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ------------------------------------------------------------
+# 以下为官方模板未覆盖、本项目追加的规则
+# ------------------------------------------------------------
+
+# IDE / 编辑器缓存（官方模板只覆盖 .vs/ 与 .consulo/）
+.idea/
+.vscode/
+
+# Vim / Emacs 临时文件
+*.swp
+*.swo
+*~
+
+# 操作系统垃圾文件
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+
+# 合并冲突与备份产物
+*.orig
+*.rej
+*.bak
+
+# AI 辅助工具目录（仅取消跟踪，物理文件保留在本地）
+.codebuddy/
+.lingma/
+
+# Asset Store Tools 插件（官方模板中默认注释，此处启用）
+/[Aa]ssets/AssetStoreTools*
+
+# iOS 打包产物（官方模板只覆盖 apk / aab）
+*.ipa

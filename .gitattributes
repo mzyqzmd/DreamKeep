@@ -1,2 +1,117 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# ============================================================
+# DreamKeep · Git 属性配置
+#
+# 三段式：① 文本文件统一 LF  ② 美术/音频走 Git LFS  ③ 代码类二进制标记 binary
+#
+# 首次克隆后务必执行：
+#     git lfs install
+#     git lfs pull
+# 未安装 Git LFS 时，标记为 filter=lfs 的文件签出会失败。
+# ============================================================
+
+# ---------- ① 文本：统一 LF ----------
+* text=auto eol=lf
+
+# C# 与程序集定义
+*.cs        text eol=lf
+*.asmdef    text eol=lf
+*.asmref    text eol=lf
+
+# Unity YAML / 序列化资源
+*.meta      text eol=lf
+*.unity     text eol=lf
+*.asset     text eol=lf
+*.prefab    text eol=lf
+*.mat       text eol=lf
+*.anim      text eol=lf
+*.controller text eol=lf
+*.overridecontroller text eol=lf
+*.mask      text eol=lf
+*.preset    text eol=lf
+*.playable  text eol=lf
+*.physicsMaterial text eol=lf
+*.physicsMaterial2D text eol=lf
+*.lighting  text eol=lf
+*.spriteatlas text eol=lf
+*.terrainlayer text eol=lf
+*.signal    text eol=lf
+
+# 着色器与 UI 样式
+*.shader    text eol=lf
+*.shadergraph text eol=lf
+*.shadersubgraph text eol=lf
+*.hlsl      text eol=lf
+*.cginc     text eol=lf
+*.compute   text eol=lf
+*.uss       text eol=lf
+*.uxml      text eol=lf
+
+# 配置与文档
+*.json      text eol=lf
+*.xml       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.csv       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# ---------- ② Git LFS：美术 / 音频 / 视频 / 字体 ----------
+# 图片
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.jpg   filter=lfs diff=lfs merge=lfs -text
+*.jpeg  filter=lfs diff=lfs merge=lfs -text
+*.bmp   filter=lfs diff=lfs merge=lfs -text
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.tga   filter=lfs diff=lfs merge=lfs -text
+*.tif   filter=lfs diff=lfs merge=lfs -text
+*.tiff  filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+*.psb   filter=lfs diff=lfs merge=lfs -text
+*.exr   filter=lfs diff=lfs merge=lfs -text
+*.hdr   filter=lfs diff=lfs merge=lfs -text
+*.webp  filter=lfs diff=lfs merge=lfs -text
+
+# 模型与动画
+*.fbx   filter=lfs diff=lfs merge=lfs -text
+*.obj   filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+*.blend1 filter=lfs diff=lfs merge=lfs -text
+*.dae   filter=lfs diff=lfs merge=lfs -text
+*.3ds   filter=lfs diff=lfs merge=lfs -text
+
+# 音频
+*.wav   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.aif   filter=lfs diff=lfs merge=lfs -text
+*.aiff  filter=lfs diff=lfs merge=lfs -text
+*.flac  filter=lfs diff=lfs merge=lfs -text
+
+# 视频
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+*.mov   filter=lfs diff=lfs merge=lfs -text
+*.webm  filter=lfs diff=lfs merge=lfs -text
+
+# 字体
+*.ttf   filter=lfs diff=lfs merge=lfs -text
+*.otf   filter=lfs diff=lfs merge=lfs -text
+*.woff  filter=lfs diff=lfs merge=lfs -text
+*.woff2 filter=lfs diff=lfs merge=lfs -text
+
+# 其他大二进制
+*.zip   filter=lfs diff=lfs merge=lfs -text
+*.7z    filter=lfs diff=lfs merge=lfs -text
+*.rar   filter=lfs diff=lfs merge=lfs -text
+*.pdf   filter=lfs diff=lfs merge=lfs -text
+
+# ---------- ③ binary：代码类二进制（不进 LFS，保持 diff 可读）----------
+*.dll       binary
+*.so        binary
+*.dylib     binary
+*.a         binary
+*.pdb       binary
+*.mdb       binary
+*.cubemap   binary
+*.unitypackage binary
+*.apk       binary
+*.aab       binary
