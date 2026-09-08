@@ -13,7 +13,5 @@ namespace _DreamKeep.Data
         public int Amount => _amount;
         public int Times => _times;
         public override string Name => "伤害";
-        public override string Description => _times > 1 ? $"造成 {_amount} 点伤害 {_times} 次" : $"造成 {_amount} 点伤害";
-        public override EAffixKind Kind => EAffixKind.Damage;
     }
 }

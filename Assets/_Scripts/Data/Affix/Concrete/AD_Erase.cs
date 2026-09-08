@@ -7,8 +7,6 @@ namespace _DreamKeep.Data
     public class AD_Erase : AffixData
     {
         public override string Name => "遗忘";
-        public override string Description => "打出时从整局游戏永久移除自身";
         public override bool ShowDescription => false;
-        public override EAffixKind Kind => EAffixKind.Erase;
     }
 }

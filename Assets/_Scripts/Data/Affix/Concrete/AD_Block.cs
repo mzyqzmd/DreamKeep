@@ -11,7 +11,5 @@ namespace _DreamKeep.Data
 
         public int Amount => _amount;
         public override string Name => "格挡";
-        public override string Description => $"获得 {_amount} 点格挡";
-        public override EAffixKind Kind => EAffixKind.Block;
     }
 }

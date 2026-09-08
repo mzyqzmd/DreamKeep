@@ -7,8 +7,6 @@ namespace _DreamKeep.Data
     public class AD_Exhaust : AffixData
     {
         public override string Name => "消耗";
-        public override string Description => "打出后进入消耗牌堆，本场战斗不再被抽到";
         public override bool ShowDescription => false;
-        public override EAffixKind Kind => EAffixKind.Exhaust;
     }
 }

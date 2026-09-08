@@ -1,0 +1,14 @@
+{
+    "name": "_DreamKeep.Utility",
+    "rootNamespace": "_DreamKeep.Utility",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

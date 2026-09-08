@@ -320,6 +320,7 @@ namespace Spine.Unity.Editor {
 				atlasAsset.Clear();
 		}
 
+#pragma warning disable 0618 // LOCAL PATCH: TextureImporter.spritesheet is obsolete; silenced only, logic unchanged.
 		static public void UpdateSpriteSlices (Texture texture, Atlas atlas) {
 			string texturePath = AssetDatabase.GetAssetPath(texture.GetInstanceID());
 			TextureImporter t = (TextureImporter)TextureImporter.GetAtPath(texturePath);
@@ -385,6 +386,7 @@ namespace Spine.Unity.Editor {
 			EditorGUIUtility.PingObject(texture);
 			Debug.Log(string.Format("Applied sprite slices to {2}. {0} added. {1} updated.", addedCount, updatedCount, texture.name));
 		}
+#pragma warning restore 0618
 	}
 
 }

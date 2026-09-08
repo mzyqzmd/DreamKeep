@@ -13,7 +13,5 @@ namespace _DreamKeep.Data
         public AffixData GrantedAffix => _grantedAffix;
         public int Count => _count;
         public override string Name => "给予";
-        public override string Description => $"给予 {_count} 张牌『{_grantedAffix?.Name}』";
-        public override EAffixKind Kind => EAffixKind.Grant;
     }
 }

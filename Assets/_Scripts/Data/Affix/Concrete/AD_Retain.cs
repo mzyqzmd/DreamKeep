@@ -7,8 +7,6 @@ namespace _DreamKeep.Data
     public class AD_Retain : AffixData
     {
         public override string Name => "保留";
-        public override string Description => "回合结束不会进入弃牌堆";
         public override bool ShowDescription => false;
-        public override EAffixKind Kind => EAffixKind.Retain;
     }
 }

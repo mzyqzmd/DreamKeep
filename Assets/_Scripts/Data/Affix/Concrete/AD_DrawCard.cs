@@ -11,7 +11,5 @@ namespace _DreamKeep.Data
 
         public int Count => _count;
         public override string Name => "抽牌";
-        public override string Description => $"抽 {_count} 张牌";
-        public override EAffixKind Kind => EAffixKind.DrawCard;
     }
 }

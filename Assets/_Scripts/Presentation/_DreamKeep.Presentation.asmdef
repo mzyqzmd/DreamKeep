@@ -2,10 +2,7 @@
     "name": "_DreamKeep.Presentation",
     "rootNamespace": "_DreamKeep.Presentation",
     "references": [
-        "GUID:743064110a38ee743a411dd0c576ab58",
-        "GUID:f0eed43b2f881644db6e48bd15c2f7c0",
-        "GUID:5f28dd248d458df4bb494094036d476b",
-        "GUID:ce4ac6a51090c3048b14777a9f8e9489"
+        "GUID:5f28dd248d458df4bb494094036d476b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
