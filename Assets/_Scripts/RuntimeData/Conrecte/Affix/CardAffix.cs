@@ -1,6 +1,6 @@
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>运行时词条基类：由配置数据烘焙而来，是局外卡与战斗卡共用的词条形态，不持有任何配置引用。</summary>
+    /// <summary>运行时词条基类：由配置数据烘焙而来，是卡组原型与战斗副本共用的词条形态，不持有任何配置引用。</summary>
     public abstract class CardAffix
     {
         /// <summary>结算管线权重，越小越先结算；修饰型词条恒为 -1，不进入效果管线。</summary>

@@ -10,7 +10,7 @@ namespace _DreamKeep.RuntimeData
         {
         }
 
-        internal CA_Damage(string name_, bool showDescription_, int amount_, int times_)
+        private CA_Damage(string name_, bool showDescription_, int amount_, int times_)
         {
             Name = name_;
             ShowDescription = showDescription_;
@@ -24,7 +24,7 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Times { get; }
         internal override int PipelineOrder => 0;
 
-        public override string GetDescription() => Times.Value > 1 ? $"造成 {Amount.Value} 点伤害，共 {Times.Value} 次" : $"造成 {Amount.Value} 点伤害";
+        public override string GetDescription() => Times.Value > 1 ? $"造成 {Amount.Value} 点\n伤害 {Times.Value} 次" : $"造成 {Amount.Value} 点伤害";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Damage(Name, ShowDescription, Amount.Value, Times.Value);

@@ -10,7 +10,7 @@ namespace _DreamKeep.RuntimeData
         {
         }
 
-        internal CA_GainEnergy(string name_, bool showDescription_, int amount_)
+        private CA_GainEnergy(string name_, bool showDescription_, int amount_)
         {
             Name = name_;
             ShowDescription = showDescription_;

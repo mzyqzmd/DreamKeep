@@ -10,7 +10,7 @@ namespace _DreamKeep.RuntimeData
         {
         }
 
-        internal CA_DrawCard(string name_, bool showDescription_, int count_)
+        private CA_DrawCard(string name_, bool showDescription_, int count_)
         {
             Name = name_;
             ShowDescription = showDescription_;

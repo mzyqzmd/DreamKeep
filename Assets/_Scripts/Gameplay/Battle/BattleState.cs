@@ -15,13 +15,24 @@ namespace _DreamKeep.Gameplay
         public CardPile ExhaustPile { get; }
         public Rng Rng { get; }
         public int TurnCount { get; set; }
-        public int EnergyPerTurn { get; }
+        public ModifiableStat EnergyPerTurn { get; }
+
+        /// <summary>本场被「遗忘」永久移除的卡组原型 Id，供战斗结束时回写卡组。</summary>
+        public IReadOnlyCollection<int> ErasedSourceIds => _erasedSourceIds;
+
+        #region 战斗结果
 
         public bool IsDefeat => Player.IsDead;
         public bool IsVictory => Enemies.TrueForAll(enemy_ => enemy_.IsDead);
         public bool IsBattleOver => IsDefeat || IsVictory;
 
-        public BattleState(Player player_, List<Enemy> enemies_, List<InBattleCard> deck_, Rng rng_, int energyPerTurn_)
+        #endregion
+
+        private readonly Dictionary<CardModel, int> _sourceOf;
+        private readonly HashSet<int> _erasedSourceIds = new();
+
+        public BattleState(Player player_, List<Enemy> enemies_, List<CardModel> deck_,
+            Dictionary<CardModel, int> sourceOf_, Rng rng_, int energyPerTurn_)
         {
             Player = player_;
             Enemies = enemies_;
@@ -30,14 +41,16 @@ namespace _DreamKeep.Gameplay
             DiscardPile = new CardPile();
             ExhaustPile = new CardPile();
             Rng = rng_;
-            EnergyPerTurn = energyPerTurn_;
+            EnergyPerTurn = new ModifiableStat(energyPerTurn_);
+            _sourceOf = sourceOf_ ?? new();
 
-            foreach (InBattleCard card in deck_)
+            foreach (CardModel card in deck_)
                 DrawPile.Add(card);
             DrawPile.Shuffle(Rng);
         }
 
         #region 取全部存活敌人，按槽位从左到右
+
         public List<Enemy> GetAliveEnemies()
         {
             List<Enemy> alive = new();
@@ -47,6 +60,16 @@ namespace _DreamKeep.Gameplay
             alive.Sort((left_, right_) => left_.Slot.CompareTo(right_.Slot));
             return alive;
         }
+
         #endregion
+
+        #region 查战斗副本对应的卡组原型 Id，查不到即为战斗内无源临时卡
+
+        public bool TryGetSourceId(CardModel battleCard_, out int sourceId_) =>
+            _sourceOf.TryGetValue(battleCard_, out sourceId_);
+
+        #endregion
+
+        internal void RegisterErased(int sourceId_) => _erasedSourceIds.Add(sourceId_);
     }
 }

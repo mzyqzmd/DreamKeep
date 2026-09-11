@@ -7,7 +7,7 @@ namespace _DreamKeep.Data
     [Serializable]
     public class AD_ApplyPerk : AffixData
     {
-        [SerializeReference] private PerkData _perk;
+        [SerializeField] private PerkData _perk;
         [SerializeField] private int _layers;
 
         public PerkData Perk => _perk;

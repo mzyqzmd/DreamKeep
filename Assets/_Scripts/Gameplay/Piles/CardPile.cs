@@ -7,17 +7,17 @@ namespace _DreamKeep.Gameplay
     /// <summary>通用牌堆：抽牌堆、手牌、弃牌堆共用，提供进出、洗牌与整体转移。以连续槽位索引为键存卡，索引即卡在堆中的顺序。</summary>
     public class CardPile
     {
-        private readonly Dictionary<int, InBattleCard> _cards = new();
+        private readonly Dictionary<int, CardModel> _cards = new();
 
         public int Count => _cards.Count;
-        public Dictionary<int, InBattleCard> Cards => _cards;
+        public Dictionary<int, CardModel> Cards => _cards;
 
         #region 把一张卡追加到堆尾
-        public void Add(InBattleCard card_) => _cards[_cards.Count] = card_;
+        public void Add(CardModel card_) => _cards[_cards.Count] = card_;
         #endregion
 
         #region 取出堆顶的一张卡，堆为空时返回 null
-        public InBattleCard DrawTop()
+        public CardModel DrawTop()
         {
             if (_cards.Count == 0) return null;
             return RemoveAt(0);
@@ -25,7 +25,7 @@ namespace _DreamKeep.Gameplay
         #endregion
 
         #region 按实例移除指定卡，用于打出与定向弃置
-        public bool Remove(InBattleCard card_)
+        public bool Remove(CardModel card_)
         {
             for (int i = 0; i < _cards.Count; i++)
             {
@@ -37,13 +37,12 @@ namespace _DreamKeep.Gameplay
         }
         #endregion
 
-        #region 按卡实例 Id 查找本堆中的卡，找不到返回 null
-        public InBattleCard Find(int instanceId_)
+        #region 判断指定卡是否在本堆中，用于出牌等命令的合法性校验
+        public bool Contains(CardModel card_)
         {
             for (int i = 0; i < _cards.Count; i++)
-                if (_cards[i].InstanceId == instanceId_)
-                    return _cards[i];
-            return null;
+                if (_cards[i] == card_) return true;
+            return false;
         }
         #endregion
 
@@ -68,9 +67,9 @@ namespace _DreamKeep.Gameplay
         #endregion
 
         /// <summary>移除指定槽位并把后续卡整体前移，保持槽位索引连续。</summary>
-        private InBattleCard RemoveAt(int slot_)
+        private CardModel RemoveAt(int slot_)
         {
-            InBattleCard card = _cards[slot_];
+            CardModel card = _cards[slot_];
             for (int i = slot_; i < _cards.Count - 1; i++)
                 _cards[i] = _cards[i + 1];
             _cards.Remove(_cards.Count - 1);

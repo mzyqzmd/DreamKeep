@@ -9,7 +9,7 @@ namespace _DreamKeep.RuntimeData
         {
         }
 
-        internal CA_Exhaust(string name_, bool showDescription_)
+        private CA_Exhaust(string name_, bool showDescription_)
         {
             Name = name_;
             ShowDescription = showDescription_;
@@ -19,7 +19,7 @@ namespace _DreamKeep.RuntimeData
         public override bool ShowDescription { get; }
         internal override int PipelineOrder => 7;
 
-        public override string GetDescription() => "打出后消耗自身，本场战斗不再被抽到";
+        public override string GetDescription() => "打出后消耗自身\n本场战斗不再被抽到";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Exhaust(Name, ShowDescription);

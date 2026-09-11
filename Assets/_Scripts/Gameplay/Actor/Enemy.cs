@@ -1,19 +1,11 @@
-using System.Collections.Generic;
-using _DreamKeep.RuntimeData;
-
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>敌人：占据一个固定阵型槽位，槽位索引即从左到右的站位次序。</summary>
+    /// <summary>敌人：占据一个固定阵型槽位，槽位索引即从左到右的站位次序，当前只作为受击目标与胜负判定依据。</summary>
     public class Enemy : Actor
     {
+        /// <summary>阵型槽位：敌人专属，玩家全场唯一故无需槽位。</summary>
         public int Slot { get; }
-        /// <summary>意图词条集合：与玩家卡共用同一条结算管线，仅目标方向相反。</summary>
-        public List<CardAffix> Intent { get; }
 
-        public Enemy(int health_, int block_, int slot_, List<CardAffix> intent_) : base(health_, block_)
-        {
-            Slot = slot_;
-            Intent = intent_ ?? new List<CardAffix>();
-        }
+        public Enemy(int health_, int block_, int slot_) : base(health_, block_) => Slot = slot_;
     }
 }

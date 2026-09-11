@@ -4,16 +4,15 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>战斗单位基类：血量、格挡、能量与状态层，敌我共用。</summary>
+    /// <summary>战斗单位基类：血量、格挡与状态层，敌我共用；能量为玩家专属故下沉至 Player。</summary>
     public class Actor
     {
-        private readonly List<InBattlePerk> _perks = new();
+        private readonly List<BattlePerk> _perks = new();
 
         public int Health { get; set; }
         public int Block { get; set; }
-        public int Energy { get; set; }
         public bool IsDead => Health <= 0;
-        public IReadOnlyList<InBattlePerk> Perks => _perks;
+        public IReadOnlyList<BattlePerk> Perks => _perks;
 
         public Actor(int health_, int block_)
         {
@@ -22,10 +21,10 @@ namespace _DreamKeep.Gameplay
         }
 
         #region 施加状态：同类型累加层数，未挂载过则克隆挂载；返回施加后的总层数
-        public int ApplyPerk(InBattlePerk perk_)
+        public int ApplyPerk(BattlePerk perk_)
         {
             Type perkType = perk_.GetType();
-            foreach (InBattlePerk perk in _perks)
+            foreach (BattlePerk perk in _perks)
             {
                 if (perk.GetType() == perkType)
                 {
@@ -33,16 +32,16 @@ namespace _DreamKeep.Gameplay
                     return perk.Layers;
                 }
             }
-            InBattlePerk cloned = perk_.Clone();
+            BattlePerk cloned = perk_.Clone();
             _perks.Add(cloned);
             return cloned.Layers;
         }
         #endregion
 
         #region 查询指定状态类型的层数，未挂载时返回 0
-        public int GetPerkLayers<T>() where T : InBattlePerk
+        public int GetPerkLayers<T>() where T : BattlePerk
         {
-            foreach (InBattlePerk perk in _perks)
+            foreach (BattlePerk perk in _perks)
                 if (perk is T typed)
                     return typed.Layers;
             return 0;

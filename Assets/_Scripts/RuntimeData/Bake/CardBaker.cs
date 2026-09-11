@@ -1,61 +1,76 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.Data;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>局外卡烘焙器：把配置卡数据转成一局游戏内的持久卡，配置只在烘焙期被读一次。</summary>
+    /// <summary>配置卡烘焙器：持有卡面配置库，把配置卡数据烘焙成卡组原型，配置只在烘焙期被读一次。</summary>
     public static class CardBaker
     {
-        #region 按卡 Id 烘焙一张局外卡
-        public static InGameCard Bake(string cardId_)
+        private static SO_CardDatabase _cardDatabase;
+
+        /// <summary>装配期注入配置库，必须在首次烘焙前调用一次。</summary>
+        public static void Initialize(SO_CardDatabase database_)
+            => _cardDatabase = database_;
+
+        #region 按卡 Id 烘焙一张卡组原型，配置缺失时返回 false 由调用方决定如何处置
+
+        public static bool TryBake(string cardId_, out CardModel card_)
         {
-            if (!ConfigLocator.TryGetCard(cardId_, out SO_Card card)) return null;
-
-            InGameCard baked = new(cardId_, card.Cost, card.TargetType, card.CanUpdate && card.UpdatedAffixes.Count > 0);
-            FillAffixes(baked, card, false);
-            return baked;
-        }
-        #endregion
-
-        #region 只烘焙词条集合：供敌人意图复用，敌我共用同一条结算管线
-        public static List<CardAffix> BakeAffixes(string cardId_)
-        {
-            List<CardAffix> affixes = new();
-            if (!ConfigLocator.TryGetCard(cardId_, out SO_Card card)) return affixes;
-
-            foreach (AffixData affix in card.Affixes)
+            if (!_cardDatabase.TryGetCard(cardId_, out SO_Card card))
             {
-                CardAffix runtime = ToRuntime(affix);
-                if (runtime == null) continue;
-                else affixes.Add(runtime);
+                card_ = null;
+                return false;
             }
-            return affixes;
+
+            card_ = new(cardId_, card.Name, card.Cost, card.CanUpdate && card.UpdatedAffixes.Count > 0);
+            FillAffixes(card_, card, false);
+            return true;
         }
+
         #endregion
 
-        #region 升级重烘焙：清空后按升级态重建整份词条集合，实例 Id 不变
-        internal static void Rebake(InGameCard card_)
+        #region 升级重烘焙：清空后按升级态重建整份词条集合,保留额外词条
+
+        public static void Rebake(CardModel card_)
         {
-            if (!ConfigLocator.TryGetCard(card_.CardId, out SO_Card config)) return;
+            if (!_cardDatabase.TryGetCard(card_.CardId, out SO_Card config)) return;
             card_.ClearAffixes();
             FillAffixes(card_, config, card_.IsUpgraded);
         }
+
         #endregion
 
-        #region 按升级态选择词条集合并有序挂载
-        private static void FillAffixes(InGameCard card_, SO_Card config_, bool upgraded_)
+        #region 按卡 Id 解析运行时落点信息：翻译目标类型，配置缺失时返回默认（最前敌人）
+
+        public static CardTargetInfo GetTargetInfo(string cardId_)
+        {
+            if (!_cardDatabase.TryGetCard(cardId_, out SO_Card config)) return default;
+            return CardTargetInfo.From(config.TargetType);
+        }
+
+        #endregion
+
+        #region 按升级态选择词条集合并有序挂载：原型卡不可被公开写口子改动，故走免断言通道
+
+        private static void FillAffixes(CardModel card_, SO_Card config_, bool upgraded_)
         {
             List<AffixData> source = upgraded_ ? config_.UpdatedAffixes : config_.Affixes;
-            foreach (AffixData affix in source)
+            foreach (var affix in source)
             {
                 CardAffix runtime = ToRuntime(affix);
                 if (runtime == null) continue;
-                else card_.AddAffix(runtime);
+                card_.AddAffixUnchecked(runtime);
             }
+
+            foreach (var affix in card_.AdditionalAffixes)
+                card_.AddAffixUnchecked(affix);
         }
+
         #endregion
 
         #region 将配置词条转换成运行时词条：只读取数值，运行时不持有配置引用
+
         private static CardAffix ToRuntime(AffixData affix_)
         {
             return affix_ switch
@@ -75,7 +90,7 @@ namespace _DreamKeep.RuntimeData
 
         private static CardAffix ToApplyPerk(AD_ApplyPerk applyPerk_)
         {
-            InBattlePerk perk = PerkBaker.Bake(applyPerk_.Perk, applyPerk_.Layers);
+            BattlePerk perk = PerkBaker.Bake(applyPerk_.Layers, applyPerk_.Perk);
             return perk == null ? null : new CA_ApplyPerk(applyPerk_, perk);
         }
 
@@ -84,6 +99,7 @@ namespace _DreamKeep.RuntimeData
             CardAffix granted = ToRuntime(grant_.GrantedAffix);
             return granted == null ? null : new CA_Grant(grant_, granted);
         }
+
         #endregion
     }
 }
