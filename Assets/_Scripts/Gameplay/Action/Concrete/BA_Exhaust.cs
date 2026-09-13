@@ -3,19 +3,23 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>消耗动作：把自身这张卡从手牌移入消耗区，本场战斗不再被抽到。</summary>
+    /// <summary>消耗动作：把打出堆中这张卡移入消耗堆，本场战斗不再被抽到。</summary>
     public class BA_Exhaust : BattleAction
     {
-        /// <summary>延迟执行期间卡可能已离场，移除失败即视为离场。</summary>
-        public CardModel Card { get; }
+        /// <summary>结算期间卡可能已离场，移除失败即视为离场。</summary>
+        private readonly CardModel _cardToExhaust;
 
-        public BA_Exhaust(Actor source_, List<Actor> targets_, CardModel card_) : base(source_, targets_) => Card = card_;
+        public BA_Exhaust(Creature source_, List<Creature> targets_, CardModel cardToExhaust_) : base(source_, targets_) => _cardToExhaust = cardToExhaust_;
 
-        protected override void OnExecute(BattleState battleState_, BattleEventBuffer events_)
+        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
         {
-            if (!battleState_.Hand.Remove(Card)) return;
-            battleState_.ExhaustPile.Add(Card);
-            events_.Emit(new IBE_CardExhausted(Card));
+            List<IBattleEvent> events = new();
+            PlayerCombatState state = battleContext_.Player.CombatState;
+            if (!state.PlayPile.Remove(_cardToExhaust)) return events;
+
+            state.ExhaustPile.Add(_cardToExhaust);
+            events.Add(new BE_CardExhausted(_cardToExhaust));
+            return events;
         }
     }
 }

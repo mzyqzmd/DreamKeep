@@ -1,8 +1,10 @@
+using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
+using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>敌人回合进行阶段：敌人行动的唯一编排位，当前敌人无行动能力，阶段为空转占位。</summary>
+    /// <summary>敌人回合进行阶段：按槽位从左到右逐个敌人执行其当前意图，执行完推进到下一条并广播，供表现层预告。</summary>
     public class BP_EnemyTurnActive : BattlePhase
     {
         public BP_EnemyTurnActive(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
@@ -14,7 +16,31 @@ namespace _DreamKeep.Gameplay
         public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnEnd;
 
-        // 敌人 AI 接入点：将来在此遍历存活敌人，把意图经 AffixToActionBaker 入队后 PerformAll
-        public override void Enter() => _owner.Events.Emit(new IBE_TurnPhaseChanged(PhaseName));
+        #region 阶段异步逻辑：逐敌人取意图 → 转动作入队 → 等待演出 → 推进并广播下一条
+
+        public override async UniTask RunAsync()
+        {
+            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
+
+            BattleContext context = _owner.BattleContext;
+            ActionSystem actions = _owner.ActionSystem;
+
+            foreach (Enemy enemy in context.GetAliveEnemies())
+            {
+                EnemyIntent intent = enemy.CurrentIntent;
+                if (intent != null)
+                {
+                    foreach (BattleAction action in _owner.IntentResolver.Build(context, enemy, intent))
+                        actions.Enqueue(action);
+                    await actions.PerformAllAsync();
+                }
+
+                enemy.AdvanceIntent();
+                if (enemy.Creature.IsDead) continue;
+                await PlayEvents(new BE_EnemyIntentChanged(enemy, enemy.CurrentIntent));
+            }
+        }
+
+        #endregion
     }
 }

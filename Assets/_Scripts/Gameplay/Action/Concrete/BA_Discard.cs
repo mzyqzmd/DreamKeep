@@ -3,19 +3,23 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>弃置动作：把手牌中指定的卡移入弃牌堆，卡已离手则静默跳过。</summary>
+    /// <summary>弃置动作：把打出堆中指定的卡移入弃牌堆，卡已离场则静默跳过。</summary>
     public class BA_Discard : BattleAction
     {
-        /// <summary>延迟执行期间卡可能已被消耗或遗忘离场，移除失败即视为离场。</summary>
+        /// <summary>结算期间卡可能已被消耗或遗忘离场，移除失败即视为离场。</summary>
         public CardModel Card { get; }
 
-        public BA_Discard(Actor source_, List<Actor> targets_, CardModel card_) : base(source_, targets_) => Card = card_;
+        public BA_Discard(Creature source_, List<Creature> targets_, CardModel card_) : base(source_, targets_) => Card = card_;
 
-        protected override void OnExecute(BattleState battleState_, BattleEventBuffer events_)
+        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
         {
-            if (!battleState_.Hand.Remove(Card)) return;
-            battleState_.DiscardPile.Add(Card);
-            events_.Emit(new IBE_CardDiscarded(Card));
+            List<IBattleEvent> events = new();
+            PlayerCombatState state = battleContext_.Player.CombatState;
+            if (!state.PlayPile.Remove(Card)) return events;
+
+            state.DiscardPile.Add(Card);
+            events.Add(new BE_CardDiscarded(Card));
+            return events;
         }
     }
 }

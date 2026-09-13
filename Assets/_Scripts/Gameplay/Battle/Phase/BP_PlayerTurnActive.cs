@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.Gameplay
 {
@@ -16,30 +17,51 @@ namespace _DreamKeep.Gameplay
         public override bool IsWaiting => true;
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnEnd;
 
-        public override void Enter() => _owner.Events.Emit(new IBE_TurnPhaseChanged(PhaseName));
-
-        #region 打出一张卡：校验能量与手牌后建队并同步排空
-        public void PlayCard(CardModel card_, int aimSlot_)
+        #region 阶段异步逻辑：等待型阶段无动作队列，仅派发阶段变更事件
+        public override async UniTask RunAsync()
         {
-            BattleState state = _owner.BattleState;
+            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
+            await base.RunAsync();
+        }
+        #endregion
+
+        #region 打出一张卡：校验能量与手牌后建队并异步等待演出
+        public async UniTask PlayCardAsync(CardModel card_, int aimSlot_)
+        {
+            BattleContext context = _owner.BattleContext;
+            PlayerCombatState state = context.Player.CombatState;
+
             // 卡可能已在更早的队列里离手，不在手牌即视为命令失效
             if (!state.Hand.Contains(card_)) return;
-            if (state.Player.Energy < card_.Cost.Value) return;
+            if (state.CurrentEnergy < card_.Cost.Value) return;
 
-            List<Actor> self = new List<Actor> { state.Player };
+            List<Creature> self = new List<Creature> { context.Player.Creature };
             ActionSystem actions = _owner.ActionSystem;
 
-            // TODO 诅咒牌禁止打出的校验：运行时卡模型不带卡面类型，需先给 CardModel 补类型字段
-            // 出牌事件必须早于结算动作，否则播放队列会先播死亡再播攻击
-            _owner.Events.Emit(new IBE_CardPlayed(card_));
-
-            actions.Enqueue(new BA_SpendEnergy(state.Player, card_.Cost.Value));
-            _owner.AffixFactory.Build(state, card_, state.Player, aimSlot_);
+            // TODO 诅咒牌禁止打出的校验：基于 card_.Type == ECardType.Curse 判定，逻辑留待后续实现
+            // 入打出堆动作产出出牌事件，必须早于结算动作，否则播放队列会先播死亡再播攻击
+            actions.Enqueue(new BA_ToPlayPile(context.Player.Creature, self, card_));
+            actions.Enqueue(new BA_SpendEnergy(context.Player.Creature, self, card_.Cost.Value));
+            foreach (BattleAction action in _owner.AffixResolver.Build(context, card_, context.Player, aimSlot_))
+                actions.Enqueue(action);
             // 消耗与遗忘已在队列内让卡离场，弃置动作取不到卡会自动跳过
-            actions.Enqueue(new BA_Discard(state.Player, self, card_));
-            actions.PerformAll();
+            actions.Enqueue(new BA_Discard(context.Player.Creature, self, card_));
+            await actions.PerformAllAsync();
+        }
+        #endregion
 
-            _owner.Hooks.InvokePoint<HP_AfterCardPlayed>(state);
+        #region 命令分派：等待型阶段唯一处理玩家意图的入口，由 BattleLoop 在等待态取出命令后调用
+        public override async UniTask HandleCommand(BattleCommand command_)
+        {
+            switch (command_)
+            {
+                case BC_PlayCard playCard:
+                    await PlayCardAsync(playCard.PlayedCard, playCard.AimSlot);
+                    break;
+                case BC_PlayerEndTurn _:
+                    _owner.EndPlayerTurn();
+                    break;
+            }
         }
         #endregion
     }

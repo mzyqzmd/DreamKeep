@@ -11,19 +11,20 @@ namespace _DreamKeep.Gameplay
         /// <summary>可被 Pre 钩子替换的词条原型，实际授予时逐张克隆。</summary>
         public CardAffix Granted { get; set; }
 
-        public BA_Grant(Actor source_, List<Actor> targets_, int count_, CardAffix granted_)
+        public BA_Grant(Creature source_, List<Creature> targets_, int count_, CardAffix granted_)
             : base(source_, targets_)
         {
             Count = count_;
             Granted = granted_;
         }
 
-        protected override void OnExecute(BattleState battleState_, BattleEventBuffer events_)
+        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
         {
-            CardPile hand = battleState_.Hand;
+            CardPile hand = battleContext_.Player.CombatState.Hand;
             int granted = Count < hand.Count ? Count : hand.Count;
             for (int i = 0; i < granted; i++)
                 hand.Cards[i].AddAffix(Granted.Clone());
+            return new List<IBattleEvent>();
         }
     }
 }

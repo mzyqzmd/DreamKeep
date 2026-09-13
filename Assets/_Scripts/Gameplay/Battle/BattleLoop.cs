@@ -1,53 +1,44 @@
 using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
+using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>战斗循环：以状态机驱动整场战斗的生命周期（战斗开始 → 六回合阶段 → 战斗结束），也是表现层唯一的命令入口。</summary>
+    /// <summary>战斗循环：以状态机驱动整场战斗的生命周期，也是表现层唯一的命令入口。演出期间屏蔽输入，防止动画未播完时再次驱动战斗。</summary>
     public class BattleLoop
     {
-        // 六阶段一圈最多 6 次切换，取两倍作为推进上限，防止某个阶段漏设 IsWaiting 时锁死主线程
-        private const int MaxAdvanceSteps = 12;
-
         private readonly StateMachine<BaseState<BattleLoop>> _fsm = new();
-        private readonly BattleState _battleState;
-        private readonly DeckService _deckService;
+        private readonly BattleContext _battleContext;
         private readonly ActionSystem _actionSystem;
-        private readonly HookRegistry _hooks;
-        private readonly BattleEventBuffer _events;
-        private readonly AffixToActionBaker _affixFactory;
+        private readonly AffixToActionResolver _affixResolver;
+        private readonly EnemyIntentResolver _intentResolver;
+        private readonly Queue<BattleCommand> _commandQueue = new();
+        private bool _loopRunning;
 
-        public BattleState BattleState => _battleState;
-        public ActionSystem ActionSystem => _actionSystem;
-        public HookRegistry Hooks => _hooks;
-        public BattleEventBuffer Events => _events;
-        public AffixToActionBaker AffixFactory => _affixFactory;
-        public int DrawPerTurn { get; }
-        /// <summary>是否停在等待命令的阶段，表现层据此决定能否发命令。</summary>
-        public bool IsWaitingForCommand => _fsm.CurrentState is BP_PlayerTurnActive;
+        internal BattleContext BattleContext => _battleContext;
+        internal ActionSystem ActionSystem => _actionSystem;
+        internal AffixToActionResolver AffixResolver => _affixResolver;
+        internal EnemyIntentResolver IntentResolver => _intentResolver;
+        internal int DrawPerTurn { get; }
 
-        public BattlePhase PhaseBattleStart { get; }
-        public BattlePhase PhasePlayerTurnStart { get; }
-        public BattlePhase PhasePlayerTurnActive { get; }
-        public BattlePhase PhasePlayerTurnEnd { get; }
-        public BattlePhase PhaseEnemyTurnStart { get; }
-        public BattlePhase PhaseEnemyTurnActive { get; }
-        public BattlePhase PhaseEnemyTurnEnd { get; }
-        public BattlePhase PhaseBattleFinish { get; }
+        internal BattlePhase PhaseBattleStart { get; }
+        internal BattlePhase PhasePlayerTurnStart { get; }
+        internal BattlePhase PhasePlayerTurnActive { get; }
+        internal BattlePhase PhasePlayerTurnEnd { get; }
+        internal BattlePhase PhaseEnemyTurnStart { get; }
+        internal BattlePhase PhaseEnemyTurnActive { get; }
+        internal BattlePhase PhaseEnemyTurnEnd { get; }
+        internal BattlePhase PhaseBattleFinish { get; }
 
-        public DeckService DeckService => _deckService;
-
-        public BattleLoop(BattleState battleState_, HookRegistry hooks_, BattleEventBuffer events_, DeckService deckService_, int drawPerTurn_)
+        public BattleLoop(BattleContext battleContext_, int drawPerTurn_, BattleEventDispatcher presenter_)
         {
-            _battleState = battleState_;
-            _deckService = deckService_;
-            _hooks = hooks_;
-            _events = events_;
+            _battleContext = battleContext_;
             DrawPerTurn = drawPerTurn_;
 
-            _actionSystem = new ActionSystem(battleState_, hooks_, events_);
-            _affixFactory = new AffixToActionBaker(_actionSystem, new TargetResolver());
+            _actionSystem = new ActionSystem(battleContext_, presenter_);
+            _affixResolver = new AffixToActionResolver();
+            _intentResolver = new EnemyIntentResolver();
 
             PhaseBattleStart = new BP_BattleStart(_fsm, this);
             PhasePlayerTurnStart = new BP_PlayerTurnStart(_fsm, this);
@@ -59,72 +50,65 @@ namespace _DreamKeep.Gameplay
             PhaseBattleFinish = new BP_BattleFinish(_fsm, this);
         }
 
-        #region 启动战斗：进入战斗开始阶段，由该阶段触发开始钩子与事件后自动推进
-        public void Start()
+        #region 唯一的外部命令入口：只入队不直接驱动，循环在等待态取出执行
+
+        public void EnqueueCommand(BattleCommand command_)
+        {
+            _commandQueue.Enqueue(command_);
+            if (_loopRunning) return;
+            _loopRunning = true;
+            RunLoop().Forget();
+        }
+
+        #endregion
+
+        #region 启动战斗：进入战斗开始阶段，由该阶段触发开始事件后自动推进
+
+        public async UniTask Start()
         {
             _fsm.Initialize(PhaseBattleStart);
-            Advance();
+            await RunLoop();
         }
+
         #endregion
 
-        #region 命令入口：表现层唯一的驱动方式，命令合法性由 Domain 校验
-        public void ExecuteCommand(InBattleCommand command_)
+        private async UniTask RunLoop()
         {
-            if (_battleState.IsBattleOver) return;
-
-            switch (command_)
+            try
             {
-                case IBC_PlayCard playCard:
-                    if (!(_fsm.CurrentState is BP_PlayerTurnActive active)) return;
-                    active.PlayCard(playCard.PlayedCard, playCard.AimSlot);
-                    Advance();
-                    break;
-                case IBC_PlayerEndTurn _:
-                    if (!(_fsm.CurrentState is BP_PlayerTurnActive)) return;
-                    _fsm.ChangeState(PhasePlayerTurnEnd);
-                    Advance();
-                    break;
-            }
-        }
-        #endregion
-
-        // 外层推进：同步跑完非等待阶段，遇等待阶段或战斗结束停下
-        private void Advance()
-        {
-            for (int step = 0; step < MaxAdvanceSteps; step++)
-            {
-                if (_battleState.IsBattleOver)
+                while (true)
                 {
-                    _fsm.ChangeState(PhaseBattleFinish);
-                    return;
+                    BattlePhase current = _fsm.CurrentState as BattlePhase;
+                    if (current == null) return;
+
+                    if (current.IsWaiting)
+                    {
+                        if (_commandQueue.Count == 0) return;
+                        BattleCommand command = _commandQueue.Dequeue();
+                        await current.HandleCommand(command);
+                        continue;
+                    }
+
+                    await current.RunAsync();
+                    if (_battleContext.IsBattleOver)
+                    {
+                        _fsm.ChangeState(PhaseBattleFinish);
+                        await PhaseBattleFinish.RunAsync();
+                        return;
+                    }
+
+                    _fsm.ChangeState(current.Next);
                 }
-                BattlePhase current = _fsm.CurrentState as BattlePhase;
-                if (current == null || current.IsWaiting) return;
-                _fsm.ChangeState(current.Next);
             }
-        }
-
-        #region 装配一场战斗：卡组原型逐张克隆为可变副本，战斗内改动只落在副本上
-
-        public static BattleState Create(IReadOnlyDictionary<int, CardModel> deck_, Player player_, List<Enemy> enemies_, Rng rng_, int energyPerTurn_)
-        {
-            List<CardModel> battleDeck = new(deck_.Count);
-            Dictionary<CardModel, int> sourceOf = new(deck_.Count);
-            // 卡组字典仅用于克隆与建映射、无排列语义，顺序不敏感故可直接枚举
-            foreach (KeyValuePair<int, CardModel> pair in deck_)
+            finally
             {
-                CardModel copy = pair.Value.ToMutable();
-                battleDeck.Add(copy);
-                sourceOf[copy] = pair.Key;
+                _loopRunning = false;
             }
-            return new(player_, enemies_, battleDeck, sourceOf, rng_, energyPerTurn_);
         }
 
-        #endregion
+        #region 玩家结束回合：供 BP_PlayerTurnActive 在命令分派时切到结束阶段，随后由主循环推进
 
-        #region 构造一个敌人：当前敌人无行动能力，意图待将来敌人 AI 落地后再接入
-
-        public static Enemy CreateEnemy(int health_, int block_, int slot_) => new(health_, block_, slot_);
+        internal void EndPlayerTurn() => _fsm.ChangeState(PhasePlayerTurnEnd);
 
         #endregion
     }

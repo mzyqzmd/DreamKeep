@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
+using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.Gameplay
 {
@@ -15,24 +17,25 @@ namespace _DreamKeep.Gameplay
         public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnStart;
 
-        public override void Enter()
+        #region 阶段异步逻辑：逐敌人衰减状态后等待演出，再推进回合计数
+        public override async UniTask RunAsync()
         {
-            _owner.Events.Emit(new IBE_TurnPhaseChanged(PhaseName));
-            BattleState state = _owner.BattleState;
+            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
+            BattleContext context = _owner.BattleContext;
             ActionSystem actions = _owner.ActionSystem;
 
-            foreach (Enemy enemy in state.Enemies)
+            foreach (Enemy enemy in context.Enemies)
             {
-                if (enemy.IsDead) continue;
-                List<Actor> self = new List<Actor> { enemy };
-                actions.Enqueue(new BA_DecayPerk(enemy, self));
+                if (enemy.Creature.IsDead) continue;
+                List<Creature> self = new List<Creature> { enemy.Creature };
+                actions.Enqueue(new BA_DecayPerk(enemy.Creature, self));
             }
 
-            actions.PerformAll();
+            await actions.PerformAllAsync();
 
             // 唯一例外：回合计数无来源无目标且不发事件，不做成动作，直接推进
-            state.TurnCount++;
-            _owner.Hooks.InvokePoint<HP_TurnEnd>(state);
+            context.TurnCount++;
         }
+        #endregion
     }
 }

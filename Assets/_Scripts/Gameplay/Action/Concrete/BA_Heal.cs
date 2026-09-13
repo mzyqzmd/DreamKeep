@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Gameplay
 {
@@ -8,15 +9,17 @@ namespace _DreamKeep.Gameplay
         /// <summary>可被 Pre 钩子修改的回复量。</summary>
         public int Amount { get; set; }
 
-        public BA_Heal(Actor source_, List<Actor> targets_, int amount_) : base(source_, targets_) => Amount = amount_;
+        public BA_Heal(Creature source_, List<Creature> targets_, int amount_) : base(source_, targets_) => Amount = amount_;
 
-        protected override void OnExecute(BattleState battleState_, BattleEventBuffer events_)
+        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
         {
-            foreach (Actor target in Targets)
+            List<IBattleEvent> events = new();
+            foreach (Creature target in Targets)
             {
-                target.Health += Amount;
-                events_.Emit(new IBE_HealthRestored(target, Amount));
+                target.CurrentHp += Amount;
+                events.Add(new BE_HealthRestored(target, Amount));
             }
+            return events;
         }
     }
 }

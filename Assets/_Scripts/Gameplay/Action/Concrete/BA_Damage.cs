@@ -3,37 +3,34 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Gameplay
 {
-    /// <summary>伤害动作：先扣格挡再扣血，力量/虚弱作用于来源，易伤作用于目标；置 IgnoresModifiers 可跳过全部修正。</summary>
+    /// <summary>伤害动作：先扣格挡再扣血，直接按基础值结算（伤害修正/状态效果为后续扩展点，当前最小循环不含）。</summary>
     public class BA_Damage : BattleAction
     {
-        /// <summary>可被 Pre 钩子修改的最终伤害基数。</summary>
-        public int Amount { get; set; }
-        /// <summary>可被 Pre 钩子切换：为真时跳过力量/虚弱/易伤修正，用于灼烧等无来源伤害。</summary>
-        public bool IgnoresModifiers { get; set; }
+        /// <summary>基础伤害值。</summary>
+        public int BaseAmount { get; }
 
-        public BA_Damage(Actor source_, List<Actor> targets_, int amount_) : base(source_, targets_) => Amount = amount_;
-
-        protected override void OnExecute(BattleState battleState_, BattleEventBuffer events_)
+        public BA_Damage(Creature source_, List<Creature> targets_, int amount_) : base(source_, targets_)
         {
-            foreach (Actor target in Targets)
+            BaseAmount = amount_;
+        }
+
+        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        {
+            List<IBattleEvent> events = new();
+            foreach (Creature target in Targets)
             {
                 if (target.IsDead) continue;
 
-                int final = Amount;
-                if (!IgnoresModifiers)
-                    final += Source.GetPerkLayers<BP_Strength>()
-                             - Source.GetPerkLayers<BP_Weak>()
-                             + target.GetPerkLayers<BP_Vulnerable>();
-                if (final < 0) final = 0;
-
+                int final = BaseAmount;
                 int absorbed = target.Block < final ? target.Block : final;
                 target.Block -= absorbed;
-                target.Health -= final - absorbed;
+                target.CurrentHp -= final - absorbed;
 
-                events_.Emit(new IBE_DamageDealt(Source, target, final, absorbed));
+                events.Add(new BE_DamageDealt(Source, target, final, absorbed));
                 if (target.IsDead)
-                    events_.Emit(new IBE_ActorDied(target));
+                    events.Add(new BE_ActorDied(target));
             }
+            return events;
         }
     }
 }

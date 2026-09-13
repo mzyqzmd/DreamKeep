@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace _DreamKeep.Data
@@ -9,15 +10,19 @@ namespace _DreamKeep.Data
         [SerializeField] private string _name;
         [SerializeField] private int _cost;
         [SerializeField] private Sprite _icon;
+        [SerializeField] private ECardRarity _rarity;
         [SerializeField] private ECardType _type;
         [SerializeField] private ECardTargetType _targetType;
         [SerializeReference] private List<AffixData> _affixes = new();
-        [SerializeReference] private List<AffixData> _updatedAffixes = new();
         [SerializeField] private bool _canUpdate;
+
+        [EnableIf("_canUpdate"), SerializeReference]
+        private List<AffixData> _updatedAffixes = new();
 
         public string Name => _name;
         public int Cost => _cost;
         public Sprite Icon => _icon;
+        public ECardRarity Rarity => _rarity;
         public ECardType Type => _type;
         public ECardTargetType TargetType => _targetType;
         public List<AffixData> Affixes => _affixes;
