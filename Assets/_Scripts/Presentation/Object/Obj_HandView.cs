@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using _DreamKeep.Gameplay;
+using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -19,13 +19,13 @@ namespace _DreamKeep.Presentation
 
         private readonly Dictionary<CardModel, Obj_Card> _views = new();
 
-        private BattleCommandGateway _sender;
+        private BattleCommandDispatcher _dispatcher;
         private Obj_Card _dragging;
 
         [Inject]
-        public void Construct(BattleCommandGateway sender_)
+        public void Construct(BattleCommandDispatcher dispatcher_)
         {
-            _sender = sender_;
+            _dispatcher = dispatcher_;
         }
 
         #region 打出请求：校验在手上后转发命令门面，不直接触碰战斗循环
@@ -33,7 +33,7 @@ namespace _DreamKeep.Presentation
         public void RequestPlay(CardModel card_, int aimSlot_)
         {
             if (!_views.ContainsKey(card_)) return;
-            _sender.PlayCard(card_, aimSlot_);
+            _dispatcher.PlayCard(card_, aimSlot_);
         }
 
         #endregion

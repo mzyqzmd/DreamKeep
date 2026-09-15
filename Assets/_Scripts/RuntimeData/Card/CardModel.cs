@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using _DreamKeep.ConfigData;
+using _DreamKeep.Utility;
+using UnityEngine;
+
+namespace _DreamKeep.RuntimeData
+{
+    /// <summary>运行时卡统一门面：融合卡面静态配置（CM_Static）与运行时状态（CM_Runtime）。
+    /// 对外是唯一契约，UI 与战斗逻辑仅经本类取数，不感知数据来自配置还是运行时；
+    /// 卡的身份即对象引用，刻意不覆写 Equals 与 GetHashCode，按引用比较可避免引用型字典与映射静默错乱。</summary>
+    public class CardModel
+    {
+        private readonly CM_Static _static;
+        private readonly CM_Runtime _runtime;
+
+        public string CardId => _static.CardId;
+        public string Name => _runtime.Name;
+        public Sprite Icon => _static.Icon;
+        public ECardType Type => _static.Type;
+        public ECardRarity Rarity => _static.Rarity;
+
+        #region 目标类型
+
+        public bool IsSelfTarget => _static.IsSelfTarget;
+        public bool IsFrontEnemyTarget => _static.IsFrontEnemyTarget;
+        public bool IsAnyEnemyTarget => _static.IsAnyEnemyTarget;
+        public bool IsRandomEnemyTarget => _static.IsRandomEnemyTarget;
+        public bool IsAllEnemyTarget => _static.IsAllEnemyTarget;
+
+        #endregion
+
+        public ModifiableStat Cost => _runtime.Cost;
+        public bool IsUpgraded => _runtime.IsUpgraded;
+        public IReadOnlyList<CardAffix> AdditionalAffixes => _runtime.AdditionalAffixes;
+        public IReadOnlyList<CardAffix> ActiveAffixes => _runtime.ActiveAffixes;
+        public bool IsRetain => _runtime.IsRetain;
+
+        internal CardModel(CM_Static static_, CM_Runtime runtime_)
+        {
+            _static = static_;
+            _runtime = runtime_;
+        }
+
+        #region 克隆一份可变副本：共享静态配置引用，仅深拷贝运行时状态
+
+        public CardModel ToMutable() => new(_static, _runtime.Clone());
+
+        #endregion
+        
+        public string GetTypeDescription() => _static.GetTypeDescription();
+
+        public string GetDescription()
+        {
+            StringBuilder description = new();
+            switch (_static.TargetType)
+            {
+                case ECardTargetType.Player:
+                case ECardTargetType.FrontEnemy: break;
+                case ECardTargetType.AllEnemy:
+                    description.AppendLine("对所有敌人:"); break;
+                case ECardTargetType.RandomEnemy:
+                    description.AppendLine("对随机敌人:"); break;
+                case ECardTargetType.AnyEnemy:
+                    description.AppendLine("指定一名敌人:"); break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+
+            for (var i = 0; i < ActiveAffixes.Count; i++)
+                description.AppendLine(ActiveAffixes[i].GetDescription());
+            return description.ToString();
+        }
+
+        #region 升级：切换生效词条到已升级集，纯运行时操作不回查配置
+
+        public void Upgrade()
+        {
+            if (!_static.CanUpgrade) return;
+            _runtime.Upgrade();
+        }
+
+        #endregion
+
+        #region 追加一条词条：转发至运行时，原型上调用抛异常
+
+        public void AddAffix(CardAffix affix_) => _runtime.AddAffix(affix_);
+
+        #endregion
+    }
+}

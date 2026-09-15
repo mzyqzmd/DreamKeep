@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using _DreamKeep.Data;
+using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
@@ -11,8 +11,8 @@ namespace _DreamKeep.RuntimeData
 
         public static CardModel Bake(SO_Card config_)
         {
-            CM_Static staticData = new(config_.name, config_.Icon, config_.Type, config_.TargetType,
-                config_.CanUpdate && config_.UpdatedAffixes.Count > 0);
+            CM_Static staticData = new(config_.name, config_.Icon, config_.Type,
+                config_.Rarity, config_.TargetType, config_.CanUpdate && config_.UpdatedAffixes.Count > 0);
             CM_Runtime runtime = new(config_.Name, config_.Cost, true);
             CardModel card = new(staticData, runtime);
             runtime.SetBakedAffixes(BuildAffixes(config_.Affixes), BuildAffixes(config_.UpdatedAffixes));
@@ -35,8 +35,6 @@ namespace _DreamKeep.RuntimeData
 
             return affixes;
         }
-
-        #endregion
 
         private static CardAffix ToRuntime(AffixData affix_)
         {
@@ -69,5 +67,6 @@ namespace _DreamKeep.RuntimeData
             CardAffix granted = ToRuntime(grant_.GrantedAffix);
             return granted == null ? null : new CA_Grant(grant_, granted);
         }
+        #endregion
     }
 }

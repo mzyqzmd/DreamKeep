@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using _DreamKeep.Data;
+using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {

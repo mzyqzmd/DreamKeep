@@ -595,6 +595,10 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  _playerConfig: {fileID: 11400000, guid: b7f8360722262a7439bd1988ad163188, type: 2}
+  _enemyConfigs:
+  - {fileID: 11400000, guid: 9de1a02f5f52bde4bb883fdc963ae4db, type: 2}
+  _seed: 12345
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
