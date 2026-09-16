@@ -25,7 +25,7 @@ namespace _DreamKeep.RuntimeData
         public CardAffix GrantedAffix { get; }
         internal override int PipelineOrder => 5;
 
-        public override string GetDescription() => $"打出后为 {Count.Value} 张牌\n追加 {GrantedAffix.Name} 词条";
+        public override string GetDescription() => $"打出后为 {Count.Value} 张牌追加 {GrantedAffix.Name} 词条";
 
         #region 深拷贝一份独立词条，被授予的词条递归克隆，避免多张卡共享同一实例
         public override CardAffix Clone() => new CA_Grant(Name, ShowDescription, Count.Value, GrantedAffix.Clone());

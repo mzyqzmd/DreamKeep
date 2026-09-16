@@ -5,7 +5,8 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>玩家回合进行阶段：唯一的等待型阶段，只接受命令，不自动推进。</summary>
+    /// <summary>玩家回合进行阶段：唯一的等待型阶段，只接受命令，不自动推进。
+    /// 打不出的命令（能量不足、牌不在手牌）不静默丢弃，一律广播拒绝事件交由视图退牌。</summary>
     public class BP_PlayerTurnActive : BattlePhase
     {
         public BP_PlayerTurnActive(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
@@ -31,9 +32,18 @@ namespace _DreamKeep.GameBattle
             BattleContext context = _owner.BattleContext;
             PlayerCombatState state = context.Player.CombatState;
 
-            // 卡可能已在更早的队列里离手，不在手牌即视为命令失效
-            if (!state.Hand.Contains(card_)) return;
-            if (state.CurrentEnergy < card_.Cost.Value) return;
+            // 卡可能已在更早的队列里离手，不在手牌即视为命令失效；广播拒绝让视图把牌退回手牌
+            if (!state.Hand.Contains(card_))
+            {
+                await PlayEvents(new BE_CardPlayRejected(card_));
+                return;
+            }
+
+            if (state.CurrentEnergy < card_.Cost.Value)
+            {
+                await PlayEvents(new BE_CardPlayRejected(card_));
+                return;
+            }
 
             List<Creature> self = new List<Creature> { context.Player.Creature };
             ActionSystem actions = _owner.ActionSystem;

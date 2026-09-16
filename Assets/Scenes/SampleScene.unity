@@ -288,7 +288,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: 6fff408971e9b43ff9a3a3a0dd6e74f7, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -515,7 +515,7 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.888319}
+  m_Offset: {x: 0, y: 1.4435184}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -526,7 +526,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 17.744814, y: 4.9974356}
+  m_Size: {x: 17.32, y: 4.887037}
   m_EdgeRadius: 0
 --- !u!4 &1156058019
 Transform:
@@ -574,17 +574,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cardPrefab: {fileID: 2779830980746283120, guid: 2a050e6179b8d481196153444c4f6231, type: 3}
   _handSpline: {fileID: 841902812}
-  _dropZones:
-  - {fileID: 1156058017}
+  _dropZone: {fileID: 1156058017}
   _drawPileView: {fileID: 1708175721}
   _discardPileView: {fileID: 1308660623}
   _exhaustPileView: {fileID: 1928729731}
   _drawGrowDuration: 0.25
   _drawGrowOvershoot: 1.08
-  _drawGrowAlpha: 0.9
   _drawSettleDuration: 0.12
   _fanStartT: 0.06
   _fanEndT: 0.94
+  _fanStepT: 0.12
   _fanMoveDuration: 0.28
   _fanFullCount: 5
   _fanScaleStep: 0.06
