@@ -1,3 +1,4 @@
+using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -7,7 +8,7 @@ using UnityEngine.Rendering;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>卡牌根：卡牌表现的唯一门面，也是每张卡的本体必备组件——刷新卡面内容、接入宿主、认领能力、下达落位与层序、播放入场/排队/离场动效。
+    /// <summary>卡牌根：卡牌表现的唯一门面，也是每张卡的本体必备组件——刷新卡面内容与外框配色、接入宿主、认领能力、下达落位与层序、播放入场/排队/离场动效。
     /// 组件粒度判据：Obj_ = 必备本体（卡面、落位、动效都收在此）；Comp_ = 可选能力——能力由预制体配置决定，运行时只认领编辑期挂上的组件，不挂即为纯展示（将来卡牌图鉴复用本预制体且不挂拖拽，就是无拖拽的展示卡）。
     /// 运行期只有 Bind → SetHost 两步，不再动态添加能力；Attach 只认领卡牌根，模型与宿主由能力按需读取。
     /// 位置/朝向/层序经 Place 下达，缩放由 ScaleToAsync 或瞬时直写 transform.localScale 承接；补间按通道独占，重开前先 Kill 同通道。</summary>
@@ -30,6 +31,18 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("卡面图标，内容来自 CardModel.Icon，由 SpriteRenderer 承接")] [SerializeField]
         private SpriteRenderer _icon;
+
+        [Tooltip("卡牌外框渲染器，颜色在 Bind 时按稀有度写入，外框图使用灰度基底供染色")] [SerializeField]
+        private SpriteRenderer _frame;
+
+        [Tooltip("普通卡外框色")] [SerializeField]
+        private Color _frameColorNormal = new(0.82f, 0.84f, 0.88f);
+
+        [Tooltip("稀有卡外框色")] [SerializeField]
+        private Color _frameColorRare = new(0.45f, 0.72f, 1f);
+
+        [Tooltip("超稀有卡外框色")] [SerializeField]
+        private Color _frameColorSuperRare = new(1f, 0.84f, 0.42f);
 
         private Collider2D _body;
         private Tween _moveTween;
@@ -66,6 +79,12 @@ namespace _DreamKeep.Presentation
             _icon.sprite = card_.Icon;
             _cost.text = card_.Cost.Value.ToString();
             _description.text = card_.GetDescription();
+            _frame.color = card_.Rarity switch
+            {
+                ECardRarity.Rare => _frameColorRare,
+                ECardRarity.SuperRare => _frameColorSuperRare,
+                _ => _frameColorNormal
+            };
         }
 
         #endregion

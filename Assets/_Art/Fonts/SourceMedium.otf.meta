@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 30dd4e42d24da2946a5a682bb3f0fd73
+guid: 63d6e10b60e503b42b82eadd24fec02f
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - inpin mochati
+  - Source Han Serif SC
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

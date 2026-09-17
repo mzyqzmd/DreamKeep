@@ -48,7 +48,7 @@ namespace _DreamKeep.GameBattle
             List<Creature> self = new List<Creature> { context.Player.Creature };
             ActionSystem actions = _owner.ActionSystem;
 
-            // TODO 诅咒牌禁止打出的校验：基于 card_.Type == ECardType.Curse 判定，逻辑留待后续实现
+            // TODO: 诅咒牌禁止打出的校验：基于 card_.Type == ECardType.Curse 判定，逻辑留待后续实现
             // 入打出堆动作产出出牌事件，必须早于结算动作，否则播放队列会先播死亡再播攻击
             actions.Enqueue(new BA_ToPlayPile(context.Player.Creature, self, card_));
             actions.Enqueue(new BA_SpendEnergy(context.Player.Creature, self, card_.Cost.Value));

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a426e35cd7eb2dc43baa84dfac0b74dd
+guid: ccda32ce35148084298e43db1ee5ec08
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,7 +9,7 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - HarmonyOS Sans SC
+  - Source Han Serif SC
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
