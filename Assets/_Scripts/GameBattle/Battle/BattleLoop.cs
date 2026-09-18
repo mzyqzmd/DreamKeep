@@ -75,11 +75,10 @@ namespace _DreamKeep.GameBattle
                     BattlePhase current = _fsm.CurrentState as BattlePhase;
                     if (current == null) return;
 
-                    if (current.IsWaiting)
+                    if (current is IBattleCommandReceiver receiver)
                     {
                         if (_commandQueue.Count == 0) return;
-                        BattleCommand command = _commandQueue.Dequeue();
-                        await current.HandleCommand(command);
+                        await receiver.HandleCommand(_commandQueue.Dequeue());
                         continue;
                     }
 

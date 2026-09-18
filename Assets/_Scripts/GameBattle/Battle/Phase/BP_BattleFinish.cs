@@ -5,15 +5,13 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>战斗结束终态：按被遗忘的局内卡幂等回写卡组，派发战斗结束事件，随后清空战斗态并静默停驻。</summary>
-    public class BP_BattleFinish : BattlePhase
+    public class BP_BattleFinish : BattlePhase, IBattleCommandReceiver
     {
         public BP_BattleFinish(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
             : base(stateMachine_, owner_)
         {
         }
 
-        public override string PhaseName => "战斗结束";
-        public override bool IsWaiting => true;
         public override BaseState<BattleLoop> Next => null;
 
         #region 阶段异步逻辑：卡组回写 + 结束事件 + 清空战斗态
@@ -35,5 +33,11 @@ namespace _DreamKeep.GameBattle
         }
 
         #endregion
+
+        public UniTask HandleCommand(BattleCommand command_)
+        {
+            //TODO:等待玩家选择奖励发命令
+            return UniTask.CompletedTask;
+        }
     }
 }

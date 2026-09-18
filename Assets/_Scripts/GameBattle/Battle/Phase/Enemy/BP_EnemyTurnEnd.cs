@@ -13,14 +13,11 @@ namespace _DreamKeep.GameBattle
         {
         }
 
-        public override string PhaseName => "敌人回合结束";
-        public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnStart;
 
         #region 阶段异步逻辑：逐敌人衰减状态后等待演出，再推进回合计数
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
             BattleContext context = _owner.BattleContext;
             ActionSystem actions = _owner.ActionSystem;
 

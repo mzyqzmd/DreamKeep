@@ -12,7 +12,8 @@ namespace _DreamKeep.GameBattle
         public Player Player { get; }
         public List<Enemy> Enemies { get; }
         public Rng Rng { get; }
-        public int TurnCount { get; set; }
+        /// <summary>当前回合序号：从 1 起，我方与敌方回合共享同一个 n，敌人回合结束阶段才 ++。</summary>
+        public int TurnCount { get; set; } = 1;
 
         /// <summary>本场被「遗忘」的局内卡，供战斗结束时从卡组永久移除。</summary>
         public IReadOnlyCollection<CardModel> ErasedRunCards => _erasedRunCards;

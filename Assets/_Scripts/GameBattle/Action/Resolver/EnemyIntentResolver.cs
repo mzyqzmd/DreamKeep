@@ -18,7 +18,8 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
-        private static void Resolve(EnemyIntent intent_, Enemy enemy_, BattleContext battleContext_, List<BattleAction> actions_)
+        private static void Resolve(EnemyIntent intent_, Enemy enemy_, BattleContext battleContext_,
+            List<BattleAction> actions_)
         {
             switch (intent_)
             {

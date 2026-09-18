@@ -5,6 +5,7 @@ using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 
 namespace _DreamKeep.Presentation
 {
@@ -22,17 +23,20 @@ namespace _DreamKeep.Presentation
 
         protected override void Configure(IContainerBuilder builder_)
         {
-            BattleContext battleContext = BattleSetup.Create(_playerConfig, _enemyConfigs, _seed);
+            Rng rng = new(_seed);
+            BattleContext battleContext = BattleSetup.Create(_playerConfig, _enemyConfigs, rng);
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();
             BattleLoop loop = new BattleLoop(battleContext, _playerConfig.DrawPerTurn, dispatcher);
 
-            builder_.RegisterInstance(battleContext);                     // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
-            builder_.RegisterInstance(dispatcher);                        // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
-            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 Obj_HandView 的 [Inject] 要
-            builder_.RegisterInstance(loop);                              // 被 BattleEntry 的构造函数要
+            builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
+            builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
+            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 Obj_HandView 的 [Inject] 要（转交给出牌流程发命令）
+            builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
 
             builder_.RegisterComponentInHierarchy<Obj_HandView>();
+            builder_.RegisterComponentInHierarchy<Obj_EnergyRemain>();
+            builder_.RegisterComponentInHierarchy<Obj_EndTurnButton>();
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }

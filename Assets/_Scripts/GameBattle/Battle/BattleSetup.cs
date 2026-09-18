@@ -11,7 +11,7 @@ namespace _DreamKeep.GameBattle
     {
         #region 装配一场战斗：产出玩家、敌人与战斗态
 
-        public static BattleContext Create(SO_Player playerConfig_, IReadOnlyList<SO_Enemy> enemyConfigs_, int seed_)
+        public static BattleContext Create(SO_Player playerConfig_, IReadOnlyList<SO_Enemy> enemyConfigs_,Rng rng_)
         {
             Player player = new(playerConfig_.MaxHp);
 
@@ -21,11 +21,10 @@ namespace _DreamKeep.GameBattle
 
             player.StartCombat(playerConfig_.StartEnergy);
 
-            Rng rng = new(seed_);
-            Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player, rng);
+            Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player, rng_);
             List<Enemy> enemies = BuildEnemies(enemyConfigs_);
 
-            return new BattleContext(player, enemies, runCardOf, rng);
+            return new BattleContext(player, enemies, runCardOf, rng_);
         }
 
         #endregion

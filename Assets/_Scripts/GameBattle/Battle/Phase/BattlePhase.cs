@@ -6,11 +6,6 @@ namespace _DreamKeep.GameBattle
     /// <summary>战斗阶段基类：阶段逻辑写在 RunAsync 中（含逐动作 await 演出），推进一律由 BattleLoop 外层驱动，禁止在阶段内切换状态。Enter 仅供 StateMachine 调用且默认不做事，避免与 Utility/FSM 共用签名冲突。</summary>
     public abstract class BattlePhase : BaseState<BattleLoop>
     {
-        public abstract string PhaseName { get; }
-
-        /// <summary>等待型阶段为 true 时，BattleLoop 停下等命令而不自动推进。</summary>
-        public abstract bool IsWaiting { get; }
-
         /// <summary>下一阶段，由宿主提供，避免阶段之间互相注入。</summary>
         public abstract BaseState<BattleLoop> Next { get; }
 
@@ -25,8 +20,5 @@ namespace _DreamKeep.GameBattle
         /// <summary>阶段事件统一播放：本地收集的事件经 ActionSystem 交给表现层 await。</summary>
         protected UniTask PlayEvents(params IBattleEvent[] events_)
             => _owner.ActionSystem.PlayAsync(events_);
-
-        /// <summary>处理一条战斗命令：默认空实现，等待型阶段覆写以分派玩家意图。</summary>
-        public virtual UniTask HandleCommand(BattleCommand command_) => UniTask.CompletedTask;
     }
 }

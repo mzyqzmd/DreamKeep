@@ -26,6 +26,7 @@ namespace _DreamKeep.GameBattle
                 target.Block -= absorbed;
                 target.CurrentHp -= final - absorbed;
 
+                //TODO:当前无消费者，到时候做了敌人才有用
                 events.Add(new BE_DamageDealt(Source, target, final, absorbed));
                 if (target.IsDead)
                     events.Add(new BE_ActorDied(target));

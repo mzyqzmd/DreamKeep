@@ -12,16 +12,12 @@ namespace _DreamKeep.GameBattle
         {
         }
 
-        public override string PhaseName => "敌人回合进行";
-        public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnEnd;
 
         #region 阶段异步逻辑：逐敌人取意图 → 转动作入队 → 等待演出 → 推进并广播下一条
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
-
             BattleContext context = _owner.BattleContext;
             ActionSystem actions = _owner.ActionSystem;
 

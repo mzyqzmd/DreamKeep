@@ -14,15 +14,12 @@ namespace _DreamKeep.GameBattle
         {
         }
 
-        public override string PhaseName => "玩家回合结束";
-        public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnStart;
 
         #region 阶段异步逻辑：灼烧/再生 → 弃手牌/衰减，两批动作顺序严格保留
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_TurnPhaseChanged(PhaseName));
             BattleContext context = _owner.BattleContext;
             Player player = context.Player;
             if (player.Creature.IsDead) return;

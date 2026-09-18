@@ -9,23 +9,23 @@ namespace _DreamKeep.Presentation
     [RequireComponent(typeof(BoxCollider2D))]
     public class Obj_PlayCardZone : MonoBehaviour
     {
-        [Tooltip("排队堆叠的步进：x 为每张牌向右错开的世界距离，y 为向上错开的世界距离")]
-        [SerializeField] private Vector2 _stackStep = new (0.16f, 0.05f);
+        [Tooltip("排队堆叠的步进：x 为每张牌向右错开的世界距离，y 为向上错开的世界距离")] [SerializeField]
+        private Vector2 _stackStep = new(-0.16f, 0.05f);
 
-        [Tooltip("队首那张牌的缩放（即刚落下的牌），往后逐张按 _scaleStep 递减")]
-        [SerializeField] private float _frontScale = 1f;
+        [Tooltip("队首那张牌的缩放（即刚落下的牌），往后逐张按 _scaleStep 递减")] [SerializeField]
+        private float _frontScale = 1.5f;
 
-        [Tooltip("队列中每靠后一位缩小的量：0.1 即每张缩小 10%")]
-        [SerializeField] private float _scaleStep = 0.1f;
+        [Tooltip("队列中每靠后一位缩小的量：0.1 即每张缩小 10%")] [SerializeField]
+        private float _scaleStep = 0.1f;
 
-        [Tooltip("队列缩放下限：牌再多也不小于该值，避免后排看不清")]
-        [SerializeField] private float _minScale = 0.5f;
+        [Tooltip("队列缩放下限：牌再多也不小于该值，避免后排看不清")] [SerializeField]
+        private float _minScale = 0.5f;
 
-        [Tooltip("队首层序：第 i 张为基准−i，需与手牌、悬停、离场层序互不重叠")]
-        [SerializeField] private int _baseOrder = 60;
+        [Tooltip("队首层序：第 i 张为基准−i，需与手牌、悬停、离场层序互不重叠")] [SerializeField]
+        private int _baseOrder = 60;
 
-        [Tooltip("入队与队伍前移的补间时长（秒），调大排队更缓慢")]
-        [SerializeField] private float _moveDuration = 0.2f;
+        [Tooltip("入队与队伍前移的补间时长（秒），调大排队更缓慢")] [SerializeField]
+        private float _moveDuration = 0.2f;
 
         private readonly List<Obj_Card> _queue = new();
         private readonly Dictionary<Obj_Card, UniTask> _arrivals = new();

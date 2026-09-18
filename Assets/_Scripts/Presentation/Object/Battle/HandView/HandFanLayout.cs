@@ -1,0 +1,126 @@
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using Unity.Mathematics;
+using UnityEngine;
+using UnityEngine.Splines;
+
+namespace _DreamKeep.Presentation
+{
+    /// <summary>手牌排布：把"第 index 张、共 count 张"求解成曲线上的位置、朝向、缩放与层序，并提供整体重排、补间回位与瞬移落位三种写入方式。
+    /// 排布规则——以曲线中点为锚向两侧等距张开（所需区间超出可用范围时整段自动压缩，第一张恒居中），朝向取切线、越靠中越大，层序自基准递增；
+    /// 不可打状态下整手牌沿 y 下沉，下沉量也在这里叠加。
+    /// 因此它是槽位真源：悬停退出、被拒退回、拖拽中断都向它取还原值，任何调用方都不许记进入前的瞬时状态。
+    /// 位置与朝向永远归它（悬停中的牌也照常跟着让位，只走不写层序的滑移通道），缩放与层序则由悬停临时独占。
+    /// 可打状态、排布例外（被拖拽或挂出等待结算）与悬停身份一律向交互闸门现读，不自行记状态。</summary>
+    public class HandFanLayout
+    {
+        private readonly SplineContainer _spline;
+        private readonly float _startT;
+        private readonly float _endT;
+        private readonly float _stepT;
+        private readonly float _moveDuration;
+        private readonly int _fullCount;
+        private readonly float _scaleStep;
+        private readonly float _minScale;
+        private readonly int _baseOrder;
+        private readonly float _unplayableDropY;
+        private readonly HandCardRegistry _registry;
+        private readonly HandInteractionGate _gate;
+
+        public HandFanLayout(SplineContainer spline_, float startT_, float endT_, float stepT_, float moveDuration_,
+            int fullCount_, float scaleStep_, float minScale_, int baseOrder_, float unplayableDropY_,
+            HandCardRegistry registry_, HandInteractionGate gate_)
+        {
+            _spline = spline_;
+            _startT = startT_;
+            _endT = endT_;
+            _stepT = stepT_;
+            _moveDuration = moveDuration_;
+            _fullCount = fullCount_;
+            _scaleStep = scaleStep_;
+            _minScale = minScale_;
+            _baseOrder = baseOrder_;
+            _unplayableDropY = unplayableDropY_;
+            _registry = registry_;
+            _gate = gate_;
+        }
+
+        // 槽位求解：曲线上的位置与切线决定朝向，间距超出可用区间时整段压缩；不可打时在 y 上叠下沉量，层序自基准递增
+        public void EvaluateSlot(int index_, int count_, out Vector3 position_, out Quaternion rotation_, out float scale_,
+            out int order_)
+        {
+            float step = count_ <= 1 ? 0f : Mathf.Min(_stepT, (_endT - _startT) / (count_ - 1));
+            float t = (_startT + _endT) * 0.5f + (index_ - (count_ - 1) * 0.5f) * step;
+            _spline.Evaluate(t, out float3 position, out float3 tangent, out _);
+            position_ = position;
+            if (!_gate.CardsPlayable) position_.y += _unplayableDropY;
+            Vector3 direction = tangent;
+            rotation_ = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
+            scale_ = Mathf.Max(_minScale, 1f - _scaleStep * Mathf.Max(0, count_ - _fullCount));
+            order_ = _baseOrder + index_;
+        }
+
+        // 整体重排：手牌增删或可打状态切换后调用；跳过例外牌（刚起飞的新牌）与闸门判定为忙的牌（被拖拽、已挂出），
+        // 那些牌各自有独占通道的补间，这里再动一次会互相 Kill。
+        // 悬停中的牌照常跟排布走位：位置与朝向归排布（滑移通道不写层序），缩放与层序留在悬停手上
+        public void ApplyLayout(Obj_Card except_ = null)
+        {
+            IReadOnlyList<Obj_Card> hand = _registry.Hand;
+            int count = hand.Count;
+            for (int i = 0; i < count; i++)
+            {
+                Obj_Card card = hand[i];
+                if (card == except_ || _gate.IsBusy(card)) continue;
+
+                EvaluateSlot(i, count, out Vector3 position, out Quaternion rotation, out float scale, out int order);
+                if (_gate.HoveredCard == card)
+                {
+                    card.MoveToAsync(position, rotation, _moveDuration).Forget();
+                    continue;
+                }
+
+                card.MoveToAsync(position, rotation, order, _moveDuration).Forget();
+                card.ScaleToAsync(scale, _moveDuration).Forget();
+            }
+        }
+
+        // 补间回槽位：松手未命中出牌区、命令被拒退回都走它
+        public UniTask ReturnToSlotAsync(Obj_Card card_)
+        {
+            if (!TryEvaluateSlot(card_, out Vector3 position, out Quaternion rotation, out float scale, out int order))
+                return UniTask.CompletedTask;
+
+            return UniTask.WhenAll(
+                card_.MoveToAsync(position, rotation, order, _moveDuration),
+                card_.ScaleToAsync(scale, _moveDuration));
+        }
+
+        // 瞬移回槽位：拖拽被强制中断时用，不播补间
+        public void PlaceToSlot(Obj_Card card_)
+        {
+            if (!TryEvaluateSlot(card_, out Vector3 position, out Quaternion rotation, out float scale, out int order))
+                return;
+
+            card_.Place(position, rotation, order);
+            card_.transform.localScale = Vector3.one * scale;
+        }
+
+        // 槽位查询：以手牌序号现算槽位，已离手的牌没有槽位可回，返回 false 由调用方静默
+        private bool TryEvaluateSlot(Obj_Card card_, out Vector3 position_, out Quaternion rotation_, out float scale_,
+            out int order_)
+        {
+            int index = _registry.IndexOf(card_);
+            if (index < 0)
+            {
+                position_ = default;
+                rotation_ = default;
+                scale_ = 1f;
+                order_ = 0;
+                return false;
+            }
+
+            EvaluateSlot(index, _registry.Count, out position_, out rotation_, out scale_, out order_);
+            return true;
+        }
+    }
+}

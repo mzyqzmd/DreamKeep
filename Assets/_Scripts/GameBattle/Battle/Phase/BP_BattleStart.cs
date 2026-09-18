@@ -12,9 +12,6 @@ namespace _DreamKeep.GameBattle
             : base(stateMachine_, owner_)
         {
         }
-
-        public override string PhaseName => "战斗开始";
-        public override bool IsWaiting => false;
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnStart;
 
         #region 阶段异步逻辑：开始事件 + 首轮意图预告

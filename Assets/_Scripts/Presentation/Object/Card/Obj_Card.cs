@@ -11,7 +11,8 @@ namespace _DreamKeep.Presentation
     /// <summary>卡牌根：卡牌表现的唯一门面，也是每张卡的本体必备组件——刷新卡面内容与外框配色、接入宿主、认领能力、下达落位与层序、播放入场/排队/离场动效。
     /// 组件粒度判据：Obj_ = 必备本体（卡面、落位、动效都收在此）；Comp_ = 可选能力——能力由预制体配置决定，运行时只认领编辑期挂上的组件，不挂即为纯展示（将来卡牌图鉴复用本预制体且不挂拖拽，就是无拖拽的展示卡）。
     /// 运行期只有 Bind → SetHost 两步，不再动态添加能力；Attach 只认领卡牌根，模型与宿主由能力按需读取。
-    /// 位置/朝向/层序经 Place 下达，缩放由 ScaleToAsync 或瞬时直写 transform.localScale 承接；补间按通道独占，重开前先 Kill 同通道。</summary>
+    /// 位置/朝向/层序经 Place 下达，缩放由 ScaleToAsync 或瞬时直写 transform.localScale 承接；补间按通道独占，重开前先 Kill 同通道。
+    /// 位置通道有两个入口：带层序的滑翔落位（排布、出牌区、归宿飞行都用它）与不写层序的滑移落位（悬停中的牌参与重排时用，层序归悬停独占）。</summary>
     public class Obj_Card : MonoBehaviour
     {
         [Tooltip("整卡的排序单元：卡面各文本与图标都挂在它名下，层序只由卡牌根一处改它，其它代码不碰")] [SerializeField]
@@ -44,9 +45,18 @@ namespace _DreamKeep.Presentation
         [Tooltip("超稀有卡外框色")] [SerializeField]
         private Color _frameColorSuperRare = new(1f, 0.84f, 0.42f);
 
+        [Tooltip("不可打时整卡乘的暗灰色：与卡面本色相乘写回，稀有度外框差异得以保留")] [SerializeField]
+        private Color _unplayableTint = new(0.45f, 0.45f, 0.5f);
+
         private Collider2D _body;
+        private SpriteRenderer[] _faceSprites;
+        private TMP_Text[] _faceTexts;
+        private Color[] _spriteColors;
+        private Color[] _textColors;
+        private Color _frameBase;
         private Tween _moveTween;
         private Tween _scaleTween;
+        private bool _playable = true;
 
         public CardModel Card { get; private set; }
 
@@ -61,10 +71,17 @@ namespace _DreamKeep.Presentation
         /// <summary>指针命中查询：悬停裁决由宿主逐帧调用；未配卡面碰撞体的卡（无需指针交互）恒不命中。</summary>
         public bool ContainsPoint(Vector3 point_) => _body && _body.OverlapPoint(point_);
 
-        // 认领编辑期配在卡上的能力：有组件才有该效果，未配能力的卡（如卡牌图鉴复用本预制体）不挂即为纯展示
+        // 认领编辑期配在卡上的能力：有组件才有该效果，未配能力的卡（如卡牌图鉴复用本预制体）不挂即为纯展示；
+        // 顺带收齐卡面全部渲染器与它们的编辑期本色，不可打外观的乘色以本色为基准，可打时逐字写回
         private void Awake()
         {
             _body = GetComponent<Collider2D>();
+            _faceSprites = GetComponentsInChildren<SpriteRenderer>(true);
+            _faceTexts = GetComponentsInChildren<TMP_Text>(true);
+            _spriteColors = new Color[_faceSprites.Length];
+            _textColors = new Color[_faceTexts.Length];
+            for (int i = 0; i < _faceSprites.Length; i++) _spriteColors[i] = _faceSprites[i].color;
+            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
             foreach (ICardAbility ability in GetComponents<ICardAbility>())
                 ability.Attach(this);
         }
@@ -79,12 +96,29 @@ namespace _DreamKeep.Presentation
             _icon.sprite = card_.Icon;
             _cost.text = card_.Cost.Value.ToString();
             _description.text = card_.GetDescription();
-            _frame.color = card_.Rarity switch
+            _frameBase = card_.Rarity switch
             {
                 ECardRarity.Rare => _frameColorRare,
                 ECardRarity.SuperRare => _frameColorSuperRare,
                 _ => _frameColorNormal
             };
+            // 外框色随稀有度变，统一由 SetPlayableLook 写；池复用后残留的压暗色与旧卡本色借此一并刷正
+            SetPlayableLook(_playable);
+        }
+
+        #endregion
+
+        #region 不可打外观：整卡渲染器与文本乘同一个灰调，可打时写回本色
+
+        public void SetPlayableLook(bool playable_)
+        {
+            _playable = playable_;
+            for (int i = 0; i < _faceSprites.Length; i++)
+                _faceSprites[i].color = playable_ ? _spriteColors[i] : _spriteColors[i] * _unplayableTint;
+            for (int i = 0; i < _faceTexts.Length; i++)
+                _faceTexts[i].color = playable_ ? _textColors[i] : _textColors[i] * _unplayableTint;
+            // 外框色由 Bind 存进 _frameBase，最后单独覆盖，避免被上面那批编辑期本色写回灰度基底
+            _frame.color = playable_ ? _frameBase : _frameBase * _unplayableTint;
         }
 
         #endregion
@@ -105,7 +139,15 @@ namespace _DreamKeep.Presentation
         #region 动效：位置与缩放两通道补间，重开前先 Kill 同通道
 
         // 滑翔落位：位置与朝向按补间推进，层序随同落定
-        public UniTask MoveToAsync(Vector3 position_, Quaternion rotation_, int order_, float duration_)
+        public UniTask MoveToAsync(Vector3 position_, Quaternion rotation_, int order_, float duration_) =>
+            MoveAsync(position_, rotation_, order_, duration_);
+
+        // 滑移落位：只走位置与朝向，层序保持不动——悬停中的牌参与手牌重排时走它，层序归悬停独占
+        public UniTask MoveToAsync(Vector3 position_, Quaternion rotation_, float duration_) =>
+            MoveAsync(position_, rotation_, null, duration_);
+
+        // 位置通道实现：order_ 为空表示逐帧不写层序（重读当前值），排布与悬停两套写入永不互相覆盖
+        private UniTask MoveAsync(Vector3 position_, Quaternion rotation_, int? order_, float duration_)
         {
             _moveTween?.Kill();
             Vector3 fromPosition = transform.position;
@@ -114,7 +156,7 @@ namespace _DreamKeep.Presentation
             _moveTween = DOTween.To(() => progress, value_ => progress = value_, 1f, duration_)
                 .SetEase(Ease.OutQuad)
                 .OnUpdate(() => Place(Vector3.Lerp(fromPosition, position_, progress),
-                    Quaternion.Slerp(fromRotation, rotation_, progress), order_));
+                    Quaternion.Slerp(fromRotation, rotation_, progress), order_ ?? _sortingGroup.sortingOrder));
             return WaitAsync(_moveTween);
         }
 
