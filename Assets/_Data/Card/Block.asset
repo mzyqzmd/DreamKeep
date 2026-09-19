@@ -20,6 +20,7 @@ MonoBehaviour:
   _targetType: 0
   _affixes:
   - rid: 5765983356684075010
+  - rid: 5765983455336464385
   _canUpdate: 1
   _updatedAffixes:
   - rid: 5765983356684075011
@@ -34,3 +35,6 @@ MonoBehaviour:
       type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 8
+    - rid: 5765983455336464385
+      type: {class: AD_Erase, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

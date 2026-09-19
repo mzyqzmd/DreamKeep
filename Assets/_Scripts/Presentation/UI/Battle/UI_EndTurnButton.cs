@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using VContainer;
 
 namespace _DreamKeep.Presentation
@@ -11,20 +12,20 @@ namespace _DreamKeep.Presentation
     /// 可交互窗口只有玩家回合进行阶段——进入该阶段才恢复本色可点击，点击瞬间立即置灰；
     /// 回合开始（抽牌）、回合结束（结算与弃牌）、敌方回合与战斗结束后，底图与文本一律乘同一灰调且不发光不响应点击，
     /// 否则命令会排在队列里等下一个玩家回合开头立即生效，把回合吞掉。
-    /// 指针交互走 UGUI 指针事件（场景 EventSystem + 相机 Physics2DRaycaster），与卡牌拖拽同一套路径，不逐帧轮询。</summary>
-    public class Obj_EndTurnButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    /// 指针交互走 UGUI 指针事件（场景 EventSystem + Canvas 上的 Graphic Raycaster），不逐帧轮询。</summary>
+    public class UI_EndTurnButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         [Tooltip("发光边框：仅在可交互且指针悬停时激活")] [SerializeField]
         private GameObject _glowFrame;
 
         [Tooltip("按钮文本：每次回合开始时刷新为「结束第 n 回合」")] [SerializeField]
-        private TextMeshPro _text;
+        private TextMeshProUGUI _text;
 
         [Tooltip("不可交互时整按钮（底图与文本）乘的灰调")] [SerializeField]
         private Color _disabledTint = new(0.45f, 0.45f, 0.5f);
 
         private BattleCommandDispatcher _commandDispatcher;
-        private SpriteRenderer _background;
+        private Image _background;
         private Color _backgroundBase;
         private Color _textBase;
         private bool _interactive;
@@ -33,7 +34,7 @@ namespace _DreamKeep.Presentation
         // 采集编辑期本色后按保守初值刷灰：战斗开始前与战斗开始阶段按钮即处于不可交互外观
         private void Awake()
         {
-            _background = GetComponent<SpriteRenderer>();
+            _background = GetComponent<Image>();
             _backgroundBase = _background.color;
             _textBase = _text.color;
             ApplyLook();

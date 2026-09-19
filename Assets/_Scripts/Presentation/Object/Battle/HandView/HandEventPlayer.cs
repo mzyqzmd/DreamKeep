@@ -17,9 +17,9 @@ namespace _DreamKeep.Presentation
         private readonly HandPlayFlow _playFlow;
         private readonly HandHoverArbiter _arbiter;
         private readonly Obj_PlayCardZone _dropZone;
-        private readonly Obj_DrawPile _drawPile;
-        private readonly Obj_DiscardPile _discardPile;
-        private readonly Obj_ExhaustPile _exhaustPile;
+        private readonly UI_DrawPile _drawPile;
+        private readonly UI_DiscardPile _discardPile;
+        private readonly UI_ExhaustPile _exhaustPile;
         private readonly float _drawGrowDuration;
         private readonly float _drawGrowOvershoot;
         private readonly float _drawSettleDuration;
@@ -27,8 +27,8 @@ namespace _DreamKeep.Presentation
         private readonly int _exitOrder;
 
         public HandEventPlayer(HandCardRegistry registry_, HandFanLayout layout_, HandInteractionGate gate_,
-            HandPlayFlow playFlow_, HandHoverArbiter arbiter_, Obj_PlayCardZone dropZone_, Obj_DrawPile drawPile_,
-            Obj_DiscardPile discardPile_, Obj_ExhaustPile exhaustPile_, float drawGrowDuration_,
+            HandPlayFlow playFlow_, HandHoverArbiter arbiter_, Obj_PlayCardZone dropZone_, UI_DrawPile drawPile_,
+            UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, float drawGrowDuration_,
             float drawGrowOvershoot_, float drawSettleDuration_, float exitDuration_, int exitOrder_)
         {
             _registry = registry_;
@@ -54,8 +54,8 @@ namespace _DreamKeep.Presentation
             dispatcher_.Register<BE_CardPlayed>(OnCardPlayedAsync);
             dispatcher_.Register<BE_CardDiscarded>(discarded_ => ExitToPileAsync(discarded_.Card, _discardPile.Anchor));
             dispatcher_.Register<BE_CardExhausted>(exhausted_ => ExitToPileAsync(exhausted_.Card, _exhaustPile.Anchor));
-            // 遗忘按既定口径同样飞往消耗堆，此处只播表现形式，永久移除与否由域侧决定
-            dispatcher_.Register<BE_CardErased>(erased_ => ExitToPileAsync(erased_.Card, _exhaustPile.Anchor));
+            // 遗忘按既定口径飞往打出区域，此处只播表现形式，永久移除与否由域侧决定
+            dispatcher_.Register<BE_CardErased>(erased_ => ExitToPileAsync(erased_.Card, _dropZone.transform.position));
             dispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejectedAsync);
             dispatcher_.Register<BE_TurnStarted>(OnTurnStartedAsync);
             dispatcher_.Register<BE_BattleEnded>(OnBattleEndedAsync);

@@ -35,8 +35,12 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
 
             builder_.RegisterComponentInHierarchy<Obj_HandView>();
-            builder_.RegisterComponentInHierarchy<Obj_EnergyRemain>();
-            builder_.RegisterComponentInHierarchy<Obj_EndTurnButton>();
+            // 三堆排在手牌视图之后：事件按注册顺序 await，等牌飞进堆的演出播完数字才跳
+            builder_.RegisterComponentInHierarchy<UI_DrawPile>();
+            builder_.RegisterComponentInHierarchy<UI_DiscardPile>();
+            builder_.RegisterComponentInHierarchy<UI_ExhaustPile>();
+            builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
+            builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }

@@ -19,16 +19,16 @@ namespace _DreamKeep.Presentation
         private SortingGroup _sortingGroup;
 
         [Tooltip("卡面费用文本，内容来自 CardModel.Cost")] [SerializeField]
-        private TMP_Text _cost;
+        private TextMeshPro _cost;
 
         [Tooltip("卡面名称文本，内容来自 CardModel.Name")] [SerializeField]
-        private TMP_Text _name;
+        private TextMeshPro _name;
 
         [Tooltip("卡面类型文本，内容来自 CardModel.GetTypeDescription()")] [SerializeField]
-        private TMP_Text _type;
+        private TextMeshPro _type;
 
         [Tooltip("卡面描述文本，内容来自 CardModel.GetDescription()")] [SerializeField]
-        private TMP_Text _description;
+        private TextMeshPro _description;
 
         [Tooltip("卡面图标，内容来自 CardModel.Icon，由 SpriteRenderer 承接")] [SerializeField]
         private SpriteRenderer _icon;
@@ -50,7 +50,7 @@ namespace _DreamKeep.Presentation
 
         private Collider2D _body;
         private SpriteRenderer[] _faceSprites;
-        private TMP_Text[] _faceTexts;
+        private TextMeshPro[] _faceTexts;
         private Color[] _spriteColors;
         private Color[] _textColors;
         private Color _frameBase;
@@ -77,7 +77,7 @@ namespace _DreamKeep.Presentation
         {
             _body = GetComponent<Collider2D>();
             _faceSprites = GetComponentsInChildren<SpriteRenderer>(true);
-            _faceTexts = GetComponentsInChildren<TMP_Text>(true);
+            _faceTexts = GetComponentsInChildren<TextMeshPro>(true);
             _spriteColors = new Color[_faceSprites.Length];
             _textColors = new Color[_faceTexts.Length];
             for (int i = 0; i < _faceSprites.Length; i++) _spriteColors[i] = _faceSprites[i].color;

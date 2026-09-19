@@ -8,13 +8,15 @@ namespace _DreamKeep.Presentation
     /// 退出还原值一律向手牌槽位真源现算，绝不记进入前的瞬时值，补间途中进出也不会写回半截尺寸；
     /// 离手 / 被拖走 / 挂出 / 入场中才只清状态，把层序与尺寸交给后续补间。
     /// 指针命中与层序比较交给登记的共用裁决（ResolveTopCard），与按下抓取同源，重叠时两边都取视觉最上层那张；
-    /// 指针的屏幕坐标 → 卡牌所在世界平面的换算也收在这里，门面的宿主契约方法转发它。</summary>
+    /// 指针的屏幕坐标 → 卡牌所在世界平面的换算也收在这里，门面的宿主契约方法转发它；
+    /// 窗口宽高比变化也由它察觉，察觉即让手牌按新的可视宽度重排一次。</summary>
     public class HandHoverArbiter
     {
         private readonly HandCardRegistry _registry;
         private readonly HandFanLayout _layout;
         private readonly HandInteractionGate _gate;
         private readonly Camera _camera;
+        private float _lastAspect;
 
         public HandHoverArbiter(HandCardRegistry registry_, HandFanLayout layout_, HandInteractionGate gate_,
             Camera camera_)
@@ -23,6 +25,7 @@ namespace _DreamKeep.Presentation
             _layout = layout_;
             _gate = gate_;
             _camera = camera_;
+            _lastAspect = camera_.aspect;
         }
 
         // 屏幕指针 → 世界坐标（投射到卡牌所在的 z=0 平面）：悬停命中与拖拽跟手共用
@@ -36,6 +39,13 @@ namespace _DreamKeep.Presentation
         // 每帧裁定一次：指针下没有可交互的牌时目标为 null，等价于退出；裁决次序为"先定目标 → 撤旧 → 写新身份 → 进新"
         public void Tick()
         {
+            // 窗口宽高比变化（拉伸窗口、改分辨率）时先按新的可视宽度重排一次手牌，不必等下一次抽牌
+            if (!Mathf.Approximately(_lastAspect, _camera.aspect))
+            {
+                _lastAspect = _camera.aspect;
+                _layout.ApplyLayout();
+            }
+
             Obj_Card current = _gate.HoveredCard;
             Obj_Card target = _registry.ResolveTopCard(PointerWorldPosition(), candidate_ =>
                 _gate.IsHoverable(candidate_, candidate_ == current) && _registry.TryGetHover(candidate_, out _));

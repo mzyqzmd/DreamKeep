@@ -22,13 +22,13 @@ namespace _DreamKeep.Presentation
         private Obj_PlayCardZone _dropZone;
 
         [Tooltip("抽牌堆视图：抽牌入场的起飞锚点")] [SerializeField]
-        private Obj_DrawPile drawPile;
+        private UI_DrawPile drawPile;
 
         [Tooltip("弃牌堆视图：弃牌归宿的飞行终点")] [SerializeField]
-        private Obj_DiscardPile discardPile;
+        private UI_DiscardPile discardPile;
 
         [Tooltip("消耗堆视图：消耗与遗忘卡归宿的飞行终点")] [SerializeField]
-        private Obj_ExhaustPile exhaustPile;
+        private UI_ExhaustPile exhaustPile;
 
         [Header("抽牌入场")] [Tooltip("抽牌飞行的时长（秒）：从抽牌堆零尺寸一路滑到手牌槽位")] [SerializeField]
         private float _drawGrowDuration = 0.25f;
@@ -63,6 +63,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("手牌层序基准：第 i 张为基准+i，需低于出牌区（60）与悬停（90）层序")] [SerializeField]
         private int _handBaseOrder = 10;
 
+        [Tooltip("手牌弧线伸缩的参考可视半宽：16:9 为 13.33，窗口更宽手牌张开、更窄收拢（系数被限幅在 0.75~1.5）")] [SerializeField]
+        private float _fanReferenceHalfWidth = 13.33f;
+
         [Header("归宿离场")] [Tooltip("离场飞向牌堆的时长（秒）：期间卡牌同步缩到 0")] [SerializeField]
         private float _exitDuration = 0.3f;
 
@@ -84,10 +87,12 @@ namespace _DreamKeep.Presentation
         {
             _registry = new HandCardRegistry(_cardPrefab, transform, this);
             _gate = new HandInteractionGate(_registry);
+            Camera mainCamera = Camera.main;
             HandFanLayout layout = new(_handSpline, _fanStartT, _fanEndT, _fanStepT, _fanMoveDuration,
-                _fanFullCount, _fanScaleStep, _fanMinScale, _handBaseOrder, _unplayableDropY, _registry, _gate);
+                _fanFullCount, _fanScaleStep, _fanMinScale, _handBaseOrder, _unplayableDropY, _registry, _gate,
+                mainCamera, _fanReferenceHalfWidth);
             _playFlow = new HandPlayFlow(_registry, _gate, layout, _dropZone, commandDispatcher_);
-            _arbiter = new HandHoverArbiter(_registry, layout, _gate, Camera.main);
+            _arbiter = new HandHoverArbiter(_registry, layout, _gate, mainCamera);
             _eventPlayer = new HandEventPlayer(_registry, layout, _gate, _playFlow, _arbiter, _dropZone,
                 drawPile, discardPile, exhaustPile, _drawGrowDuration, _drawGrowOvershoot, _drawSettleDuration,
                 _exitDuration, _exitOrder);

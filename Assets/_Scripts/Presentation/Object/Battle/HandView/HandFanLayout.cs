@@ -8,6 +8,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>手牌排布：把"第 index 张、共 count 张"求解成曲线上的位置、朝向、缩放与层序，并提供整体重排、补间回位与瞬移落位三种写入方式。
     /// 排布规则——以曲线中点为锚向两侧等距张开（所需区间超出可用范围时整段自动压缩，第一张恒居中），朝向取切线、越靠中越大，层序自基准递增；
+    /// 横向跨度随窗口宽高比伸缩（位置与切线一起乘系数），保持手牌占屏比例恒定；
     /// 不可打状态下整手牌沿 y 下沉，下沉量也在这里叠加。
     /// 因此它是槽位真源：悬停退出、被拒退回、拖拽中断都向它取还原值，任何调用方都不许记进入前的瞬时状态。
     /// 位置与朝向永远归它（悬停中的牌也照常跟着让位，只走不写层序的滑移通道），缩放与层序则由悬停临时独占。
@@ -26,10 +27,12 @@ namespace _DreamKeep.Presentation
         private readonly float _unplayableDropY;
         private readonly HandCardRegistry _registry;
         private readonly HandInteractionGate _gate;
+        private readonly Camera _camera;
+        private readonly float _referenceHalfWidth;
 
         public HandFanLayout(SplineContainer spline_, float startT_, float endT_, float stepT_, float moveDuration_,
             int fullCount_, float scaleStep_, float minScale_, int baseOrder_, float unplayableDropY_,
-            HandCardRegistry registry_, HandInteractionGate gate_)
+            HandCardRegistry registry_, HandInteractionGate gate_, Camera camera_, float referenceHalfWidth_)
         {
             _spline = spline_;
             _startT = startT_;
@@ -43,6 +46,8 @@ namespace _DreamKeep.Presentation
             _unplayableDropY = unplayableDropY_;
             _registry = registry_;
             _gate = gate_;
+            _camera = camera_;
+            _referenceHalfWidth = referenceHalfWidth_;
         }
 
         // 槽位求解：曲线上的位置与切线决定朝向，间距超出可用区间时整段压缩；不可打时在 y 上叠下沉量，层序自基准递增
@@ -52,13 +57,19 @@ namespace _DreamKeep.Presentation
             float step = count_ <= 1 ? 0f : Mathf.Min(_stepT, (_endT - _startT) / (count_ - 1));
             float t = (_startT + _endT) * 0.5f + (index_ - (count_ - 1) * 0.5f) * step;
             _spline.Evaluate(t, out float3 position, out float3 tangent, out _);
-            position_ = position;
+            // 可视宽度伸缩：位置与切线一起乘 k，朝向由乘后切线求出，卡牌本身不变形
+            float widthScale = EvaluateWidthScale();
+            position_ = new Vector3(position.x * widthScale, position.y, position.z);
             if (!_gate.CardsPlayable) position_.y += _unplayableDropY;
-            Vector3 direction = tangent;
+            Vector3 direction = new(tangent.x * widthScale, tangent.y, tangent.z);
             rotation_ = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg);
             scale_ = Mathf.Max(_minScale, 1f - _scaleStep * Mathf.Max(0, count_ - _fullCount));
             order_ = _baseOrder + index_;
         }
+
+        // 可视宽度伸缩系数：手牌横向跨度随窗口宽高比收放以保持占屏比例恒定，极端比例由上下限兜住
+        private float EvaluateWidthScale() =>
+            Mathf.Clamp(_camera.aspect * _camera.orthographicSize / _referenceHalfWidth, 0.75f, 1.5f);
 
         // 整体重排：手牌增删或可打状态切换后调用；跳过例外牌（刚起飞的新牌）与闸门判定为忙的牌（被拖拽、已挂出），
         // 那些牌各自有独占通道的补间，这里再动一次会互相 Kill。
