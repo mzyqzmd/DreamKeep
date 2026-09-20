@@ -7,9 +7,8 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>手牌视图（门面）：手牌与出牌全流程的编排者——按领域事件生成与回收卡面、播放抽牌入场与归宿演出、沿曲线排布手牌、逐帧裁决悬停、把拖拽落点转成打出命令。
     /// 只发命令与消费事件，不判断任何规则：能量够不够、目标合不合法一律由域侧校验，被拒的命令由拒绝事件退回手牌、阶段对账兜底。
-    /// 本体只做三件事：持有 Inspector 配置、在装配点按"登记处 → 闸门 → 排布 → 出牌流程 → 悬停裁决 → 演出播放器"线性建起六个协作者、把宿主契约与每帧驱动转发给它们；
-    /// 其余职责分在 HandCardRegistry（卡池与手牌索引）、HandInteractionGate（交互状态与判据）、HandFanLayout（曲线槽位求解与排布）、
-    /// HandPlayFlow（拖拽与出牌）、HandHoverArbiter（悬停裁决与指针换算）、HandEventPlayer（事件订阅与全部演出）里。</summary>
+    /// 本体只做三件事：持有 Inspector 配置、在装配点按"手牌本体与交互资格 → 手牌空间 → 打牌与表现"线性建起三个协作者、把宿主契约与每帧驱动转发给它们；
+    /// 其余职责分在 HandCardRegistry（卡池、手牌索引与交互状态判据）、HandSpace（曲线槽位求解、指针换算与悬停裁决）、HandPlayFlow（拖拽出牌与全部事件演出）里。</summary>
     public class Obj_HandView : MonoBehaviour
     {
         [Tooltip("手牌卡面预制体：池化实例化用，实例挂在 HandView 之下")] [SerializeField]
@@ -76,27 +75,22 @@ namespace _DreamKeep.Presentation
         private float _unplayableDropY = -0.8f;
 
         private HandCardRegistry _registry;
-        private HandInteractionGate _gate;
+        private HandSpace _space;
         private HandPlayFlow _playFlow;
-        private HandHoverArbiter _arbiter;
-        private HandEventPlayer _eventPlayer;
 
-        // 装配：按依赖方向线性构造，参数即"谁被谁要"，构造期无前向引用、无闭包；排布只被出牌流程与演出播放器要，故留在局部
+        // 装配：按依赖方向线性构造，参数即"谁被谁要"，构造期无前向引用、无闭包
         [Inject]
         public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_)
         {
-            _registry = new HandCardRegistry(_cardPrefab, transform, this);
-            _gate = new HandInteractionGate(_registry);
+            _registry = new HandCardRegistry(_cardPrefab, transform, this, _dropZone);
             Camera mainCamera = Camera.main;
-            HandFanLayout layout = new(_handSpline, _fanStartT, _fanEndT, _fanStepT, _fanMoveDuration,
-                _fanFullCount, _fanScaleStep, _fanMinScale, _handBaseOrder, _unplayableDropY, _registry, _gate,
+            _space = new HandSpace(_handSpline, _fanStartT, _fanEndT, _fanStepT, _fanMoveDuration,
+                _fanFullCount, _fanScaleStep, _fanMinScale, _handBaseOrder, _unplayableDropY, _registry,
                 mainCamera, _fanReferenceHalfWidth);
-            _playFlow = new HandPlayFlow(_registry, _gate, layout, _dropZone, commandDispatcher_);
-            _arbiter = new HandHoverArbiter(_registry, layout, _gate, mainCamera);
-            _eventPlayer = new HandEventPlayer(_registry, layout, _gate, _playFlow, _arbiter, _dropZone,
+            _playFlow = new HandPlayFlow(_registry, _space, _dropZone, commandDispatcher_,
                 drawPile, discardPile, exhaustPile, _drawGrowDuration, _drawGrowOvershoot, _drawSettleDuration,
                 _exitDuration, _exitOrder);
-            _eventPlayer.Register(eventDispatcher_);
+            _playFlow.Register(eventDispatcher_);
         }
 
         #region 出牌受理：抓起、松手与中断一律转交出牌流程，本视图不判断规则
@@ -114,14 +108,14 @@ namespace _DreamKeep.Presentation
         public bool TryResolveGrab(out Obj_Card card_)
         {
             card_ = _registry.ResolveTopCard(PointerWorldPosition(),
-                candidate_ => _gate.IsGrabbable(candidate_) && _registry.TryGetDrag(candidate_, out _));
+                candidate_ => _registry.IsGrabbable(candidate_) && _registry.TryGetDrag(candidate_, out _));
             return card_ != null;
         }
 
-        // 屏幕指针 → 世界坐标（投射到卡牌所在的 z=0 平面）：悬停命中与拖拽跟手共用，换算收在悬停裁决者手上
-        public Vector3 PointerWorldPosition() => _arbiter.PointerWorldPosition();
+        // 屏幕指针 → 世界坐标（投射到卡牌所在的 z=0 平面）：悬停命中与拖拽跟手共用，换算收在手牌空间里
+        public Vector3 PointerWorldPosition() => _space.PointerWorldPosition();
 
-        // 每帧只驱动悬停裁决一次：要不要换悬停目标、怎么进怎么退都由裁决者决定
-        private void Update() => _arbiter.Tick();
+        // 每帧只驱动悬停裁决一次：要不要换悬停目标、怎么进怎么退都由手牌空间决定
+        private void Update() => _space.Tick();
     }
 }

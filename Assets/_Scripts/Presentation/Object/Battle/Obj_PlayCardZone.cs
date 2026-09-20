@@ -5,7 +5,8 @@ using UnityEngine;
 namespace _DreamKeep.Presentation
 {
     /// <summary>出牌区：打出的牌在此按先后排队堆叠——越靠后的牌越小、层序越靠后，结算期间停在队位不动。
-    /// 同时充当拖拽落点判定体，需要 `BoxCollider2D` 才能被命中。</summary>
+    /// 同时充当拖拽落点判定体，需要 `BoxCollider2D` 才能被命中。
+    /// 队列还是"已打出、等结算"这段成员关系的唯一真源：手牌登记处判忙与回合对账都按它查，别处不再另记一份。</summary>
     [RequireComponent(typeof(BoxCollider2D))]
     public class Obj_PlayCardZone : MonoBehaviour
     {
@@ -38,6 +39,11 @@ namespace _DreamKeep.Presentation
 
         // 命中判定只认一个点：调用方传卡牌根物体的世界坐标，落在本区碰撞体内即为命中
         public bool Accepts(Vector3 worldPosition_) => _collider.OverlapPoint(worldPosition_);
+
+        // 队列（按打入先后）：挂出等待结算的成员关系以它为准，手牌登记处判忙与回合对账都向这里查
+        public IReadOnlyList<Obj_Card> Queue => _queue;
+
+        public bool Contains(Obj_Card card_) => _queue.Contains(card_);
 
         // 入队即刻起补间不等，轮到执行时由宿主用 WaitArrivalAsync 等它停稳
         public void Enqueue(Obj_Card card_)
