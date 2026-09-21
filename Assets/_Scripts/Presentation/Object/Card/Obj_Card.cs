@@ -12,7 +12,7 @@ namespace _DreamKeep.Presentation
     /// 组件粒度判据：Obj_ = 必备本体（卡面、落位、动效都收在此）；Comp_ = 可选能力——能力由预制体配置决定，运行时只认领编辑期挂上的组件，不挂即为纯展示（将来卡牌图鉴复用本预制体且不挂拖拽，就是无拖拽的展示卡）。
     /// 运行期只有 Bind → SetHost 两步，不再动态添加能力；Attach 只认领卡牌根，模型与宿主由能力按需读取。
     /// 位置/朝向/层序经 Place 下达，缩放由 ScaleToAsync 或瞬时直写 transform.localScale 承接；补间按通道独占，重开前先 Kill 同通道。
-    /// 位置通道有两个入口：带层序的滑翔落位（排布、出牌区、归宿飞行都用它）与不写层序的滑移落位（悬停中的牌参与重排时用，层序归悬停独占）。</summary>
+    /// 位置通道只有一个入口：带层序的滑翔落位——排布、出牌区排队、悬停拎起与归宿飞行都用它，谁开播谁写的层序随补间一起落定。</summary>
     public class Obj_Card : MonoBehaviour
     {
         [Tooltip("整卡的排序单元：卡面各文本与图标都挂在它名下，层序只由卡牌根一处改它，其它代码不碰")] [SerializeField]
@@ -142,12 +142,8 @@ namespace _DreamKeep.Presentation
         public UniTask MoveToAsync(Vector3 position_, Quaternion rotation_, int order_, float duration_) =>
             MoveAsync(position_, rotation_, order_, duration_);
 
-        // 滑移落位：只走位置与朝向，层序保持不动——悬停中的牌参与手牌重排时走它，层序归悬停独占
-        public UniTask MoveToAsync(Vector3 position_, Quaternion rotation_, float duration_) =>
-            MoveAsync(position_, rotation_, null, duration_);
-
-        // 位置通道实现：order_ 为空表示逐帧不写层序（重读当前值），排布与悬停两套写入永不互相覆盖
-        private UniTask MoveAsync(Vector3 position_, Quaternion rotation_, int? order_, float duration_)
+        // 位置通道实现：排布、悬停与归宿三套写入共用它，各自开播前先 Kill 同通道，层序随补间一并落定
+        private UniTask MoveAsync(Vector3 position_, Quaternion rotation_, int order_, float duration_)
         {
             _moveTween?.Kill();
             Vector3 fromPosition = transform.position;
@@ -156,7 +152,7 @@ namespace _DreamKeep.Presentation
             _moveTween = DOTween.To(() => progress, value_ => progress = value_, 1f, duration_)
                 .SetEase(Ease.OutQuad)
                 .OnUpdate(() => Place(Vector3.Lerp(fromPosition, position_, progress),
-                    Quaternion.Slerp(fromRotation, rotation_, progress), order_ ?? _sortingGroup.sortingOrder));
+                    Quaternion.Slerp(fromRotation, rotation_, progress), order_));
             return WaitAsync(_moveTween);
         }
 

@@ -97,6 +97,12 @@ namespace _DreamKeep.Presentation
             _cardPool.Release(view_);
         }
 
+        // 借一张飞行用的卡面（洗回搬运）：只取池、不入手牌列与模型索引，卡面沿用上次 Bind 的残留内容，由调用方摆位后立刻归还
+        public Obj_Card RentFlyView() => _cardPool.Get();
+
+        // 归还飞行用的卡面：与归宿收尾同一条回收路径，回收回调会清补间、注销悬停与拖拽缓存
+        public void ReturnFlyView(Obj_Card view_) => _cardPool.Release(view_);
+
         public bool TryGetView(CardModel model_, out Obj_Card view_) => _views.TryGetValue(model_, out view_);
 
         public bool Contains(Obj_Card card_) => _hand.Contains(card_);

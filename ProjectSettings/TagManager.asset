@@ -41,6 +41,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Card
+  - name: World
     uniqueID: 1995766765
+    locked: 0
+  - name: Pop
+    uniqueID: 2881395197
+    locked: 0
+  - name: HUD
+    uniqueID: 618859377
+    locked: 0
+  - name: Overlay
+    uniqueID: 2823869253
     locked: 0

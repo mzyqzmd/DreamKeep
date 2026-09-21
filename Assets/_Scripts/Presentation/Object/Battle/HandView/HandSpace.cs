@@ -10,11 +10,11 @@ namespace _DreamKeep.Presentation
     /// 排布规则——以曲线中点为锚向两侧等距张开（所需区间超出可用范围时整段自动压缩，第一张恒居中），朝向取切线、越靠中越大，层序自基准递增；
     /// 横向跨度随窗口宽高比伸缩（位置与切线一起乘系数），保持手牌占屏比例恒定；不可打状态下整手牌沿 y 下沉，下沉量也在这里叠加。
     /// 因此它是槽位真源：悬停退出、被拒退回、拖拽中断都向它取还原值，任何调用方都不许记进入前的瞬时状态。
-    /// 位置与朝向永远归它（悬停中的牌也照常跟着让位，只走不写层序的滑移通道），缩放与层序则由悬停临时独占。
+    /// 悬停中的牌除外——它被拎起来端详，位置、朝向、缩放与层序整段归悬停能力独占，重排一律跳过它，正在看的牌不会被让位拽走。
     /// 后半是指针裁定——每帧算出指针下唯一一张手牌并只驱动它：目标不变就什么都不做，变化时先撤旧再进新，重叠手牌不会互相争抢；
     /// 它不吃指针事件，指针不动时手牌增删也会被下次裁决接管或让位，悬停身份记在手牌登记处，排布与清悬停都从那里读。
-    /// 悬停只独占缩放与层序，退出还原值一律按槽位真源现算，绝不记进入前的瞬时值，补间途中进出也不会写回半截尺寸；
-    /// 离手 / 被拖走 / 挂出 / 入场中才只清状态，把层序与尺寸交给后续补间。
+    /// 退出还原值一律按槽位真源现算后交给悬停能力，绝不记进入前的瞬时值，补间途中进出也不会写回半截姿态；
+    /// 离手 / 被拖走 / 挂出 / 入场中才只清状态，把姿态交给后续补间。
     /// 指针命中与层序比较交给手牌登记处的共用裁决（ResolveTopCard），与按下抓取同源，重叠时两边都取视觉最上层那张；
     /// 指针的屏幕坐标 → 卡牌所在世界平面的换算也收在这里，门面的宿主契约方法转发它；
     /// 窗口宽高比变化也由它察觉，察觉即让手牌按新的可视宽度重排一次。
@@ -77,9 +77,8 @@ namespace _DreamKeep.Presentation
         private float EvaluateWidthScale() =>
             Mathf.Clamp(_camera.aspect * _camera.orthographicSize / _referenceHalfWidth, 0.75f, 1.5f);
 
-        // 整体重排：手牌增删或可打状态切换后调用；跳过例外牌（刚起飞的新牌）与登记处判定为忙的牌（被拖拽、已挂出），
-        // 那些牌各自有独占通道的补间，这里再动一次会互相 Kill。
-        // 悬停中的牌照常跟排布走位：位置与朝向归排布（滑移通道不写层序），缩放与层序留在悬停手上
+        // 整体重排：手牌增删或可打状态切换后调用；跳过例外牌（刚起飞的新牌）、正被悬停的牌与登记处判定为忙的牌（被拖拽、已挂出），
+        // 这些牌各自有独占通道的补间（悬停独占位置、朝向、缩放与层序），这里再动一次会互相 Kill，正在端详的牌也会被拽回槽位
         public void ApplyLayout(Obj_Card except_ = null)
         {
             IReadOnlyList<Obj_Card> hand = _registry.Hand;
@@ -87,15 +86,9 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < count; i++)
             {
                 Obj_Card card = hand[i];
-                if (card == except_ || _registry.IsBusy(card)) continue;
+                if (card == except_ || card == _registry.HoveredCard || _registry.IsBusy(card)) continue;
 
                 EvaluateSlot(i, count, out Vector3 position, out Quaternion rotation, out float scale, out int order);
-                if (_registry.HoveredCard == card)
-                {
-                    card.MoveToAsync(position, rotation, _moveDuration).Forget();
-                    continue;
-                }
-
                 card.MoveToAsync(position, rotation, order, _moveDuration).Forget();
                 card.ScaleToAsync(scale, _moveDuration).Forget();
             }
@@ -168,7 +161,7 @@ namespace _DreamKeep.Presentation
             if (target && _registry.TryGetHover(target, out Comp_CardHover hover)) hover.EnterHover();
         }
 
-        // 让出悬停身份：切换不可打、牌离手或被拖走时由演出侧调用，只清组件状态与身份，尺寸与层序一律交给后续补间
+        // 让出悬停身份：切换不可打、牌离手或被拖走时由演出侧调用，只清组件状态与身份，姿态一律交给后续补间
         public void ClearHover()
         {
             Obj_Card hovered = _registry.HoveredCard;
@@ -177,8 +170,8 @@ namespace _DreamKeep.Presentation
             _registry.SetHovered(null);
         }
 
-        // 撤下悬停：只要牌还在手牌里、本回合可打、没被拖拽或挂出、没在入场飞行，就按当前槽位值写回缩放与层序；
-        // 位置不在此处补——它归排布，正在飞的滑移补间会把它送到槽位；其余情况（离手 / 被拖走 / 挂出 / 入场中）只清状态交给后续补间
+        // 撤下悬停：只要牌还在手牌里、本回合可打、没被拖拽或挂出、没在入场飞行，就按当前槽位真源一次还原位置、朝向、缩放与层序；
+        // 其余情况（离手 / 被拖走 / 挂出 / 入场中）只清状态交给后续补间
         private void ExitHover(Obj_Card card_)
         {
             if (!_registry.TryGetHover(card_, out Comp_CardHover hover)) return;
@@ -188,8 +181,9 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            EvaluateSlot(_registry.IndexOf(card_), _registry.Count, out _, out _, out float scale, out int order);
-            hover.ExitHover(order, scale);
+            EvaluateSlot(_registry.IndexOf(card_), _registry.Count, out Vector3 position, out Quaternion rotation,
+                out float scale, out int order);
+            hover.ExitHover(position, rotation, order, scale);
         }
     }
 }

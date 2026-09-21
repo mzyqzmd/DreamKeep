@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
@@ -9,7 +10,7 @@ namespace _DreamKeep.Presentation
     /// <summary>打牌与表现：前半是出牌流程——管住"抓起 → 松手 → 落点判定 → 入队等待 → 被拒退回 / 归宿离场"这一条线，出牌区队列由它入队出队；
     /// 状态不在这里（拖拽身份与悬停身份都记在手牌登记处，"已打出、等结算"的成员关系由出牌区队列唯一持有），
     /// 它只按登记处与落点做取舍，判定通过即直接向命令门面发出打出意图——本视图唯一向域侧发命令的角色。
-    /// 后半是本视图关心的八个领域事件的订阅与全部演出——抽牌入场、打出等待、弃牌/消耗/遗忘的归宿飞行、被拒退回、回合开始与战斗结束。
+    /// 后半是本视图关心的九个领域事件的订阅与全部演出——抽牌入场、洗回搬运、打出等待、弃牌/消耗/遗忘的归宿飞行、被拒退回、回合开始与战斗结束。
     /// 它是本视图里唯一 await 演出播完的角色（域侧逐事件 await，演出播完才继续下一件事），且只消费事件、不判断规则。
     /// 位置与缩放的补间全交卡牌根，它只决定"什么时候让哪张牌去哪、等多久"；
     /// 可打状态切换的编排（切登记处可打位 → 清悬停 → 重排 → 刷整卡外观）也收在这里，因为回合开始与战斗结束是它唯一的触发源。
@@ -31,11 +32,24 @@ namespace _DreamKeep.Presentation
         private readonly float _drawSettleDuration;
         private readonly float _exitDuration;
         private readonly int _exitOrder;
+        private readonly float _reshuffleFlyDuration;
+        private readonly float _reshuffleFlyScale;
+        private readonly int _reshuffleFlyCardCount;
+        private readonly float _reshuffleFlyStagger;
+        private readonly float _reshuffleFlySpread;
+        private readonly int _reshuffleFlyOrder;
+        private readonly float _reshuffleRestoreDuration;
+        private readonly float _reshuffleStepDuration;
+        private readonly float _reshuffleMaxDuration;
+        private readonly float _reshufflePunchScale;
 
         public HandPlayFlow(HandCardRegistry registry_, HandSpace space_, Obj_PlayCardZone dropZone_,
             BattleCommandDispatcher commandDispatcher_, UI_DrawPile drawPile_, UI_DiscardPile discardPile_,
             UI_ExhaustPile exhaustPile_, float drawGrowDuration_, float drawGrowOvershoot_,
-            float drawSettleDuration_, float exitDuration_, int exitOrder_)
+            float drawSettleDuration_, float exitDuration_, int exitOrder_, float reshuffleFlyDuration_,
+            float reshuffleFlyScale_, int reshuffleFlyCardCount_, float reshuffleFlyStagger_,
+            float reshuffleFlySpread_, int reshuffleFlyOrder_, float reshuffleRestoreDuration_,
+            float reshuffleStepDuration_, float reshuffleMaxDuration_, float reshufflePunchScale_)
         {
             _registry = registry_;
             _space = space_;
@@ -49,11 +63,22 @@ namespace _DreamKeep.Presentation
             _drawSettleDuration = drawSettleDuration_;
             _exitDuration = exitDuration_;
             _exitOrder = exitOrder_;
+            _reshuffleFlyDuration = reshuffleFlyDuration_;
+            _reshuffleFlyScale = reshuffleFlyScale_;
+            _reshuffleFlyCardCount = reshuffleFlyCardCount_;
+            _reshuffleFlyStagger = reshuffleFlyStagger_;
+            _reshuffleFlySpread = reshuffleFlySpread_;
+            _reshuffleFlyOrder = reshuffleFlyOrder_;
+            _reshuffleRestoreDuration = reshuffleRestoreDuration_;
+            _reshuffleStepDuration = reshuffleStepDuration_;
+            _reshuffleMaxDuration = reshuffleMaxDuration_;
+            _reshufflePunchScale = reshufflePunchScale_;
         }
 
         // 接线：事件清单集中在这里，各事件的演出就在下面，不用翻第二个文件
         public void Register(BattleEventDispatcher dispatcher_)
         {
+            dispatcher_.Register<BE_DiscardReshuffled>(OnDiscardReshuffledAsync);
             dispatcher_.Register<BE_CardDrawn>(OnCardDrawnAsync);
             dispatcher_.Register<BE_CardPlayed>(OnCardPlayedAsync);
             dispatcher_.Register<BE_CardDiscarded>(discarded_ => ExitToPileAsync(discarded_.Card, _discardPile.Anchor));
@@ -123,14 +148,70 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸
+        // 洗回搬运：借几张卡面从弃牌堆飞到抽牌堆，同时两个数字一张一张搬过去；两段必须同起同落，故统一算好每张间隔后并行 await。
+        // 每张间隔按总时长上限自动压缩，张数再多也不久等；域侧逐事件 await，这段播完才轮到本次抽牌入场
+        private UniTask OnDiscardReshuffledAsync(BE_DiscardReshuffled reshuffled_)
+        {
+            int count = reshuffled_.Count;
+            float step = count > 0 ? Mathf.Min(_reshuffleStepDuration, _reshuffleMaxDuration / count) : 0f;
+            return UniTask.WhenAll(
+                FlyCardsAsync(count),
+                _discardPile.PlayDrainAsync(count, _reshuffleFlyDuration, step),
+                _drawPile.PlayRefillAsync(count, _reshuffleFlyDuration, step, _reshuffleRestoreDuration,
+                    _reshufflePunchScale));
+        }
+
+        // 飞行：借几张卡面（只取池、不入手牌列与模型索引）从弃牌堆飞到抽牌堆并缩到 0，全部到达才算飞完，飞完随即归还卡池；
+        // 借来的卡面还带着上次 Bind 的残留内容，但整段飞行都缩得很小，不为它单独刷外观
+        private async UniTask FlyCardsAsync(int count_)
+        {
+            int flyCount = Mathf.Clamp(count_, 1, _reshuffleFlyCardCount);
+            Obj_Card[] cards = new Obj_Card[flyCount];
+            Vector3 from = _discardPile.Anchor;
+            Vector3 to = _drawPile.Anchor;
+
+            // 起飞：逐张摆在弃牌堆锚点附近（错开量见 EvaluateFlyOffset），缩到飞行用的起始尺寸
+            for (int i = 0; i < flyCount; i++)
+            {
+                Obj_Card card = _registry.RentFlyView();
+                cards[i] = card;
+                card.Place(from + EvaluateFlyOffset(i, flyCount), Quaternion.identity, _reshuffleFlyOrder);
+                card.transform.localScale = Vector3.one * _reshuffleFlyScale;
+            }
+
+            // 逐张错开起飞，全部到达才算飞完
+            UniTask[] flights = new UniTask[flyCount];
+            for (int i = 0; i < flyCount; i++)
+            {
+                if (i > 0) await UniTask.Delay(TimeSpan.FromSeconds(_reshuffleFlyStagger), DelayType.DeltaTime);
+                Obj_Card card = cards[i];
+                Vector3 destination = to + EvaluateFlyOffset(i, flyCount);
+                flights[i] = UniTask.WhenAll(
+                    card.MoveToAsync(destination, Quaternion.identity, _reshuffleFlyOrder, _reshuffleFlyDuration),
+                    card.ScaleToAsync(0f, _reshuffleFlyDuration));
+            }
+
+            await UniTask.WhenAll(flights);
+            for (int i = 0; i < flyCount; i++) _registry.ReturnFlyView(cards[i]);
+        }
+
+        // 飞行牌的起落点错开量：横向按序号对称铺开、纵向奇偶反向，几张牌错开飞而不是完全重合
+        private Vector3 EvaluateFlyOffset(int index_, int count_)
+        {
+            float lateral = (index_ - (count_ - 1) * 0.5f) * _reshuffleFlySpread;
+            float vertical = (index_ % 2 == 0 ? 1f : -1f) * _reshuffleFlySpread * 0.5f;
+            return new Vector3(lateral, vertical, 0f);
+        }
+
+        // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸。
+        // 峰值与落位尺寸都按槽位缩放换算：手牌超过不缩小的张数上限后每张都有缩放，新牌不能按常态 1 落位，否则比同手牌大一截，碰撞体也同步变大
         private async UniTask OnCardDrawnAsync(BE_CardDrawn drawn_)
         {
             CardModel model = drawn_.Card;
             Obj_Card view = _registry.Spawn(model);
             view.SetPlayableLook(_registry.CardsPlayable); // 将来敌方回合塞牌也不会漏刷
             _space.EvaluateSlot(_registry.Count - 1, _registry.Count, out Vector3 position, out Quaternion rotation,
-                out _, out int order);
+                out float slotScale, out int order);
             view.Place(_drawPile.Anchor, Quaternion.identity, order);
             view.transform.localScale = Vector3.zero;
 
@@ -139,7 +220,7 @@ namespace _DreamKeep.Presentation
             // 新牌起飞的同时就让既有手牌让位张开，不必等新牌落位后再集体挪一次
             _space.ApplyLayout(view);
             await UniTask.WhenAll(
-                view.ScaleToAsync(_drawGrowOvershoot, _drawGrowDuration),
+                view.ScaleToAsync(slotScale * _drawGrowOvershoot, _drawGrowDuration),
                 view.MoveToAsync(position, rotation, order, _drawGrowDuration));
 
             // 入场途中卡已离场（被回收进池）则收尾不再补，避免写到已复用的卡面
@@ -149,7 +230,7 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            await view.ScaleToAsync(1f, _drawSettleDuration);
+            await view.ScaleToAsync(slotScale, _drawSettleDuration);
             _registry.UnmarkEntering(view);
         }
 

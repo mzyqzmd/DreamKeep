@@ -32,7 +32,7 @@ namespace _DreamKeep.Presentation
         [Header("抽牌入场")] [Tooltip("抽牌飞行的时长（秒）：从抽牌堆零尺寸一路滑到手牌槽位")] [SerializeField]
         private float _drawGrowDuration = 0.25f;
 
-        [Tooltip("抽牌途中的放大峰值：略大于常态 1，落位后再收回，调大弹跳感更强")] [SerializeField]
+        [Tooltip("抽牌途中的放大倍率：略大于 1，落位后再收回该牌在手牌槽位里的常态尺寸，调大弹跳感更强")] [SerializeField]
         private float _drawGrowOvershoot = 1.08f;
 
         [Tooltip("飞行到位后收回常态尺寸的时长（秒），调大收得更柔")] [SerializeField]
@@ -71,6 +71,36 @@ namespace _DreamKeep.Presentation
         [Tooltip("离场飞行期间的层序：需盖过手牌与出牌区，让飞行的牌在最上层可见")] [SerializeField]
         private int _exitOrder = 80;
 
+        [Header("洗回演出")] [Tooltip("单张牌从弃牌堆飞到抽牌堆的时长（秒）：飞行期间牌缩得很小，飞到位后才开始搬运计数")] [SerializeField]
+        private float _reshuffleFlyDuration = 0.2f;
+
+        [Tooltip("飞行牌的起始缩放：整段飞行都缩得很小，只求体现\"牌从弃牌堆搬进了抽牌堆\"")] [SerializeField]
+        private float _reshuffleFlyScale = 0.4f;
+
+        [Tooltip("代表这一摞飞出的牌张数上限：弃牌再多也只飞这么多张")] [SerializeField]
+        private int _reshuffleFlyCardCount = 3;
+
+        [Tooltip("相邻两张飞行牌的起飞间隔（秒）：0 即同时起飞")] [SerializeField]
+        private float _reshuffleFlyStagger = 0.05f;
+
+        [Tooltip("起落点散开幅度（世界单位）：几张牌错开飞而不是完全重合")] [SerializeField]
+        private float _reshuffleFlySpread = 0.5f;
+
+        [Tooltip("飞行期间的层序：需盖过牌堆图标，又要低于手牌悬停（90）")] [SerializeField]
+        private int _reshuffleFlyOrder = 85;
+
+        [Tooltip("洗回后抽牌堆图标落定弹跳的时长（秒）")] [SerializeField]
+        private float _reshuffleRestoreDuration = 0.15f;
+
+        [Tooltip("洗回时每张牌的计数搬运间隔（秒）：弃牌堆数字逐张掉、抽牌堆数字逐张涨")] [SerializeField]
+        private float _reshuffleStepDuration = 0.04f;
+
+        [Tooltip("洗回计数搬运的总时长上限（秒）：张数多时自动压缩每张间隔，不会为一摞厚弃牌堆久等")] [SerializeField]
+        private float _reshuffleMaxDuration = 0.6f;
+
+        [Tooltip("洗回后抽牌堆图标落定弹跳的幅度：0.08 即最大放大 8%，0 即不弹")] [SerializeField]
+        private float _reshufflePunchScale = 0.08f;
+
         [Header("不可打状态")] [Tooltip("非我方回合时整手牌下沉的世界距离：负值向下，按手感调")] [SerializeField]
         private float _unplayableDropY = -0.8f;
 
@@ -89,7 +119,9 @@ namespace _DreamKeep.Presentation
                 mainCamera, _fanReferenceHalfWidth);
             _playFlow = new HandPlayFlow(_registry, _space, _dropZone, commandDispatcher_,
                 drawPile, discardPile, exhaustPile, _drawGrowDuration, _drawGrowOvershoot, _drawSettleDuration,
-                _exitDuration, _exitOrder);
+                _exitDuration, _exitOrder, _reshuffleFlyDuration, _reshuffleFlyScale, _reshuffleFlyCardCount,
+                _reshuffleFlyStagger, _reshuffleFlySpread, _reshuffleFlyOrder, _reshuffleRestoreDuration,
+                _reshuffleStepDuration, _reshuffleMaxDuration, _reshufflePunchScale);
             _playFlow.Register(eventDispatcher_);
         }
 

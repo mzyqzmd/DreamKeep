@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1b3b4b945939a54ea0b23d3396115fb, type: 3}
   m_Name: Bubbles_SkeletonData
   m_EditorClassIdentifier: 
-  atlasAssets: []
+  atlasAssets:
+  - {fileID: 11400000, guid: 997c032364ec0214eb7d25c2a7da6da8, type: 2}
   scale: 0.01
   skeletonJSON: {fileID: 4900000, guid: 69c2f565eb7bd4883b6f598c5ea7aa1a, type: 3}
   isUpgradingBlendModeMaterials: 0
