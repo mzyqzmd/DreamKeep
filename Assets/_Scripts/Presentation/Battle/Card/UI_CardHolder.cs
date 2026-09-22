@@ -3,14 +3,17 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>战斗包装：把一张纯展示牌面（UI_CardFace）包成"战斗手牌里的那张卡"——需要什么类型的卡就包一层什么，包装即卡种。
     /// 位置 / 朝向 / 所在层、命中面、按下拖动松手、悬停进出全在这里；牌面只管长什么样，展示卡直接摆牌面、不包这一层，于是天然收不到指针事件。
-    /// 换层由 MoveToLayer 唯一通道下达（各层 rect 与 pivot 完全一致，本地值原样保留即视觉零位移）；
-    /// 能不能抓一律问宿主闸门（非我方回合、飞行中 / 已挂出待结算 / 还没全部抽完落稳的牌都抓不起来），包装只报事件不判规则。
-    /// 悬停姿态的还原值由宿主按槽位真源给出，包装不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
+    /// 位置与朝向一律是**世界姿态**：区域（卡层）只负责挂载与遮挡，槽位由区域按自己的点换算好后下发，包装只管写到 transform 上；
+    /// 换层走 MoveToLayer 唯一通道且一律保世界位置，故各层矩形怎么摆都不会错位。
+    /// 能不能抓一律问宿主闸门（非我方回合、还在入场飞行中、已让出牌区等结算的牌都抓不起来），包装只报事件不判规则；
+    /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
+    /// 悬停姿态的进入与还原值都由区域按槽位真源给出，包装不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
     /// 位置与缩放两通道补间重开前先 Kill 同通道，补间按通道独占。</summary>
     public class UI_CardHolder : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
@@ -20,53 +23,81 @@ namespace _DreamKeep.Presentation
         [Tooltip("悬停时的缩放目标值（绝对值而非倍率）：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
         private float _hoverScale = 1.15f;
 
-        [Tooltip("悬停时向上抬起的画布像素：抬高才不会被相邻手牌压住；上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖（本卡半高 298px、悬停缩放 1.15 时上限约 45px）")] [SerializeField]
+        [Tooltip("悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")] [SerializeField]
         private float _hoverLiftPx = 100.8f;
 
         [Tooltip("悬停进出的补间时长（秒）：抬起、回正、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
         private float _hoverDuration = 0.12f;
 
         private RectTransform _rect;
+        private Image _hitFace;
         private Tween _moveTween;
         private Tween _scaleTween;
         private bool _dragging;
         private bool _hovered;
-        private Vector2 _grabOffset;
+        private Vector3 _grabOffset;
+
+        // "已就位"的判定阈值：重排据此跳过空转补间（位置差不足 0.01 世界单位约合 1.4 画布像素，肉眼不可见）
+        private const float PoseEpsilon = 0.01f;
+        private const float AngleEpsilon = 0.05f;
+        private const float ScaleEpsilon = 0.001f;
 
         public UI_HandView Host { get; private set; }
 
         public CardModel Card => _face.Card;
 
-        /// <summary>当前锚点位置（相对卡牌容器中心）：悬停拎起与拖拽跟手都以它为起点。</summary>
-        public Vector2 AnchoredPosition => _rect.anchoredPosition;
+        /// <summary>当前世界位置（卡根 pivot＝卡下沿中点）：拖拽跟手、落点判定与悬停抬起都以这个锚点起算。</summary>
+        public Vector3 WorldPosition => _rect.position;
 
-        /// <summary>是否有位置补间在飞：悬停闸门用，飞行中的牌不响应悬停，避免悬停姿态被补间逐帧顶掉。</summary>
-        public bool IsMoving => _moveTween != null && _moveTween.IsActive();
+        /// <summary>悬停抬起量（画布像素）：由所在区域换算成世界的"上"向量后下发，进入姿态仍归包装独占。</summary>
+        public float HoverLiftPx => _hoverLiftPx;
 
-        private void Awake() => _rect = (RectTransform)transform;
+        /// <summary>位置与朝向是否已等于目标姿态：重排按它跳过空转补间。</summary>
+        public bool IsAtPose(Vector3 worldPosition_, Quaternion worldRotation_) =>
+            (_rect.position - worldPosition_).sqrMagnitude < PoseEpsilon * PoseEpsilon &&
+            Quaternion.Angle(_rect.rotation, worldRotation_) < AngleEpsilon;
+
+        /// <summary>缩放是否已等于目标：重排按它跳过空转补间。</summary>
+        public bool IsAtScale(float scale_) => Mathf.Abs(transform.localScale.x - scale_) < ScaleEpsilon;
+
+        private void Awake()
+        {
+            _rect = (RectTransform)transform;
+            _hitFace = GetComponent<Image>(); // 根上那张全尺寸透明图是唯一命中面，牌面所有图形都不接指针
+        }
 
         public void SetHost(UI_HandView host_) => Host = host_;
 
-        // 牌面转发：卡面内容与外观的写入入口都收在包装上，手牌层只认包装
+        // 牌面转发：卡面内容与外观的写入入口都收在包装上，手牌区只认包装
         public void Bind(CardModel card_) => _face.Bind(card_);
 
         public void SetPlayableLook(bool playable_) => _face.SetPlayableLook(playable_);
 
+        #region 命中面：不响应指针的牌（入场中 / 等结算 / 飞行）由区域关掉，免得挡住它后面那张
+
+        // 关掉即整张牌退出射线判定；区域按状态单点写入，本包装不自己判断该不该接指针
+        public void SetPointerEnabled(bool enabled_)
+        {
+            if (_hitFace) _hitFace.raycastTarget = enabled_;
+        }
+
+        #endregion
+
         #region 拖拽：按下先问宿主能不能抓、拖动跟手、松手与中断交宿主处置
 
-        // 按下：UGUI 只会把事件送到指针下最上层那张牌，它不可抓就静默忽略，不穿透到下面那张；无宿主即没被手牌层管，同样静默
+        // 按下：UGUI 只会把事件送到指针下最上层那张牌，它不可抓就静默忽略，不穿透到下面那张；无宿主即没被手牌区管，同样静默
         public void OnPointerDown(PointerEventData eventData)
         {
             if (!Host || !Host.CanGrab(this)) return;
             _dragging = true;
-            _grabOffset = Host.PointerLocalPosition() - AnchoredPosition;
+            _grabOffset = Host.PointerWorldPosition() - WorldPosition;
             Host.OnCardGrabbed(this);
         }
 
         public void OnDrag(PointerEventData eventData)
         {
             if (!_dragging) return;
-            Place(Host.PointerLocalPosition() - _grabOffset, transform.rotation);
+            Place(Host.PointerWorldPosition() - _grabOffset, _rect.rotation);
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -87,23 +118,24 @@ namespace _DreamKeep.Presentation
             Host.OnCardDragCancelled(this);
         }
 
-        #region 悬停进出：宿主裁定出唯一悬停牌后调用，进入拎起，退出按槽位真源原位还原
+        #region 悬停进出：区域裁定出唯一悬停牌后调用，进入按槽位拎起，退出按槽位真源一次还原
 
-        // 进入：从当前位置（即槽位）抬起并回正，同时放大；换层已由宿主先行完成，这里只管姿态
-        public void EnterHover()
+        // 进入：按区域给的槽位姿态拎起——位置取"槽位 + 抬起"、朝向回正到区域的基准朝向（与槽位求解同源），同时放大；
+        // 换层已由区域先行完成，这里只管姿态
+        public void EnterHover(Vector3 worldPosition_, Quaternion worldRotation_)
         {
             if (_hovered) return;
             _hovered = true;
-            MoveToAsync(AnchoredPosition + Vector2.up * _hoverLiftPx, Quaternion.identity, _hoverDuration).Forget();
+            MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
             ScaleToAsync(_hoverScale, _hoverDuration).Forget();
         }
 
-        // 退出：按宿主给的槽位位置、朝向与缩放一次还原三项，与进入时的瞬时状态无关，补间途中进出也不会写回半截姿态
-        public void ExitHover(Vector2 position_, Quaternion rotation_, float scale_)
+        // 退出：按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，补间途中进出也不会写回半截姿态
+        public void ExitHover(Vector3 worldPosition_, Quaternion worldRotation_, float scale_)
         {
             if (!_hovered) return;
             _hovered = false;
-            MoveToAsync(position_, rotation_, _hoverDuration).Forget();
+            MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
             ScaleToAsync(scale_, _hoverDuration).Forget();
         }
 
@@ -112,19 +144,19 @@ namespace _DreamKeep.Presentation
         // 离手 / 被拖走 / 入场中等不还原场景：只清状态，把姿态交给后续补间
         public void ClearHover() => _hovered = false;
 
-        #region 落位与层归属：设置锚点坐标与朝向、换到所属层并按层内兄弟位排位，位置与层归属的唯一写入通道
+        #region 落位与层归属：世界姿态与所在层的唯一写入通道
 
-        public void Place(Vector2 anchoredPosition_, Quaternion rotation_)
+        public void Place(Vector3 worldPosition_, Quaternion worldRotation_)
         {
-            _rect.anchoredPosition = anchoredPosition_;
-            _rect.localRotation = rotation_;
+            _rect.position = worldPosition_;
+            _rect.rotation = worldRotation_;
         }
 
-        // 换层：父节点不同才重挂（各层 rect 与 pivot 完全一致，本地值原样保留即视觉零位移）；
-        // index_ < 0 表示追加置末，否则插到指定兄弟位；排位没变时一个字都不写——写兄弟序号会标脏画布触发重建
+        // 换层：保世界位置重挂（区域只负责挂载与遮挡，矩形怎么摆都不会让牌跳），index_ < 0 表示追加置末，否则插到指定兄弟位；
+        // 排位没变时一个字都不写——写兄弟序号会标脏画布触发重建
         public void MoveToLayer(Transform layer_, int index_)
         {
-            if (_rect.parent != layer_) _rect.SetParent(layer_, false);
+            if (_rect.parent != layer_) _rect.SetParent(layer_, true);
             int target = index_ < 0 ? _rect.parent.childCount - 1 : index_;
             if (_rect.GetSiblingIndex() != target) _rect.SetSiblingIndex(target);
         }
@@ -133,17 +165,17 @@ namespace _DreamKeep.Presentation
 
         #region 动效：位置与缩放两通道补间，重开前先 Kill 同通道
 
-        // 滑翔落位：位置与朝向按补间推进
-        public UniTask MoveToAsync(Vector2 anchoredPosition_, Quaternion rotation_, float duration_)
+        // 滑翔落位：位置与朝向按补间推进，起终点都是世界姿态
+        public UniTask MoveToAsync(Vector3 worldPosition_, Quaternion worldRotation_, float duration_)
         {
             _moveTween?.Kill();
-            Vector2 fromPosition = _rect.anchoredPosition;
-            Quaternion fromRotation = _rect.localRotation;
+            Vector3 fromPosition = _rect.position;
+            Quaternion fromRotation = _rect.rotation;
             float progress = 0f;
             _moveTween = DOTween.To(() => progress, value_ => progress = value_, 1f, duration_)
                 .SetEase(Ease.OutQuad)
-                .OnUpdate(() => Place(Vector2.Lerp(fromPosition, anchoredPosition_, progress),
-                    Quaternion.Slerp(fromRotation, rotation_, progress)));
+                .OnUpdate(() => Place(Vector3.Lerp(fromPosition, worldPosition_, progress),
+                    Quaternion.Slerp(fromRotation, worldRotation_, progress)));
             return WaitAsync(_moveTween);
         }
 
