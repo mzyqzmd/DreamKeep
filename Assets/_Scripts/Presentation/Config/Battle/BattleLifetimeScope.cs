@@ -4,7 +4,6 @@ using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
-using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 
 namespace _DreamKeep.Presentation
@@ -31,11 +30,11 @@ namespace _DreamKeep.Presentation
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
-            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 Obj_HandView 的 [Inject] 要（转交给出牌流程发命令）
+            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（转交给出牌流程发命令）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
 
-            builder_.RegisterComponentInHierarchy<Obj_HandView>();
-            // 三堆排在手牌视图之后：事件按注册顺序 await，等牌飞进堆的演出播完数字才跳
+            builder_.RegisterComponentInHierarchy<UI_HandView>();
+            // 三堆不订阅任何事件：数字由打牌流程在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
             builder_.RegisterComponentInHierarchy<UI_DrawPile>();
             builder_.RegisterComponentInHierarchy<UI_DiscardPile>();
             builder_.RegisterComponentInHierarchy<UI_ExhaustPile>();

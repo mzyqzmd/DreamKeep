@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _name: "\u6253\u51FB"
   _cost: 1
-  _icon: {fileID: 21300000, guid: d43e64d3584234c1e82a8f779a916704, type: 3}
+  _icon: {fileID: 21300000, guid: 549d9b6986e54f0499c2301e8b33aa3d, type: 3}
   _rarity: 2
   _type: 0
   _targetType: 1

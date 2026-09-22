@@ -72,7 +72,7 @@ MonoBehaviour:
   initialSkinName: default
   initialFlipX: 0
   initialFlipY: 0
-  startingAnimation: 
+  startingAnimation: stand
   startingLoop: 1
   timeScale: 1
   freeze: 0
