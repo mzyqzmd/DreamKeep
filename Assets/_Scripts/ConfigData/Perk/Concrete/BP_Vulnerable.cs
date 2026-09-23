@@ -11,7 +11,7 @@ namespace _DreamKeep.ConfigData
 
         public override string Name => "易伤";
         public float Ratio => _ratio;
-        public override string GetDescription() => $"受到的伤害提高 {Ratio * 100} %";
+        public override string GetDescription() => $"受到的伤害+ {Ratio * 100} %";
         public override BattlePerk Clone() => WithLayers(new BP_Vulnerable());
     }
 }

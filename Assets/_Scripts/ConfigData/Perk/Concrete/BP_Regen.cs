@@ -7,7 +7,7 @@ namespace _DreamKeep.ConfigData
     public class BP_Regen : BattlePerk
     {
         public override string Name => "再生";
-        public override string GetDescription() => $"回合结束恢复 {Layers} 点生命值，随后层数减少一层";
+        public override string GetDescription() => $"回合结束恢复 {Layers} 点生命值，随后层数-1";
         public override BattlePerk Clone() => WithLayers(new BP_Regen());
     }
 }

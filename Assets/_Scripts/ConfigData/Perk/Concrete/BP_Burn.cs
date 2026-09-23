@@ -7,7 +7,7 @@ namespace _DreamKeep.ConfigData
     public class BP_Burn : BattlePerk
     {
         public override string Name => "灼烧";
-        public override string GetDescription() => $"回合结束受到 {Layers} 点伤害，随后层数减少一层";
+        public override string GetDescription() => $"回合结束受到 {Layers} 点伤害，随后层数-1";
         public override BattlePerk Clone() => WithLayers(new BP_Burn());
     }
 }

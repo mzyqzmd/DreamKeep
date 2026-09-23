@@ -11,7 +11,7 @@ namespace _DreamKeep.ConfigData
 
         public override string Name => "虚弱";
         public float Ratio => _ratio;
-        public override string GetDescription() => $"从卡牌中造成的伤害减少 {Ratio * 100} %";
+        public override string GetDescription() => $"造成的伤害- {Ratio * 100} %";
         public override BattlePerk Clone() => WithLayers(new BP_Weak());
     }
 }
