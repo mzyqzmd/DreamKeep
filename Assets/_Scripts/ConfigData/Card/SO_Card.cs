@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Sirenix.OdinInspector;
+using NaughtyAttributes;
 using UnityEngine;
 
 namespace _DreamKeep.ConfigData
@@ -16,7 +16,8 @@ namespace _DreamKeep.ConfigData
         [SerializeReference] private List<AffixData> _affixes = new();
         [SerializeField] private bool _canUpdate;
 
-        [EnableIf("_canUpdate"), SerializeReference]
+        [ShowIf("_canUpdate")]
+        [SerializeReference]
         private List<AffixData> _updatedAffixes = new();
 
         public string Name => _name;
