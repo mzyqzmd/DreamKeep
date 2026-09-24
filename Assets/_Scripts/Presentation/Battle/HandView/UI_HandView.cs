@@ -71,16 +71,16 @@ namespace _DreamKeep.Presentation
         // 演出与手感的固定值：曾经是 Inspector 上的可调字段，现收进代码常量（改这些要重新编译，也不再随场景序列化）
         private const float FanMoveDuration = 0.28f; // 手牌重排（让位、回位）的补间时长
         private const float DrawGrowDuration = 0.25f; // 抽牌飞行时长：从抽牌堆零尺寸滑到手牌槽位
-        private const float DrawGrowOvershoot = 1.2f; // 抽牌途中的放大倍率：落位后再收回槽位尺寸
+        private const float DrawGrowOvershoot = 1.1f; // 抽牌途中的放大倍率：落位后再收回槽位尺寸
         private const float DrawSettleDuration = 0.15f; // 飞行到位后收回常态尺寸的时长
         private const float ExitDuration = 0.25f; // 离场飞向牌堆并缩到 0 的时长
         private const float ReshuffleFlyDuration = 0.2f; // 单张洗回牌从弃牌堆飞到抽牌堆的时长
-        private const float ReshuffleFlyScale = 0.4f; // 洗回飞行牌的起始缩放
+        private const float ReshuffleFlyScale = 0.2f; // 洗回飞行牌的起始缩放
         private const float ReshuffleFlyStagger = 0.05f; // 相邻两张洗回牌的起飞间隔
         private const float ReshuffleFlySpreadPx = 72f; // 洗回起落点的散开幅度
         private const float ReshuffleFlySpreadMaxPx = 240f; // 洗回牌流的总跨度上限
-        private const float ReshuffleMaxDuration = 0.6f; // 洗回起飞段的总时长上限
-        private const float UnplayableDropPx = -115.2f; // 非我方回合整手牌的下沉量：负值向下
+        private const float ReshuffleMaxDuration = 0.8f; // 洗回起飞段的总时长上限
+        private const float UnplayableDropPx = -110f; // 非我方回合整手牌的下沉量：负值向下
 
         private HandArea _cards;
         private HandPlayFlow _playFlow;

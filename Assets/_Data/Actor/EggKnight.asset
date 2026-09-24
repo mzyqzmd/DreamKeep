@@ -17,6 +17,7 @@ MonoBehaviour:
   _enemyIntents:
   - rid: 5765983475554844673
   - rid: 5765983475554844674
+  - rid: 5765983561550135296
   references:
     version: 2
     RefIds:
@@ -29,3 +30,19 @@ MonoBehaviour:
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 5
+    - rid: 5765983561550135296
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 5765983561550135297
+        _intent2:
+          rid: 5765983561550135299
+    - rid: 5765983561550135297
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 2
+        _times: 2
+    - rid: 5765983561550135299
+      type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 3

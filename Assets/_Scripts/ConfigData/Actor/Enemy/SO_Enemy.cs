@@ -9,7 +9,7 @@ namespace _DreamKeep.ConfigData
     {
         [SerializeField] private string _name;
         [SerializeField] private int _maxHP;
-        [SerializeReference] private List<IntentData> _enemyIntents = new();
+        [SerializeReference, SubclassSelector] private List<IntentData> _enemyIntents = new();
 
         public string Name => _name;
         public int MaxHp => _maxHP;

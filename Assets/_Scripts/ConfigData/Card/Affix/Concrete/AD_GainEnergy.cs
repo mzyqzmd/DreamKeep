@@ -5,6 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>获得能量词条：为自身获得指定数值的能量。</summary>
     [Serializable]
+    [AddTypeMenu("Affix/获得能量")]
     public class AD_GainEnergy : AffixData
     {
         [SerializeField] private int _amount;

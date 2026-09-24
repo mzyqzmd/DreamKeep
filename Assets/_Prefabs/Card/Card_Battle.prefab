@@ -90,7 +90,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _face: {fileID: 193991543654271923}
-  _hoverScale: 1.15
+  _hoverScale: 1.05
   _hoverLiftPx: 100.8
   _hoverDuration: 0.12
 --- !u!1001 &1737884573932230844

@@ -13,11 +13,10 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private ECardRarity _rarity;
         [SerializeField] private ECardType _type;
         [SerializeField] private ECardTargetType _targetType;
-        [SerializeReference] private List<AffixData> _affixes = new();
+        [SerializeReference, SubclassSelector] private List<AffixData> _affixes = new();
         [SerializeField] private bool _canUpdate;
 
-        [ShowIf("_canUpdate")]
-        [SerializeReference]
+        [ShowIf("_canUpdate")] [SerializeReference, SubclassSelector]
         private List<AffixData> _updatedAffixes = new();
 
         public string Name => _name;

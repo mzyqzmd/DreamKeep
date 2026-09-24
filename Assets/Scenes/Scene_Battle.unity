@@ -2170,7 +2170,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: -160}
+  m_AnchoredPosition: {x: 0, y: -110}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1127662405
@@ -2357,10 +2357,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ec97ef35e6a3b7469e53beb1b956f49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _stackStepPx: {x: -110, y: 0}
-  _frontScale: 1.2
-  _scaleStep: 0.1
-  _minScale: 0.5
+  _stackStepPx: {x: -110, y: 5}
+  _frontScale: 0.9
+  _scaleStep: 0.05
+  _minScale: 0.6
   _moveDuration: 0.2
   _queuePoint: {fileID: 1460863854}
 --- !u!224 &1156058019
@@ -2633,10 +2633,10 @@ MonoBehaviour:
   _handLayer: {fileID: 1683338860}
   _focusLayer: {fileID: 1817952189}
   _fanCenterPoint: {fileID: 1117339986}
-  _fanHalfRunPx: 570
-  _fanStepPx: 155.5
+  _fanHalfRunPx: 720
+  _fanStepPx: 160
   _fanSagPx: 50
-  _fanTiltMaxDeg: 0.96
+  _fanTiltMaxDeg: 10
   _fanFullCount: 5
   _fanScaleStep: 0.08
   _fanMinScale: 0.6
@@ -3014,7 +3014,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 158}
+  m_AnchoredPosition: {x: 0, y: 172}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1480105376

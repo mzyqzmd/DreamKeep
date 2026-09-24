@@ -15,32 +15,24 @@ MonoBehaviour:
   _name: "\u6253\u51FB"
   _cost: 1
   _icon: {fileID: 21300000, guid: 549d9b6986e54f0499c2301e8b33aa3d, type: 3}
-  _rarity: 2
+  _rarity: 0
   _type: 0
   _targetType: 1
   _affixes:
-  - rid: 5765983356684075008
-  - rid: 5765983455336464384
-  - rid: 5765983475554844672
+  - rid: 5765983561550135300
   _canUpdate: 1
   _updatedAffixes:
-  - rid: 5765983356684075009
+  - rid: 5765983561550135301
   references:
     version: 2
     RefIds:
-    - rid: 5765983356684075008
+    - rid: 5765983561550135300
       type: {class: AD_Damage, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 6
         _times: 1
-    - rid: 5765983356684075009
+    - rid: 5765983561550135301
       type: {class: AD_Damage, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 9
         _times: 1
-    - rid: 5765983455336464384
-      type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
-    - rid: 5765983475554844672
-      type: {class: AD_Retain, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 

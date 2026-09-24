@@ -4,6 +4,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>状态「灼烧」：回合结束时受到等于层数的伤害，随后层数递减。</summary>
     [Serializable]
+    [AddTypeMenu("Perk/灼烧")]
     public class BP_Burn : BattlePerk
     {
         public override string Name => "灼烧";
