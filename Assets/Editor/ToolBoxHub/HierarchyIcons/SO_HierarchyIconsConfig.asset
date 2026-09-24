@@ -80,3 +80,9 @@ MonoBehaviour:
   - ruleName: SpriteRenderer
     icon: {fileID: 0}
     enabled: 1
+  - ruleName: CanvasScaler
+    icon: {fileID: 0}
+    enabled: 1
+  - ruleName: GraphicRaycaster
+    icon: {fileID: 0}
+    enabled: 1

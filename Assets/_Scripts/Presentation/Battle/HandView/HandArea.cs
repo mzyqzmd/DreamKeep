@@ -3,30 +3,11 @@ using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.Pool;
-using Object = UnityEngine.Object;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>手牌区本体：手牌"谁在手里 / 能不能动 / 摆在哪 / 指着谁"四件事都收在这里，是手牌区唯一的状态持有者。
-    /// 台账一半：卡池、手牌列、模型到包装的索引、入场中标记都由它保管；一张牌从取池到回收的整段生命周期都从这里过，
-    /// Spawn 一次完成取池、绑卡、接入宿主、进手牌列与标记入场中，离手与归宿由 RemoveFromHand / Release 收尾。
-    /// 资格一半：本回合可打、正被拖拽、正被悬停三个状态位收在这里，判据只有一条——本回合可打、这张牌真在手上
-    /// （在手牌列、不在入场飞行中、没让位给出牌区队列）、没有别的牌正被拖拽；按下抓取与逐帧悬停共用它，
-    /// 动画一律不参与判据：滑行中的牌照样能按下即抓、扫过即抬起，只有"还没落到手上"的牌要等它落位。
-    /// "已打出、等结算"的成员关系不在这里，向出牌区现问，两处不各记一份。
-    /// 排布一半：槽位真源在这里——把**行内序号与行内张数**求解成一条浅弧上的世界姿态，基准是手牌区的点（FanCenterPoint）：
-    /// 位置一律写成 点.TransformPoint(画布像素偏移)，朝向取点的朝向乘切角，故点被拖动、缩放、旋转时整套跟着走，
-    /// 四层矩形怎么摆都不影响坐标。行＝手牌列减去已让位给结算的牌，入队即让位故打出那一刻整手立刻合拢；
-    /// 让位的牌不占行内序号，被拒退回时它重新回到行里、整手重新开缝。
-    /// 悬停中的牌位置、朝向、缩放与所在层归包装的悬停姿态独占，重排一律跳过它，正在看的牌不会被让位拽走。
-    /// 层只在这里指派（MoveToHand / MoveToFly / MoveToFocus），换层由包装保世界位置完成；队列层不出现在这里，它是出牌区的地盘。
-    /// 命中面也只在这里刷新（RefreshPointer）：只有真在手牌行里、且不在入场飞行中的牌才接指针，
-    /// 入场中、已让位等结算、飞行中的牌一律让开，免得挡住它后面那张的按下。
-    /// 指针一半：每帧向界面问一次"指针下最上层是哪张牌"（射线顺序即层级顺序即渲染顺序），只驱动唯一一张，目标不变就什么都不做；
-    /// 命中不合格的牌继续往下找（穿透），悬停身份记在本类，排布与清悬停都从它读。指针的屏幕坐标 → 画布平面世界坐标的换算也收在这里。
-    /// 可打状态初值取不可打最保守：任何漏掉的阶段信号都只会让手牌安静，不会让手牌误响应；
-    /// 状态切换时要不要清悬停、重排、刷外观由调用方（演出侧）编排。</summary>
     public class HandArea
     {
         private readonly ObjectPool<UI_CardHolder> _cardPool;
@@ -277,7 +258,8 @@ namespace _DreamKeep.Presentation
         // 指针在画布平面上的世界坐标：拖拽跟手与落点判定共用。画布是 ScreenSpaceCamera，换算必须传画布相机
         public Vector3 PointerWorldPosition()
         {
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(_fanCenterPoint, Input.mousePosition,
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(_fanCenterPoint,
+                Pointer.current.position.ReadValue(),
                 _canvasCamera, out Vector3 world);
             return world;
         }
@@ -288,7 +270,7 @@ namespace _DreamKeep.Presentation
         public void Tick()
         {
             UI_CardHolder current = _hoveredCard;
-            UI_CardHolder target = RaycastTopCard(current);
+            UI_CardHolder target = RaycastTopCard();
             if (target == current) return;
 
             if (current) ExitHover(current);
@@ -319,7 +301,8 @@ namespace _DreamKeep.Presentation
         {
             int count = 0;
             for (int i = 0; i < _hand.Count; i++)
-                if (!_dropZone.Contains(_hand[i])) count++;
+                if (!_dropZone.Contains(_hand[i]))
+                    count++;
             return count;
         }
 
@@ -361,7 +344,7 @@ namespace _DreamKeep.Presentation
 
         // 射线裁决：按命中先后取第一张资格通过的牌；同一张卡的多个命中面只判一次。
         // 当前悬停中的牌照常作为候选参与（指针还停在它身上就是"目标不变"），因此它的进出补间不会把自己顶掉
-        private UI_CardHolder RaycastTopCard(UI_CardHolder current_)
+        private UI_CardHolder RaycastTopCard()
         {
             if (_hand.Count == 0) return null; // 手牌空时指针下不可能有可悬停的牌，这次射线直接省掉
             EventSystem eventSystem = EventSystem.current;
@@ -373,7 +356,7 @@ namespace _DreamKeep.Presentation
                 _pointerData = new PointerEventData(eventSystem);
             }
 
-            _pointerData.position = Input.mousePosition;
+            _pointerData.position = Pointer.current.position.ReadValue();
             _raycastResults.Clear();
             eventSystem.RaycastAll(_pointerData, _raycastResults);
 
