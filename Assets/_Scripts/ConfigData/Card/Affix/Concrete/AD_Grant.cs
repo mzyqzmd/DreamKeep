@@ -8,7 +8,7 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Affix/给予")]
     public class AD_Grant : AffixData
     {
-        [SerializeReference] private AffixData _grantedAffix;  //给予的词条
+        [SerializeReference,SubclassSelector] private AffixData _grantedAffix;  //给予的词条
         [SerializeField] private int _count;  //可以给几张牌给予词条
 
         public AffixData GrantedAffix => _grantedAffix;

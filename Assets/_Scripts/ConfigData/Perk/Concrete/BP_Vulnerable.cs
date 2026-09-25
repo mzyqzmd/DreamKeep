@@ -8,10 +8,11 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Perk/易伤")]
     public class BP_Vulnerable : BattlePerk
     {
-        public BP_Vulnerable(float ratio_) => Ratio = ratio_;
-        public float Ratio { get; private set; }
+        [SerializeField] private float _ratio = 0.5f;
+        public float Ratio => _ratio;
         public override string Name => "易伤";
-        public override string GetDescription() => $"受到的伤害+ {Ratio * 100} %";
-        public override BattlePerk Clone() => WithLayers(new BP_Vulnerable(Ratio));
+        public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.TurnEnd;
+        public override string GetDescription() => $"接下来 {Layers} 回合内，受到的伤害+ {Ratio * 100} %";
+        public override BattlePerk Clone() => WithLayers(new BP_Vulnerable());
     }
 }

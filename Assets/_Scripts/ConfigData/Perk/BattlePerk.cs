@@ -13,8 +13,8 @@ namespace _DreamKeep.ConfigData
         /// <summary>当前层数：实例私有状态，配置模板上恒为 0。</summary>
         public int Layers { get; private set; }
 
-        /// <summary>回合结束是否自动衰减一层；力量等永久状态覆写为 false。</summary>
-        public virtual bool DecaysEachTurn => true;
+        /// <summary>衰减时机：宿主自己的回合边界递减一层，默认回合结束；永久状态覆写为 None。</summary>
+        public abstract EPerkDecayTiming DecayTiming { get; }
 
         public abstract string Name { get; }
         public Sprite Icon => _icon;
@@ -29,10 +29,11 @@ namespace _DreamKeep.ConfigData
 
         #endregion
 
-        /// <summary>克隆辅助：把本实例的层数带到克隆体上。</summary>
+        /// <summary>克隆辅助：把本实例的层数与图标带到克隆体上。</summary>
         protected BattlePerk WithLayers(BattlePerk clone_)
         {
             clone_.Layers = Layers;
+            clone_._icon = _icon;
             return clone_;
         }
     }

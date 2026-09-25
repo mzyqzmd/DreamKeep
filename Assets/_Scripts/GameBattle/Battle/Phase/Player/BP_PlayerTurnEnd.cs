@@ -48,7 +48,7 @@ namespace _DreamKeep.GameBattle
                 actions.Enqueue(new BA_Discard(player.Creature, self, card, hand));
             }
 
-            actions.Enqueue(new BA_DecayPerk(player.Creature, self));
+            actions.Enqueue(new BA_DecayPerk(player.Creature, self, EPerkDecayTiming.TurnEnd));
             await actions.PerformAllAsync();
         }
 

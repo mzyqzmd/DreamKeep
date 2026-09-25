@@ -4503,6 +4503,8 @@ MonoBehaviour:
   _enemyConfigs:
   - {fileID: 11400000, guid: 9de1a02f5f52bde4bb883fdc963ae4db, type: 2}
   _seed: 12345
+  _perkPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
+  _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
 --- !u!1 &2096025520
 GameObject:
   m_ObjectHideFlags: 0

@@ -88,16 +88,17 @@ namespace _DreamKeep.Presentation
         // 装配：按依赖方向线性构造，参数即"谁被谁要"，构造期无前向引用、无闭包。
         // 画布相机在装配点解析（不靠 Awake，避免与容器装配的先后次序打架），手牌区的点与三个卡层随参数下发给本体
         [Inject]
-        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_)
+        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_,
+            UI_Actor selfTargetActor_)
         {
             Camera canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             _cards = new HandArea(_cardPrefab, this, dropZone, _fanCenterPoint, _handLayer, _flyLayer, _focusLayer,
                 canvasCamera, _fanHalfRunPx, _fanStepPx, _fanSagPx, _fanTiltMaxDeg, FanMoveDuration, _fanFullCount,
                 _fanScaleStep, _fanMinScale, UnplayableDropPx);
             _playFlow = new HandPlayFlow(_cards, dropZone, commandDispatcher_, drawPile, discardPile, exhaustPile,
-                DrawGrowDuration, DrawGrowOvershoot, DrawSettleDuration, ExitDuration, ReshuffleFlyDuration,
-                ReshuffleFlyScale, ReshuffleFlyStagger, ReshuffleFlySpreadPx, ReshuffleFlySpreadMaxPx,
-                ReshuffleMaxDuration);
+                selfTargetActor_, DrawGrowDuration, DrawGrowOvershoot, DrawSettleDuration, ExitDuration,
+                ReshuffleFlyDuration, ReshuffleFlyScale, ReshuffleFlyStagger, ReshuffleFlySpreadPx,
+                ReshuffleFlySpreadMaxPx, ReshuffleMaxDuration);
             _playFlow.Register(eventDispatcher_);
         }
 
@@ -118,7 +119,11 @@ namespace _DreamKeep.Presentation
         // 指针在画布平面上的世界坐标：拖拽跟手用，换算收在手牌区本体里
         public Vector3 PointerWorldPosition() => _cards.PointerWorldPosition();
 
-        // 每帧只驱动悬停裁决一次：要不要换悬停目标、怎么进怎么退都由手牌区本体决定
-        private void Update() => _cards.Tick();
+        // 每帧驱动两次裁决：手牌区的悬停进出由本体决定，出牌流程做拖拽自目标提示判定
+        private void Update()
+        {
+            _cards.Tick();
+            _playFlow.Tick();
+        }
     }
 }

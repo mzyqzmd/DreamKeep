@@ -337,6 +337,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7436782244867207905}
+  - component: {fileID: 5738356110295771587}
   m_Layer: 5
   m_Name: Player
   m_TagString: Untagged
@@ -365,6 +366,20 @@ RectTransform:
   m_AnchoredPosition: {x: 1280, y: 0}
   m_SizeDelta: {x: 1380.6882, y: 983.1013}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &5738356110295771587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 944051879394645438}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa5f33ecf2e844259d5c375adf2b90f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _targetTip: {fileID: 6281497406433875849}
+  _infoPanel: {fileID: 1881504772899000622}
 --- !u!1 &1859081737637264810
 GameObject:
   m_ObjectHideFlags: 0
@@ -802,6 +817,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6966923789214180001}
   - component: {fileID: 3976940370318851684}
+  - component: {fileID: 6281497406433875849}
   m_Layer: 5
   m_Name: TargetTip
   m_TagString: Untagged
@@ -853,6 +869,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &6281497406433875849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3883337372068965315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5da9ca0acaa428b9d0f3967ef280082, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5922339382135320908
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,6 +1219,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8659287162803014147}
+  - component: {fileID: 1881504772899000622}
   m_Layer: 5
   m_Name: InfoPanel
   m_TagString: Untagged
@@ -1219,6 +1248,55 @@ RectTransform:
   m_AnchoredPosition: {x: 0.5, y: 55.630005}
   m_SizeDelta: {x: -298.44, y: 111.26}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1881504772899000622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8145695245702772561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8b58bd99b784ccbb4f27e258c1ab6c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _gradient:
+    serializedVersion: 2
+    key0: {r: 0.47058824, g: 0, b: 0, a: 1}
+    key1: {r: 0.7735849, g: 0, b: 0, a: 1}
+    key2: {r: 1, g: 0, b: 0, a: 0}
+    key3: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
+    key4: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
+    key5: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 32768
+    ctime2: 65535
+    ctime3: 65535
+    ctime4: 65535
+    ctime5: 65535
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: 0
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
+  _healthSlider: {fileID: 3773887646890820701}
+  _healthText: {fileID: 6017017767625049371}
+  _healthTweenDuration: 0.25
+  _anim: {fileID: 3650476093532993214}
+  _blockAmount: {fileID: 4005385010885319401}
+  _perkGroupRoot: {fileID: 5922339382135320908}
+  _perkTipLiftPx: 12
 --- !u!1 &8614493758115572357
 GameObject:
   m_ObjectHideFlags: 0

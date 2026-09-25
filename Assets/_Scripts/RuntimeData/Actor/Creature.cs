@@ -22,19 +22,19 @@ namespace _DreamKeep.RuntimeData
             CurrentHp = maxHp_;
         }
 
-        #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回施加后的总层数
-        public int ApplyPerk(BattlePerk perk_)
+        #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回挂载实例供动作侧发事件
+        public BattlePerk ApplyPerk(BattlePerk perk_)
         {
             for (int i = 0; i < _powers.Count; i++)
             {
                 if (_powers[i].GetType() != perk_.GetType()) continue;
                 _powers[i].AddLayers(perk_.Layers);
-                return _powers[i].Layers;
+                return _powers[i];
             }
 
             BattlePerk mounted = perk_.Clone();
             _powers.Add(mounted);
-            return mounted.Layers;
+            return mounted;
         }
         #endregion
 
@@ -58,16 +58,21 @@ namespace _DreamKeep.RuntimeData
         }
         #endregion
 
-        #region 回合结束：会衰减的状态层数递减，归零项移除
-        public void DecayPerks()
+        #region 回合边界：衰减指定时机的状态层数，归零项移除并逐个带回，供动作侧发移除事件
+
+        public List<BattlePerk> DecayPerks(EPerkDecayTiming timing_)
         {
+            List<BattlePerk> removed = new();
             for (int i = _powers.Count - 1; i >= 0; i--)
             {
-                if (!_powers[i].DecaysEachTurn) continue;
+                if (_powers[i].DecayTiming != timing_) continue;
                 _powers[i].AddLayers(-1);
-                if (_powers[i].Layers <= 0)
-                    _powers.RemoveAt(i);
+                if (_powers[i].Layers > 0) continue;
+                removed.Add(_powers[i]);
+                _powers.RemoveAt(i);
             }
+
+            return removed;
         }
         #endregion
     }

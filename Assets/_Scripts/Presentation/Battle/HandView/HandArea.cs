@@ -81,6 +81,9 @@ namespace _DreamKeep.Presentation
         /// <summary>本回合手牌是否可打：新牌入场刷外观与松手要不要打出都按它。</summary>
         public bool CardsPlayable => _cardsPlayable;
 
+        /// <summary>当前正被拖拽的卡：目标提示按它判定，没在拖拽时为 null。</summary>
+        public UI_CardHolder Dragged => _draggedCard;
+
         #region 台账：取牌、离手、归宿与飞行借还
 
         // 取出并登记：取池 → 绑卡 → 接入宿主 → 进手牌列 → 归手牌层 → 标记入场中（入场期间命中面关着，落位才开）

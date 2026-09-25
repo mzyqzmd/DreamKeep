@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
@@ -25,6 +26,9 @@ namespace _DreamKeep.GameBattle
             Player player = _owner.BattleContext.Player;
             List<Creature> self = new List<Creature> { player.Creature };
             ActionSystem actions = _owner.ActionSystem;
+
+            // 回合开始衰减：时机为 TurnStart 的状态层数递减（现有状态均为回合结束型，本入口为将来预留）
+            actions.Enqueue(new BA_DecayPerk(player.Creature, self, EPerkDecayTiming.TurnStart));
 
             // 先落盾再回能：玩家上回合残留的格挡不跨回合保留
             actions.Enqueue(new BA_ClearBlock(player.Creature, self));

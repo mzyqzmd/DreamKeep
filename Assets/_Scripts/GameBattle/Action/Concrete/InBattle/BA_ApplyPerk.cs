@@ -19,8 +19,8 @@ namespace _DreamKeep.GameBattle
             foreach (Creature target in Targets)
             {
                 if (target.IsDead) continue;
-                int layers = target.ApplyPerk(Perk);
-                events.Add(new BE_PerkApplied(target, Perk, layers));
+                BattlePerk mounted = target.ApplyPerk(Perk);
+                events.Add(new BE_PerkApplied(target, mounted));
             }
 
             return events;

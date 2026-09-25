@@ -8,10 +8,11 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Perk/虚弱")]
     public class BP_Weak : BattlePerk
     {
-        public BP_Weak(float ratio_) => Ratio = ratio_;
-        public float Ratio { get; private set; }
+        [SerializeField] private float _ratio = 0.25f;
+        public float Ratio => _ratio;
         public override string Name => "虚弱";
-        public override string GetDescription() => $"造成的伤害 - {Ratio * 100} %";
-        public override BattlePerk Clone() => WithLayers(new BP_Weak(Ratio));
+        public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.TurnEnd;
+        public override string GetDescription() => $"接下来 {Layers} 回合内，造成的伤害 - {Ratio * 100} %";
+        public override BattlePerk Clone() => WithLayers(new BP_Weak());
     }
 }

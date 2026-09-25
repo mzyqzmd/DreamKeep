@@ -29,6 +29,8 @@ namespace _DreamKeep.Presentation
         private readonly UI_DrawPile _drawPile;
         private readonly UI_DiscardPile _discardPile;
         private readonly UI_ExhaustPile _exhaustPile;
+        private readonly UI_Actor _selfTargetActor;
+        private bool _selfTargetAimed;
         private readonly float _drawGrowDuration;
         private readonly float _drawGrowOvershoot;
         private readonly float _drawSettleDuration;
@@ -41,7 +43,7 @@ namespace _DreamKeep.Presentation
         private readonly float _reshuffleMaxDuration;
 
         public HandPlayFlow(HandArea cards_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,
-            UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_,
+            UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, UI_Actor selfTargetActor_,
             float drawGrowDuration_, float drawGrowOvershoot_, float drawSettleDuration_, float exitDuration_,
             float reshuffleFlyDuration_, float reshuffleFlyScale_, float reshuffleFlyStagger_,
             float reshuffleFlySpreadPx_, float reshuffleFlySpreadMaxPx_, float reshuffleMaxDuration_)
@@ -52,6 +54,7 @@ namespace _DreamKeep.Presentation
             _drawPile = drawPile_;
             _discardPile = discardPile_;
             _exhaustPile = exhaustPile_;
+            _selfTargetActor = selfTargetActor_;
             _drawGrowDuration = drawGrowDuration_;
             _drawGrowOvershoot = drawGrowOvershoot_;
             _drawSettleDuration = drawSettleDuration_;
@@ -98,6 +101,7 @@ namespace _DreamKeep.Presentation
         public void Release(UI_CardHolder card_)
         {
             _cards.ClearDragged();
+            HideSelfTargetTip();
             if (!_cards.CardsPlayable || !_cards.IsInHand(card_) || !_dropZone.Accepts(card_.WorldPosition))
             {
                 _cards.ReturnToSlotAsync(card_).Forget();
@@ -115,6 +119,7 @@ namespace _DreamKeep.Presentation
         public void CancelDrag(UI_CardHolder card_)
         {
             _cards.ClearDragged();
+            HideSelfTargetTip();
             _cards.PlaceToSlot(card_);
         }
 
@@ -133,6 +138,29 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
+
+        #region 目标提示：拖拽中的自目标判定
+
+        // 每帧判定：被拖拽卡的锚点（下沿中点）悬在出牌区矩形内、且这张卡目标是玩家自己才算瞄准；
+        // 状态变化才写 SetActive，敌人目标（FrontEnemy 等）等敌人视图落地后再在此扩展
+        public void Tick()
+        {
+            UI_CardHolder dragged = _cards.Dragged;
+            bool aimed = dragged && dragged.Card.IsSelfTarget && _dropZone.Accepts(dragged.WorldPosition);
+            if (aimed == _selfTargetAimed) return;
+            _selfTargetAimed = aimed;
+            _selfTargetActor.ShowTargetTip(aimed);
+        }
+
+        #endregion
+
+        // 熄灭目标提示：松手与拖拽中断时显式调用，不等下一帧 Tick，卡飞向队列或槽位时提示已经收掉
+        private void HideSelfTargetTip()
+        {
+            if (!_selfTargetAimed) return;
+            _selfTargetAimed = false;
+            _selfTargetActor.ShowTargetTip(false);
+        }
 
         // 洗回搬运：域侧一次搬完整摞，这里把它演成一张一张搬——洗回多少张就飞多少张，一张飞抵即一张进堆；
         // 域侧逐事件 await，这段播完才轮到本次抽牌入场
@@ -269,7 +297,12 @@ namespace _DreamKeep.Presentation
         private void ApplyPlayable(bool playable_)
         {
             if (!_cards.SetPlayable(playable_)) return;
-            if (!playable_) _cards.ClearHover();
+            if (!playable_)
+            {
+                _cards.ClearHover();
+                HideSelfTargetTip();
+            }
+
             _cards.ApplyLayout();
             _cards.RefreshPlayableLook(playable_);
         }

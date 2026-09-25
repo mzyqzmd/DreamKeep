@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace _DreamKeep.GameBattle
             {
                 if (enemy.Creature.IsDead) continue;
                 List<Creature> self = new List<Creature> { enemy.Creature };
-                actions.Enqueue(new BA_DecayPerk(enemy.Creature, self));
+                actions.Enqueue(new BA_DecayPerk(enemy.Creature, self, EPerkDecayTiming.TurnEnd));
             }
 
             await actions.PerformAllAsync();

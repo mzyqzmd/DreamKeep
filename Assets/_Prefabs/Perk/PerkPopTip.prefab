@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 521944280813401490}
+  - component: {fileID: 2552076003067718171}
   - component: {fileID: 9092937488984692085}
   - component: {fileID: 3928351232731708549}
   - component: {fileID: 8748600550064152572}
@@ -41,6 +42,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 463.66, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2552076003067718171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 474106847536133845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95aa31a7f708442580f8394cfb1ef053, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _perkName: {fileID: 4979012466186691399}
+  _perkDescription: {fileID: 4800876786191860977}
 --- !u!114 &9092937488984692085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,7 +318,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 231.83, y: -108.38501}
+  m_AnchoredPosition: {x: 231.83, y: -135.02501}
   m_SizeDelta: {x: 383.66, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5807990613702829644
@@ -334,7 +349,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u9020\u6210\u7684\u4F24\u5BB3 - 25 %"
+  m_text: "\u63A5\u4E0B\u6765 2 \u56DE\u5408\u5185\uFF0C\u9020\u6210\u7684\u4F24\u5BB3
+    - 25 %"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: da967935ac8d8d44aa81ec83eab43639, type: 2}
   m_sharedMaterial: {fileID: 2357111181166970784, guid: da967935ac8d8d44aa81ec83eab43639, type: 2}
