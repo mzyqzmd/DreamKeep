@@ -21,7 +21,7 @@ MonoBehaviour:
   _affixes:
   - rid: 5765983356684075010
   - rid: 5765983561550135306
-  - rid: 5765983578581368833
+  - rid: 5765983591953596416
   _canUpdate: 1
   _updatedAffixes:
   - rid: 5765983356684075011
@@ -40,21 +40,19 @@ MonoBehaviour:
       type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk:
-          rid: 5765983578581368832
-        _layers: 1
-    - rid: 5765983578581368832
-      type: {class: BP_Weak, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _icon: {fileID: 21300000, guid: 6b15ffbf02a104844b93bc9e75f4f30a, type: 3}
-        _ratio: 0.5
-    - rid: 5765983578581368833
+          rid: 5765983591953596418
+        _layers: 2
+    - rid: 5765983591953596416
       type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk:
-          rid: 5765983578581368834
-        _layers: 2
-    - rid: 5765983578581368834
-      type: {class: BP_Weak, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+          rid: 5765983591953596417
+        _layers: 5
+    - rid: 5765983591953596417
+      type: {class: BP_Burn, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _icon: {fileID: 21300000, guid: 6b15ffbf02a104844b93bc9e75f4f30a, type: 3}
-        _ratio: 0.25
+        _icon: {fileID: 21300000, guid: f380d9789c287e54995d405551283a8d, type: 3}
+    - rid: 5765983591953596418
+      type: {class: BP_Regen, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _icon: {fileID: 21300000, guid: 59093ecad1d282e4abef88420db6bd3a, type: 3}

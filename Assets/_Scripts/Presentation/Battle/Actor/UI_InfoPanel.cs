@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战斗单位信息面板：血条、格挡与状态槽位显示的唯一写入点，只认 UI_Actor 转发来的域真值，自己不订事件不判规则。
     /// 血条走 DOTween 单通道补间（数值滚动 + 按 _gradient 染 Fill），格挡由 AC_BlockFrame 的 Show 布尔驱动显隐，
-    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹复用的 UI_DescriptionPopTip。</summary>
+    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹复用的 UI_DescriptionPopTip（挂场景 Canvas_Pop/PopTextRoot 下）。</summary>
     public class UI_InfoPanel : MonoBehaviour
     {
         [Header("血条")] [SerializeField] private Gradient _gradient;
@@ -29,10 +29,19 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
 
         [Tooltip("详情提示与图标顶沿的间距（画布像素）")] [SerializeField]
-        private float _perkTipLiftPx = 12f;
+        private float _perkTipLiftPx = 1f;
 
-        // AC_BlockFrame 的显隐参数：Bool，true 播 BlockFrameShow、false 播 BlockFrameHide；缓存哈希避免字符串查找
-        private static readonly int BlockShow = Animator.StringToHash("Show");
+        private UI_PopTextRoot PopTextRoot
+        {
+            get
+            {
+                if (_popTextRoot) return _popTextRoot;
+                _popTextRoot = FindFirstObjectByType<UI_PopTextRoot>();
+                return _popTextRoot ? _popTextRoot : throw new Exception("UI_InfoPanel 找不到 PopTextRoot 实例");
+            }
+        }
+
+        private UI_PopTextRoot _popTextRoot;
 
         private Creature _creature;
         private Image _fillImage;
@@ -40,6 +49,7 @@ namespace _DreamKeep.Presentation
         private int _shownBlock = -1;
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
         private UI_DescriptionPopTip _descriptionPopTip;
+        private UI_PerkSlot _shownTipSlot;
 
 
         // 初始化：装配期调用——缓存 Fill、按域真值直写血量与格挡，不播补间
@@ -89,7 +99,7 @@ namespace _DreamKeep.Presentation
             if (_shownBlock == block_) return;
             _shownBlock = block_;
             _blockAmount.text = block_ > 0 ? block_.ToString() : "";
-            _anim.SetBool(BlockShow, block_ > 0);
+            _anim.SetBool(Animator.StringToHash("Show"), block_ > 0);
         }
 
         #endregion
@@ -112,10 +122,14 @@ namespace _DreamKeep.Presentation
             _perkSlots[type] = slot;
         }
 
-        // 效果层数递减：按类型找到槽位刷新显示（事件携带的是挂载实例，与槽位绑定同源）
+        // 效果层数递减：按类型找到槽位刷新显示（事件携带的是挂载实例，与槽位绑定同源）；
+        // 弹窗正开着且显示的正是这个槽位时同步重写弹窗，防悬停期间回合衰减后弹窗还挂着旧层数
         public void RefreshPerkLayers(BattlePerk perk_)
         {
-            if (_perkSlots.TryGetValue(perk_.GetType(), out UI_PerkSlot slot)) slot.RefreshLayers();
+            if (!_perkSlots.TryGetValue(perk_.GetType(), out UI_PerkSlot slot)) return;
+            slot.RefreshLayers();
+            if (_descriptionPopTip && _descriptionPopTip.gameObject.activeSelf && _shownTipSlot == slot)
+                WriteTipContent(slot);
         }
 
         // 移除效果：按效果类型找到槽位销毁（事件携带的是挂载实例，与槽位绑定的原型不同源，只能按类型对号）；
@@ -131,12 +145,23 @@ namespace _DreamKeep.Presentation
 
         #region 效果提示弹窗
 
-        // 弹效果详情：内容写好、重建一次布局拿到真实高度后再定位到图标上方，显示时置顶保证盖过其他单位
+        // 弹效果详情：单实例复用——有则换内容重新定位，无则懒生成到 Canvas_Pop/PopTextRoot（按 UI_PopTextRoot 标记查找，
+        // 场景里没有标记则回退自身所在 Canvas）；记录显示中的槽位，供悬停期间层数变化时同步刷新
         public void ShowPerkTip(UI_PerkSlot slot_)
         {
-            if (_descriptionPopTip) return;
-            _descriptionPopTip = Instantiate(_descriptionPopTipPrefab, GetComponentInParent<Canvas>().transform);
-            ((RectTransform)_descriptionPopTip.transform).pivot = new Vector2(0.5f, 0f); // 底沿中点对准定位点：高度随内容变化只向上生长
+            if (!_descriptionPopTip)
+            {
+                _descriptionPopTip = Instantiate(_descriptionPopTipPrefab, PopTextRoot.transform);
+                ((RectTransform)_descriptionPopTip.transform).pivot = new Vector2(0.5f, 0f); // 底沿中点对准定位点：高度随内容变化只向上生长
+            }
+
+            _shownTipSlot = slot_;
+            WriteTipContent(slot_);
+        }
+
+        // 弹层内容与定位的统一写入口：悬停进入与悬停期间层数变化共用；先收起再写内容，重建一次布局拿到真实高度后定位到图标上方，显示时置顶保证盖过其他单位
+        private void WriteTipContent(UI_PerkSlot slot_)
+        {
             _descriptionPopTip.gameObject.SetActive(false);
             _descriptionPopTip.SetContent(slot_.Perk.Name, slot_.Perk.GetDescription());
             _descriptionPopTip.gameObject.SetActive(true);
@@ -148,7 +173,8 @@ namespace _DreamKeep.Presentation
 
         public void HidePerkTip()
         {
-            if (_descriptionPopTip) _descriptionPopTip.gameObject.SetActive(false);
+            if (_descriptionPopTip)
+                _descriptionPopTip.gameObject.SetActive(false);
         }
 
         #endregion

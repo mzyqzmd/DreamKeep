@@ -1246,7 +1246,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0.5, y: 55.630005}
-  m_SizeDelta: {x: -298.44, y: 111.26}
+  m_SizeDelta: {x: -394.5, y: 111.26}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1881504772899000622
 MonoBehaviour:
@@ -1296,7 +1296,9 @@ MonoBehaviour:
   _anim: {fileID: 3650476093532993214}
   _blockAmount: {fileID: 4005385010885319401}
   _perkGroupRoot: {fileID: 5922339382135320908}
-  _perkTipLiftPx: 12
+  _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
+  _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
+  _perkTipLiftPx: 1
 --- !u!1 &8614493758115572357
 GameObject:
   m_ObjectHideFlags: 0
