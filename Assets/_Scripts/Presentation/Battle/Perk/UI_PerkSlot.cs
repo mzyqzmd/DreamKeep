@@ -30,7 +30,7 @@ namespace _DreamKeep.Presentation
         // 层数刷新：域侧递减后由宿主调用，恒显示当前层数（含 1 层）
         public void RefreshLayers() => _perkAmount.text = Perk.Layers.ToString();
 
-        // 图标顶沿的世界坐标：详情提示的定位锚点，在它上方留出间距放 PerkPopTip
+        // 图标顶沿的世界坐标：详情提示的定位锚点，在它上方留出间距放 UI_DescriptionPopTip
         public Vector3 TipAnchorPosition()
         {
             RectTransform rect = _perkIcon.rectTransform;

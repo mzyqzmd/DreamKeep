@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战斗单位信息面板：血条、格挡与状态槽位显示的唯一写入点，只认 UI_Actor 转发来的域真值，自己不订事件不判规则。
     /// 血条走 DOTween 单通道补间（数值滚动 + 按 _gradient 染 Fill），格挡由 AC_BlockFrame 的 Show 布尔驱动显隐，
-    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹复用的 UI_PerkPopTip。</summary>
+    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹复用的 UI_DescriptionPopTip。</summary>
     public class UI_InfoPanel : MonoBehaviour
     {
         [Header("血条")] [SerializeField] private Gradient _gradient;
@@ -25,6 +25,8 @@ namespace _DreamKeep.Presentation
         [SerializeField] private TextMeshProUGUI _blockAmount;
 
         [Header("Perk管理")] [SerializeField] private GameObject _perkGroupRoot;
+        [SerializeField] private UI_PerkSlot _perkSlotPrefab;
+        [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
 
         [Tooltip("详情提示与图标顶沿的间距（画布像素）")] [SerializeField]
         private float _perkTipLiftPx = 12f;
@@ -37,18 +39,14 @@ namespace _DreamKeep.Presentation
         private Tween _healthTween;
         private int _shownBlock = -1;
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
-        private UI_PerkSlot _perkSlotPrefab;
-        private UI_PerkPopTip _perkPopTipPrefab;
-        private UI_PerkPopTip _perkPopTip;
+        private UI_DescriptionPopTip _descriptionPopTip;
 
         #region 对外写入入口（UI_Actor 驱动）
 
         // 初始化：装配期调用——缓存 Fill、按域真值直写血量与格挡，不播补间
-        public void Init(Creature creature_, UI_PerkSlot perkSlotPrefab_, UI_PerkPopTip perkPopTipPrefab_)
+        public void Init(Creature creature_)
         {
             _creature = creature_;
-            _perkSlotPrefab = perkSlotPrefab_;
-            _perkPopTipPrefab = perkPopTipPrefab_;
             _fillImage = _healthSlider.fillRect ? _healthSlider.fillRect.GetComponent<Image>() : null;
             _healthSlider.maxValue = _creature.MaxHp;
             SetHealth(_creature.CurrentHp, false);
@@ -113,30 +111,24 @@ namespace _DreamKeep.Presentation
         // 弹详情：内容写好、重建一次布局拿到真实高度后再定位到图标上方，显示时置顶保证盖过其他单位
         public void ShowPerkTip(UI_PerkSlot slot_)
         {
-            EnsurePerkTip();
-            _perkPopTip.SetContent(slot_.Perk);
-            _perkPopTip.gameObject.SetActive(true);
-            _perkPopTip.transform.SetAsLastSibling();
-            RectTransform tipRect = (RectTransform)_perkPopTip.transform;
+            if (_descriptionPopTip) return;
+            _descriptionPopTip = Instantiate(_descriptionPopTipPrefab, GetComponentInParent<Canvas>().transform);
+            ((RectTransform)_descriptionPopTip.transform).pivot = new Vector2(0.5f, 0f); // 底沿中点对准定位点：高度随内容变化只向上生长
+            _descriptionPopTip.gameObject.SetActive(false);
+            _descriptionPopTip.SetContent(slot_.Perk.Name, slot_.Perk.GetDescription());
+            _descriptionPopTip.gameObject.SetActive(true);
+            _descriptionPopTip.transform.SetAsLastSibling();
+            RectTransform tipRect = (RectTransform)_descriptionPopTip.transform;
             LayoutRebuilder.ForceRebuildLayoutImmediate(tipRect);
             tipRect.position = slot_.TipAnchorPosition() + tipRect.parent.up * _perkTipLiftPx;
         }
 
         public void HidePerkTip()
         {
-            if (_perkPopTip) _perkPopTip.gameObject.SetActive(false);
+            if (_descriptionPopTip) _descriptionPopTip.gameObject.SetActive(false);
         }
 
         #endregion
-
-        // 懒生成唯一一个详情提示实例：挂在信息面板所在的 Canvas 下复用，隐藏只是关激活，下一次弹出直接换内容
-        private void EnsurePerkTip()
-        {
-            if (_perkPopTip) return;
-            _perkPopTip = Instantiate(_perkPopTipPrefab, GetComponentInParent<Canvas>().transform);
-            ((RectTransform)_perkPopTip.transform).pivot = new Vector2(0.5f, 0f); // 底沿中点对准定位点：高度随内容变化只向上生长
-            _perkPopTip.gameObject.SetActive(false);
-        }
 
         // 血条的可视三件套：Slider 值、滚动文本与按血量占比从色带取的 Fill 颜色，补间与直写共用
         private void WriteHealthVisual(float value_)

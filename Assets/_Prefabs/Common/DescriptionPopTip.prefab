@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8748600550064152572}
   - component: {fileID: 3475077466214179549}
   m_Layer: 5
-  m_Name: PerkPopTip
+  m_Name: DescriptionPopTip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -54,8 +54,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95aa31a7f708442580f8394cfb1ef053, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _perkName: {fileID: 4979012466186691399}
-  _perkDescription: {fileID: 4800876786191860977}
+  _name: {fileID: 0}
+  _description: {fileID: 0}
 --- !u!114 &9092937488984692085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,7 +147,7 @@ GameObject:
   - component: {fileID: 4979012466186691399}
   - component: {fileID: 18626195577819833}
   m_Layer: 5
-  m_Name: PerkName
+  m_Name: Name
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -296,7 +296,7 @@ GameObject:
   - component: {fileID: 4800876786191860977}
   - component: {fileID: 4214450665848967304}
   m_Layer: 5
-  m_Name: PerkDescription
+  m_Name: Description
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

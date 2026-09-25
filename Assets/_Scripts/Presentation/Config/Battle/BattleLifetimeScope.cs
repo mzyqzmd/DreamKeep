@@ -19,8 +19,6 @@ namespace _DreamKeep.Presentation
         [SerializeField] private SO_Player _playerConfig;
         [SerializeField] private List<SO_Enemy> _enemyConfigs = new();
         [SerializeField] private int _seed = 12345;
-        [SerializeField] private UI_PerkPopTip _perkPopTipPrefab;
-        [SerializeField] private UI_PerkSlot _perkSlotPrefab;
 
         protected override void Configure(IContainerBuilder builder_)
         {
@@ -43,8 +41,6 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterComponentInHierarchy<UI_Player>().AsSelf().As<UI_Actor>(); // 出牌流程的目标提示协作者，经 UI_Actor 解析
-            builder_.RegisterInstance(_perkSlotPrefab); // 被 UI_Player 的 [Inject] 要（转交给信息面板生成状态槽位）
-            builder_.RegisterInstance(_perkPopTipPrefab); // 同上，信息面板懒生成复用的详情提示
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }
