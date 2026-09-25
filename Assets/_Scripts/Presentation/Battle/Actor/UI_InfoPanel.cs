@@ -41,7 +41,6 @@ namespace _DreamKeep.Presentation
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
         private UI_DescriptionPopTip _descriptionPopTip;
 
-        #region 对外写入入口（UI_Actor 驱动）
 
         // 初始化：装配期调用——缓存 Fill、按域真值直写血量与格挡，不播补间
         public void Init(Creature creature_)
@@ -52,6 +51,10 @@ namespace _DreamKeep.Presentation
             SetHealth(_creature.CurrentHp, false);
             SetBlock(_creature.Block);
         }
+
+        private void OnDestroy() => _healthTween?.Kill();
+
+        #region 设置血量
 
         // 血量：animate_ 为 false 直写（开局初值），为 true 且值有变才起补间；补间途中再来一次则 Kill 旧的从当前值续走
         public void SetHealth(int current_, bool animate_)
@@ -68,6 +71,18 @@ namespace _DreamKeep.Presentation
             WriteHealthVisual(current);
         }
 
+        // 血条的可视三件套：Slider 值、滚动文本与按血量占比从色带取的 Fill 颜色，补间与直写共用
+        private void WriteHealthVisual(float value_)
+        {
+            _healthSlider.value = value_;
+            _healthText.text = $"{Mathf.RoundToInt(value_)}/{_creature.MaxHp}";
+            if (_fillImage) _fillImage.color = _gradient.Evaluate(value_ / _creature.MaxHp);
+        }
+
+        #endregion
+
+        #region 设置格挡
+
         // 格挡：数值恒写域真值；显隐交给 AC_BlockFrame 的 Show 布尔，值没变就一个字都不写
         public void SetBlock(int block_)
         {
@@ -77,7 +92,11 @@ namespace _DreamKeep.Presentation
             _anim.SetBool(BlockShow, block_ > 0);
         }
 
-        // 施加状态：按状态类型建槽；同状态重复施加（槽位已存在）只刷新层数显示，图标与绑定不变
+        #endregion
+
+        #region 施加效果
+
+        // 施加效果：按效果类型建槽；同状态重复施加（槽位已存在）只刷新层数显示，图标与绑定不变
         public void AddPerk(BattlePerk perk_)
         {
             Type type = perk_.GetType();
@@ -93,13 +112,13 @@ namespace _DreamKeep.Presentation
             _perkSlots[type] = slot;
         }
 
-        // 状态层数递减：按类型找到槽位刷新显示（事件携带的是挂载实例，与槽位绑定同源）
+        // 效果层数递减：按类型找到槽位刷新显示（事件携带的是挂载实例，与槽位绑定同源）
         public void RefreshPerkLayers(BattlePerk perk_)
         {
             if (_perkSlots.TryGetValue(perk_.GetType(), out UI_PerkSlot slot)) slot.RefreshLayers();
         }
 
-        // 移除状态：按状态类型找到槽位销毁（事件携带的是挂载实例，与槽位绑定的原型不同源，只能按类型对号）；
+        // 移除效果：按效果类型找到槽位销毁（事件携带的是挂载实例，与槽位绑定的原型不同源，只能按类型对号）；
         // 弹着的详情提示一并收掉，防它还指向已消失的状态
         public void RemovePerk(BattlePerk perk_)
         {
@@ -108,7 +127,11 @@ namespace _DreamKeep.Presentation
             Destroy(slot.gameObject);
         }
 
-        // 弹详情：内容写好、重建一次布局拿到真实高度后再定位到图标上方，显示时置顶保证盖过其他单位
+        #endregion
+
+        #region 效果提示弹窗
+
+        // 弹效果详情：内容写好、重建一次布局拿到真实高度后再定位到图标上方，显示时置顶保证盖过其他单位
         public void ShowPerkTip(UI_PerkSlot slot_)
         {
             if (_descriptionPopTip) return;
@@ -129,15 +152,5 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
-
-        // 血条的可视三件套：Slider 值、滚动文本与按血量占比从色带取的 Fill 颜色，补间与直写共用
-        private void WriteHealthVisual(float value_)
-        {
-            _healthSlider.value = value_;
-            _healthText.text = $"{Mathf.RoundToInt(value_)}/{_creature.MaxHp}";
-            if (_fillImage) _fillImage.color = _gradient.Evaluate(value_ / _creature.MaxHp);
-        }
-
-        private void OnDestroy() => _healthTween?.Kill();
     }
 }
