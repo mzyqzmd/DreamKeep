@@ -23,6 +23,7 @@ namespace _DreamKeep.Presentation
         protected override void Configure(IContainerBuilder builder_)
         {
             Rng rng = new(_seed);
+            builder_.RegisterInstance(rng);
             BattleContext battleContext = BattleSetup.Create(_playerConfig, _enemyConfigs, rng);
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();

@@ -10,8 +10,7 @@ namespace _DreamKeep.GameBattle
     /// 抽牌演出收尾处广播 BE_PlayerTurnActiveStarted，作为"玩家操作窗口开启"的唯一信号（等待型进行阶段不会被主循环驱动 RunAsync，入口信号只能在此发出）。</summary>
     public class BP_PlayerTurnStart : BattlePhase
     {
-        public BP_PlayerTurnStart(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
-            : base(stateMachine_, owner_)
+        public BP_PlayerTurnStart(BattleLoop owner_) : base(owner_)
         {
         }
 

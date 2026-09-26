@@ -33,6 +33,14 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
+        #region 对子类暴露的动画钩子：默认空实现，覆写后在 HUD 数字刷新前播单位动画（await 演完才落账）
+
+        protected virtual UniTask OnBlockGainedAnimAsync(BE_BlockGained gained_) => UniTask.CompletedTask;
+
+        protected virtual UniTask OnDamageDealtAnimAsync(BE_DamageDealt dealt_) => UniTask.CompletedTask;
+
+        #endregion
+
         #region 目标提示：拖拽的自目标卡悬在出牌区时由出牌流程点亮
 
         public void ShowTargetTip(bool show_)
@@ -44,21 +52,21 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 格挡获得：显示值一律对齐域侧真值，获得、吸收衰减与回合清空三条路径共用这一个写入口
-        private UniTask OnBlockGainedAsync(BE_BlockGained gained_)
+        // 格挡获得：受击动画演完才对齐显示值，获得、吸收衰减与回合清空三条路径共用这一个写入口
+        private async UniTask OnBlockGainedAsync(BE_BlockGained gained_)
         {
-            if (gained_.Target != _boundCreature) return UniTask.CompletedTask;
+            if (gained_.Target != _boundCreature) return;
+            await OnBlockGainedAnimAsync(gained_);
             _infoPanel.SetBlock(gained_.Target.Block);
-            return UniTask.CompletedTask;
         }
 
-        // 伤害结算：域侧先扣格挡再扣血后才发事件，血与格挡一起对齐真值
-        private UniTask OnDamageDealtAsync(BE_DamageDealt dealt_)
+        // 伤害结算：域侧先扣格挡再扣血后才发事件，受击动画演完才一起对齐血与格挡真值
+        private async UniTask OnDamageDealtAsync(BE_DamageDealt dealt_)
         {
-            if (dealt_.Target != _boundCreature) return UniTask.CompletedTask;
+            if (dealt_.Target != _boundCreature) return;
+            await OnDamageDealtAnimAsync(dealt_);
             _infoPanel.SetBlock(dealt_.Target.Block);
             _infoPanel.SetHealth(dealt_.Target.CurrentHp, true);
-            return UniTask.CompletedTask;
         }
 
         private UniTask OnBlockClearedAsync(BE_BlockCleared cleared_)

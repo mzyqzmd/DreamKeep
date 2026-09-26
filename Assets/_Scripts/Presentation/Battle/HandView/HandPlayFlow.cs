@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -26,6 +27,7 @@ namespace _DreamKeep.Presentation
         private readonly HandArea _cards;
         private readonly UI_PlayCardZone _dropZone;
         private readonly BattleCommandDispatcher _commandDispatcher;
+        private readonly Rng _rng;
         private readonly UI_DrawPile _drawPile;
         private readonly UI_DiscardPile _discardPile;
         private readonly UI_ExhaustPile _exhaustPile;
@@ -41,7 +43,7 @@ namespace _DreamKeep.Presentation
         private readonly float _reshuffleFlySpreadMaxPx;
         private readonly float _flyJitterPx;
 
-        public HandPlayFlow(HandArea cards_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,
+        public HandPlayFlow(HandArea cards_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,Rng rng_,
             UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, UI_Actor selfTargetActor_,
             float drawGrowDuration_, float drawGrowOvershoot_, float drawSettleDuration_, float exitDuration_,
             float reshuffleFlyDuration_, float reshuffleFlyScale_, float reshuffleFlySpreadPx_,
@@ -50,6 +52,7 @@ namespace _DreamKeep.Presentation
             _cards = cards_;
             _dropZone = dropZone_;
             _commandDispatcher = commandDispatcher_;
+            _rng = rng_;
             _drawPile = drawPile_;
             _discardPile = discardPile_;
             _exhaustPile = exhaustPile_;
@@ -219,7 +222,7 @@ namespace _DreamKeep.Presentation
 
         // 飞行起落点的随机抖动：±幅度内均匀分布的画布像素，经节点换算成世界向量，只打散重叠轨迹不改朝向
         private Vector3 Jitter(Transform node_) =>
-            node_.TransformVector(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * _flyJitterPx);
+            node_.TransformVector(new Vector2(_rng.Next(-2f,2f), _rng.Next(-2f,2f)) * _flyJitterPx);
 
         // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸。
         // 槽位与峰值都按手牌区本体现算的世界姿态与槽位缩放：手牌超过不缩小的张数上限后每张都有缩放，

@@ -7,8 +7,7 @@ namespace _DreamKeep.GameBattle
     /// <summary>敌人回合进行阶段：按槽位从左到右逐个敌人执行其当前意图，执行完推进到下一条并广播，供表现层预告。</summary>
     public class BP_EnemyTurnActive : BattlePhase
     {
-        public BP_EnemyTurnActive(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
-            : base(stateMachine_, owner_)
+        public BP_EnemyTurnActive(BattleLoop owner_) : base(owner_)
         {
         }
 

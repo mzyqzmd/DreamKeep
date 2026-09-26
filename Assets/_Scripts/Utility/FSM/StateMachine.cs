@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace _DreamKeep.Utility
 {
     /// <summary>
-    /// 单层状态机，状态转换由状态内部调用 ChangeState 自决，不提供分层子状态机与表驱动条件转换。
+    /// 单层状态机，仅持有当前状态并提供切换去重守卫与切换通知；状态转换由外部持有者（如 BattleLoop）或宿主路由驱动，不内嵌帧驱动与自决切换逻辑。
     /// </summary>
     public class StateMachine<TState> where TState : IState
     {
@@ -28,7 +28,5 @@ namespace _DreamKeep.Utility
             CurrentState.Enter();
             OnStateChanged?.Invoke(from, newState_);
         }
-
-        public void Update() => CurrentState?.Update();
     }
 }

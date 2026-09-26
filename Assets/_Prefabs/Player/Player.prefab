@@ -252,7 +252,7 @@ RectTransform:
   m_GameObject: {fileID: 862405703072342991}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.6, y: 0.6, z: 0.6}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6966923789214180001}
@@ -260,7 +260,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -526}
+  m_AnchoredPosition: {x: 0, y: -444}
   m_SizeDelta: {x: 0, y: 831}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &4342703198851499600
@@ -283,9 +283,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d85b887af7e6c3f45a2e2d2920d641bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 2100000, guid: b66cf7a186d13054989b33a5c90044e4, type: 2}
+  m_Material: {fileID: 2100000, guid: 9ec88eb84829d934f9cf186fb355bdcb, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -295,10 +295,10 @@ MonoBehaviour:
   additiveMaterial: {fileID: 2100000, guid: 2e8245019faeb8c43b75f9ca3ac8ee34, type: 2}
   multiplyMaterial: {fileID: 2100000, guid: e74a1f8978a7da348a721508d0d58834, type: 2}
   screenMaterial: {fileID: 2100000, guid: bab24c479f34eec45be6ea8595891569, type: 2}
-  initialSkinName: default
+  initialSkinName: 
   initialFlipX: 0
   initialFlipY: 0
-  startingAnimation: 
+  startingAnimation: stand
   startingLoop: 1
   timeScale: 1
   freeze: 0
@@ -380,6 +380,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _targetTip: {fileID: 6281497406433875849}
   _infoPanel: {fileID: 1881504772899000622}
+  _skeletonGraphic: {fileID: 5878971931005922491}
 --- !u!1 &1859081737637264810
 GameObject:
   m_ObjectHideFlags: 0
@@ -1297,7 +1298,6 @@ MonoBehaviour:
   _blockAmount: {fileID: 4005385010885319401}
   _perkGroupRoot: {fileID: 5922339382135320908}
   _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
-  _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
   _perkTipLiftPx: 1
 --- !u!1 &8614493758115572357
 GameObject:

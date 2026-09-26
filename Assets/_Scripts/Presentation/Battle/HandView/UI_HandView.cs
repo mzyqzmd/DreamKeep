@@ -1,4 +1,5 @@
 using _DreamKeep.GameBattle;
+using _DreamKeep.Utility;
 using UnityEngine;
 using VContainer;
 
@@ -37,7 +38,6 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("手牌层：手牌停在这里，层内按手牌序号排位（靠右压靠左）")] [SerializeField]
         private RectTransform _handLayer;
-
 
         [Tooltip("交互层：悬停与拖拽的牌（排在最后，永远画在最上层）")] [SerializeField]
         private RectTransform _focusLayer;
@@ -88,13 +88,13 @@ namespace _DreamKeep.Presentation
         // 画布相机在装配点解析（不靠 Awake，避免与容器装配的先后次序打架），手牌区的点与三个卡层随参数下发给本体
         [Inject]
         public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_,
-            UI_Actor selfTargetActor_)
+            UI_Actor selfTargetActor_, Rng rng_)
         {
             Camera canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             _cards = new HandArea(_cardPrefab, this, dropZone, _fanCenterPoint, _handLayer, _flyLayer, _focusLayer,
                 canvasCamera, _fanHalfRunPx, _fanStepPx, _fanSagPx, _fanTiltMaxDeg, FanMoveDuration, _fanFullCount,
                 _fanScaleStep, _fanMinScale, UnplayableDropPx);
-            _playFlow = new HandPlayFlow(_cards, dropZone, commandDispatcher_, drawPile, discardPile, exhaustPile,
+            _playFlow = new HandPlayFlow(_cards, dropZone, commandDispatcher_, rng_, drawPile, discardPile, exhaustPile,
                 selfTargetActor_, DrawGrowDuration, DrawGrowOvershoot, DrawSettleDuration, ExitDuration,
                 ReshuffleFlyDuration, ReshuffleFlyScale, ReshuffleFlySpreadPx,
                 ReshuffleFlySpreadMaxPx, FlyJitterPx);

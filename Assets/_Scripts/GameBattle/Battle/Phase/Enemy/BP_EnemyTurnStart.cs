@@ -10,14 +10,14 @@ namespace _DreamKeep.GameBattle
     /// <remarks>敌人当前无获取格挡的途径时本循环短路；保留是为敌人防御意图预留。</remarks>
     public class BP_EnemyTurnStart : BattlePhase
     {
-        public BP_EnemyTurnStart(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
-            : base(stateMachine_, owner_)
+        public BP_EnemyTurnStart(BattleLoop owner_) : base(owner_)
         {
         }
 
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnActive;
 
         #region 阶段异步逻辑：逐敌人清格挡后等待演出
+
         public override async UniTask RunAsync()
         {
             await PlayEvents(new BE_TurnStarted(_owner.BattleContext.TurnCount, false));
@@ -33,6 +33,7 @@ namespace _DreamKeep.GameBattle
 
             await actions.PerformAllAsync();
         }
+
         #endregion
     }
 }

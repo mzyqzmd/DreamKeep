@@ -9,8 +9,7 @@ namespace _DreamKeep.GameBattle
     /// <summary>玩家回合结束阶段：结算灼烧与再生，弃掉未保留的手牌并衰减状态。</summary>
     public class BP_PlayerTurnEnd : BattlePhase
     {
-        public BP_PlayerTurnEnd(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
-            : base(stateMachine_, owner_)
+        public BP_PlayerTurnEnd(BattleLoop owner_) : base(owner_)
         {
         }
 

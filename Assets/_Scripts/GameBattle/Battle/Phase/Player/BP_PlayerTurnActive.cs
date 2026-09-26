@@ -8,23 +8,24 @@ namespace _DreamKeep.GameBattle
     /// <summary>玩家回合进行阶段：唯一的等待型阶段，只接受命令，不自动推进。
     /// 进入本阶段即"玩家操作窗口开启"，但等待型阶段不被主循环驱动 RunAsync，故该信号由上一阶段 BP_PlayerTurnStart 在抽牌演出收尾处广播 BE_PlayerTurnActiveStarted。
     /// 打不出的命令（能量不足、牌不在手牌）不静默丢弃，一律广播拒绝事件交由视图退牌。</summary>
-    public class BP_PlayerTurnActive : BattlePhase,IBattleCommandReceiver
+    public class BP_PlayerTurnActive : BattlePhase, IBattleCommandReceiver
     {
-        public BP_PlayerTurnActive(StateMachine<BaseState<BattleLoop>> stateMachine_, BattleLoop owner_)
-            : base(stateMachine_, owner_)
+        public BP_PlayerTurnActive(BattleLoop owner_) : base(owner_)
         {
         }
 
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnEnd;
 
         #region 阶段异步逻辑：等待型阶段不产生演出，主循环也不会驱动本方法（只分发 HandleCommand），保留空实现仅作入口钩子的位置说明
+
         public override UniTask RunAsync() => base.RunAsync();
+
         #endregion
 
-   
 
         #region 命令分派：等待型阶段唯一处理玩家意图的入口，由 BattleLoop 在等待态取出命令后调用
-        public  async UniTask HandleCommand(BattleCommand command_)
+
+        public async UniTask HandleCommand(BattleCommand command_)
         {
             switch (command_)
             {
@@ -36,8 +37,11 @@ namespace _DreamKeep.GameBattle
                     break;
             }
         }
+
         #endregion
+
         #region 打出一张卡：校验能量与手牌后建队并异步等待演出
+
         private async UniTask PlayCardAsync(CardModel card_, int aimSlot_)
         {
             BattleContext context = _owner.BattleContext;
@@ -68,6 +72,7 @@ namespace _DreamKeep.GameBattle
             _owner.ActionSystem.Enqueue(new BA_DiscardSingle(context.Player.Creature, self, card_, state.PlayPile));
             await _owner.ActionSystem.PerformAllAsync();
         }
+
         #endregion
     }
 }

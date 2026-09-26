@@ -15,6 +15,10 @@ namespace _DreamKeep.Utility
         /// <summary>返回 [minInclusive_, maxExclusive_) 区间内的随机整数。</summary>
         public int Next(int minInclusive_, int maxExclusive_) => _random.Next(minInclusive_, maxExclusive_);
 
+        /// <summary>返回 [minInclusive_, maxExclusive_) 区间内的随机浮点数。</summary>
+        public float Next(float minInclusive_, float maxExclusive_) =>
+            (float)(_random.NextDouble() * (maxExclusive_ - minInclusive_) + minInclusive_);
+
         /// <summary>按整数百分比判定是否命中；全程 int 运算以保持跨环境一致。</summary>
         public bool Chance(int percent_) => _random.Next(100) < percent_;
 
