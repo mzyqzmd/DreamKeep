@@ -65,7 +65,7 @@ namespace _DreamKeep.GameBattle
             foreach (BattleAction action in CardAffixResolver.Build(context, card_, context.Player, aimSlot_))
                 _owner.ActionSystem.Enqueue(action);
             // 消耗与遗忘已在队列内让卡离场，弃置动作取不到卡会自动跳过
-            _owner.ActionSystem.Enqueue(new BA_Discard(context.Player.Creature, self, card_, state.PlayPile));
+            _owner.ActionSystem.Enqueue(new BA_DiscardSingle(context.Player.Creature, self, card_, state.PlayPile));
             await _owner.ActionSystem.PerformAllAsync();
         }
         #endregion

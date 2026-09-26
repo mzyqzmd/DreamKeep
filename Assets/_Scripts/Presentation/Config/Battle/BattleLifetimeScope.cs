@@ -40,6 +40,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_ExhaustPile>();
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
+            builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
             builder_.RegisterComponentInHierarchy<UI_Player>().AsSelf().As<UI_Actor>(); // 出牌流程的目标提示协作者，经 UI_Actor 解析
             builder_.RegisterEntryPoint<BattleEntry>();
         }

@@ -38,15 +38,17 @@ namespace _DreamKeep.GameBattle
 
             await actions.PerformAllAsync();
 
-            // 弃手牌：未带「保留」的逐张建动作，逐个走完"离手 → 飞向弃牌堆 → 落地"，落地时计数才递增
-            // 倒序建动作＝保持既有弃牌顺序（手牌末位那张先飞）；筛选跑在任何动作执行之前，手牌不会被边遍历边改动
+            // 弃手牌：未带「保留」的整手收成一批一次弃置，表现层整波同飞，全部落地才轮到衰减与敌方回合；
+            // 倒序收集＝保持既有弃牌顺序（手牌末位那张先入堆）；筛选跑在任何动作执行之前，手牌不会被边遍历边改动
             CardPile hand = player.CombatState.Hand;
+            List<CardModel> discardBatch = new();
             for (int i = hand.Count - 1; i >= 0; i--)
             {
                 CardModel card = hand.Cards[i];
                 if (card.IsRetain) continue;
-                actions.Enqueue(new BA_Discard(player.Creature, self, card, hand));
+                discardBatch.Add(card);
             }
+            if (discardBatch.Count > 0) actions.Enqueue(new BA_DiscardBatch(player.Creature, self, discardBatch, hand));
 
             actions.Enqueue(new BA_DecayPerk(player.Creature, self, EPerkDecayTiming.TurnEnd));
             await actions.PerformAllAsync();

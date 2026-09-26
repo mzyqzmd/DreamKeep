@@ -49,6 +49,9 @@ namespace _DreamKeep.Presentation
         /// <summary>当前世界位置（卡根 pivot＝卡下沿中点）：拖拽跟手、落点判定与悬停抬起都以这个锚点起算。</summary>
         public Vector3 WorldPosition => _rect.position;
 
+        /// <summary>当前世界朝向：起飞抖动等需要原位重写姿态的场合与 WorldPosition 配对使用。</summary>
+        public Quaternion WorldRotation => _rect.rotation;
+
         /// <summary>悬停抬起量（画布像素）：由所在区域换算成世界的"上"向量后下发，进入姿态仍归包装独占。</summary>
         public float HoverLiftPx => _hoverLiftPx;
 

@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战斗单位信息面板：血条、格挡与状态槽位显示的唯一写入点，只认 UI_Actor 转发来的域真值，自己不订事件不判规则。
     /// 血条走 DOTween 单通道补间（数值滚动 + 按 _gradient 染 Fill），格挡由 AC_BlockFrame 的 Show 布尔驱动显隐，
-    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹复用的 UI_DescriptionPopTip（挂场景 Canvas_Pop/PopTextRoot 下）。</summary>
+    /// 状态槽位按状态类型去重挂在 PerkGroup 下（HorizontalLayoutGroup 自动排布），悬停槽位在其图标上方弹 PopTextRoot 共享复用的 UI_DescriptionPopTip。</summary>
     public class UI_InfoPanel : MonoBehaviour
     {
         [Header("血条")] [SerializeField] private Gradient _gradient;
@@ -26,7 +26,6 @@ namespace _DreamKeep.Presentation
 
         [Header("Perk管理")] [SerializeField] private GameObject _perkGroupRoot;
         [SerializeField] private UI_PerkSlot _perkSlotPrefab;
-        [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
 
         [Tooltip("详情提示与图标顶沿的间距（画布像素）")] [SerializeField]
         private float _perkTipLiftPx = 1f;
@@ -48,7 +47,7 @@ namespace _DreamKeep.Presentation
         private Tween _healthTween;
         private int _shownBlock = -1;
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
-        private UI_DescriptionPopTip _descriptionPopTip;
+        private UI_DescriptionPopTip _descriptionPopTip; // 共享实例的本地缓存：PopTextRoot 全战斗只建一个，首次弹出时领用
         private UI_PerkSlot _shownTipSlot;
 
 
@@ -145,16 +144,11 @@ namespace _DreamKeep.Presentation
 
         #region 效果提示弹窗
 
-        // 弹效果详情：单实例复用——有则换内容重新定位，无则懒生成到 Canvas_Pop/PopTextRoot（按 UI_PopTextRoot 标记查找，
-        // 场景里没有标记则回退自身所在 Canvas）；记录显示中的槽位，供悬停期间层数变化时同步刷新
+        // 弹效果详情：单实例复用——向 PopTextRoot 要共享提示（首次由宿主懒生成挂其名下），之后有则换内容重新定位；
+        // 记录显示中的槽位，供悬停期间层数变化时同步刷新
         public void ShowPerkTip(UI_PerkSlot slot_)
         {
-            if (!_descriptionPopTip)
-            {
-                _descriptionPopTip = Instantiate(_descriptionPopTipPrefab, PopTextRoot.transform);
-                ((RectTransform)_descriptionPopTip.transform).pivot = new Vector2(0.5f, 0f); // 底沿中点对准定位点：高度随内容变化只向上生长
-            }
-
+            if (!_descriptionPopTip) _descriptionPopTip = PopTextRoot.DescriptionTip;
             _shownTipSlot = slot_;
             WriteTipContent(slot_);
         }
@@ -173,8 +167,8 @@ namespace _DreamKeep.Presentation
 
         public void HidePerkTip()
         {
-            if (_descriptionPopTip)
-                _descriptionPopTip.gameObject.SetActive(false);
+            _shownTipSlot = null; // 共享实例：先清本面板的显示记录，防层数刷新错抢别的面板正显示的内容
+            if (_descriptionPopTip) _descriptionPopTip.gameObject.SetActive(false);
         }
 
         #endregion

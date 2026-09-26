@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
@@ -10,9 +9,10 @@ namespace _DreamKeep.Presentation
     /// <summary>手牌区的流程与演出：前半是出牌流程——管住"抓起 → 松手 → 落点判定 → 收进出牌区等待 → 被拒退回 / 归宿离场"这一条线；
     /// 状态不在这里（拖拽与悬停身份、手牌列都在手牌区本体，"已打出、等结算"的成员关系在出牌区队列），
     /// 它只按本体与落点做取舍，判定通过即直接向命令门面发出打出意图——手牌区唯一向域侧发命令的角色。
-    /// 后半是九个领域事件的订阅与全部演出——抽牌入场、洗回搬运、打出等待、弃牌/消耗/遗忘的归宿飞行、被拒退回、回合开始与战斗结束。
+    /// 后半是十个领域事件的订阅与全部演出——抽牌入场、洗回搬运、打出等待、批量弃牌整波同飞、消耗/遗忘/单张弃牌的归宿飞行、
+    /// 被拒退回、回合开始与战斗结束。
     /// "牌进堆 / 离堆"的计数通知在起飞的与落地的那一帧发出（谁飞谁通知），三个牌堆的显示数与弹跳归它们自己；
-    /// 洗回时多少张就飞多少张，逐张涨数与逐张弹跳因此与飞行的节奏同源。
+    /// 洗回与批量弃牌都是整波同飞、一张飞抵即一张进堆，逐张涨数与逐张弹跳因此与飞行的节奏同源。
     /// 它是手牌区里唯一 await 演出播完的角色（域侧逐事件 await，演出播完才继续下一件事），且只消费事件、不判断规则。
     /// 位置与缩放的补间全交包装（UI_CardHolder），它只决定"什么时候让哪张牌去哪、等多久"，且一律给世界姿态：
     /// 槽位由手牌区本体按点现算，牌堆与出牌区的落点直接取各自节点的世界位置，散开幅度按节点的 画布像素→世界 换算；
@@ -37,16 +37,15 @@ namespace _DreamKeep.Presentation
         private readonly float _exitDuration;
         private readonly float _reshuffleFlyDuration;
         private readonly float _reshuffleFlyScale;
-        private readonly float _reshuffleFlyStagger;
         private readonly float _reshuffleFlySpreadPx;
         private readonly float _reshuffleFlySpreadMaxPx;
-        private readonly float _reshuffleMaxDuration;
+        private readonly float _flyJitterPx;
 
         public HandPlayFlow(HandArea cards_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,
             UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, UI_Actor selfTargetActor_,
             float drawGrowDuration_, float drawGrowOvershoot_, float drawSettleDuration_, float exitDuration_,
-            float reshuffleFlyDuration_, float reshuffleFlyScale_, float reshuffleFlyStagger_,
-            float reshuffleFlySpreadPx_, float reshuffleFlySpreadMaxPx_, float reshuffleMaxDuration_)
+            float reshuffleFlyDuration_, float reshuffleFlyScale_, float reshuffleFlySpreadPx_,
+            float reshuffleFlySpreadMaxPx_, float flyJitterPx_)
         {
             _cards = cards_;
             _dropZone = dropZone_;
@@ -61,10 +60,9 @@ namespace _DreamKeep.Presentation
             _exitDuration = exitDuration_;
             _reshuffleFlyDuration = reshuffleFlyDuration_;
             _reshuffleFlyScale = reshuffleFlyScale_;
-            _reshuffleFlyStagger = reshuffleFlyStagger_;
             _reshuffleFlySpreadPx = reshuffleFlySpreadPx_;
             _reshuffleFlySpreadMaxPx = reshuffleFlySpreadMaxPx_;
-            _reshuffleMaxDuration = reshuffleMaxDuration_;
+            _flyJitterPx = flyJitterPx_;
         }
 
         // 接线：事件清单集中在这里，各事件的演出就在下面，不用翻第二个文件
@@ -74,7 +72,8 @@ namespace _DreamKeep.Presentation
             dispatcher_.Register<BE_CardDrawn>(OnCardDrawnAsync);
             dispatcher_.Register<BE_CardPlayed>(OnCardPlayedAsync);
             dispatcher_.Register<BE_CardDiscarded>(discarded_ =>
-                ExitToPileAsync(discarded_.Card, _discardPile));
+                ExitToPileAsync(discarded_.Card, _discardPile)); // 单张弃牌：打出结算后的卡离场（消耗/遗忘时域侧自动跳过）与将来"弃一张"卡效
+            dispatcher_.Register<BE_CardsDiscarded>(OnCardsDiscardedAsync);
             dispatcher_.Register<BE_CardExhausted>(exhausted_ =>
                 ExitToPileAsync(exhausted_.Card, _exhaustPile));
             // 遗忘按既定口径飞往出牌区域，此处只播表现形式，永久移除与否由域侧决定；只借道不落堆，故不发进堆通知
@@ -162,38 +161,37 @@ namespace _DreamKeep.Presentation
             _selfTargetActor.ShowTargetTip(false);
         }
 
-        // 洗回搬运：域侧一次搬完整摞，这里把它演成一张一张搬——洗回多少张就飞多少张，一张飞抵即一张进堆；
+        // 洗回搬运：域侧一次搬完整摞，这里把它演成整波同飞——洗回多少张就飞多少张，一张飞抵即一张进堆；
         // 域侧逐事件 await，这段播完才轮到本次抽牌入场
         private UniTask OnDiscardReshuffledAsync(BE_DiscardReshuffled reshuffled_) => FlyCardsAsync(reshuffled_.Count);
 
-        // 飞行：借同等张数的包装（只取池、不入手牌列与模型索引）从弃牌堆飞到抽牌堆并缩到 0，全部到达才算飞完，飞完随即归还卡池；
-        // 起飞那一刻通知弃牌堆"牌离堆"（数字随之减），落地那一刻通知抽牌堆"牌进堆"（数字随之加并弹一下）——
-        // 两堆的数字与弹跳都由这两条通知推动，这里只管飞；借来的包装还带着上次 Bind 的残留内容，但整段飞行都缩得很小，不为它单独刷外观
+        // 飞行：借同等张数的包装（只取池、不入手牌列与模型索引）从弃牌堆同帧全部飞到抽牌堆并缩到 0，全部到达才算飞完，飞完随即归还卡池；
+        // 起落点按对称铺开骨架错开保底不重叠、再叠随机抖动打散轨迹；起飞那一刻通知弃牌堆"牌离堆"（数字随之减），
+        // 落地那一刻通知抽牌堆"牌进堆"（数字随之加并弹一下）——两堆的数字与弹跳都由这两条通知推动，这里只管飞；
+        // 借来的包装还带着上次 Bind 的残留内容，但整段飞行都缩得很小，不为它单独刷外观
         private async UniTask FlyCardsAsync(int count_)
         {
             int flyCount = count_;
-            float stagger = flyCount > 1 ? Mathf.Min(_reshuffleFlyStagger, _reshuffleMaxDuration / flyCount) : 0f;
             UI_CardHolder[] cards = new UI_CardHolder[flyCount];
             Vector3 from = _discardPile.transform.position;
             Vector3 to = _drawPile.transform.position;
 
-            // 起飞：逐张摆在弃牌堆附近（错开量见 FlyOffset），缩到飞行用的起始尺寸
+            // 起飞：逐张摆在弃牌堆附近的散开点上，缩到飞行用的起始尺寸，同帧全部起飞
             for (int i = 0; i < flyCount; i++)
             {
                 UI_CardHolder card = _cards.RentFlyView();
                 cards[i] = card;
-                card.Place(from + FlyOffset(i, flyCount), _discardPile.transform.rotation);
+                card.Place(from + FlyOffset(i, flyCount) + Jitter(_discardPile.transform),
+                    _discardPile.transform.rotation);
                 card.transform.localScale = Vector3.one * _reshuffleFlyScale;
             }
 
-            // 逐张错开起飞：起飞间隔按总时长上限自动压缩，张数再多也不久等；全部到达才算飞完
             UniTask[] flights = new UniTask[flyCount];
             for (int i = 0; i < flyCount; i++)
             {
-                if (i > 0) await UniTask.Delay(TimeSpan.FromSeconds(stagger), DelayType.DeltaTime);
                 UI_CardHolder card = cards[i];
                 _discardPile.OnCardLeft();
-                flights[i] = FlyOneAsync(card, to + FlyOffset(i, flyCount));
+                flights[i] = FlyOneAsync(card, to + FlyOffset(i, flyCount) + Jitter(_drawPile.transform));
             }
 
             await UniTask.WhenAll(flights);
@@ -218,6 +216,10 @@ namespace _DreamKeep.Presentation
             float vertical = (index_ % 2 == 0 ? 1f : -1f) * spread * 0.5f;
             return _drawPile.transform.TransformVector(new Vector2(lateral, vertical));
         }
+
+        // 飞行起落点的随机抖动：±幅度内均匀分布的画布像素，经节点换算成世界向量，只打散重叠轨迹不改朝向
+        private Vector3 Jitter(Transform node_) =>
+            node_.TransformVector(new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)) * _flyJitterPx);
 
         // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸。
         // 槽位与峰值都按手牌区本体现算的世界姿态与槽位缩放：手牌超过不缩小的张数上限后每张都有缩放，
@@ -305,6 +307,41 @@ namespace _DreamKeep.Presentation
 
             _cards.ApplyLayout();
             _cards.RefreshPlayableLook(playable_);
+        }
+
+        // 批量弃牌波：整手未保留的牌同帧各自飞向弃牌堆并缩到 0，全部落地才算波次播完（其后域侧才推进到状态衰减与敌方回合）；
+        // 起飞逐张记离堆（数字一次掉到底）、落地逐张记进堆（数字随落地递增）；起落位各带随机抖动打散重叠轨迹
+        private async UniTask OnCardsDiscardedAsync(BE_CardsDiscarded discarded_)
+        {
+            Transform target = _discardPile.transform;
+            List<UniTask> flights = new();
+
+            // 起飞：逐张出列、先挪到槽位附近散开的随机点再换到飞行层，整手随即合拢
+            foreach (CardModel model in discarded_.Cards)
+            {
+                if (!_cards.TryGetView(model, out UI_CardHolder view)) continue;
+                _cards.RemoveFromHand(view);
+                _dropZone.Remove(view);
+                view.Place(view.WorldPosition + Jitter(target), view.WorldRotation);
+                _cards.MoveToFly(view); // 起飞即换到飞行层：飞行的牌一律画在手牌与队列之上
+                _discardPile.OnCardLeft();
+                flights.Add(FlyToPileAsync(view, model, target));
+            }
+
+            if (flights.Count == 0) return;
+            _cards.ApplyLayout();
+
+            await UniTask.WhenAll(flights);
+        }
+
+        // 波内单张归宿飞行：飞向牌堆并缩到 0，落定即通知进堆、注销索引并回收进池
+        private async UniTask FlyToPileAsync(UI_CardHolder view_, CardModel model_, Transform target_)
+        {
+            await UniTask.WhenAll(
+                view_.MoveToAsync(target_.position + Jitter(target_), target_.rotation, _exitDuration),
+                view_.ScaleToAsync(0f, _exitDuration));
+            _discardPile.OnCardArrived();
+            _cards.Release(model_, view_);
         }
 
         // 归宿：离手 → 出队 → 飞向目标牌堆（传 null 即飞往出牌区）并缩到 0 → 落地通知目标堆进了一张 → 注销索引、回收进池。
