@@ -43,6 +43,12 @@ namespace _DreamKeep.GameBattle
                     if (mixed.First != null) Resolve(mixed.First, enemy_, battleContext_, actions_);
                     if (mixed.Second != null) Resolve(mixed.Second, enemy_, battleContext_, actions_);
                     break;
+                case EI_Move:
+                    actions_.Add(new BA_Move(enemy_));
+                    break;
+                case EI_Heal heal:
+                    actions_.Add(new BA_Heal(enemy_.Creature, new List<Creature> { enemy_.Creature }, heal.Amount));
+                    break;
             }
         }
     }

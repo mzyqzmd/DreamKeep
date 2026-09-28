@@ -2,27 +2,30 @@ using System.Collections.Generic;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>敌人：占据一个固定阵型槽位（槽位索引即从左到右的站位次序），持有一串运行时意图并按顺序循环取用。</summary>
+    /// <summary>敌人：占据一个纵深槽位（0 最靠前、2 最靠后，可在槽位间移动），持有一串运行时意图并按顺序循环取用；站 0 号时当前意图被替换意图临时顶替（执行与预告统一走 PreviewIntent）。</summary>
     public class Enemy
     {
         private readonly List<EnemyIntent> _intents;
+        private readonly EnemyIntent _slotZeroIntent;
         private int _intentIndex;
 
         public Creature Creature { get; }
-        public int Slot { get; }
+        public int Slot { get; private set; }
         public string Name { get; }
-
-        public IReadOnlyList<EnemyIntent> Intents => _intents;
 
         /// <summary>本次将要执行的意图；没有配置意图时为 null。</summary>
         public EnemyIntent CurrentIntent => _intents.Count == 0 ? null : _intents[_intentIndex];
 
-        public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_)
+        /// <summary>对外展示的意图：站 0 号且配置了替换意图时显示它（打完即回位），否则显示序列当前意图。</summary>
+        public EnemyIntent PreviewIntent => Slot == 0 && _slotZeroIntent != null ? _slotZeroIntent : CurrentIntent;
+
+        public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent slotZeroIntent_)
         {
             Name = name_;
             Creature = new Creature(maxHp_);
             Slot = slot_;
             _intents = intents_ ?? new List<EnemyIntent>();
+            _slotZeroIntent = slotZeroIntent_;
         }
 
         #region 推进到下一条意图，按顺序循环
@@ -31,6 +34,10 @@ namespace _DreamKeep.RuntimeData
             if (_intents.Count == 0) return;
             _intentIndex = (_intentIndex + 1) % _intents.Count;
         }
+        #endregion
+
+        #region 变更所在槽位，由移动动作调用
+        public void SetSlot(int slot_) => Slot = slot_;
         #endregion
     }
 }

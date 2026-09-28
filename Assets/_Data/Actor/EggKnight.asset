@@ -13,11 +13,16 @@ MonoBehaviour:
   m_Name: EggKnight
   m_EditorClassIdentifier: 
   _name: "\u86CB\u86CB\u602A"
-  _maxHP: 30
+  _maxHP: 40
   _enemyIntents:
+  - rid: 5765983649002684418
   - rid: 5765983475554844673
-  - rid: 5765983475554844674
   - rid: 5765983561550135296
+  _slotZeroIntent:
+    _intent1:
+      rid: 5765983649002684416
+    _intent2:
+      rid: 5765983649002684417
   references:
     version: 2
     RefIds:
@@ -26,10 +31,6 @@ MonoBehaviour:
       data:
         _damage: 4
         _times: 2
-    - rid: 5765983475554844674
-      type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _amount: 5
     - rid: 5765983561550135296
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -46,3 +47,14 @@ MonoBehaviour:
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 3
+    - rid: 5765983649002684416
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 8
+        _times: 2
+    - rid: 5765983649002684417
+      type: {class: AdvanceIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 5765983649002684418
+      type: {class: AdvanceIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

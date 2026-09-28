@@ -21,6 +21,11 @@ namespace _DreamKeep.RuntimeData
 
             return intents;
         }
+        #endregion
+
+        #region 烘焙单条配置意图：供敌人 0 号槽位替换意图等单条场景取用
+
+        public static EnemyIntent Bake(IntentData config_) => ToRuntime(config_);
 
         #endregion
 
@@ -32,6 +37,8 @@ namespace _DreamKeep.RuntimeData
                 BlockIntentData block => new EI_Block(block.Amount),
                 ApplyPerkIntentData applyPerk => ToApplyPerk(applyPerk),
                 MixedIntentData mixed => new EI_Mixed(ToRuntime(mixed.Intent1), ToRuntime(mixed.Intent2)),
+                MoveForwardIntentData => new EI_Move(),
+                HealIntentData heal => new EI_Heal(heal.Amount),
                 _ => null,
             };
         }

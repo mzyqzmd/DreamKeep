@@ -18,6 +18,9 @@ namespace _DreamKeep.Presentation
     {
         [SerializeField] private SO_Player _playerConfig;
         [SerializeField] private List<SO_Enemy> _enemyConfigs = new();
+
+        /// <summary>敌人视图预制体：与 _enemyConfigs 平行索引，元素根上挂 UI_Enemy 子类，由 BattleEntry 运行时生成。</summary>
+        [SerializeField] private List<GameObject> _enemyViewPrefabs = new();
         [SerializeField] private int _seed = 12345;
 
         protected override void Configure(IContainerBuilder builder_)
@@ -33,6 +36,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（转交给出牌流程发命令）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
+            builder_.RegisterInstance(_enemyViewPrefabs); // 被 BattleEntry 的构造函数要（生成敌人视图）
 
             builder_.RegisterComponentInHierarchy<UI_HandView>();
             // 三堆不订阅任何事件：数字由打牌流程在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
@@ -43,6 +47,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
             builder_.RegisterComponentInHierarchy<UI_Player>().AsSelf().As<UI_Actor>(); // 出牌流程的目标提示协作者，经 UI_Actor 解析
+            builder_.RegisterComponentInHierarchy<UI_EnemyArea>(); // 敌人槽位区：敌人视图出生摆位与移动补间的坐标来源
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }

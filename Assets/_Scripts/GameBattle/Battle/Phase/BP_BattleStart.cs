@@ -22,7 +22,7 @@ namespace _DreamKeep.GameBattle
 
             List<Enemy> enemies = _owner.BattleContext.GetAliveEnemies();
             foreach (Enemy enemy in enemies)
-                await PlayEvents(new BE_EnemyIntentChanged(enemy, enemy.CurrentIntent));
+                await PlayEvents(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
 
             await base.RunAsync();
         }

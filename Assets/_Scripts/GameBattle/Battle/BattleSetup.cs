@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
@@ -48,14 +49,19 @@ namespace _DreamKeep.GameBattle
             return runCardOf;
         }
 
-        /// <summary>敌人按配置顺序装配，列表次序即阵型槽位（从左到右）。</summary>
+        /// <summary>敌人按配置顺序装配：从最靠后槽位向前排（1 只站 2 号、2 只站 1/2 号），并烘焙 0 号槽位替换意图。</summary>
         private static List<Enemy> BuildEnemies(IReadOnlyList<SO_Enemy> enemyConfigs_)
         {
+            if (enemyConfigs_.Count > BattleContext.MaxEnemyCount)
+                throw new InvalidOperationException($"敌人数量 {enemyConfigs_.Count} 超过纵深阵型上限 {BattleContext.MaxEnemyCount}");
+
             List<Enemy> enemies = new();
+            int rearOffset = BattleContext.MaxSlotIndex + 1 - enemyConfigs_.Count;
             for (int i = 0; i < enemyConfigs_.Count; i++)
             {
                 SO_Enemy config = enemyConfigs_[i];
-                enemies.Add(new Enemy(config.Name, config.MaxHp, i, IntentBaker.Bake(config.EnemyIntents)));
+                enemies.Add(new Enemy(config.Name, config.MaxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
+                    IntentBaker.Bake(config.SlotZeroIntent)));
             }
 
             return enemies;
