@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
 {
     public abstract class UI_Actor : MonoBehaviour
     {
-        [SerializeField] protected UI_TargetTip _targetTip;
+        [SerializeField] protected GameObject _targetTip;
         [SerializeField] protected UI_InfoPanel _infoPanel;
 
         /// <summary>绑定的域侧生物数据：事件按它过滤，血量、格挡与状态真值都从它读。</summary>
@@ -22,8 +22,8 @@ namespace _DreamKeep.Presentation
         public virtual void Construct(BattleContext battleContext_, BattleEventDispatcher eventDispatcher_)
         {
             _infoPanel.Init(_boundCreature);
-            eventDispatcher_.Register<BE_BlockGained>(OnBlockGainedAsync);
             eventDispatcher_.Register<BE_DamageDealt>(OnDamageDealtAsync);
+            eventDispatcher_.Register<BE_BlockGained>(OnBlockGainedAsync);
             eventDispatcher_.Register<BE_BlockCleared>(OnBlockClearedAsync);
             eventDispatcher_.Register<BE_HealthRestored>(OnHealthRestoredAsync);
             eventDispatcher_.Register<BE_PerkApplied>(OnPerkAppliedAsync);
@@ -35,9 +35,8 @@ namespace _DreamKeep.Presentation
 
         #region 对子类暴露的动画钩子：默认空实现，覆写后在 HUD 数字刷新前播单位动画（await 演完才落账）
 
-        protected virtual UniTask OnBlockGainedAnimAsync(BE_BlockGained gained_) => UniTask.CompletedTask;
-
         protected virtual UniTask OnDamageDealtAnimAsync(BE_DamageDealt dealt_) => UniTask.CompletedTask;
+        protected virtual UniTask OnBlockGainedAnimAsync(BE_BlockGained gained_) => UniTask.CompletedTask;
 
         #endregion
 
@@ -45,20 +44,13 @@ namespace _DreamKeep.Presentation
 
         public void ShowTargetTip(bool show_)
         {
-            if (!_targetTip || _targetTipShown == show_) return;
+            if (_targetTipShown == show_) return;
             _targetTipShown = show_;
             _targetTip.gameObject.SetActive(show_);
         }
 
         #endregion
 
-        // 格挡获得：受击动画演完才对齐显示值，获得、吸收衰减与回合清空三条路径共用这一个写入口
-        private async UniTask OnBlockGainedAsync(BE_BlockGained gained_)
-        {
-            if (gained_.Target != _boundCreature) return;
-            await OnBlockGainedAnimAsync(gained_);
-            _infoPanel.SetBlock(gained_.Target.Block);
-        }
 
         // 伤害结算：域侧先扣格挡再扣血后才发事件，受击动画演完才一起对齐血与格挡真值
         private async UniTask OnDamageDealtAsync(BE_DamageDealt dealt_)
@@ -67,6 +59,14 @@ namespace _DreamKeep.Presentation
             await OnDamageDealtAnimAsync(dealt_);
             _infoPanel.SetBlock(dealt_.Target.Block);
             _infoPanel.SetHealth(dealt_.Target.CurrentHp, true);
+        }
+
+        // 格挡获得：受击动画演完才对齐显示值，获得、吸收衰减与回合清空三条路径共用这一个写入口
+        private async UniTask OnBlockGainedAsync(BE_BlockGained gained_)
+        {
+            if (gained_.Target != _boundCreature) return;
+            await OnBlockGainedAnimAsync(gained_);
+            _infoPanel.SetBlock(gained_.Target.Block);
         }
 
         private UniTask OnBlockClearedAsync(BE_BlockCleared cleared_)
