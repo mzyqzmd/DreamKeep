@@ -43,13 +43,15 @@ namespace _DreamKeep.Presentation
             int count = Mathf.Min(_enemyViewPrefabs.Count, enemies.Count);
             for (int i = 0; i < count; i++)
             {
-                GameObject instance = Object.Instantiate(_enemyViewPrefabs[i], _enemyArea.transform);
+                GameObject instance =
+                    Object.Instantiate(_enemyViewPrefabs[i], _enemyArea.GetSlotTransform(2 - i).transform);
                 if (!instance.TryGetComponent(out UI_Enemy enemyView))
                 {
                     Debug.LogError($"敌人视图预制体 {_enemyViewPrefabs[i].name} 根上缺少 UI_Enemy 子类组件");
                     Object.Destroy(instance);
                     continue;
                 }
+
                 enemyView.Construct(_battleContext, _dispatcher, enemies[i], _enemyArea);
             }
         }

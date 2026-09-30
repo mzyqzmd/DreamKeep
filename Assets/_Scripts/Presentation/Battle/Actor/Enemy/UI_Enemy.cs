@@ -12,10 +12,10 @@ namespace _DreamKeep.Presentation
     /// 头顶意图预告与 Spine 动画（stand 循环 / 受击 hit / 攻击 attack / 死亡 death）；具体敌人继承并挂各自预制体。</summary>
     public abstract class UI_Enemy : UI_Actor
     {
-        private const string AnimStand = "stand";
-        private const string AnimHit = "hit";
-        private const string AnimAttack = "attack";
-        private const string AnimDeath = "death";
+        [SerializeField] private string AnimStand = "stand";
+        [SerializeField] private string AnimHit = "hit";
+        [SerializeField] private string AnimAttack = "attack";
+        [SerializeField] private string AnimDeath = "death";
 
         [SerializeField] private SkeletonGraphic _skeletonGraphic;
         [SerializeField] private UI_EnemyIntentGroup _intentGroup;
@@ -33,7 +33,8 @@ namespace _DreamKeep.Presentation
         #region 对子类暴露的装配入口：绑定敌人、注册事件并按槽位落位
 
         /// <summary>显式值传递装配（不走 [Inject]：容器不知道"是第几个敌人"），由生成侧在 Instantiate 后调用。</summary>
-        public virtual void Construct(BattleContext battleContext_, BattleEventDispatcher eventDispatcher_, Enemy enemy_, UI_EnemyArea area_)
+        public virtual void Construct(BattleContext battleContext_, BattleEventDispatcher eventDispatcher_,
+            Enemy enemy_, UI_EnemyArea area_)
         {
             _boundEnemy = enemy_;
             _boundCreature = enemy_.Creature;
