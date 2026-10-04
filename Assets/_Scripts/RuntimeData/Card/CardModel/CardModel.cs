@@ -63,7 +63,7 @@ namespace _DreamKeep.RuntimeData
                 case ECardTargetType.RandomEnemy:
                     description.AppendLine("对随机目标:"); break;
                 case ECardTargetType.AnyEnemy:
-                    description.AppendLine("指定一个目标:"); break;
+                    description.AppendLine("指定目标:"); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 

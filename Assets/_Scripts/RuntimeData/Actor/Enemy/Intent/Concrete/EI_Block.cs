@@ -7,6 +7,6 @@ namespace _DreamKeep.RuntimeData
 
         public EI_Block(int amount_) => Amount = amount_;
 
-        public override string GetDescription() => $"接下来为自己获得 {Amount} 点格挡";
+        public override string GetDescription() => $"这名敌人将要获得格挡";
     }
 }

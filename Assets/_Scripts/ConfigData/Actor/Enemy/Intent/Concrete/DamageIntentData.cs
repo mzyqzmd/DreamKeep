@@ -12,6 +12,5 @@ namespace _DreamKeep.ConfigData
 
         public int Damage => _damage;
         public int Times => _times;
-        public override string GetDescription() => $"这名敌人即将对你造成伤害";
     }
 }

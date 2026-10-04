@@ -14,6 +14,6 @@ namespace _DreamKeep.RuntimeData
             IsSelf = isSelf_;
         }
 
-        public override string GetDescription() => Perk.GetDescription();
+        public override string GetDescription() => IsSelf ? "这名敌人将要强化自身" : "这名敌人将要对你施加负面效果";
     }
 }

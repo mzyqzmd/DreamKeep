@@ -12,7 +12,7 @@ namespace _DreamKeep.RuntimeData
             Times = times_;
         }
 
-        public override string GetDescription() =>
-            Times > 1 ? $"接下来对你造成 {Amount} 点伤害，共 {Times} 次" : $"接下来对你造成 {Amount} 点伤害";
+        public override string GetDescription() 
+            => Times == 1 ? $"这名敌人将要对你发动一次攻击" : $"这名敌人将要对你发动{Times}次攻击";
     }
 }

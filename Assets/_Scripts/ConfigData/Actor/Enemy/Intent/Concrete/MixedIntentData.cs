@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using UnityEngine;
 
 namespace _DreamKeep.ConfigData
@@ -14,13 +13,5 @@ namespace _DreamKeep.ConfigData
 
         public IntentData Intent1 => _intent1;
         public IntentData Intent2 => _intent2;
-
-        public override string GetDescription()
-        {
-            StringBuilder description = new();
-            description.AppendLine(_intent1.GetDescription());
-            description.AppendLine(_intent2.GetDescription());
-            return description.ToString();
-        }
     }
 }

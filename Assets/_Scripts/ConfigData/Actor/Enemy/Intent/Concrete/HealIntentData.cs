@@ -11,6 +11,5 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private int _amount;
 
         public int Amount => _amount;
-        public override string GetDescription() => $"这名敌人即将治疗自己";
     }
 }

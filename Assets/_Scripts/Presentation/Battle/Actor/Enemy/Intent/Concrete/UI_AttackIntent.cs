@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 namespace _DreamKeep.Presentation.Intent
 {
-    /// <summary>攻击意图图标：按伤害数值选档位图，单次只写伤害、多次写"伤害 × 次数"。
-    /// 数据由 UI_EnemyIntentGroup 生成后经 Bind 写入。</summary>
-    public class UI_AttackIntent : MonoBehaviour
+    /// <summary>攻击意图图标：按伤害数值选档位图，单次只写伤害、多次写"伤害 × 次数"；
+    /// 数据由 UI_EnemyIntentGroup 生成后经 Bind 写入，悬停说明由基类统一承接。</summary>
+    public class UI_AttackIntent : UI_IntentIcon
     {
         [Header("基础配置")] [SerializeField] private Image _icon;
         [SerializeField] private TextMeshProUGUI _damageText;
@@ -22,6 +22,7 @@ namespace _DreamKeep.Presentation.Intent
 
         public void Bind(EI_Damage damage_)
         {
+            BindIntent(damage_);
             int totalDamage = damage_.Amount * damage_.Times;
             _icon.sprite = totalDamage switch
             {
