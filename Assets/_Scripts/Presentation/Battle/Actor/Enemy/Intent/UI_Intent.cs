@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation.Intent
     /// <summary>意图图标基类：每个图标自己承接悬停，在自身顶沿上方弹一条说明（意图只有描述、无标题）；
     /// 具体图标在 Bind 里登记自己对应的意图，说明文案取它的 GetDescription()；
     /// 生成方 UI_EnemyIntentGroup 在生成后注入气泡宿主。</summary>
-    public abstract class UI_IntentIcon : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public abstract class UI_Intent : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Tooltip("气泡底沿与本图标顶沿的间距（画布像素）")] [SerializeField]
         private float _tipLiftPx = 1f;

@@ -72,7 +72,7 @@ namespace _DreamKeep.Presentation
         {
             if (prefab_ == null) return null;
             RectTransform icon = Instantiate(prefab_, transform);
-            icon.GetComponent<UI_IntentIcon>()?.Initialize(PopTextRoot);
+            icon.GetComponent<UI_Intent>()?.Initialize(PopTextRoot);
             return icon;
         }
 

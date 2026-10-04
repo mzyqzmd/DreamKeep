@@ -49,7 +49,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
             builder_.RegisterComponentInHierarchy<UI_Player>(); // 场景注册的单位即玩家：注入时自绑玩家生物并登记注册表
             builder_.RegisterComponentInHierarchy<UI_TargetTipDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
-            builder_.RegisterComponentInHierarchy<UI_ActorSlotGroup>(); // 战场槽位区：玩家与敌人视图的槽位点坐标来源（出生摆位与移动补间）
+            builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场槽位区：玩家与敌人视图的槽位点坐标来源（出生摆位与移动补间）
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }

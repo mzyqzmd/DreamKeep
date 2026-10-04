@@ -13,17 +13,17 @@ namespace _DreamKeep.Presentation
         private readonly BattleLoop _loop;
         private readonly BattleContext _battleContext;
         private readonly BattleEventDispatcher _dispatcher;
-        private readonly UI_ActorSlotGroup _actorSlotGroup;
+        private readonly UI_ActorRoot _actorRoot;
         private readonly ActorViewRegistry _actorViewRegistry;
         private readonly List<GameObject> _enemyViewPrefabs;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_ActorSlotGroup actorSlotGroup_, ActorViewRegistry actorViewRegistry_, List<GameObject> enemyViewPrefabs_)
+            UI_ActorRoot actorRoot_, ActorViewRegistry actorViewRegistry_, List<GameObject> enemyViewPrefabs_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
             _dispatcher = dispatcher_;
-            _actorSlotGroup = actorSlotGroup_;
+            _actorRoot = actorRoot_;
             _actorViewRegistry = actorViewRegistry_;
             _enemyViewPrefabs = enemyViewPrefabs_;
         }
@@ -45,7 +45,7 @@ namespace _DreamKeep.Presentation
             int count = Mathf.Min(_enemyViewPrefabs.Count, enemies.Count);
             for (int i = 0; i < count; i++)
             {
-                Transform slot = _actorSlotGroup.GetSlotTransform(enemies[i].Slot);
+                Transform slot = _actorRoot.GetSlotTransform(enemies[i].Slot);
                 if (slot == null)
                 {
                     Debug.LogError($"敌人 {enemies[i].Name} 的槽位点 {enemies[i].Slot} 号未接线，跳过该敌人视图");
@@ -61,7 +61,7 @@ namespace _DreamKeep.Presentation
                 }
 
                 // 意图与移动是敌人的固有能力，一次装配到位，无需再探测可选组件
-                enemyView.Bind(_dispatcher, enemies[i], _actorSlotGroup, _actorViewRegistry);
+                enemyView.Bind(_dispatcher, enemies[i], _actorRoot, _actorViewRegistry);
             }
         }
 

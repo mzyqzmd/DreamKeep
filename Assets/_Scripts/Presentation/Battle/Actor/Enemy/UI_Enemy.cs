@@ -16,16 +16,16 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Ease _moveEase = Ease.OutQuad;
 
         private Enemy _boundEnemy;
-        private UI_ActorSlotGroup _slotGroup;
+        private UI_ActorRoot _root;
         private Tween _moveTween;
 
         #region 对外暴露的装配入口：由生成侧在 Instantiate 后注入装配
 
         /// <summary>统一装配：绑敌人 → 转调基类（面板与共享事件）→ 订阅意图与移动 → 展示当前预告意图 → 钉到出生槽位。</summary>
-        public void Bind(BattleEventDispatcher eventDispatcher_, Enemy enemy_, UI_ActorSlotGroup slotGroup_, ActorViewRegistry registry_)
+        public void Bind(BattleEventDispatcher eventDispatcher_, Enemy enemy_, UI_ActorRoot root_, ActorViewRegistry registry_)
         {
             _boundEnemy = enemy_;
-            _slotGroup = slotGroup_;
+            _root = root_;
             base.Bind(eventDispatcher_, enemy_.Creature, registry_);
             eventDispatcher_.Register<BE_EnemyIntentChanged>(OnIntentChangedAsync);
             eventDispatcher_.Register<BE_EnemyMoved>(OnEnemyMovedAsync);
@@ -47,7 +47,7 @@ namespace _DreamKeep.Presentation
         private async UniTask OnEnemyMovedAsync(BE_EnemyMoved moved_)
         {
             if (moved_.Enemy != _boundEnemy || this == null) return;
-            Transform slot = _slotGroup.GetSlotTransform(moved_.ToSlot);
+            Transform slot = _root.GetSlotTransform(moved_.ToSlot);
             if (slot == null) return;
             await PlayMoveAsync(slot.position);
         }
@@ -55,7 +55,7 @@ namespace _DreamKeep.Presentation
         // 出生摆位：不补间直接钉到当前槽位点
         private void PlaceAtSlot(int slot_)
         {
-            Transform point = _slotGroup.GetSlotTransform(slot_);
+            Transform point = _root.GetSlotTransform(slot_);
             if (point == null) return;
             _moveTween?.Kill();
             ((RectTransform)transform).position = point.position;

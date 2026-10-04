@@ -4,7 +4,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战场槽位区：持有纵深阵型四个槽位点（0 号为玩家、1~3 号为敌人，1 最靠前、3 最靠后），
     /// 是单位出生摆位与移动补间的唯一坐标来源；槽位编号口径见 RuntimeData 的 BattleSlotLayout。</summary>
-    public class UI_ActorSlotGroup : MonoBehaviour
+    public class UI_ActorRoot : MonoBehaviour
     {
         [SerializeField] private Transform _slot0;
         [SerializeField] private Transform _slot1;
