@@ -1,10 +1,10 @@
-using _DreamKeep.ConfigData;
 using TMPro;
 using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>状态详情提示：名字与描述的复用弹板，内容由 UI_InfoPanel 在弹出前经 SetContent 写入，显隐与定位也归它管。</summary>
+    /// <summary>描述气泡：标题与描述的复用弹板，内容由 UI_DescriptionPopTipGroup 在弹收与重排时写入；
+    /// 标题为空自动收起标题行（意图类说明只有描述），显隐与定位全归容器管。</summary>
     public class UI_DescriptionPopTip : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _name;
@@ -12,7 +12,9 @@ namespace _DreamKeep.Presentation
 
         public void SetContent(string name_, string description_)
         {
-            _name.text = name_;
+            bool hasName = !string.IsNullOrEmpty(name_);
+            _name.gameObject.SetActive(hasName);
+            if (hasName) _name.text = name_;
             _description.text = description_;
         }
     }

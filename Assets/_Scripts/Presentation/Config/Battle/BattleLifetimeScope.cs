@@ -19,7 +19,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] private SO_Player _playerConfig;
         [SerializeField] private List<SO_Enemy> _enemyConfigs = new();
 
-        /// <summary>敌人视图预制体：与 _enemyConfigs 平行索引，元素根上挂 UI_Enemy 子类，由 BattleEntry 运行时生成。</summary>
+        /// <summary>敌人视图预制体：与 _enemyConfigs 平行索引，元素根上挂具体敌人类（如 UI_EggKnight）与 UI_ActorAnimator，由 BattleEntry 运行时生成。</summary>
         [SerializeField] private List<GameObject> _enemyViewPrefabs = new();
         [SerializeField] private int _seed = 12345;
 
@@ -35,6 +35,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（转交给出牌流程发命令）
+            builder_.RegisterInstance(new ActorViewRegistry()); // 单位视图注册表：敌人视图运行时生成，目标提示按目标生物查视图
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
             builder_.RegisterInstance(_enemyViewPrefabs); // 被 BattleEntry 的构造函数要（生成敌人视图）
 
@@ -46,8 +47,9 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
-            builder_.RegisterComponentInHierarchy<UI_Player>().AsSelf().As<UI_Actor>(); // 出牌流程的目标提示协作者，经 UI_Actor 解析
-            builder_.RegisterComponentInHierarchy<UI_EnemyArea>(); // 敌人槽位区：敌人视图出生摆位与移动补间的坐标来源
+            builder_.RegisterComponentInHierarchy<UI_Player>(); // 场景注册的单位即玩家：注入时自绑玩家生物并登记注册表
+            builder_.RegisterComponentInHierarchy<UI_TargetTipDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
+            builder_.RegisterComponentInHierarchy<UI_ActorSlotGroup>(); // 战场槽位区：玩家与敌人视图的槽位点坐标来源（出生摆位与移动补间）
             builder_.RegisterEntryPoint<BattleEntry>();
         }
     }

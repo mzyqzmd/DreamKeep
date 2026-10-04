@@ -15,10 +15,6 @@ namespace _DreamKeep.GameBattle
         /// <summary>当前回合序号：从 1 起，我方与敌方回合共享同一个 n，敌人回合结束阶段才 ++。</summary>
         public int TurnCount { get; set; } = 1;
 
-        /// <summary>纵深槽位数：0/1/2 三个槽位，0 最靠前（贴玩家）、2 最靠后。</summary>
-        public const int SlotCount = 3;
-        public const int MaxSlotIndex = SlotCount - 1;
-
         /// <summary>一场战斗最多同时参与的敌人数。</summary>
         public const int MaxEnemyCount = 2;
 
@@ -59,21 +55,22 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
-        #region 槽位查询：纵深阵型的占位与归位判定，供移动动作取用
+        #region 槽位查询：纵深阵型的占位与归位判定（槽位编号见 BattleSlotLayout），供移动动作取用
 
-        /// <summary>指定槽位是否被除排除者之外的存活敌人占据。</summary>
+        /// <summary>指定槽位是否被占据：0 号槽位恒被玩家占据，其余判定是否被除排除者之外的存活敌人占据。</summary>
         public bool IsSlotOccupied(int slot_, Enemy except_)
         {
+            if (slot_ == 0) return true;
             foreach (Enemy enemy in Enemies)
                 if (enemy != except_ && !enemy.Creature.IsDead && enemy.Slot == slot_)
                     return true;
             return false;
         }
 
-        /// <summary>从最靠后（2 号）向前扫第一个空槽，全满返回 -1（最多两只敌人时不会发生）。</summary>
+        /// <summary>从最靠后（3 号）向前扫第一个空槽，全满返回 -1（最多两只敌人时不会发生）。</summary>
         public int GetRearmostEmptySlot(Enemy except_)
         {
-            for (int slot = MaxSlotIndex; slot >= 0; slot--)
+            for (int slot = 3; slot >= 1; slot--)
                 if (!IsSlotOccupied(slot, except_))
                     return slot;
             return -1;

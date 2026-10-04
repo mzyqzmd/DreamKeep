@@ -9,7 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4668560875071015032}
-  - component: {fileID: 5819783119307169498}
+  - component: {fileID: 5417448788700371773}
+  - component: {fileID: 1401577113075711011}
   m_Layer: 5
   m_Name: Player
   m_TagString: Untagged
@@ -38,7 +39,7 @@ RectTransform:
   m_AnchoredPosition: {x: 489, y: 98}
   m_SizeDelta: {x: 465.74, y: 616.74}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5819783119307169498
+--- !u!114 &5417448788700371773
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -47,12 +48,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 235640479445222248}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa5f33ecf2e844259d5c375adf2b90f4, type: 3}
+  m_Script: {fileID: 11500000, guid: 3c1b7f6392bc57c4cb7ce94a60bb511b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _standAnim: 
+  _hitAnim: 
+  _attackAnim: 
+  _deathAnim: 
+  _skillAnim: 
+  _blockAnim: 
+  _parryAnim: 
+  _parryStandAnim: 
+  _parryClipEnd01: 0.5
+  _deathHoldDuration: 2
+  _skeletonGraphic: {fileID: 1918114150593664658}
+--- !u!114 &1401577113075711011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235640479445222248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc335e9df3b8f1f4c9b2d41adbfa8b7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _targetTip: {fileID: 5087547631459548789}
-  _infoPanel: {fileID: 6217602101058324670}
-  _skeletonGraphic: {fileID: 1918114150593664658}
+  _healthBar: {fileID: 6438211661578092196}
+  _blockView: {fileID: 6931505137018397252}
+  _perkGroup: {fileID: 8822786113781635461}
 --- !u!1 &328138854744313143
 GameObject:
   m_ObjectHideFlags: 0
@@ -374,7 +399,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2348045050494753471}
-  - component: {fileID: 6217602101058324670}
   m_Layer: 5
   m_Name: InfoPanel
   m_TagString: Untagged
@@ -403,56 +427,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0.5, y: 55.630005}
   m_SizeDelta: {x: -17.200012, y: 111.26}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &6217602101058324670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695262565503795388}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8b58bd99b784ccbb4f27e258c1ab6c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _gradient:
-    serializedVersion: 2
-    key0: {r: 0.47058824, g: 0, b: 0, a: 1}
-    key1: {r: 0.7735849, g: 0, b: 0, a: 1}
-    key2: {r: 1, g: 0, b: 0, a: 0}
-    key3: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
-    key4: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
-    key5: {r: 0.9176471, g: 0.1254902, b: 0.15294118, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 32768
-    ctime2: 65535
-    ctime3: 65535
-    ctime4: 65535
-    ctime5: 65535
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_ColorSpace: 0
-    m_NumColorKeys: 3
-    m_NumAlphaKeys: 2
-  _healthSlider: {fileID: 8783520458294963070}
-  _healthText: {fileID: 3341608452447296908}
-  _healthTweenDuration: 0.25
-  _anim: {fileID: 4790753085441090259}
-  _blockAmount: {fileID: 2793543741023909790}
-  _perkGroupRoot: {fileID: 826500811887190770}
-  _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
-  _perkTipLiftPx: 1
 --- !u!1 &826500811887190770
 GameObject:
   m_ObjectHideFlags: 0
@@ -463,6 +437,7 @@ GameObject:
   m_Component:
   - component: {fileID: 42044069369404240}
   - component: {fileID: 8254419218676557338}
+  - component: {fileID: 8822786113781635461}
   m_Layer: 5
   m_Name: PerkGroup
   m_TagString: Untagged
@@ -513,6 +488,20 @@ MonoBehaviour:
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 1
   m_ConstraintCount: 7
+--- !u!114 &8822786113781635461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 826500811887190770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 244cc00f1e1dac547b175a5ae453cc28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
+  _perkTipLiftPx: 1
 --- !u!1 &1776860449677172910
 GameObject:
   m_ObjectHideFlags: 0
@@ -708,6 +697,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 298315671361156231}
+  - component: {fileID: 6438211661578092196}
   - component: {fileID: 8783520458294963070}
   m_Layer: 5
   m_Name: HealthBar
@@ -739,6 +729,51 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -17.595001}
   m_SizeDelta: {x: 0, y: 35.19}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &6438211661578092196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2568039224617429944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8189b0aea08b6ef41ab4794cbeddfb67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _gradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  _healthSlider: {fileID: 8783520458294963070}
+  _healthText: {fileID: 3341608452447296908}
+  _healthTweenDuration: 0.25
 --- !u!114 &8783520458294963070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1295,8 +1330,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7977657092705749180}
   - component: {fileID: 4790753085441090259}
+  - component: {fileID: 6931505137018397252}
   m_Layer: 5
-  m_Name: BlockInfo
+  m_Name: BlockView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1345,6 +1381,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &6931505137018397252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6905278038196388482}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7aaf719311d52b9469fe86828a19b21f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _anim: {fileID: 4790753085441090259}
+  _blockAmount: {fileID: 2793543741023909790}
 --- !u!1 &8512920288425863971
 GameObject:
   m_ObjectHideFlags: 0

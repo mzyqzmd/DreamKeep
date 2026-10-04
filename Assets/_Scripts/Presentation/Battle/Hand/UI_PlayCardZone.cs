@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
@@ -38,11 +39,7 @@ namespace _DreamKeep.Presentation
 
         // 命中判定只认一个点：调用方传卡牌锚点（卡根 pivot＝卡下沿中点）的世界坐标，换算进本区矩形再判包含；
         // 矩形本身就是可见的有效区，本类不再对坐标做任何补偿
-        public bool Accepts(Vector3 anchorWorld_)
-        {
-            RectTransform rect = (RectTransform)transform;
-            return rect.rect.Contains(rect.InverseTransformPoint(anchorWorld_));
-        }
+        public bool Accepts(Vector3 anchorWorld_) => UiGeometry.Contains((RectTransform)transform, anchorWorld_);
 
         #endregion
 

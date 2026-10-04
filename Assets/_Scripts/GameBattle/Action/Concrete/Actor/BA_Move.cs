@@ -3,7 +3,7 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>敌人移动动作：向玩家方向前进一个槽位；前槽被占则白过，站 0 号（前面没有槽位）则回绕到最靠后空槽。</summary>
+    /// <summary>敌人移动动作：向玩家方向前进一个槽位；前槽被占则白过，站最前敌人槽位（1 号）则回绕到最靠后空槽。</summary>
     public class BA_Move : BattleAction
     {
         private readonly Enemy _enemy;
@@ -22,10 +22,10 @@ namespace _DreamKeep.GameBattle
             return events;
         }
 
-        /// <summary>算目标槽位：站 0 号回绕到最靠后空槽，否则前槽为空前进一格、被挡原地不动。</summary>
+        /// <summary>算目标槽位：站最前敌人槽位回绕到最靠后空槽，否则前槽为空前进一格、被挡原地不动。</summary>
         private int ResolveTargetSlot(BattleContext battleContext_)
         {
-            if (_enemy.Slot == 0)
+            if (_enemy.Slot == 1)
             {
                 int rearSlot = battleContext_.GetRearmostEmptySlot(_enemy);
                 return rearSlot < 0 ? _enemy.Slot : rearSlot;

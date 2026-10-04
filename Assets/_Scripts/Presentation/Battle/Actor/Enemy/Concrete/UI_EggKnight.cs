@@ -1,6 +1,6 @@
 namespace _DreamKeep.Presentation
 {
-    /// <summary>蛋蛋怪视图：无专属机制，仅作为 EggKnight.prefab 的挂载点与未来特殊机制的扩展位。</summary>
+    /// <summary>蛋骑士：具体敌人视图，当前行为全部来自敌人基类，保留类型作将来差异化行为的落点。</summary>
     public class UI_EggKnight : UI_Enemy
     {
     }

@@ -13,5 +13,7 @@ namespace _DreamKeep.RuntimeData
             Perk = perk_;
             IsSelf = isSelf_;
         }
+
+        public override string GetDescription() => Perk.GetDescription();
     }
 }

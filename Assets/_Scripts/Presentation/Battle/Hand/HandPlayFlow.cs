@@ -7,7 +7,9 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>手牌区的流程与演出：前半是出牌流程——管住"抓起 → 松手 → 落点判定 → 收进出牌区等待 → 被拒退回 / 归宿离场"这一条线；
+    /// <summary>手牌区的流程与演出：前半是出牌流程——管住"抓起 → 松手 → 落点判定 → 收进出牌区等待 → 被拒退回 / 归宿离场"这一条线，
+    /// 其中 AnyEnemy 卡走瞄准分支：按下即登记瞄准模式（卡定住、不跟手），拖动越过启动阈值后由它驱动目标箭头（每帧从卡中心指向指针），
+    /// 松手时指向敌人即按其打出、落空或未激活则取消回位；
     /// 状态不在这里（拖拽与悬停身份、手牌列都在手牌区本体，"已打出、等结算"的成员关系在出牌区队列），
     /// 它只按本体与落点做取舍，判定通过即直接向命令门面发出打出意图——手牌区唯一向域侧发命令的角色。
     /// 后半是十个领域事件的订阅与全部演出——抽牌入场、洗回搬运、打出等待、批量弃牌整波同飞、消耗/遗忘/单张弃牌的归宿飞行、
@@ -21,9 +23,6 @@ namespace _DreamKeep.Presentation
     /// 命令被域侧拒绝时由退回事件走 RejectAsync，回合切换时由 ReconcilePending 把仍挂在出牌区的牌全部对账回手牌。</summary>
     public class HandPlayFlow
     {
-        // 目标选择尚未实现，槽位固定打首个敌人，等敌人视图落地后再由落点决定
-        private const int DefaultAimSlot = 0;
-
         private readonly HandArea _cards;
         private readonly UI_PlayCardZone _dropZone;
         private readonly BattleCommandDispatcher _commandDispatcher;
@@ -31,8 +30,7 @@ namespace _DreamKeep.Presentation
         private readonly UI_DrawPile _drawPile;
         private readonly UI_DiscardPile _discardPile;
         private readonly UI_ExhaustPile _exhaustPile;
-        private readonly UI_Actor _selfTargetActor;
-        private bool _selfTargetAimed;
+        private readonly UI_CardArrow _arrow;
         private readonly float _drawGrowDuration;
         private readonly float _drawGrowOvershoot;
         private readonly float _drawSettleDuration;
@@ -43,8 +41,12 @@ namespace _DreamKeep.Presentation
         private readonly float _reshuffleFlySpreadMaxPx;
         private readonly float _flyJitterPx;
 
+        // 瞄准状态：哪张牌正走"拖箭头指定目标"的模式（AnyEnemy 卡按下即登记），以及箭头是否已经越过启动阈值显示出来
+        private UI_CardHolder _aimingCard;
+        private bool _aimingActive;
+
         public HandPlayFlow(HandArea cards_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,Rng rng_,
-            UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, UI_Actor selfTargetActor_,
+            UI_DrawPile drawPile_, UI_DiscardPile discardPile_, UI_ExhaustPile exhaustPile_, UI_CardArrow arrow_,
             float drawGrowDuration_, float drawGrowOvershoot_, float drawSettleDuration_, float exitDuration_,
             float reshuffleFlyDuration_, float reshuffleFlyScale_, float reshuffleFlySpreadPx_,
             float reshuffleFlySpreadMaxPx_, float flyJitterPx_)
@@ -56,7 +58,7 @@ namespace _DreamKeep.Presentation
             _drawPile = drawPile_;
             _discardPile = discardPile_;
             _exhaustPile = exhaustPile_;
-            _selfTargetActor = selfTargetActor_;
+            _arrow = arrow_;
             _drawGrowDuration = drawGrowDuration_;
             _drawGrowOvershoot = drawGrowOvershoot_;
             _drawSettleDuration = drawSettleDuration_;
@@ -87,23 +89,56 @@ namespace _DreamKeep.Presentation
             dispatcher_.Register<BE_BattleEnded>(OnBattleEndedAsync);
         }
 
-        #region 出牌受理：抓起、松手、落点判定与回合对账
+        #region 出牌受理：抓起、松手、落点判定、瞄准与回合对账
 
-        // 抓起：登记拖拽身份、整张牌换到交互层最上（压过悬停那张）并掐掉在飞补间，随后由包装跟手
+        // 抓起：登记拖拽身份、整张牌换到交互层最上（压过悬停那张）并掐掉在飞补间，随后由包装跟手；
+        // AnyEnemy 卡在此登记进瞄准模式——包装据此改成"卡定住、拖动交给宿主"，卡牌姿不再跟手
         public void Grab(UI_CardHolder card_)
         {
             _cards.SetDragged(card_);
             _cards.MoveToFocus(card_);
             card_.KillMotion();
+            _aimingCard = card_.Card.IsAnyEnemyTarget ? card_ : null;
+            _aimingActive = false;
+        }
+
+        /// <summary>这张牌此刻是不是走"拖箭头指定目标"的瞄准模式（按下即成立，与是否越过启动阈值无关）：包装据此决定跟手还是上报。</summary>
+        public bool IsAiming(UI_CardHolder card_) => _aimingCard == card_;
+
+        // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色由 Tick 逐帧刷新
+        public void OnAimDragged(UI_CardHolder card_, bool onTarget_)
+        {
+            if (card_ != _aimingCard) return;
+            _aimingActive = true;
+            _arrow.Show(card_.WorldCenter, _cards.PointerWorldPosition(), onTarget_);
+        }
+
+        // 瞄准的逐帧驱动：卡离手或不再被按住时兜底取消；箭头展开期间按"卡中心 → 指针"刷新位姿，
+        // 并按当前是否指向合法目标（onTarget_）整支变色
+        public void Tick(bool onTarget_)
+        {
+            if (_aimingCard == null) return;
+            if (_cards.Dragged != _aimingCard || !_cards.IsInHand(_aimingCard))
+            {
+                CancelAim();
+                return;
+            }
+
+            if (_aimingActive) _arrow.Show(_aimingCard.WorldCenter, _cards.PointerWorldPosition(), onTarget_);
         }
 
         // 松手：以卡牌的锚点（卡根 pivot＝卡下沿中点）是不是落进出牌区的矩形来判（那块矩形即落点真源），命中即视为选定目标打出，
         // 未命中飞回手牌槽位。松手瞬间本回合已不可打（回合权已交出）、或这张牌已在拖拽途中离手（被弃置 / 回收）时也只回位，
-        // 不把过期命令塞进队列等下一个玩家回合结算
-        public void Release(UI_CardHolder card_)
+        // 不把过期命令塞进队列等下一个玩家回合结算；瞄准模式的牌不看落点矩形，走 ReleaseAim
+        public void Release(UI_CardHolder card_, int aimSlot_)
         {
+            if (card_ == _aimingCard)
+            {
+                ReleaseAim(card_, aimSlot_);
+                return;
+            }
+
             _cards.ClearDragged();
-            HideSelfTargetTip();
             if (!_cards.CardsPlayable || !_cards.IsInHand(card_) || !_dropZone.Accepts(card_.WorldPosition))
             {
                 _cards.ReturnToSlotAsync(card_).Forget();
@@ -114,14 +149,19 @@ namespace _DreamKeep.Presentation
             _dropZone.Enqueue(card_);
             // 入队即让位：这张从手牌行退出、整手立刻合拢，不等域侧回声；域侧确认到达时（OnCardPlayedAsync）已无视觉动作
             _cards.ApplyLayout();
-            _commandDispatcher.PlayCard(card_.Card, DefaultAimSlot);
+            _commandDispatcher.PlayCard(card_.Card, aimSlot_);
         }
 
-        // 拖拽被强制中断（包装禁用或回收）时直接落回槽位，不播补间
+        // 拖拽被强制中断（包装禁用或回收）时直接落回槽位，不播补间；瞄准中的牌走 CancelAim 收箭头
         public void CancelDrag(UI_CardHolder card_)
         {
+            if (card_ == _aimingCard)
+            {
+                CancelAim();
+                return;
+            }
+
             _cards.ClearDragged();
-            HideSelfTargetTip();
             _cards.PlaceToSlot(card_);
         }
 
@@ -141,27 +181,36 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 目标提示：拖拽中的自目标判定
-
-        // 每帧判定：被拖拽卡的锚点（下沿中点）悬在出牌区矩形内、且这张卡目标是玩家自己才算瞄准；
-        // 状态变化才写 SetActive，敌人目标（FrontEnemy 等）等敌人视图落地后再在此扩展
-        public void Tick()
+        // 瞄准松手：指向了某个敌人（aimSlot 不小于 0）才打出，落空、从未展开箭头、不可打或已离手一律取消回位
+        private void ReleaseAim(UI_CardHolder card_, int aimSlot_)
         {
-            UI_CardHolder dragged = _cards.Dragged;
-            bool aimed = dragged && dragged.Card.IsSelfTarget && _dropZone.Accepts(dragged.WorldPosition);
-            if (aimed == _selfTargetAimed) return;
-            _selfTargetAimed = aimed;
-            _selfTargetActor.ShowTargetTip(aimed);
+            bool shown = _aimingActive;
+            _aimingCard = null;
+            _aimingActive = false;
+            _cards.ClearDragged();
+            if (shown) _arrow.Hide();
+
+            if (!_cards.CardsPlayable || !_cards.IsInHand(card_) || aimSlot_ < 0)
+            {
+                _cards.ReturnToSlotAsync(card_).Forget();
+                return;
+            }
+
+            _dropZone.Enqueue(card_);
+            _cards.ApplyLayout();
+            _commandDispatcher.PlayCard(card_.Card, aimSlot_);
         }
 
-        #endregion
-
-        // 熄灭目标提示：松手与拖拽中断时显式调用，不等下一帧 Tick，卡飞向队列或槽位时提示已经收掉
-        private void HideSelfTargetTip()
+        // 取消瞄准：收箭头、清身份、把牌瞬移回槽位（中断与兜底路径，不播补间）
+        private void CancelAim()
         {
-            if (!_selfTargetAimed) return;
-            _selfTargetAimed = false;
-            _selfTargetActor.ShowTargetTip(false);
+            if (_aimingCard == null) return;
+            UI_CardHolder card = _aimingCard;
+            _aimingCard = null;
+            _aimingActive = false;
+            _arrow.Hide();
+            _cards.ClearDragged();
+            _cards.PlaceToSlot(card);
         }
 
         // 洗回搬运：域侧一次搬完整摞，这里把它演成整波同飞——洗回多少张就飞多少张，一张飞抵即一张进堆；
@@ -297,15 +346,15 @@ namespace _DreamKeep.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 可打状态切换：先让出悬停身份（不可打后就不可交互，ExitHover 只会清状态、会留下半截放大），
+        // 可打状态切换：先取消瞄准并让出悬停身份（不可打后就不可交互，ExitHover 只会清状态、会留下半截放大），
         // 再按槽位真源整体重排（位置、缩放与所在层一起回位），最后统一刷整手牌外观；状态没变则什么都不动
         private void ApplyPlayable(bool playable_)
         {
             if (!_cards.SetPlayable(playable_)) return;
             if (!playable_)
             {
+                CancelAim();
                 _cards.ClearHover();
-                HideSelfTargetTip();
             }
 
             _cards.ApplyLayout();

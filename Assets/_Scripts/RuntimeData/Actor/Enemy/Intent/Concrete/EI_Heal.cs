@@ -6,5 +6,7 @@ namespace _DreamKeep.RuntimeData
         public int Amount { get; }
 
         public EI_Heal(int amount_) => Amount = amount_;
+
+        public override string GetDescription() => $"接下来恢复自身 {Amount} 点生命";
     }
 }

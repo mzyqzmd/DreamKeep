@@ -12,6 +12,7 @@ namespace _DreamKeep.Presentation
     /// 位置与朝向一律是**世界姿态**：区域（卡层）只负责挂载与遮挡，槽位由区域按自己的点换算好后下发，包装只管写到 transform 上；
     /// 换层走 MoveToLayer 唯一通道且一律保世界位置，故各层矩形怎么摆都不会错位。
     /// 能不能抓一律问宿主闸门（非我方回合、还在入场飞行中、已让出牌区等结算的牌都抓不起来），包装只报事件不判规则；
+    /// 按下后走哪种交互也由宿主回答：普通卡跟手滑行，AnyEnemy 卡进瞄准模式——卡定住不动，拖动越过启动阈值后交给宿主去驱动目标箭头；
     /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
     /// 悬停姿态的进入与还原值都由区域按槽位真源给出，包装不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
     /// 位置与缩放两通道补间重开前先 Kill 同通道，补间按通道独占。</summary>
@@ -29,13 +30,18 @@ namespace _DreamKeep.Presentation
         [Tooltip("悬停进出的补间时长（秒）：抬起、回正、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
         private float _hoverDuration = 0.12f;
 
+        [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
+        private float _aimThresholdPx = 12f;
+
         private RectTransform _rect;
         private Image _hitFace;
         private Tween _moveTween;
         private Tween _scaleTween;
         private bool _dragging;
         private bool _hovered;
+        private bool _aimActivated;
         private Vector3 _grabOffset;
+        private Vector2 _pressScreenPosition;
 
         // "已就位"的判定阈值：重排据此跳过空转补间（位置差不足 0.01 世界单位约合 1.4 画布像素，肉眼不可见）
         private const float PoseEpsilon = 0.01f;
@@ -51,6 +57,9 @@ namespace _DreamKeep.Presentation
 
         /// <summary>当前世界朝向：起飞抖动等需要原位重写姿态的场合与 WorldPosition 配对使用。</summary>
         public Quaternion WorldRotation => _rect.rotation;
+
+        /// <summary>卡牌矩形的世界中心：目标箭头的起点，卡抬起、缩放、旋转时自动跟随。</summary>
+        public Vector3 WorldCenter => _rect.TransformPoint(_rect.rect.center);
 
         /// <summary>悬停抬起量（画布像素）：由所在区域换算成世界的"上"向量后下发，进入姿态仍归包装独占。</summary>
         public float HoverLiftPx => _hoverLiftPx;
@@ -93,13 +102,22 @@ namespace _DreamKeep.Presentation
         {
             if (!Host || !Host.CanGrab(this)) return;
             _dragging = true;
+            _aimActivated = false;
+            _pressScreenPosition = eventData.position;
             _grabOffset = Host.PointerWorldPosition() - WorldPosition;
             Host.OnCardGrabbed(this);
         }
 
+        // 拖动：瞄准模式（AnyEnemy 卡）下卡牌定住不跟手，越过启动阈值后把拖动交给宿主去驱动目标箭头；其余仍是跟手滑行
         public void OnDrag(PointerEventData eventData)
         {
             if (!_dragging) return;
+            if (Host.IsAiming(this))
+            {
+                DragAim(eventData);
+                return;
+            }
+
             Place(Host.PointerWorldPosition() - _grabOffset, _rect.rotation);
         }
 
@@ -107,7 +125,20 @@ namespace _DreamKeep.Presentation
         {
             if (!_dragging) return;
             _dragging = false;
-            Host.OnCardReleased(this);
+            _aimActivated = false;
+            Host.OnCardReleased(this); // 瞄准与否由宿主分流：松手后是打出还是回位都不在这里判断
+        }
+
+        // 瞄准拖动：指针越过启动阈值那一刻起才通知宿主，此后每帧都通知（箭头随指针刷新）；阈值前什么都不做，故纯点击不留痕迹
+        private void DragAim(PointerEventData eventData_)
+        {
+            if (!_aimActivated)
+            {
+                if ((eventData_.position - _pressScreenPosition).sqrMagnitude < _aimThresholdPx * _aimThresholdPx) return;
+                _aimActivated = true;
+            }
+
+            Host.OnAimDragged(this);
         }
 
         #endregion
@@ -116,6 +147,7 @@ namespace _DreamKeep.Presentation
         private void OnDisable()
         {
             ClearHover();
+            _aimActivated = false;
             if (!_dragging) return;
             _dragging = false;
             Host.OnCardDragCancelled(this);

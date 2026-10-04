@@ -13,16 +13,18 @@ namespace _DreamKeep.Presentation
         private readonly BattleLoop _loop;
         private readonly BattleContext _battleContext;
         private readonly BattleEventDispatcher _dispatcher;
-        private readonly UI_EnemyArea _enemyArea;
+        private readonly UI_ActorSlotGroup _actorSlotGroup;
+        private readonly ActorViewRegistry _actorViewRegistry;
         private readonly List<GameObject> _enemyViewPrefabs;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_EnemyArea enemyArea_, List<GameObject> enemyViewPrefabs_)
+            UI_ActorSlotGroup actorSlotGroup_, ActorViewRegistry actorViewRegistry_, List<GameObject> enemyViewPrefabs_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
             _dispatcher = dispatcher_;
-            _enemyArea = enemyArea_;
+            _actorSlotGroup = actorSlotGroup_;
+            _actorViewRegistry = actorViewRegistry_;
             _enemyViewPrefabs = enemyViewPrefabs_;
         }
 
@@ -43,16 +45,23 @@ namespace _DreamKeep.Presentation
             int count = Mathf.Min(_enemyViewPrefabs.Count, enemies.Count);
             for (int i = 0; i < count; i++)
             {
-                GameObject instance =
-                    Object.Instantiate(_enemyViewPrefabs[i], _enemyArea.GetSlotTransform(2 - i).transform);
+                Transform slot = _actorSlotGroup.GetSlotTransform(enemies[i].Slot);
+                if (slot == null)
+                {
+                    Debug.LogError($"敌人 {enemies[i].Name} 的槽位点 {enemies[i].Slot} 号未接线，跳过该敌人视图");
+                    continue;
+                }
+
+                GameObject instance = Object.Instantiate(_enemyViewPrefabs[i], slot);
                 if (!instance.TryGetComponent(out UI_Enemy enemyView))
                 {
-                    Debug.LogError($"敌人视图预制体 {_enemyViewPrefabs[i].name} 根上缺少 UI_Enemy 子类组件");
+                    Debug.LogError($"敌人视图预制体 {_enemyViewPrefabs[i].name} 根上缺少 UI_Enemy 组件");
                     Object.Destroy(instance);
                     continue;
                 }
 
-                enemyView.Construct(_battleContext, _dispatcher, enemies[i], _enemyArea);
+                // 意图与移动是敌人的固有能力，一次装配到位，无需再探测可选组件
+                enemyView.Bind(_dispatcher, enemies[i], _actorSlotGroup, _actorViewRegistry);
             }
         }
 

@@ -59,11 +59,11 @@ namespace _DreamKeep.RuntimeData
                 case ECardTargetType.Player:
                 case ECardTargetType.FrontEnemy: break;
                 case ECardTargetType.AllEnemy:
-                    description.AppendLine("对所有敌人:"); break;
+                    description.AppendLine("对全体目标:"); break;
                 case ECardTargetType.RandomEnemy:
-                    description.AppendLine("对随机敌人:"); break;
+                    description.AppendLine("对随机目标:"); break;
                 case ECardTargetType.AnyEnemy:
-                    description.AppendLine("指定一名敌人:"); break;
+                    description.AppendLine("指定一个目标:"); break;
                 default: throw new ArgumentOutOfRangeException();
             }
 

@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>复合意图：最多两条子意图，执行时按顺序依次展开。</summary>
@@ -10,6 +12,15 @@ namespace _DreamKeep.RuntimeData
         {
             First = first_;
             Second = second_;
+        }
+
+        // 混合自身不展示 tip（表现层会把子意图逐条展开），仅为满足抽象契约拼一份子描述
+        public override string GetDescription()
+        {
+            StringBuilder description = new();
+            if (First != null) description.AppendLine(First.GetDescription());
+            if (Second != null) description.AppendLine(Second.GetDescription());
+            return description.ToString();
         }
     }
 }
