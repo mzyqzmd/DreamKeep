@@ -640,7 +640,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _perkSlotPrefab: {fileID: 1984585377961343275, guid: d8e58d92da6dba64d820682d7a8a5895, type: 3}
-  _perkTipLiftPx: 1
 --- !u!1 &5421846078685048169
 GameObject:
   m_ObjectHideFlags: 0
@@ -999,12 +998,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08edc0fc52e4a304a9cc1edeeda0aa83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _attackIntentPrefab: {fileID: 6369628092964456586, guid: 86d772fe868c99d468911c6f84f71fe0, type: 3}
-  _blockIntentPrefab: {fileID: 7698567427266048591, guid: ef9f34900b1ff994ea01755325a4a724, type: 3}
-  _healIntentPrefab: {fileID: 5700546932847271050, guid: 5b7254a5cbc332442a7f9d8648fdaa0f, type: 3}
-  _moveIntentPrefab: {fileID: 9029042866843198642, guid: 8688b25b635645f4ca7e6709e20fa2f1, type: 3}
-  _applyPerkIntentPrefab: {fileID: 4545055111860080437, guid: a62bccc376bdaba40b9d02a91ccb9969, type: 3}
-  _intentTipLiftPx: 1
+  _attackIntentPrefab: {fileID: 8948393726579575890, guid: 86d772fe868c99d468911c6f84f71fe0, type: 3}
+  _blockIntentPrefab: {fileID: 151538870004541080, guid: ef9f34900b1ff994ea01755325a4a724, type: 3}
+  _healIntentPrefab: {fileID: 3244748537314421812, guid: 5b7254a5cbc332442a7f9d8648fdaa0f, type: 3}
+  _moveIntentPrefab: {fileID: 6856655943348080542, guid: 8688b25b635645f4ca7e6709e20fa2f1, type: 3}
+  _applyPerkIntentPrefab: {fileID: 4808077870620195035, guid: a62bccc376bdaba40b9d02a91ccb9969, type: 3}
 --- !u!114 &7478271480911410223
 MonoBehaviour:
   m_ObjectHideFlags: 0

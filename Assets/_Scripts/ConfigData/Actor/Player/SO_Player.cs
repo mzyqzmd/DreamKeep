@@ -5,11 +5,12 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>玩家配置：起始能量、每回合抽牌数与起始卡组；生命上限来自单位配置基类。</summary>
     [CreateAssetMenu(fileName = "Player", menuName = "DreamKeep/Data/Actor/Player")]
-    public class SO_Player :ScriptableObject
+    public class SO_Player : ScriptableObject
     {
-        [SerializeField] private string _name;
+        [Header("基础配置")] [SerializeField] private string _name;
         [SerializeField] private int _maxHP;
-        [SerializeField] private int _startGold; //TODO:还没做商店相关内容，先不急
+        [SerializeField] private GameObject _viewPrefab;
+        [Header("玩家配置")] [SerializeField] private int _startGold; //TODO:还没做商店相关内容，先不急
         [SerializeField] private int _startEnergy = 3;
         [SerializeField] private int _drawPerTurn = 5;
 
@@ -18,6 +19,7 @@ namespace _DreamKeep.ConfigData
         //TODO:还有玩家初始遗物没添加
         public string Name => _name;
         public int MaxHp => _maxHP;
+        public GameObject ViewPrefab => _viewPrefab;
         public int StartGold => _startGold;
         public int StartEnergy => _startEnergy;
         public int DrawPerTurn => _drawPerTurn;

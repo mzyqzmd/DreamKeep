@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _name: "\u6218\u58EB"
   _maxHP: 80
+  _viewPrefab: {fileID: 235640479445222248, guid: 111909164d35d34408a26338589ab2de, type: 3}
   _startGold: 99
   _startEnergy: 3
   _drawPerTurn: 5

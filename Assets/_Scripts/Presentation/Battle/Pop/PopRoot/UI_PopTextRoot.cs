@@ -17,16 +17,13 @@ namespace _DreamKeep.Presentation
         private UI_TurnCountPopTip _turnCountPopTip;
         private object _requester;
 
-        #region 对外展示：单条说明气泡在给定世界锚点上方弹出，按发起者收起
+        #region 单条描述气泡说明
 
         /// <summary>弹出单条说明气泡：底沿贴住 worldAnchor_（通常传槽位顶沿世界坐标），标题为空自动收起标题行。</summary>
         public void ShowTip(object requester_, string name_, string description_, Vector3 worldAnchor_)
         {
             if (_descriptionPopTip == null)
-            {
                 _descriptionPopTip = Instantiate(_descriptionPopTipPrefab, transform);
-                ((RectTransform)_descriptionPopTip.transform).pivot = new Vector2(0.5f, 0f);
-            }
 
             _requester = requester_;
             _descriptionPopTip.SetContent(name_, description_);
@@ -45,27 +42,18 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 接线：订阅回合开始事件转发横幅展示
+        #region 回合横幅弹出
 
         [Inject]
         public void Construct(BattleEventDispatcher eventDispatcher_) =>
             eventDispatcher_.Register<BE_TurnStarted>(OnTurnStartedAsync);
 
-        #endregion
 
         private UniTask OnTurnStartedAsync(BE_TurnStarted started_)
         {
-            ShowTurnBanner(started_.IsPlayerTurn, started_.TurnCount);
-            return UniTask.CompletedTask;
-        }
-
-        #region 回合横幅：懒生成单实例并转发展示
-
-        // 横幅自带"收拢→停留→渐隐"时间线且不由域侧 await，与抽牌等回合演出同屏并行
-        private void ShowTurnBanner(bool isPlayerTurn_, int turnCount_)
-        {
             if (_turnCountPopTip == null) _turnCountPopTip = Instantiate(_turnCountPopTipPrefab, transform);
-            _turnCountPopTip.Show(isPlayerTurn_, turnCount_);
+            _turnCountPopTip.Show(started_.IsPlayerTurn, started_.TurnCount);
+            return UniTask.CompletedTask;
         }
 
         #endregion

@@ -28,7 +28,7 @@ namespace _DreamKeep.Presentation
 
         public void ShowTargetTip(bool show_)
         {
-            if (_targetTip == null || _targetTipShown == show_) return;
+            if (!_targetTip || _targetTipShown == show_) return;
             _targetTipShown = show_;
             _targetTip.gameObject.SetActive(show_);
         }

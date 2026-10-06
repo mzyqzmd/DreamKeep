@@ -7,46 +7,88 @@ using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战斗段表现层入口：先按配置生成敌人视图并值传递装配，再启动战斗循环，是"这场战斗从哪里开始"的唯一落点。</summary>
+    /// <summary>战斗段表现层入口：按配置给出的视图预制体依次生成玩家与敌人视图并值传递装配，再启动战斗循环，
+    /// 是"这场战斗从哪里开始"的唯一落点；视图一律运行时生成，场景里没有预摆的单位实例。</summary>
     public class BattleEntry : IStartable
     {
+        private const int PlayerSlot = 0; // 0 号槽位恒为玩家（1~3 号为敌人，1 最靠前）
+
         private readonly BattleLoop _loop;
         private readonly BattleContext _battleContext;
         private readonly BattleEventDispatcher _dispatcher;
         private readonly UI_ActorRoot _actorRoot;
         private readonly ActorViewRegistry _actorViewRegistry;
+        private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_ActorRoot actorRoot_, ActorViewRegistry actorViewRegistry_, List<GameObject> enemyViewPrefabs_)
+            UI_ActorRoot actorRoot_, ActorViewRegistry actorViewRegistry_, GameObject playerViewPrefab_,
+            List<GameObject> enemyViewPrefabs_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
             _dispatcher = dispatcher_;
             _actorRoot = actorRoot_;
             _actorViewRegistry = actorViewRegistry_;
+            _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
         }
 
         public void Start()
         {
+            SpawnPlayerView();
             SpawnEnemyViews();
             _loop.Start().Forget();
         }
 
-        #region 生成敌人视图：预制体列表与敌人配置平行索引，错位报错并跳过多余项
+        #region 生成玩家视图：实例化到玩家槽位，枢轴（脚底中点）钉到槽位点后值传递装配
+
+        private void SpawnPlayerView()
+        {
+            if (!_playerViewPrefab)
+            {
+                Debug.LogError("玩家配置未接视图预制体，跳过玩家视图生成");
+                return;
+            }
+
+            Transform slot = _actorRoot.GetSlotTransform(PlayerSlot);
+            if (!slot)
+            {
+                Debug.LogError($"玩家槽位点 {PlayerSlot} 号未接线，跳过玩家视图生成");
+                return;
+            }
+
+            GameObject instance = Object.Instantiate(_playerViewPrefab, slot);
+            if (!instance.TryGetComponent(out UI_Player playerView))
+            {
+                Debug.LogError($"玩家视图预制体 {_playerViewPrefab.name} 根上缺少 UI_Player 组件");
+                Object.Destroy(instance);
+                return;
+            }
+
+            // 位置真源只有槽位点：prefab 的本地偏移不参与，枢轴即脚底中点
+            ((RectTransform)instance.transform).position = slot.position;
+            playerView.Bind(_dispatcher, _battleContext.Player, _actorViewRegistry);
+        }
+
+        #endregion
+
+        #region 生成敌人视图：预制体列表与敌人配置平行索引，缺预制体或缺槽位点报错并跳过该项
 
         private void SpawnEnemyViews()
         {
             List<Enemy> enemies = _battleContext.Enemies;
-            if (_enemyViewPrefabs.Count != enemies.Count)
-                Debug.LogError($"敌人视图预制体数 {_enemyViewPrefabs.Count} 与敌人配置数 {enemies.Count} 不一致，多余的将被跳过");
-
             int count = Mathf.Min(_enemyViewPrefabs.Count, enemies.Count);
             for (int i = 0; i < count; i++)
             {
+                if (!_enemyViewPrefabs[i])
+                {
+                    Debug.LogError($"敌人 {enemies[i].Name} 的配置未接视图预制体，跳过该敌人视图");
+                    continue;
+                }
+
                 Transform slot = _actorRoot.GetSlotTransform(enemies[i].Slot);
-                if (slot == null)
+                if (!slot)
                 {
                     Debug.LogError($"敌人 {enemies[i].Name} 的槽位点 {enemies[i].Slot} 号未接线，跳过该敌人视图");
                     continue;

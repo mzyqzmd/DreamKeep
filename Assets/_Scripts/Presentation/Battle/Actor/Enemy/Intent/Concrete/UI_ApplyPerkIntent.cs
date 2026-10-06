@@ -8,14 +8,14 @@ namespace _DreamKeep.Presentation.Intent
     /// 数据由 UI_EnemyIntentGroup 生成后经 Bind 写入，悬停说明由基类统一承接。</summary>
     public class UI_ApplyPerkIntent : UI_Intent
     {
+        private static readonly int IsSelf = Animator.StringToHash("IsSelf");
         [SerializeField] private Image _icon;
-        [SerializeField] private Sprite _upIcon;
-        [SerializeField] private Sprite _debuffIcon;
+        [SerializeField] private Animator _anim;
 
         public void Bind(EI_ApplyPerk applyPerk_)
         {
             BindIntent(applyPerk_);
-            _icon.sprite = applyPerk_.IsSelf ? _upIcon : _debuffIcon;
+            _anim.SetBool(IsSelf, applyPerk_.IsSelf);
         }
     }
 }

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6512811030755357197}
   - component: {fileID: 6404691707589813686}
   - component: {fileID: 6856655943348080542}
+  - component: {fileID: 7781957280644226546}
   m_Layer: 5
   m_Name: MoveIntent
   m_TagString: Untagged
@@ -66,7 +67,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -367703229, guid: ffb2075dd9f7c1743acea7c6fcc4eaca, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d721e95553ef574e94e76a1fbf08b3b, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -88,3 +89,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b979a5415cb847bca4bf83fe9be63eeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _tipLiftPx: 1
+--- !u!95 &7781957280644226546
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8052108936594930933}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 584b6f51fd5a97542be546b3b86692e7, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

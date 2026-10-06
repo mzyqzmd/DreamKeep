@@ -38,7 +38,7 @@ namespace _DreamKeep.Presentation
         private void Update()
         {
             UI_CardHolder aimed = _handView.AimedCard;
-            if (aimed == null)
+            if (!aimed)
             {
                 _handView.SetAimSlot(DefaultAimSlot);
                 HideAll();

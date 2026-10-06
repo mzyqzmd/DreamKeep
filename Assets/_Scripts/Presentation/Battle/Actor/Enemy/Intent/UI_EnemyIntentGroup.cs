@@ -10,11 +10,11 @@ namespace _DreamKeep.Presentation
     /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。</summary>
     public class UI_EnemyIntentGroup : MonoBehaviour
     {
-        [Header("意图预制体")] [SerializeField] private RectTransform _attackIntentPrefab;
-        [SerializeField] private RectTransform _blockIntentPrefab;
-        [SerializeField] private RectTransform _healIntentPrefab;
-        [SerializeField] private RectTransform _moveIntentPrefab;
-        [SerializeField] private RectTransform _applyPerkIntentPrefab;
+        [Header("意图预制体")] [SerializeField] private UI_AttackIntent _attackIntentPrefab;
+        [SerializeField] private UI_BlockIntent _blockIntentPrefab;
+        [SerializeField] private UI_HealIntent _healIntentPrefab;
+        [SerializeField] private UI_MoveIntent _moveIntentPrefab;
+        [SerializeField] private UI_ApplyPerkIntent _applyPerkIntentPrefab;
 
         private UI_PopTextRoot _popTextRoot;
 
@@ -34,7 +34,7 @@ namespace _DreamKeep.Presentation
         /// 悬停中重建会销毁旧图标（OnDisable 收起气泡），指针下一帧重新进入新图标再弹，最多一帧闪烁。</summary>
         public void Show(EnemyIntent intent_)
         {
-            Clear();
+            for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
             if (intent_ != null) Append(intent_);
         }
 
@@ -50,35 +50,30 @@ namespace _DreamKeep.Presentation
                     if (mixed.Second != null) Append(mixed.Second);
                     break;
                 case EI_Damage damage:
-                    Spawn(_attackIntentPrefab)?.GetComponent<UI_AttackIntent>().Bind(damage);
+                    Spawn(_attackIntentPrefab)?.Bind(damage);
                     break;
                 case EI_Block block:
-                    Spawn(_blockIntentPrefab)?.GetComponent<UI_BlockIntent>().Bind(block);
+                    Spawn(_blockIntentPrefab)?.Bind(block);
                     break;
                 case EI_Heal heal:
-                    Spawn(_healIntentPrefab)?.GetComponent<UI_HealIntent>().Bind(heal);
+                    Spawn(_healIntentPrefab)?.Bind(heal);
                     break;
                 case EI_Move move:
-                    Spawn(_moveIntentPrefab)?.GetComponent<UI_MoveIntent>().Bind(move);
+                    Spawn(_moveIntentPrefab)?.Bind(move);
                     break;
                 case EI_ApplyPerk applyPerk:
-                    Spawn(_applyPerkIntentPrefab)?.GetComponent<UI_ApplyPerkIntent>().Bind(applyPerk);
+                    Spawn(_applyPerkIntentPrefab)?.Bind(applyPerk);
                     break;
             }
         }
 
         // 生成图标并注入气泡宿主：图标自己承接悬停说明
-        private RectTransform Spawn(RectTransform prefab_)
+        private T Spawn<T>(T prefab_) where T : UI_Intent
         {
             if (prefab_ == null) return null;
-            RectTransform icon = Instantiate(prefab_, transform);
-            icon.GetComponent<UI_Intent>()?.Initialize(PopTextRoot);
+            var icon = Instantiate(prefab_, transform);
+            icon.Initialize(PopTextRoot);
             return icon;
-        }
-
-        private void Clear()
-        {
-            for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
         }
     }
 }
