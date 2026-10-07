@@ -1,16 +1,16 @@
 /******************************************************************************
  * Spine Runtimes License Agreement
- * Last updated July 28, 2023. Replaces all prior versions.
+ * Last updated April 5, 2025. Replaces all prior versions.
  *
- * Copyright (c) 2013-2023, Esoteric Software LLC
+ * Copyright (c) 2013-2025, Esoteric Software LLC
  *
  * Integration of the Spine Runtimes into software or otherwise creating
  * derivative works of the Spine Runtimes is permitted under the terms and
  * conditions of Section 2 of the Spine Editor License Agreement:
  * http://esotericsoftware.com/spine-editor-license
  *
- * Otherwise, it is permitted to integrate the Spine Runtimes into software or
- * otherwise create derivative works of the Spine Runtimes (collectively,
+ * Otherwise, it is permitted to integrate the Spine Runtimes into software
+ * or otherwise create derivative works of the Spine Runtimes (collectively,
  * "Products"), provided that each user of the Products must obtain their own
  * Spine Editor license and redistribution of the Products in any form must
  * include this license and copyright notice.
@@ -23,18 +23,23 @@
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES,
  * BUSINESS INTERRUPTION, OR LOSS OF USE, DATA, OR PROFITS) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THE
- * SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THE SPINE RUNTIMES, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *****************************************************************************/
 
 #if UNITY_2018_1_OR_NEWER
 #define HAS_BUILD_PROCESS_WITH_REPORT
 #endif
 
+#if UNITY_2021_2_OR_NEWER
+#define HAS_BUILD_PLAYER_PROCESSOR
+#endif
+
 #if UNITY_2020_2_OR_NEWER
 #define HAS_ON_POSTPROCESS_PREFAB
 #endif
 
+// Note: major_minor_OR_NEWER is automatically defined, but not major_minor_patch_OR_NEWER
 #if (UNITY_2020_3 && !(UNITY_2020_3_1 || UNITY_2020_3_2 || UNITY_2020_3_3 || UNITY_2020_3_4 || UNITY_2020_3_5 || UNITY_2020_3_6 || UNITY_2020_3_7 || UNITY_2020_3_8 || UNITY_2020_3_9 || UNITY_2020_3_10 || UNITY_2020_3_11 || UNITY_2020_3_12 || UNITY_2020_3_13 || UNITY_2020_3_14 || UNITY_2020_3_15))
 #define UNITY_2020_3_16_OR_NEWER
 #endif
@@ -42,7 +47,7 @@
 #define UNITY_2021_1_17_OR_NEWER
 #endif
 
-#if UNITY_2020_3_16_OR_NEWER || UNITY_2021_1_17_OR_NEWER
+#if UNITY_2020_3_16_OR_NEWER || UNITY_2021_1_17_OR_NEWER || UNITY_2021_2_OR_NEWER
 #define HAS_SAVE_ASSET_IF_DIRTY
 #endif
 
@@ -111,7 +116,6 @@ namespace Spine.Unity.Editor {
 						prefabsToRestore.Add(assetPath);
 					}
 				}
-				EditorUtility.UnloadUnusedAssetsImmediate();
 				AssetDatabase.StopAssetEditing();
 #if !HAS_SAVE_ASSET_IF_DIRTY
 				if (prefabAssets.Length > 0)
@@ -168,7 +172,6 @@ namespace Spine.Unity.Editor {
 #endif
 					}
 				}
-				EditorUtility.UnloadUnusedAssetsImmediate();
 				AssetDatabase.StopAssetEditing();
 #if !HAS_SAVE_ASSET_IF_DIRTY
 				if (textureLoadersToRestore.Count > 0)
@@ -222,7 +225,6 @@ namespace Spine.Unity.Editor {
 					AssetDatabase.SaveAssetIfDirty(atlasAsset);
 #endif
 				}
-				EditorUtility.UnloadUnusedAssetsImmediate();
 				AssetDatabase.StopAssetEditing();
 #if !HAS_SAVE_ASSET_IF_DIRTY
 				if (spriteAtlasAssets.Length > 0)
@@ -258,26 +260,43 @@ namespace Spine.Unity.Editor {
 		}
 	}
 
-	public class SpineBuildPreprocessor :
-#if HAS_BUILD_PROCESS_WITH_REPORT
-		IPreprocessBuildWithReport
-#else
-		IPreprocessBuild
-#endif
-	{
+#if HAS_BUILD_PLAYER_PROCESSOR
+	/// <summary>
+	/// Build Preprocessor for Unity 2021.2 and newer.
+	/// Unfortunately BuildPlayerProcessors seem to be executed before IPreprocessBuildWithReport regardless of
+	/// callbackOrder, thus requiring use of this base class to call pre-build hooks before Addressables or
+	/// Asset Bundles are built.
+	/// </summary>
+	public class SpineBuildPreprocessor : UnityEditor.Build.BuildPlayerProcessor {
+		public override int callbackOrder {
+			get { return -2000; }
+		}
+
+		public override void PrepareForBuild (BuildPlayerContext buildPlayerContext) {
+			SpineBuildProcessor.PreprocessBuild();
+		}
+	}
+#elif HAS_BUILD_PROCESS_WITH_REPORT
+	public class SpineBuildPreprocessor : IPreprocessBuildWithReport {
 		public int callbackOrder {
 			get { return -2000; }
 		}
-#if HAS_BUILD_PROCESS_WITH_REPORT
+
 		void IPreprocessBuildWithReport.OnPreprocessBuild (BuildReport report) {
 			SpineBuildProcessor.PreprocessBuild();
 		}
+	}
 #else
+	public class SpineBuildPreprocessor : IPreprocessBuild {
+		public int callbackOrder {
+			get { return -2000; }
+		}
+
 		void IPreprocessBuild.OnPreprocessBuild (BuildTarget target, string path) {
 			SpineBuildProcessor.PreprocessBuild();
 		}
-#endif
 	}
+#endif
 
 	public class SpineBuildPostprocessor :
 #if HAS_BUILD_PROCESS_WITH_REPORT

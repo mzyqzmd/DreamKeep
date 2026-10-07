@@ -21,6 +21,7 @@ namespace _DreamKeep.GameBattle
                 player.Deck.Add(CardModelBaker.Bake(playerConfig_.StartDeck[i]).ToMutable());
 
             player.StartCombat(playerConfig_.StartEnergy);
+            ApplyStartPerks(player.Creature, playerConfig_.StartPerks);
 
             Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player, rng_);
             List<Enemy> enemies = BuildEnemies(enemyConfigs_);
@@ -61,11 +62,26 @@ namespace _DreamKeep.GameBattle
             for (int i = 0; i < enemyConfigs_.Count; i++)
             {
                 SO_Enemy config = enemyConfigs_[i];
-                enemies.Add(new Enemy(config.Name, config.MaxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
-                    IntentBaker.Bake(config.FrontSlotIntent)));
+                Enemy enemy = new(config.Name, config.MaxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
+                    IntentBaker.Bake(config.FrontSlotIntent));
+                ApplyStartPerks(enemy.Creature, config.StartPerks);
+                enemies.Add(enemy);
             }
 
             return enemies;
+        }
+
+        /// <summary>按配置施加初始状态：克隆模板配层数后走标准施加链，模板不被污染；空条目静默跳过（Inspector 空元素陷阱）。</summary>
+        private static void ApplyStartPerks(Creature creature_, IReadOnlyList<PerkEntry> startPerks_)
+        {
+            for (int i = 0; i < startPerks_.Count; i++)
+            {
+                PerkEntry entry = startPerks_[i];
+                if (entry?.Perk == null) continue;
+                BattlePerk perk = entry.Perk.Clone();
+                perk.AddLayers(entry.Layers);
+                creature_.ApplyPerk(perk);
+            }
         }
     }
 }
