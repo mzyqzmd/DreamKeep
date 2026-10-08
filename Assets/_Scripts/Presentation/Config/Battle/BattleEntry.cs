@@ -99,7 +99,7 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                // 意图与移动是敌人的固有能力，一次装配到位；出生摆位由 Bind 内的 PlaceAtSlot 钉到槽位点
+                // 意图与移动是敌人的固有能力，一次装配到位；出生摆位由 Bind 直接钉到槽位点
                 enemyView.Bind(_dispatcher, enemies[i]);
             }
         }

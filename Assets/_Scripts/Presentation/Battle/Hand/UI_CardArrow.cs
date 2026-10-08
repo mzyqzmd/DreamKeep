@@ -6,12 +6,8 @@ using UnityEngine.UI;
 namespace _DreamKeep.Presentation
 {
     /// <summary>目标箭头：从卡牌中心指向指针的瞄准指示器——十段渐细的箭头段沿一条带轻微弧度的曲线排布，头部贴指针并转向目标。
-    /// 纯表现，不认识卡牌、手牌区与任何战斗单位，只回答"从哪画到哪、有没有指向合法目标"；段数固定，沿用场景里摆好的段与各自缩放
-    /// （首段最大、末段最小，本类不增删段、不缩放段），每次 Show 按当前起终点重排位姿。
-    /// 弧度按指针方向相对"起点正上方"的偏移角连续变化：角度越大弧度越大、正对正上方时是一条直线，跨过基准线平滑过渡不会翻边；
-    /// 指向合法目标时整支（十段与头部）变红，其余时候回到各图形本来的颜色。
-    /// 段的引用、初始缩放、图形与初始色都在 Awake 一次备好，Show 可逐帧重复调用且零分配；
-    /// 箭头下所有图形一律关掉射线——否则展开时它会盖在最上层，挡掉手牌每帧的悬停裁决。</summary>
+    /// 弧度按指针方向相对"起点正上方"的偏角连续变化（角度越大弯得越多，正对正上方是一条直线，跨过基准线不翻边）；
+    /// 指向合法目标时整支变红。它纯表现，不认识卡牌与战斗单位，只回答"从哪画到哪、有没有指向合法目标"。</summary>
     public class UI_CardArrow : MonoBehaviour
     {
         [Tooltip("段容器：它的子节点即箭头段，按兄弟顺序从头部段（最大）排到尾部段（最小）")] [SerializeField]
@@ -42,7 +38,7 @@ namespace _DreamKeep.Presentation
 
         private void Awake()
         {
-            // 射线一律关掉：箭头画在最上层，开着会挡住手牌的悬停射线与指针命中；顺带缓存图形与本来的颜色，供命中高亮写回
+            // 射线一律关掉（箭头画在最上层，开着会挡住手牌的悬停射线），顺带缓存图形与本来的颜色，供命中高亮写回
             foreach (Graphic graphic in GetComponentsInChildren<Graphic>(true))
             {
                 _graphics.Add(graphic);
@@ -63,16 +59,15 @@ namespace _DreamKeep.Presentation
         #region 对外暴露的显示与收起：起点为卡牌中心、终点为指针，可逐帧重复调用
 
         /// <summary>按当前起终点重排箭头：段沿带轻微弧度的曲线从头端到尾端均布、每段朝向当地切线，头部贴终点并转向目标；
-        /// 弧度由指针相对起点正上方的偏角决定（偏得越多弯得越多、正对正上方是一条直线），onTarget_ 为真时整支变红。</summary>
+        /// 弧度由指针相对起点正上方的偏角决定，onTarget_ 为真时整支变红。</summary>
         public void Show(Vector3 fromWorld_, Vector3 toWorld_, bool onTarget_)
         {
             gameObject.SetActive(true);
 
-            Vector3 chord = fromWorld_ - toWorld_;
-            float length = chord.magnitude;
+            Vector3 aim = toWorld_ - fromWorld_;
+            float length = aim.magnitude;
             // 指针方向相对"起点正上方"的带符号夹角（负在左、正在右）：角度越大弧度越大，正对正上方时弧度归零，
             // 跨过基准线是连续过渡，不会像固定侧向那样瞬间翻边
-            Vector3 aim = toWorld_ - fromWorld_;
             float angle = Mathf.Atan2(aim.x, aim.y);
             float ratio = Mathf.Min(Mathf.Abs(angle) * Mathf.Rad2Deg / Mathf.Max(_bendFullAngleDeg, Epsilon), 1f);
             // 控制点从中点朝指针所在侧的**反侧**鼓出（指针在左则向右鼓、在右则向左鼓）：弧高 = 弦长 × 系数 × 角度占比，

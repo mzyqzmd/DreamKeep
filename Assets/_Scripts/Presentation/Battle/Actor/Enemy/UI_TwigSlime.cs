@@ -1,10 +1,10 @@
 namespace _DreamKeep.Presentation
 {
-    /// <summary>树枝史莱姆单位视图：当前行为全部来自基类，保留类型作预制体身份与将来差异化演出的落点。
-    /// 动画名对齐 twig_slime 骨架（二进制提取，待 SkeletonDataAsset Inspector 核对）。</summary>
+    /// <summary>树枝史莱姆单位视图：四条公约动画（idle_loop/attack/hurt/die）走 UI_Actor，
+    /// 本类只声明 twig_slime 的专属动画（同时是预制体的组件身份）。</summary>
     public class UI_TwigSlime : UI_Enemy
     {
-        // twig_slime 骨架动画清单：uniblink/multiblink/eye_anger/drop（全是待机小动作，暂无战斗动画，留 null 禁用）
-        protected override string StandAnim => "uniblink";
+        // twig_slime 专属动画：cast 尚未接入演出
+        private const string CastAnim = "cast";
     }
 }

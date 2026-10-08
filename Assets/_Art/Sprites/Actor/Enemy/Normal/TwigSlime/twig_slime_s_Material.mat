@@ -39,7 +39,7 @@ Material:
     - _OutlineOpaqueAlpha: 1
     - _OutlineReferenceTexWidth: 1024
     - _OutlineSmoothness: 1
-    - _OutlineWidth: 3
+    - _OutlineWidth: 1
     - _Stencil: 0
     - _StencilComp: 8
     - _StencilOp: 0

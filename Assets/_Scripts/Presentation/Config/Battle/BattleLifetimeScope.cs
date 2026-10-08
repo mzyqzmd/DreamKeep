@@ -47,7 +47,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
-            builder_.RegisterComponentInHierarchy<UI_TargetTipDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
+            builder_.RegisterComponentInHierarchy<UI_TargetDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
             builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场单位区：槽位点坐标来源（出生摆位与移动补间）+ 单位视图登记表（目标提示按生物查视图）
             builder_.RegisterEntryPoint<BattleEntry>();
         }

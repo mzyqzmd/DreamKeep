@@ -17,12 +17,11 @@ MonoBehaviour:
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841560953389060
+  - rid: 8162841580618121216
+  - rid: 8162841580618121217
   _frontSlotIntent:
     rid: 8162841560953389058
-  _startPerks:
-  - _perk:
-      rid: 8162841560953389059
-    _layers: 2
+  _startPerks: []
   references:
     version: 2
     RefIds:
@@ -33,10 +32,6 @@ MonoBehaviour:
           rid: 8162841560953389061
         _intent2:
           rid: 8162841560953389062
-    - rid: 8162841560953389059
-      type: {class: BP_Regen, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _icon: {fileID: 21300000, guid: fd765f3aaa54c45459bd1d905ddeeef2, type: 3}
     - rid: 8162841560953389060
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -50,3 +45,10 @@ MonoBehaviour:
     - rid: 8162841560953389062
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
+    - rid: 8162841580618121216
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 8162841580618121217
+      type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 4

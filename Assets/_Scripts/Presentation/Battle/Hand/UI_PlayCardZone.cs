@@ -5,13 +5,9 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>出牌区：一块自洽的区域——打出的牌在此按先后排队堆叠，区域自己管命中判定、队列状态与队位落点，
+    /// <summary>出牌区：一块自洽的区域——打出的牌在此按先后排队堆叠，区域自己管命中判定、队列状态与队位落点。
     /// 手牌区只单向问它"在队里吗 / 命中吗 / 收下 / 还回 / 等停稳"，它不认识手牌区，也不判断任何规则。
-    /// 它是与手牌区平级的隐形矩形：不挂图形、不参与指针命中，只回答"卡牌锚点（卡根 pivot＝卡下沿中点）落点在不在本区矩形内"这一个问题。
-    /// 落点与队位分家：矩形只管判定，队位一律交给区域里的点（CardQueuePoint）——位置写成 点.TransformPoint(画布像素偏移)，
-    /// 朝向取点的朝向，故在 Scene 里拖那个点即整队挪位，矩形怎么摆都不影响队位。
-    /// 队列还是"已打出、等结算"这段成员关系的唯一真源：手牌区的忙碌判据、回合对账都向它查，别处不再另记一份；
-    /// 收下即换层到本区名下并按入队先后排位，队首（最早打出、最先结算的那张）恒在最上。</summary>
+    /// 落点与队位分家：矩形只管判定（卡牌锚点落在矩形内即算打出），队位一律由区域里的点 CardQueuePoint 起算。</summary>
     public class UI_PlayCardZone : MonoBehaviour
     {
         [Tooltip("排队堆叠的步进（画布像素）：以队列点为准，x 为每张牌向右错开的距离，y 为向上错开的距离")] [SerializeField]
@@ -37,15 +33,14 @@ namespace _DreamKeep.Presentation
 
         #region 落点判定：卡牌锚点落在本区矩形内即算打出
 
-        // 命中判定只认一个点：调用方传卡牌锚点（卡根 pivot＝卡下沿中点）的世界坐标，换算进本区矩形再判包含；
-        // 矩形本身就是可见的有效区，本类不再对坐标做任何补偿
+        // 命中判定只认一个点：调用方传卡牌锚点（卡根 pivot＝卡下沿中点）的世界坐标，换算进本区矩形再判包含
         public bool Accepts(Vector3 anchorWorld_) => UiGeometry.Contains((RectTransform)transform, anchorWorld_);
 
         #endregion
 
         #region 排队：收下、让位、等待与交出
 
-        // 队列（按打入先后）：挂出等待结算的成员关系以它为准，手牌区判忙与回合对账都向这里查
+        /// <summary>队列（按打入先后）：谁是"已打出、等结算"以它为准，手牌区判忙与回合对账都向这里查。</summary>
         public IReadOnlyList<UI_CardHolder> Queue => _queue;
 
         public bool Contains(UI_CardHolder card_) => _queue.Contains(card_);
