@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Spine;
@@ -10,14 +11,16 @@ namespace _DreamKeep.Presentation
     /// 骨架未接线时就近取；演出等待锚定宿主销毁令牌，宿主没了即静默放行，不阻塞上层事件链。</summary>
     public class UI_ActorAnimTool : MonoBehaviour
     {
-        [SerializeField] private SkeletonGraphic _skeleton; // 演出用骨架
+        private UI_Actor _actor;
+
+        private void Awake() => _actor = GetComponent<UI_Actor>();
 
         #region 播放一次播一次动画，播完、被截断或宿主销毁后放行；
 
         public async UniTask PlayOnceAsync(string animationName_)
         {
-            if (!_skeleton.IsValid) _skeleton.Initialize(false);
-            TrackEntry entry = _skeleton.AnimationState.SetAnimation(0, animationName_, false);
+            if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
+            TrackEntry entry = _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, false);
             UniTaskCompletionSource finished = new();
             entry.Complete += _ => finished.TrySetResult();
             entry.End += _ => finished.TrySetResult();
@@ -32,8 +35,8 @@ namespace _DreamKeep.Presentation
 
         public void PlayLoop(string animationName_)
         {
-            if (!_skeleton.IsValid) _skeleton.Initialize(false);
-            _skeleton.AnimationState.SetAnimation(0, animationName_, true);
+            if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
+            _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, true);
         }
 
         #endregion
@@ -42,14 +45,14 @@ namespace _DreamKeep.Presentation
 
         public void VerifyAnim(params string[] names_)
         {
-            if (_skeleton == null)
+            if (_actor.Skeleton == null)
             {
                 Debug.LogError($"[{GetType().Name}] 未绑定 SkeletonGraphic，动画演出不可用");
                 return;
             }
 
-            if (!_skeleton.IsValid) _skeleton.Initialize(false);
-            SkeletonData data = _skeleton.Skeleton.Data;
+            if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
+            SkeletonData data = _actor.Skeleton.Skeleton.Data;
             if (data == null)
             {
                 Debug.LogError($"[{GetType().Name}] 骨架数据未就绪，无法校验动画名");

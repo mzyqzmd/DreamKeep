@@ -126,9 +126,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _targetTip: {fileID: 5087547631459548789}
+  _actorName: {fileID: 3004580755406223968}
+  _skeletonMaterial: {fileID: 2100000, guid: fec3262e4394dcb4ea252eda1b9c7349, type: 2}
   _healthBar: {fileID: 3975120028503733725}
   _blockView: {fileID: 2617685378078802007}
   _perkGroup: {fileID: 8637538362073586600}
+  _outlineShader: {fileID: 4800000, guid: 28b5cf4804845fe4b868531fd0bb81d5, type: 3}
+  _hoverFadeDuration: 0.12
+  _hoverFadeEase: 6
   _deathHoldDuration: 1
 --- !u!114 &8047489658391447656
 MonoBehaviour:
@@ -820,7 +825,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4097327065393496153
 RectTransform:
   m_ObjectHideFlags: 0

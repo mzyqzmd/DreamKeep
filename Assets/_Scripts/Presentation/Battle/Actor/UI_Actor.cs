@@ -4,23 +4,34 @@ using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using Spine.Unity;
 using TMPro;
 using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示与演出编排（含"演完才落账"的时序）。
-    /// 骨架句柄、四条公约动画名与播放原语都在 UI_ActorAnimTool；意图与移动在 UI_Enemy。</summary>
+    /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示、悬停名牌与描边高亮、演出编排（含"演完才落账"的时序）。
+    /// 骨架句柄、四条公约动画名与播放原语都在 UI_ActorAnimTool；意图与移动在 UI_Enemy；悬停由 UI_ActorRoot 每帧差分下发。</summary>
     [RequireComponent(typeof(UI_ActorAnimTool))]
     public abstract class UI_Actor : MonoBehaviour
     {
-        [Header("基础配置")] [SerializeField] private GameObject _targetTip; // 箭头指向本单位时亮起的提示
+        private const string
+            OutlineShaderName = "Spine/Outline/SkeletonGraphic"; // 描边 shader 变体：Inspector 里勾选 Outline 就是换到它
+
+        private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+
+        [Header("基础配置")] [SerializeField] protected SkeletonGraphic _skeleton; // 演出用骨架
+        [SerializeField] private GameObject _targetTip; // 箭头指向本单位时亮起的提示
 
         [SerializeField] private TextMeshProUGUI _actorName;
         [SerializeField] private Material _skeletonMaterial;
         [SerializeField] protected UI_HealthBar _healthBar;
         [SerializeField] protected UI_BlockView _blockView;
         [SerializeField] protected UI_PerkGroup _perkGroup;
+        [Header("悬停反馈")] [SerializeField] private Shader _outlineShader; // 描边 shader 引用，留空则运行时按名查找
+        [SerializeField] private float _hoverFadeDuration = 0.12f;
+        [SerializeField] private Ease _hoverFadeEase = Ease.OutQuad;
         [Header("死亡配置")] [SerializeField] protected float _deathHoldDuration = 1f; // 死亡停帧：die 播完停末帧这么多秒后自毁视图
 
         // 公约四条动画名：十条骨架统一导出，全单位一致，写死不可改（将来某单位要做状态变体时再议）
@@ -28,6 +39,8 @@ namespace _DreamKeep.Presentation
         protected const string AttackAnim = "attack";
         protected const string HitAnim = "hurt";
         protected const string DeathAnim = "die";
+
+        public SkeletonGraphic Skeleton => _skeleton;
 
         /// <summary>绑定的域侧生物：事件按它过滤，血量、格挡与状态真值都从它读。</summary>
         protected Creature _boundCreature;
@@ -38,6 +51,15 @@ namespace _DreamKeep.Presentation
         protected UI_ActorAnimTool _animTool;
         private bool _targetTipShown;
 
+        // 悬停反馈状态：描边材质副本只在首次悬停克隆、之后常驻，共享材质资产全程不写
+        private Material _outlineMaterial;
+        private Color _outlineColor;
+        private bool _outlineUnavailable;
+        private float _hoverFade;
+        private Tween _hoverTween;
+        private bool _hovered;
+        private bool _nameShown;
+
         /// <summary>已播完死亡动画：此后忽略一切动画请求（托管字段，宿主销毁后仍可安全读）。</summary>
         protected bool _deathAnimTriggered;
 
@@ -46,9 +68,11 @@ namespace _DreamKeep.Presentation
             _animTool = GetComponent<UI_ActorAnimTool>();
         }
 
-        // 销毁即注销登记（覆盖敌人死亡自毁这条路径）；子类覆写时先收自己的尾再转调
+        // 销毁即收掉悬停补间与描边副本，再注销登记（覆盖敌人死亡自毁这条路径）；子类覆写时先收自己的尾再转调
         protected virtual void OnDestroy()
         {
+            _hoverTween?.Kill();
+            if (_outlineMaterial) Destroy(_outlineMaterial);
             if (_actorRoot) _actorRoot.Unregister(_boundCreature);
         }
 
@@ -67,6 +91,70 @@ namespace _DreamKeep.Presentation
             UiGeometry.Contains((RectTransform)(_targetTip ? _targetTip.transform : transform), world_);
 
         #endregion
+
+        #region 悬停反馈：指针停在单位范围内时淡入名牌与描边，由 UI_ActorRoot 差分下发
+
+        /// <summary>悬停反馈总开关：显示时淡入名牌与描边，移出时反向淡出；重复同一状态不做任何事。</summary>
+        public void SetHovered(bool show_)
+        {
+            if (_hovered == show_) return;
+            _hovered = show_;
+            if (show_)
+            {
+                EnsureOutlineMaterial();
+                ShowName();
+            }
+
+            _hoverTween?.Kill();
+            _hoverTween = DOTween.To(() => _hoverFade, WriteHoverFade, show_ ? 1f : 0f, _hoverFadeDuration)
+                .SetEase(_hoverFadeEase)
+                .OnComplete(HideNameIfIdle);
+        }
+
+        #endregion
+
+        // 渐入系数的唯一写入口：名牌 alpha 与描边颜色按同一系数走。描边 pass 是预乘混合、片元输出整色乘描边遮盖度，
+        // 故降不透明度必须整色缩放——只把 a 压到 0 会留下 RGB 加色亮斑
+        private void WriteHoverFade(float fade_)
+        {
+            _hoverFade = fade_;
+            if (_actorName) _actorName.alpha = fade_;
+            if (_outlineMaterial) _outlineMaterial.SetColor(OutlineColorId, _outlineColor * fade_);
+        }
+
+        // 描边材质副本：首次悬停克隆一份并切到描边 shader 变体，赋给骨架后常驻；描边宽度与颜色随克隆自带
+        private void EnsureOutlineMaterial()
+        {
+            if (_outlineMaterial || _outlineUnavailable || !_skeletonMaterial) return;
+            Shader shader = _outlineShader ? _outlineShader : Shader.Find(OutlineShaderName);
+            if (!shader)
+            {
+                _outlineUnavailable = true;
+                Debug.LogError($"[{GetType().Name}] 找不到描边 shader：{OutlineShaderName}，悬停描边不可用（可在预制体上接 Shader 引用）");
+                return;
+            }
+
+            _outlineMaterial = new Material(_skeletonMaterial) { shader = shader };
+            _outlineColor = _outlineMaterial.GetColor(OutlineColorId);
+            _outlineMaterial.SetColor(OutlineColorId, _outlineColor * _hoverFade); // 先抹到当前系数，免得换材质那一帧闪出满描边
+            if (_animTool && _skeleton) _skeleton.material = _outlineMaterial;
+        }
+
+        // 名牌显隐：亮出前先对齐当前系数（免露出上次残留），淡出补间走完才收起来；补间被杀时不收，留给下一次淡入接续
+        private void ShowName()
+        {
+            if (!_actorName || _nameShown) return;
+            _nameShown = true;
+            _actorName.alpha = _hoverFade;
+            _actorName.gameObject.SetActive(true);
+        }
+
+        private void HideNameIfIdle()
+        {
+            if (!_actorName || _hovered) return;
+            _nameShown = false;
+            _actorName.gameObject.SetActive(false);
+        }
 
         #region 装配入口：子类绑好自己的生物后转调
 
