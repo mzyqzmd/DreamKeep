@@ -405,6 +405,9 @@ GameObject:
   - component: {fileID: 356516480370577585}
   - component: {fileID: 3504761435466215078}
   - component: {fileID: 9064148191008295801}
+  - component: {fileID: 8546950747939119409}
+  - component: {fileID: 8960364477917930693}
+  - component: {fileID: 863939520267886108}
   m_Layer: 5
   m_Name: TwigSlime
   m_TagString: Untagged
@@ -446,16 +449,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a915aea2866a74840b6dc6935727e912, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _targetTip: {fileID: 2993660806872956389}
-  _actorName: {fileID: 1908728729208968833}
-  _skeletonMaterial: {fileID: 2100000, guid: ef02086abfd65414ab09123c974e4836, type: 2}
   _healthBar: {fileID: 8744179912813604640}
   _blockView: {fileID: 6299357182448807998}
   _perkGroup: {fileID: 5822193550654822009}
+  _skeleton: {fileID: 7464708472004080688}
+  _targetTip: {fileID: 2993660806872956389}
+  _actorName: {fileID: 1908728729208968833}
   _outlineShader: {fileID: 4800000, guid: 28b5cf4804845fe4b868531fd0bb81d5, type: 3}
-  _hoverFadeDuration: 0.12
-  _hoverFadeEase: 6
-  _deathHoldDuration: 1
+  _skeletonMaterial: {fileID: 2100000, guid: ef02086abfd65414ab09123c974e4836, type: 2}
   _intentGroup: {fileID: 8684412588836701434}
   _moveDuration: 0.3
   _moveEase: 6
@@ -471,7 +472,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdbe76ea440a468891bc2792830895a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeleton: {fileID: 7464708472004080688}
+--- !u!114 &8546950747939119409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171826752692776713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0e0569dbf604a6dbca830c317f74bc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hoverFadeDuration: 0.12
+  _hoverFadeEase: 6
+--- !u!222 &8960364477917930693
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171826752692776713}
+  m_CullTransparentMesh: 1
+--- !u!114 &863939520267886108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171826752692776713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &2227509152811558276
 GameObject:
   m_ObjectHideFlags: 0

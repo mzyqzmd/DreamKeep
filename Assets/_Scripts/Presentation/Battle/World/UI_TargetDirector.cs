@@ -7,8 +7,9 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>目标提示驱动：每帧读手牌区暴露的瞄准事实（瞄准中的牌、目标槽位、指针世界坐标），用玩法层的只读预览
-    /// 解析出"这张牌真正会命中的目标"，再查 ActorRoot 登记的单位视图点亮对应目标、熄灭其余；箭头瞄准时它还负责把
-    /// "指针落在哪个敌人视图矩形内"解析成存活列表下标并回写手牌侧，于是打牌命令与提示共用同一个目标。
+    /// 解析出"这张牌真正会命中的目标"，再查 ActorRoot 登记的单位视图、由它的命中框点亮对应目标、熄灭其余；箭头瞄准时
+    /// 它还负责把"指针落在哪个敌人命中框内"解析成存活列表下标并回写手牌侧，于是打牌命令与提示共用同一个目标。
+    /// 同一份目标集合还顺带压制其余单位的悬停演出——瞄准扫过玩家与无关敌人时不再误亮名牌与描边。
     /// 它归战斗单位侧：手牌侧只提供中立事实、不认识任何单位，落点规则也只有玩法层一份。</summary>
     public sealed class UI_TargetDirector : MonoBehaviour
     {
@@ -39,21 +40,22 @@ namespace _DreamKeep.Presentation
             {
                 _handView.SetAimSlot(UI_HandView.DefaultAimSlot);
                 HideAll();
+                _actorRoot.ApplyHoverSuppression(null); // 没在瞄准就一律放开，指针还停着的单位自行淡入
                 return;
             }
 
             List<Creature> targets;
             if (aimed.Card.IsAnyEnemyTarget)
             {
-                // 箭头瞄准：指针落在哪个敌人视图的矩形内就取哪个（按存活列表顺序，都没命中为 -1），
+                // 箭头瞄准：指针落在哪个敌人的命中框内就取哪个（按存活列表顺序，都没命中为 -1），
                 // 按该下标回写手牌侧，再用同一份玩法层落点解析——提示的是谁，松手打的就是谁
                 Vector3 pointerWorld = _handView.PointerWorldPosition();
                 List<Enemy> alive = _battleContext.GetAliveEnemies();
                 int slot = NoAimSlot;
                 for (int i = 0; i < alive.Count; i++)
                 {
-                    if (!_actorRoot.TryGetView(alive[i].Creature, out UI_Actor view) || view == null) continue;
-                    if (!view.ContainsWorldPoint(pointerWorld)) continue;
+                    UI_ActorHoverBox box = GetHoverBox(alive[i].Creature);
+                    if (!box || !box.ContainsWorldPoint(pointerWorld)) continue;
                     slot = i;
                     break;
                 }
@@ -69,6 +71,9 @@ namespace _DreamKeep.Presentation
                 targets = CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player,
                     _handView.CurrentAimSlot);
             }
+
+            // 压制对账：瞄准期间只留"这张牌真正会命中的单位"的悬停，其余（含玩家自己）静默；集合没变也照写，盒内自己去重
+            _actorRoot.ApplyHoverSuppression(targets);
 
             // 目标集合比较：顺序由玩法层的解析确定，逐项等值即可；没变就早退，不做任何开关
             if (targets.Count == _shownTargets.Count)
@@ -88,19 +93,27 @@ namespace _DreamKeep.Presentation
             HideAll();
             foreach (Creature creature in targets)
             {
-                if (!_actorRoot.TryGetView(creature, out UI_Actor view) || view == null) continue;
-                view.ShowTargetTip(true);
+                UI_ActorHoverBox box = GetHoverBox(creature);
+                if (!box) continue;
+                box.ShowTargetTip(true);
                 _shownTargets.Add(creature);
             }
         }
 
-        // 熄灭全部提示：按登记的视图反查（视图随死亡销毁时 OnDestroy 已注销登记，TryGetView 自然返回 false）
+        // 熄灭全部提示：按登记的视图反查命中框（视图随死亡销毁时 OnDestroy 已注销登记，TryGetView 自然返回 false）
         private void HideAll()
         {
             foreach (Creature creature in _shownTargets)
-                if (_actorRoot.TryGetView(creature, out UI_Actor view) && view != null)
-                    view.ShowTargetTip(false);
+            {
+                UI_ActorHoverBox box = GetHoverBox(creature);
+                if (box) box.ShowTargetTip(false);
+            }
+
             _shownTargets.Clear();
         }
+
+        // 命中框查询：视图或命中框缺失一律当拿不到（视图可能已随死亡销毁，登记表里留下的是伪空引用）
+        private UI_ActorHoverBox GetHoverBox(Creature creature_) =>
+            _actorRoot.TryGetView(creature_, out UI_Actor view) && view != null ? view.HoverBox : null;
     }
 }
