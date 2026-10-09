@@ -11,7 +11,7 @@ namespace _DreamKeep.RuntimeData
             Amount = amount_;
             Times = times_;
         }
-
+        public override string GetIntentName() => "攻势";
         public override string GetDescription() 
             => Times == 1 ? $"这名敌人将要对你发动一次攻击" : $"这名敌人将要对你发动{Times}次攻击";
     }

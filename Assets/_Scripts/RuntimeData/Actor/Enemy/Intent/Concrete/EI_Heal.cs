@@ -6,7 +6,7 @@ namespace _DreamKeep.RuntimeData
         public int Amount { get; }
 
         public EI_Heal(int amount_) => Amount = amount_;
-
+        public override string GetIntentName() => "治疗";
         public override string GetDescription() => $"这名敌人将要治疗自己";
     }
 }

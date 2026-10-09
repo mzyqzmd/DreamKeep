@@ -7,7 +7,6 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>单位命中框：挂在单位根节点上，指针进出时淡入淡出名牌与描边，并兼管目标提示点亮与箭头命中判定
     /// （判定用的就是本节点的矩形，与悬停范围同源）。被手牌、牌堆等上层界面压住不算悬停由 EventSystem 的层序负责；
-    /// 瞄准期间非命中目标的悬停由 UI_TargetDirector 经 SetHoverSuppressed 整体压制（指针事实照常记录，只不出反馈）。
     /// 配置不在这里，一律读所在 UI_Actor 的只读出口，所以组件挂上即生效、无需 Inspector 接线。</summary>
     public sealed class UI_ActorHoverBox : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
@@ -31,10 +30,6 @@ namespace _DreamKeep.Presentation
         private bool _hovered;
         private bool _nameShown;
 
-        // 指针事实与压制状态：Enter/Exit 只记事实，出不出反馈由 RefreshHover 统一裁决
-        private bool _pointerInside;
-        private bool _hoverSuppressed;
-
         private void Awake() => _actor = GetComponentInParent<UI_Actor>();
 
         // 销毁即收掉悬停补间与描边副本
@@ -44,9 +39,9 @@ namespace _DreamKeep.Presentation
             if (_outlineMaterial) Destroy(_outlineMaterial);
         }
 
-        public void OnPointerEnter(PointerEventData eventData) => SetPointerInside(true);
+        public void OnPointerEnter(PointerEventData eventData) => SetHovered(true);
 
-        public void OnPointerExit(PointerEventData eventData) => SetPointerInside(false);
+        public void OnPointerExit(PointerEventData eventData) => SetHovered(false);
 
         #region 目标提示与命中判定：由 UI_TargetDirector 按"这张牌会命中的目标"调用
 
@@ -82,22 +77,7 @@ namespace _DreamKeep.Presentation
                 .OnComplete(HideNameIfIdle);
         }
 
-        /// <summary>悬停压制开关：瞄准期间对"这张牌不会命中的单位"打开、对命中目标解除；状态没变一个字都不写。</summary>
-        public void SetHoverSuppressed(bool suppressed_)
-        {
-            if (_hoverSuppressed == suppressed_) return;
-            _hoverSuppressed = suppressed_;
-            SetHovered(_pointerInside && !_hoverSuppressed);
-        }
-
         #endregion
-
-        // 指针事实写入：进出只改事实，出不出反馈交 RefreshHover 裁决（压制中进出的单位不会误亮）
-        private void SetPointerInside(bool inside_)
-        {
-            _pointerInside = inside_;
-            SetHovered(_pointerInside && !_hoverSuppressed);
-        }
 
         // 渐入系数的唯一写入口：名牌 alpha 与描边颜色按同一系数走。描边 pass 是预乘混合、片元输出整色乘描边遮盖度，
         // 故降不透明度必须整色缩放——只把 a 压到 0 会留下 RGB 加色亮斑

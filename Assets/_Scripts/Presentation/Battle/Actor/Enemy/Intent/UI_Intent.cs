@@ -27,7 +27,8 @@ namespace _DreamKeep.Presentation.Intent
         {
             if (_tipHost == null || _intent == null) return;
             _tipShown = true;
-            _tipHost.ShowTip(this, null, _intent.GetDescription(), UiGeometry.TopCenter(this, _tipLiftPx));
+            _tipHost.ShowTip(this, _intent.GetIntentName(), _intent.GetDescription(),
+                UiGeometry.TopCenter(this, _tipLiftPx));
         }
 
         public void OnPointerExit(PointerEventData eventData_) => HideTip();

@@ -9,7 +9,6 @@ namespace _DreamKeep.Presentation
     /// <summary>目标提示驱动：每帧读手牌区暴露的瞄准事实（瞄准中的牌、目标槽位、指针世界坐标），用玩法层的只读预览
     /// 解析出"这张牌真正会命中的目标"，再查 ActorRoot 登记的单位视图、由它的命中框点亮对应目标、熄灭其余；箭头瞄准时
     /// 它还负责把"指针落在哪个敌人命中框内"解析成存活列表下标并回写手牌侧，于是打牌命令与提示共用同一个目标。
-    /// 同一份目标集合还顺带压制其余单位的悬停演出——瞄准扫过玩家与无关敌人时不再误亮名牌与描边。
     /// 它归战斗单位侧：手牌侧只提供中立事实、不认识任何单位，落点规则也只有玩法层一份。</summary>
     public sealed class UI_TargetDirector : MonoBehaviour
     {
@@ -40,7 +39,6 @@ namespace _DreamKeep.Presentation
             {
                 _handView.SetAimSlot(UI_HandView.DefaultAimSlot);
                 HideAll();
-                _actorRoot.ApplyHoverSuppression(null); // 没在瞄准就一律放开，指针还停着的单位自行淡入
                 return;
             }
 
@@ -71,9 +69,6 @@ namespace _DreamKeep.Presentation
                 targets = CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player,
                     _handView.CurrentAimSlot);
             }
-
-            // 压制对账：瞄准期间只留"这张牌真正会命中的单位"的悬停，其余（含玩家自己）静默；集合没变也照写，盒内自己去重
-            _actorRoot.ApplyHoverSuppression(targets);
 
             // 目标集合比较：顺序由玩法层的解析确定，逐项等值即可；没变就早退，不做任何开关
             if (targets.Count == _shownTargets.Count)
