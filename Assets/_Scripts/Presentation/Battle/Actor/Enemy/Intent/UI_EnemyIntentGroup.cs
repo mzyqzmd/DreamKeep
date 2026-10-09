@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
     /// <summary>敌人意图预告组：把展示意图翻译成头顶图标串并分发视觉绑定，负责生成与清空；
     /// 悬停说明由每个图标自己承接（悬停哪一张弹哪一张），组只把气泡宿主交给新生成的图标；
     /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。</summary>
-    public class UI_EnemyIntentGroup : MonoBehaviour
+    public sealed class UI_EnemyIntentGroup : MonoBehaviour
     {
         [Header("意图预制体")] [SerializeField] private UI_AttackIntent _attackIntentPrefab;
         [SerializeField] private UI_BlockIntent _blockIntentPrefab;

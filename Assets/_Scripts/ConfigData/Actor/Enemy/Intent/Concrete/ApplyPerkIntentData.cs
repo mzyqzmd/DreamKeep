@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     [Serializable]
     [AddTypeMenu("Intent/施加效果")]
-    public class ApplyPerkIntentData : IntentData
+    public sealed class ApplyPerkIntentData : IntentData
     {
         [SerializeReference, SubclassSelector] private BattlePerk _perk;
         [SerializeField] private int _layers;

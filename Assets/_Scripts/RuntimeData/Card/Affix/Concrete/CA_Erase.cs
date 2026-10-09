@@ -3,7 +3,7 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>遗忘词条（效果型，标记）：打出时从整局游戏永久移除自身，区别于消耗仅本场离场。</summary>
-    public class CA_Erase : CardAffix
+    public sealed class CA_Erase : CardAffix
     {
         internal CA_Erase(AD_Erase erase_) : this(erase_.Name, erase_.ShowDescriptionCardView)
         {

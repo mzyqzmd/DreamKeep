@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
     /// <summary>弹层宿主：挂在场景 Canvas_Pop/PopTextRoot 上，持有本战斗的弹层文本——
     /// 说明气泡（悬停类：内容与世界锚点由调用方给，此处只管单条实例复用与定位）与回合横幅（公告类：自订阅 BE_TurnStarted 转发展示）；
     /// 运行期不认识具体调用方（仅装配期注入事件门面）。</summary>
-    public class UI_PopTextRoot : MonoBehaviour
+    public sealed class UI_PopTextRoot : MonoBehaviour
     {
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
         [SerializeField] private UI_TurnCountPopTip _turnCountPopTipPrefab;

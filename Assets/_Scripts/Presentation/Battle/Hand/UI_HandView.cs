@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
     /// <summary>手牌区门面：持有 Inspector 配置，在装配点按"手牌区本体 → 手牌流程"建起两个协作者，把宿主契约与每帧驱动转发给它们。
     /// 本体（HandArea）管牌的去向、资格、层归属、槽位排布与悬停裁决；流程（HandPlayFlow）管出牌、瞄准与领域事件演出；
     /// 出牌区（UI_PlayCardZone）是另一块自洽区域。它只对外暴露瞄准事实：瞄准中的牌、指针世界坐标、目标槽位回写口。</summary>
-    public class UI_HandView : MonoBehaviour
+    public sealed class UI_HandView : MonoBehaviour
     {
         [Tooltip("战斗包装预制体：池化实例化用，实例挂在手牌层之下，里面内嵌牌面")] [SerializeField]
         private UI_CardHolder _cardPrefab;

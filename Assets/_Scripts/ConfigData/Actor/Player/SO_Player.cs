@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>玩家配置：起始能量、每回合抽牌数与起始卡组；表现数据与初始状态同敌人完全同构。</summary>
     [CreateAssetMenu(fileName = "Player", menuName = "DreamKeep/Data/Actor/Player")]
-    public class SO_Player : ScriptableObject
+    public sealed class SO_Player : ScriptableObject
     {
         [Header("基础配置")]
         [SerializeField] private string _name;

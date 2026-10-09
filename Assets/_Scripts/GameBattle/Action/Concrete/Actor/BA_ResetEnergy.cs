@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>重置能量动作：把当前能量设为指定值，用于回合开始回满，区别于只做累加的获得能量。</summary>
-    public class BA_ResetEnergy : BattleAction
+    public sealed class BA_ResetEnergy : BattleAction
     {
         /// <summary>可被 Pre 钩子修改的目标能量值。</summary>
         public int Amount { get; set; }

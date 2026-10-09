@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>敌人移动动作：向玩家方向前进一个槽位；前槽被占则白过，站最前敌人槽位（1 号）则回绕到最靠后空槽。</summary>
-    public class BA_Move : BattleAction
+    public sealed class BA_Move : BattleAction
     {
         private readonly Enemy _enemy;
 

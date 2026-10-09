@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>遗忘动作：把这张卡从整局卡组永久移除，不进入任何牌堆；战斗结束时由结束阶段回写卡组。</summary>
-    public class BA_Erase : BattleAction
+    public sealed class BA_Erase : BattleAction
     {
         /// <summary>结算期间卡可能已离场，移除失败即视为离场。</summary>
         private readonly CardModel _cardToErase;

@@ -7,7 +7,7 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>敌人回合结束阶段：敌人状态衰减并推进回合计数，一回合到此结束。</summary>
-    public class BP_EnemyTurnEnd : BattlePhase
+    public sealed class BP_EnemyTurnEnd : BattlePhase
     {
         public BP_EnemyTurnEnd(BattleLoop owner_) : base(owner_)
         {

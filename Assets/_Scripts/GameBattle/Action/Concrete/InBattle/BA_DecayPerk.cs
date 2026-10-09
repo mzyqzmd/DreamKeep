@@ -6,7 +6,7 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>状态衰减动作：回合边界让目标身上该时机的状态层数递减，归零移除的逐个发移除事件，
     /// 幸存的逐个发递减事件供表现层刷新层数，玩家与敌人共用。</summary>
-    public class BA_DecayPerk : BattleAction
+    public sealed class BA_DecayPerk : BattleAction
     {
         private readonly EPerkDecayTiming _timing;
 

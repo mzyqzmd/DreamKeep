@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
     /// <summary>状态「力量」：每层提高 1 点攻击伤害，战斗内不自动衰减。</summary>
     [Serializable]
     [AddTypeMenu("Perk/力量")]
-    public class BP_Strength : BattlePerk
+    public sealed class BP_Strength : BattlePerk
     {
         public override string Name => "力量";
         public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.None;

@@ -84,6 +84,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4668560875071015032}
   - component: {fileID: 1401577113075711011}
+  - component: {fileID: 8047489658391447656}
   m_Layer: 5
   m_Name: Player
   m_TagString: Untagged
@@ -128,6 +129,20 @@ MonoBehaviour:
   _healthBar: {fileID: 3975120028503733725}
   _blockView: {fileID: 2617685378078802007}
   _perkGroup: {fileID: 8637538362073586600}
+  _deathHoldDuration: 1
+--- !u!114 &8047489658391447656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235640479445222248}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdbe76ea440a468891bc2792830895a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _skeleton: {fileID: 1918114150593664658}
 --- !u!1 &551374552608510456
 GameObject:
   m_ObjectHideFlags: 0
@@ -800,7 +815,7 @@ GameObject:
   - component: {fileID: 4202217573682060072}
   - component: {fileID: 3004580755406223968}
   m_Layer: 5
-  m_Name: PlayerName
+  m_Name: ActorName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

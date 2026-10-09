@@ -3,7 +3,7 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>保留词条（卡级修饰型，标记）：回合结束不进弃牌堆，仅当被打出时才离场。</summary>
-    public class CA_Retain : CardAffix
+    public sealed class CA_Retain : CardAffix
     {
         internal CA_Retain(AD_Retain retain_) : this(retain_.Name, retain_.ShowDescriptionCardView)
         {

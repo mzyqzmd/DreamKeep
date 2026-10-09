@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>消耗能量动作：从玩家扣除当前能量，用于打出卡牌，能量是否足够由阶段侧先行校验。</summary>
-    public class BA_SpendEnergy : BattleAction
+    public sealed class BA_SpendEnergy : BattleAction
     {
         /// <summary>可被 Pre 钩子修改的消耗量。</summary>
         public int Amount { get; set; }

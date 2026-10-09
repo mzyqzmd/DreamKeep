@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>格挡词条（效果型）：为自身获得指定数值的格挡。</summary>
-    public class CA_Block : CardAffix
+    public sealed class CA_Block : CardAffix
     {
         internal CA_Block(AD_Block block_) : this(block_.Name, block_.ShowDescriptionCardView, block_.Amount)
         {

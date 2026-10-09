@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     [Serializable]
     [AddTypeMenu("Intent/混合意图(最多两个混合)")]
-    public class MixedIntentData : IntentData
+    public sealed class MixedIntentData : IntentData
     {
         //NOTE:最多同时有两个意图
         [SerializeReference, SubclassSelector] private IntentData _intent1;

@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>清空格挡动作：回合开始清除残留格挡，区别于只做累加的格挡动作。</summary>
-    public class BA_ClearBlock : BattleAction
+    public sealed class BA_ClearBlock : BattleAction
     {
         public BA_ClearBlock(Creature source_, List<Creature> targets_) : base(source_, targets_) { }
 

@@ -10,7 +10,7 @@ namespace _DreamKeep.Presentation
     /// 解析出"这张牌真正会命中的目标"，再查 ActorRoot 登记的单位视图点亮对应目标、熄灭其余；箭头瞄准时它还负责把
     /// "指针落在哪个敌人视图矩形内"解析成存活列表下标并回写手牌侧，于是打牌命令与提示共用同一个目标。
     /// 它归战斗单位侧：手牌侧只提供中立事实、不认识任何单位，落点规则也只有玩法层一份。</summary>
-    public class UI_TargetDirector : MonoBehaviour
+    public sealed class UI_TargetDirector : MonoBehaviour
     {
         private UI_HandView _handView;
         private BattleContext _battleContext;

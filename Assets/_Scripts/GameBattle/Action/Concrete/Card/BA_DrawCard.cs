@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>抽牌动作：从抽牌堆抽一张入手牌，手牌已达上限时本张被拒（不入手牌、不洗回、抽牌堆不动），抽牌堆见底时先把弃牌堆整摞洗回，并广播洗回事件（视图据此播搬运演出，播完才轮到抽牌入场）。抽多张请入队多个动作，使每张独立走钩子、各自判定手牌上限。</summary>
-    public class BA_DrawCard : BattleAction
+    public sealed class BA_DrawCard : BattleAction
     {
         public BA_DrawCard(Creature source_, List<Creature> targets_) : base(source_, targets_)
         {

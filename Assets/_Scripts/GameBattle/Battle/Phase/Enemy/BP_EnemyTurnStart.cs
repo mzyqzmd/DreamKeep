@@ -8,7 +8,7 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>敌人回合开始阶段：清空敌人上回合残留的格挡，为意图结算做准备。</summary>
     /// <remarks>敌人当前无获取格挡的途径时本循环短路；保留是为敌人防御意图预留。</remarks>
-    public class BP_EnemyTurnStart : BattlePhase
+    public sealed class BP_EnemyTurnStart : BattlePhase
     {
         public BP_EnemyTurnStart(BattleLoop owner_) : base(owner_)
         {

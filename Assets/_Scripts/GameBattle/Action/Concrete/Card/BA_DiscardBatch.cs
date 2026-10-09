@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>批量弃置动作：把指定牌堆中的一批卡一次移入弃牌堆，卡已离场则静默跳过，成功者合并发一条批量事件。</summary>
-    public class BA_DiscardBatch : BattleAction
+    public sealed class BA_DiscardBatch : BattleAction
     {
         private readonly IReadOnlyList<CardModel> _cardsToDiscard;
         private readonly CardPile _sourcePile;

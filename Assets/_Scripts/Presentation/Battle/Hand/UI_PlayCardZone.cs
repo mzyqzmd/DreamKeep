@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
     /// <summary>出牌区：一块自洽的区域——打出的牌在此按先后排队堆叠，区域自己管命中判定、队列状态与队位落点。
     /// 手牌区只单向问它"在队里吗 / 命中吗 / 收下 / 还回 / 等停稳"，它不认识手牌区，也不判断任何规则。
     /// 落点与队位分家：矩形只管判定（卡牌锚点落在矩形内即算打出），队位一律由区域里的点 CardQueuePoint 起算。</summary>
-    public class UI_PlayCardZone : MonoBehaviour
+    public sealed class UI_PlayCardZone : MonoBehaviour
     {
         [Tooltip("排队堆叠的步进（画布像素）：以队列点为准，x 为每张牌向右错开的距离，y 为向上错开的距离")] [SerializeField]
         private Vector2 _stackStepPx = new(-110f, 0f);

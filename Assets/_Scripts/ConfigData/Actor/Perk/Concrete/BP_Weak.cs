@@ -6,7 +6,7 @@ namespace _DreamKeep.ConfigData
     /// <summary>状态「虚弱」：降低目标造成的伤害，回合结束层数递减。</summary>
     [Serializable]
     [AddTypeMenu("Perk/虚弱")]
-    public class BP_Weak : BattlePerk
+    public sealed class BP_Weak : BattlePerk
     {
         [SerializeField] private float _ratio = 0.25f;
         public float Ratio => _ratio;

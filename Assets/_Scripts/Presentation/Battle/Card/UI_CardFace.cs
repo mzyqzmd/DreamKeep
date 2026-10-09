@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
     /// <summary>牌面：卡牌的纯展示层——把卡模型刷到名称 / 类型 / 费用 / 描述 / 图标与外框配色上，并提供不可打外观的整卡压暗。
     /// 它不参与任何交互：不挂命中面、不收指针事件、不管位置与缩放，只被包装（UI_CardHolder）持有并转发调用；
     /// 战斗卡与展示卡共用这一张预制体，区别只在"有没有被包一层包装"——图鉴之类的静态界面直接用它即纯展示卡。</summary>
-    public class UI_CardFace : MonoBehaviour
+    public sealed class UI_CardFace : MonoBehaviour
     {
         [Tooltip("卡面费用文本，内容来自 CardModel.Cost")] [SerializeField]
         private TextMeshProUGUI _cost;

@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>给予动作：为手牌中指定张数的卡动态追加一个词条，支持运行时增删。</summary>
-    public class BA_Grant : BattleAction
+    public sealed class BA_Grant : BattleAction
     {
         /// <summary>可被 Pre 钩子修改的授予张数。</summary>
         public int Count { get; set; }

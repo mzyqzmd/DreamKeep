@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
     /// <summary>状态槽位组：状态按类型去重挂在自己名下（格子布局自动排布），负责建槽、刷层与销槽；
     /// 悬停说明由每个槽位自己承接（悬停哪一格弹哪一格），组只把气泡宿主交给新建的槽位；
     /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
-    public class UI_PerkGroup : MonoBehaviour
+    public sealed class UI_PerkGroup : MonoBehaviour
     {
         [SerializeField] private UI_PerkSlot _perkSlotPrefab;
 

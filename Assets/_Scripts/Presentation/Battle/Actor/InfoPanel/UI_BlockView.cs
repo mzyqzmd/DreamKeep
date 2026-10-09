@@ -6,7 +6,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>格挡组件：数字文本 + AC_BlockFrame 的 Show 布尔驱动显隐，
     /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
-    public class UI_BlockView : MonoBehaviour
+    public sealed class UI_BlockView : MonoBehaviour
     {
         [Header("格挡")] [SerializeField] private Animator _anim;
         [SerializeField] private TextMeshProUGUI _blockAmount;

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace _DreamKeep.ConfigData
 {
     [CreateAssetMenu(fileName = "NewCard", menuName = "DreamKeep/Data/Card")]
-    public class SO_Card : ScriptableObject
+    public sealed class SO_Card : ScriptableObject
     {
         [SerializeField] private string _name;
         [SerializeField] private int _cost;

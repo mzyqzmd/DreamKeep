@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>消耗动作：把打出堆中这张卡移入消耗堆，本场战斗不再被抽到。</summary>
-    public class BA_Exhaust : BattleAction
+    public sealed class BA_Exhaust : BattleAction
     {
         /// <summary>结算期间卡可能已离场，移除失败即视为离场。</summary>
         private readonly CardModel _cardToExhaust;

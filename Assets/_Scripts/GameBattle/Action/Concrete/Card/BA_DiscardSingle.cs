@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>弃置动作：把指定牌堆中指定的卡移入弃牌堆，卡已离场则静默跳过。</summary>
-    public class BA_DiscardSingle : BattleAction
+    public sealed class BA_DiscardSingle : BattleAction
     {
         /// <summary>结算期间卡可能已被消耗或遗忘离场，移除失败即视为离场。</summary>
         public CardModel Card { get; }

@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>抽牌词条（效果型）：从抽牌堆抽指定张数的牌。</summary>
-    public class CA_DrawCard : CardAffix
+    public sealed class CA_DrawCard : CardAffix
     {
         internal CA_DrawCard(AD_DrawCard drawCard_) : this(drawCard_.Name, drawCard_.ShowDescriptionCardView, drawCard_.Count)
         {

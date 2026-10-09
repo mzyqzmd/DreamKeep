@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 
 namespace _DreamKeep.Utility
 {
-    public class UI_ButtonScaler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
+    public sealed class UI_ButtonScaler : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, ISelectHandler, IDeselectHandler
     {
     [SerializeField] private float _scaleOnHover = 1.2f;
     [SerializeField] private float _duration = 0.2f;

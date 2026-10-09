@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>格挡动作：为目标累加格挡，格挡优先吸收后续伤害。</summary>
-    public class BA_Block : BattleAction
+    public sealed class BA_Block : BattleAction
     {
         /// <summary>可被 Pre 钩子修改的格挡值。</summary>
         public int Amount { get; set; }

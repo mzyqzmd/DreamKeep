@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>血条组件：Slider 数值滚动补间（DOTween 单通道）+ 滚动文本 + 按血量占比从色带染 Fill，
     /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
-    public class UI_HealthBar : MonoBehaviour
+    public sealed class UI_HealthBar : MonoBehaviour
     {
         [Header("血条")] [SerializeField] private Gradient _gradient;
         [SerializeField] private Slider _healthSlider;

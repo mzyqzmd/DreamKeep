@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>敌人配置：视图预制体声明敌人身份（根上挂各自的具体视图类），意图序列按顺序循环执行，最前槽位替换意图可选，初始状态随配置自带。</summary>
     [CreateAssetMenu(fileName = "Enemy", menuName = "DreamKeep/Data/Actor/Enemy")]
-    public class SO_Enemy : ScriptableObject
+    public sealed class SO_Enemy : ScriptableObject
     {
         [Header("基础配置")]
         [SerializeField] private string _name;

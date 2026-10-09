@@ -8,7 +8,7 @@ namespace _DreamKeep.Presentation
     /// 是单位出生摆位与移动补间的唯一坐标来源；同时内嵌"生物 → 单位视图"登记表——单位视图由生成侧
     /// 运行时创建并挂在本节点之下，目标提示按玩法层给的目标查视图只能靠它，单位在装配时自登记、
     /// 销毁时注销（覆盖敌人死亡自我销毁）。槽位编号口径见 RuntimeData 的 BattleSlotLayout。</summary>
-    public class UI_ActorRoot : MonoBehaviour
+    public sealed class UI_ActorRoot : MonoBehaviour
     {
         [SerializeField] private Transform _slot0;
         [SerializeField] private Transform _slot1;

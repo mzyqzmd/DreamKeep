@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>获得能量词条（效果型）：为自身获得指定数值的能量。</summary>
-    public class CA_GainEnergy : CardAffix
+    public sealed class CA_GainEnergy : CardAffix
     {
         internal CA_GainEnergy(AD_GainEnergy gainEnergy_) : this(gainEnergy_.Name, gainEnergy_.ShowDescriptionCardView, gainEnergy_.Amount)
         {

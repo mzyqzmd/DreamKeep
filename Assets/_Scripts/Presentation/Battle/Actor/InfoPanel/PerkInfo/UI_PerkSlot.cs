@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>状态槽位：PerkGroup 里的一格，显示状态的图标与当前层数（恒显示含 1 层）；
     /// 图标、层数与状态数据由 Bind 写入；悬停由本槽位自己承接，在自身顶沿上方弹该状态的名称与描述。</summary>
-    public class UI_PerkSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public sealed class UI_PerkSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private Image _perkIcon;
         [SerializeField] private TextMeshProUGUI _perkAmount;

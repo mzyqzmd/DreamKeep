@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>获得能量动作：为玩家累加当前能量，能量为玩家专属故读写恒指向玩家战斗态。</summary>
-    public class BA_GainEnergy : BattleAction
+    public sealed class BA_GainEnergy : BattleAction
     {
         /// <summary>可被 Pre 钩子修改的获得量。</summary>
         public int Amount { get; set; }

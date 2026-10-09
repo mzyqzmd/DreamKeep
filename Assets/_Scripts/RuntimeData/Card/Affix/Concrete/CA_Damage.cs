@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>伤害词条（效果型）：对目标造成指定数值的伤害，可多次结算。</summary>
-    public class CA_Damage : CardAffix
+    public sealed class CA_Damage : CardAffix
     {
         internal CA_Damage(AD_Damage damage_) : this(damage_.Name, damage_.ShowDescriptionCardView, damage_.Amount, damage_.Times)
         {

@@ -3,7 +3,7 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>施加状态词条（效果型）：为指定目标施加一个状态原型，层数由原型携带。</summary>
-    public class CA_ApplyPerk : CardAffix
+    public sealed class CA_ApplyPerk : CardAffix
     {
         internal CA_ApplyPerk(AD_ApplyPerk applyPerk_, BattlePerk perk_)
             : this(applyPerk_.Name, applyPerk_.ShowDescriptionCardView, perk_)

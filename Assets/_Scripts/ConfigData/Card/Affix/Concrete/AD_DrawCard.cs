@@ -6,7 +6,7 @@ namespace _DreamKeep.ConfigData
     /// <summary>抽牌词条：从抽牌堆抽指定张数的牌。</summary>
     [Serializable]
     [AddTypeMenu("Affix/抽牌")]
-    public class AD_DrawCard : AffixData
+    public sealed class AD_DrawCard : AffixData
     {
         [SerializeField] private int _count;
 

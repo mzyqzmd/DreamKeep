@@ -15,7 +15,15 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Ease _moveEase = Ease.OutQuad;
 
         private Enemy _boundEnemy;
+
         private Tween _moveTween;
+
+        // 销毁：先收掉自己的移动补间，再转调基类注销登记
+        protected override void OnDestroy()
+        {
+            _moveTween?.Kill();
+            base.OnDestroy();
+        }
 
         #region 装配入口：由生成侧在 Instantiate 后注入装配
 
@@ -29,10 +37,8 @@ namespace _DreamKeep.Presentation
             _intentGroup.Show(_boundEnemy.PreviewIntent);
 
             // 出生摆位：不补间，直接钉到当前槽位点
-            Transform slot = _actorRoot.GetSlotTransform(_boundEnemy.Slot);
-            if (slot == null) return;
             _moveTween?.Kill();
-            ((RectTransform)transform).position = slot.position;
+            transform.position = _actorRoot.GetSlotTransform(_boundEnemy.Slot).position;
         }
 
         #endregion
@@ -48,7 +54,7 @@ namespace _DreamKeep.Presentation
         // 移动：滑向目标槽位点，事件链阻塞到到位（逐格推进与打完回位都按序演出）
         private async UniTask OnEnemyMovedAsync(BE_EnemyMoved moved_)
         {
-            if (moved_.Enemy != _boundEnemy || this == null) return;
+            if (moved_.Enemy != _boundEnemy) return;
             Transform slot = _actorRoot.GetSlotTransform(moved_.ToSlot);
             if (slot == null) return;
 
@@ -60,13 +66,6 @@ namespace _DreamKeep.Presentation
                 .OnComplete(() => finished.TrySetResult())
                 .OnKill(() => finished.TrySetResult());
             await finished.Task;
-        }
-
-        // 销毁：先收掉自己的移动补间，再转调基类注销登记
-        protected override void OnDestroy()
-        {
-            _moveTween?.Kill();
-            base.OnDestroy();
         }
     }
 }

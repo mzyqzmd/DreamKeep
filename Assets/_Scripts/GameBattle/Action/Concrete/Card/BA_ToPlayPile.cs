@@ -5,7 +5,7 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>入打出堆动作：打出的第一步，把卡从手牌移入打出堆并写出出牌事件；
     /// 此后扣能量与词条结算都在打出堆已完成，卡在结算结束后按结果离场。</summary>
-    public class BA_ToPlayPile : BattleAction
+    public sealed class BA_ToPlayPile : BattleAction
     {
         public CardModel Card { get; }
 

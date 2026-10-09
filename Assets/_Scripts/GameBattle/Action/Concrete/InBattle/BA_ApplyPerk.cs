@@ -5,7 +5,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>施加状态动作：为目标挂载状态层数，同类型累加。</summary>
-    public class BA_ApplyPerk : BattleAction
+    public sealed class BA_ApplyPerk : BattleAction
     {
         /// <summary>可被 Pre 钩子替换的状态实例，层数由实例携带。</summary>
         public BattlePerk Perk { get; set; }

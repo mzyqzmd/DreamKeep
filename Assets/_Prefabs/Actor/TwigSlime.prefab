@@ -404,6 +404,7 @@ GameObject:
   m_Component:
   - component: {fileID: 356516480370577585}
   - component: {fileID: 3504761435466215078}
+  - component: {fileID: 9064148191008295801}
   m_Layer: 5
   m_Name: TwigSlime
   m_TagString: Untagged
@@ -449,9 +450,23 @@ MonoBehaviour:
   _healthBar: {fileID: 8744179912813604640}
   _blockView: {fileID: 6299357182448807998}
   _perkGroup: {fileID: 5822193550654822009}
+  _deathHoldDuration: 1
   _intentGroup: {fileID: 8684412588836701434}
   _moveDuration: 0.3
   _moveEase: 6
+--- !u!114 &9064148191008295801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2171826752692776713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdbe76ea440a468891bc2792830895a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _skeleton: {fileID: 7464708472004080688}
 --- !u!1 &2227509152811558276
 GameObject:
   m_ObjectHideFlags: 0
@@ -786,7 +801,7 @@ GameObject:
   - component: {fileID: 8365713309178833914}
   - component: {fileID: 1908728729208968833}
   m_Layer: 5
-  m_Name: EnemyName
+  m_Name: ActorName
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -968,7 +983,7 @@ MonoBehaviour:
   m_CellSize: {x: 64, y: 64}
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 1
-  m_ConstraintCount: 6
+  m_ConstraintCount: 4
 --- !u!114 &5822193550654822009
 MonoBehaviour:
   m_ObjectHideFlags: 0

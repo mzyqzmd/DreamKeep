@@ -6,7 +6,7 @@ namespace _DreamKeep.ConfigData
     /// <summary>状态「易伤」：提高目标受到的伤害，回合结束层数递减。</summary>
     [Serializable]
     [AddTypeMenu("Perk/易伤")]
-    public class BP_Vulnerable : BattlePerk
+    public sealed class BP_Vulnerable : BattlePerk
     {
         [SerializeField] private float _ratio = 0.5f;
         public float Ratio => _ratio;

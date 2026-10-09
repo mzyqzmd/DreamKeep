@@ -8,7 +8,7 @@ namespace _DreamKeep.GameBattle
     /// <summary>玩家回合进行阶段：唯一的等待型阶段，只接受命令，不自动推进。
     /// 进入本阶段即"玩家操作窗口开启"，但等待型阶段不被主循环驱动 RunAsync，故该信号由上一阶段 BP_PlayerTurnStart 在抽牌演出收尾处广播 BE_PlayerTurnActiveStarted。
     /// 打不出的命令（能量不足、牌不在手牌）不静默丢弃，一律广播拒绝事件交由视图退牌。</summary>
-    public class BP_PlayerTurnActive : BattlePhase, IBattleCommandReceiver
+    public sealed class BP_PlayerTurnActive : BattlePhase, IBattleCommandReceiver
     {
         public BP_PlayerTurnActive(BattleLoop owner_) : base(owner_)
         {

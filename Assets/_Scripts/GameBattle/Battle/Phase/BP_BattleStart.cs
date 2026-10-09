@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>战斗开始阶段：派发战斗开始事件，随后广播每名敌人的首条意图，再自动推进到首个玩家回合。</summary>
-    public class BP_BattleStart : BattlePhase
+    public sealed class BP_BattleStart : BattlePhase
     {
         public BP_BattleStart(BattleLoop owner_) : base(owner_)
         {

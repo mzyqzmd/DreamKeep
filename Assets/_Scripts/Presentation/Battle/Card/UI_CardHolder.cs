@@ -16,7 +16,7 @@ namespace _DreamKeep.Presentation
     /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
     /// 悬停姿态的进入与还原值都由区域按槽位真源给出，包装不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
     /// 位置与缩放两通道补间重开前先 Kill 同通道，补间按通道独占。</summary>
-    public class UI_CardHolder : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+    public sealed class UI_CardHolder : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
         [Tooltip("内嵌的牌面：卡面内容、外框配色与不可打外观都转发给它")] [SerializeField]
         private UI_CardFace _face;

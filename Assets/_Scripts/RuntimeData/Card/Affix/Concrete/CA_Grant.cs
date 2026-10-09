@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>给予词条（效果型）：打出后为指定张数的牌追加一个词条，运行时动态增删。</summary>
-    public class CA_Grant : CardAffix
+    public sealed class CA_Grant : CardAffix
     {
         internal CA_Grant(AD_Grant grant_, CardAffix grantedAffix_)
             : this(grant_.Name, grant_.ShowDescriptionCardView, grant_.Count, grantedAffix_)
