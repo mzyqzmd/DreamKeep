@@ -1,3 +1,4 @@
+using _DreamKeep.Utility;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -49,15 +50,11 @@ namespace _DreamKeep.Presentation
             _countText.text = _shown.ToString();
         }
 
-        // 牌进堆：打断上一条弹跳后从当前缩放起弹——第一段不写起点，DOTween 自动取当前 localScale（即以当前缩放继续）；
-        // 终点恒为本堆基准缩放，故洗回那种 0.04 秒一次的反复打断只会重置节奏，不会越弹越大
+        // 牌进堆：脉冲的"从当前缩放起弹、终点恒为本堆基准缩放"由工具保证，故洗回那种 0.04 秒一次的反复打断只会重置节奏、不会越弹越大
         protected void PlayPop()
         {
-            _punchTween?.Kill();
             // TODO 进堆音效：牌进堆的反馈归本堆自己，将来在此处播放
-            _punchTween = DOTween.Sequence()
-                .Append(transform.DOScale(_baseScale * (1f + _popScale), _popUpDuration).SetEase(Ease.OutQuad))
-                .Append(transform.DOScale(_baseScale, _popDownDuration).SetEase(Ease.OutQuad));
+            UiTween.PlayPunch(ref _punchTween, transform, _baseScale, _popScale, _popUpDuration, _popDownDuration);
         }
     }
 }

@@ -1,5 +1,6 @@
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -60,12 +61,8 @@ namespace _DreamKeep.Presentation
 
             // 杀旧补间再开新的；播完或被杀都放行等待方
             _moveTween?.Kill();
-            UniTaskCompletionSource finished = new();
-            _moveTween = ((RectTransform)transform).DOMove(slot.position, _moveDuration)
-                .SetEase(_moveEase)
-                .OnComplete(() => finished.TrySetResult())
-                .OnKill(() => finished.TrySetResult());
-            await finished.Task;
+            _moveTween = ((RectTransform)transform).DOMove(slot.position, _moveDuration).SetEase(_moveEase);
+            await _moveTween.WaitAsync();
         }
     }
 }

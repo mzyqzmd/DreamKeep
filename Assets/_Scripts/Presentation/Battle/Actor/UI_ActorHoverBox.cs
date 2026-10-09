@@ -16,7 +16,6 @@ namespace _DreamKeep.Presentation
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
 
         [Header("悬停反馈")] [SerializeField] private float _hoverFadeDuration = 0.12f;
-        [SerializeField] private Ease _hoverFadeEase = Ease.OutQuad;
 
         private UI_Actor _actor;
         private bool _targetTipShown;
@@ -71,9 +70,8 @@ namespace _DreamKeep.Presentation
                 ShowName();
             }
 
-            _hoverTween?.Kill();
-            _hoverTween = DOTween.To(() => _hoverFade, WriteHoverFade, show_ ? 1f : 0f, _hoverFadeDuration)
-                .SetEase(_hoverFadeEase)
+            UiTween.PlayScalar(ref _hoverTween, () => _hoverFade,
+                    WriteHoverFade, show_ ? 1f : 0f, _hoverFadeDuration)
                 .OnComplete(HideNameIfIdle);
         }
 

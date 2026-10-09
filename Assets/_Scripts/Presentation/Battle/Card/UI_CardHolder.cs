@@ -1,4 +1,5 @@
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -211,17 +212,12 @@ namespace _DreamKeep.Presentation
                 .SetEase(Ease.OutQuad)
                 .OnUpdate(() => Place(Vector3.Lerp(fromPosition, worldPosition_, progress),
                     Quaternion.Slerp(fromRotation, worldRotation_, progress)));
-            return WaitAsync(_moveTween);
+            return _moveTween.WaitAsync();
         }
 
-        public UniTask ScaleToAsync(float scale_, float duration_)
-        {
-            _scaleTween?.Kill();
-            _scaleTween = DOTween.To(() => transform.localScale.x,
-                    value_ => transform.localScale = Vector3.one * value_, scale_, duration_)
-                .SetEase(Ease.OutQuad);
-            return WaitAsync(_scaleTween);
-        }
+        public UniTask ScaleToAsync(float scale_, float duration_) =>
+            UiTween.PlayScalar(ref _scaleTween, () => transform.localScale.x,
+                value_ => transform.localScale = Vector3.one * value_, scale_, duration_).WaitAsync();
 
         #endregion
 
@@ -234,18 +230,6 @@ namespace _DreamKeep.Presentation
             _moveTween = null;
             _scaleTween?.Kill();
             _scaleTween = null;
-        }
-
-        #endregion
-
-        #region DOTween → UniTask 等待胶水
-        // 完成与被 Kill 都算结束，杜绝 await 悬挂（第二个消费者出现时再抽公共扩展）
-        private static UniTask WaitAsync(Tween tween_)
-        {
-            if (!tween_.IsActive()) return UniTask.CompletedTask;
-            UniTaskCompletionSource source = new();
-            tween_.OnComplete(() => source.TrySetResult()).OnKill(() => source.TrySetResult());
-            return source.Task;
         }
 
         #endregion

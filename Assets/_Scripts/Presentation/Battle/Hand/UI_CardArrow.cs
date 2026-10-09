@@ -18,7 +18,7 @@ namespace _DreamKeep.Presentation
         private RectTransform _head;
 
         [Tooltip("最大弧高系数：指针偏离起点正上方达到满角度时，弧高 = 起终点距离 × 该系数；偏得越正弧度越小，正对正上方是一条直线")] [SerializeField]
-        private float _bendFactor = 0.5f;
+        private float _bendFactor = 0.9f;
 
         [Tooltip("满角度（度）：指针偏离起点正上方达到该角度时弧度到达最大；角度越小弧度按比例越小")] [SerializeField]
         private float _bendFullAngleDeg = 60f;
@@ -30,7 +30,7 @@ namespace _DreamKeep.Presentation
         private Color _targetColor = Color.red;
 
         [Header("命中脉冲")] [Tooltip("头部在命中的那一瞬间的放大比例：0.3 即最多放大 30%，指向期间只弹这一次")] [SerializeField]
-        private float _headPunchScale = 0.3f;
+        private float _headPunchScale = 0.2f;
 
         [Tooltip("头部放大到峰值用的时长（秒）：极短，起来要快")] [SerializeField]
         private float _headPunchUpDuration = 0.1f;
@@ -98,13 +98,8 @@ namespace _DreamKeep.Presentation
             _head.rotation = UiGeometry.UpRotation(-Curve.Tangent(toWorld_, control, fromWorld_, 0f));
             // 命中脉冲：只在"未命中 → 命中"那一刻弹一次，指着目标期间不再动
             if (onTarget_ && !_onTarget)
-            {
-                _headPunchTween?.Kill();
-                _headPunchTween = DOTween.Sequence()
-                    .Append(_head.DOScale(_headBaseScale * (1f + _headPunchScale), _headPunchUpDuration)
-                        .SetEase(Ease.OutQuad))
-                    .Append(_head.DOScale(_headBaseScale, _headPunchDownDuration).SetEase(Ease.OutQuad));
-            }
+                UiTween.PlayPunch(ref _headPunchTween, _head, _headBaseScale, _headPunchScale,
+                    _headPunchUpDuration, _headPunchDownDuration);
 
             _onTarget = onTarget_;
             // 命中高亮：指向合法目标时整支写目标色，否则写回各图形本来的颜色；同色短路，避免每帧白标脏画布

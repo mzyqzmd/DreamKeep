@@ -1233,8 +1233,8 @@ RectTransform:
   m_GameObject: {fileID: 501953717}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.4}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1038128321}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2625,11 +2625,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _segmentRoot: {fileID: 187919296}
   _head: {fileID: 501953718}
-  _bendFactor: 0.75
+  _bendFactor: 0.9
   _bendFullAngleDeg: 60
-  _headGapFactor: 0.85
+  _headGapFactor: 1
   _targetColor: {r: 1, g: 0, b: 0, a: 1}
-  _headPunchScale: 0.3
+  _headPunchScale: 0.2
   _headPunchUpDuration: 0.1
   _headPunchDownDuration: 0.12
 --- !u!1 &1063794537

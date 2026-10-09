@@ -1,4 +1,5 @@
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -45,8 +46,8 @@ namespace _DreamKeep.Presentation
             _healthTween?.Kill();
             if (animate_ && !Mathf.Approximately(_healthSlider.value, current))
             {
-                _healthTween = DOTween.To(() => _healthSlider.value, WriteHealthVisual, current, _healthTweenDuration)
-                    .SetEase(Ease.OutQuad);
+                UiTween.PlayScalar(ref _healthTween, () => _healthSlider.value, WriteHealthVisual, current,
+                    _healthTweenDuration);
                 return;
             }
 
