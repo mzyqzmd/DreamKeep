@@ -98,7 +98,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 绑定战斗相关事件
+        #region 绑定战斗相关事件用于演绎
 
         protected virtual UniTask OnBattleStarted(BE_BattleStarted started_)
         {

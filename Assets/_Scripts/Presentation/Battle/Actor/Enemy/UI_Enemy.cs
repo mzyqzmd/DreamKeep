@@ -44,6 +44,19 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
+        #region 敌人重写演绎
+
+        protected override UniTask OnActorDiedAsync(BE_ActorDied died_)
+        {
+            if (died_.Creature != _boundCreature) return UniTask.CompletedTask;
+            _intentGroup.Show(null); // 死亡即刻收起头顶意图，再交给基类播死亡演出
+            return base.OnActorDiedAsync(died_);
+        }
+
+        #endregion
+
+        #region 敌人独有演绎
+
         // 意图变动：刷新头顶图标组
         private UniTask OnIntentChangedAsync(BE_EnemyIntentChanged changed_)
         {
@@ -64,5 +77,7 @@ namespace _DreamKeep.Presentation
             _moveTween = ((RectTransform)transform).DOMove(slot.position, _moveDuration).SetEase(_moveEase);
             await _moveTween.WaitAsync();
         }
+
+        #endregion
     }
 }

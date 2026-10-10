@@ -32,7 +32,7 @@ namespace _DreamKeep.Presentation
         public void Show(bool isPlayerTurn_, int turnCount_)
         {
             _turnText.text = isPlayerTurn_ ? "玩家回合" : "敌人回合";
-            _turnCountText.text = $"第 {turnCount_} 回合";
+            _turnCountText.text = isPlayerTurn_ ? $"第 {turnCount_} 回合" : "";
             gameObject.SetActive(true);
             // 时间线：收拢入场 → 停留 → 整层渐隐 → 自收；透明度复位放在每次重播开头，收起时不必还原
             _timeline?.Kill();

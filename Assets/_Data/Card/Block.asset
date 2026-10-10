@@ -14,14 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _name: "\u683C\u6321"
   _cost: 1
-  _icon: {fileID: 21300000, guid: d9d371b0343f1814a995d2cc5967c2d4, type: 3}
+  _icon: {fileID: 21300000, guid: aba26d9903458aa44bfc216724e8cbf4, type: 3}
   _rarity: 0
   _type: 1
   _targetType: 0
   _affixes:
   - rid: 5765983356684075010
-  - rid: 5765983561550135306
-  - rid: 5765983591953596416
   _canUpdate: 1
   _updatedAffixes:
   - rid: 5765983356684075011
@@ -36,23 +34,3 @@ MonoBehaviour:
       type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 8
-    - rid: 5765983561550135306
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk:
-          rid: 5765983591953596418
-        _layers: 2
-    - rid: 5765983591953596416
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk:
-          rid: 5765983591953596417
-        _layers: 5
-    - rid: 5765983591953596417
-      type: {class: BP_Burn, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _icon: {fileID: 21300000, guid: f380d9789c287e54995d405551283a8d, type: 3}
-    - rid: 5765983591953596418
-      type: {class: BP_Regen, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _icon: {fileID: 21300000, guid: 59093ecad1d282e4abef88420db6bd3a, type: 3}

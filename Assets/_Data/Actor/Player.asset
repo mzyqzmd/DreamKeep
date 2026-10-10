@@ -15,42 +15,26 @@ MonoBehaviour:
   _name: "\u6218\u58EB"
   _maxHP: 80
   _viewPrefab: {fileID: 235640479445222248, guid: 111909164d35d34408a26338589ab2de, type: 3}
-  _viewData:
-    rid: 8162841560953389056
   _startGold: 99
   _startEnergy: 3
   _drawPerTurn: 5
   _startDeck:
   - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 7367fd6e56e978c4697ef061ccc83b66, type: 2}
+  - {fileID: 11400000, guid: 7367fd6e56e978c4697ef061ccc83b66, type: 2}
+  - {fileID: 11400000, guid: 7367fd6e56e978c4697ef061ccc83b66, type: 2}
+  - {fileID: 11400000, guid: bece2c1cc257863478550d81cb053dae, type: 2}
+  - {fileID: 11400000, guid: bece2c1cc257863478550d81cb053dae, type: 2}
+  - {fileID: 11400000, guid: bece2c1cc257863478550d81cb053dae, type: 2}
   - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
   - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
   - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
-  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
+  - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
+  - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
   _startPerks: []
   references:
     version: 2
-    RefIds:
-    - rid: 8162841560953389056
-      type: {class: PlayerViewData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _skeletonData: {fileID: 11400000, guid: 25c723aa6419501409c4311cf8e36bd8, type: 2}
-        _standAnim: 
-        _hitAnim: 
-        _attackAnim: 
-        _deathAnim: 
-        _skillAnim: 
-        _blockAnim: 
-        _parryAnim: 
-        _parryStandAnim: 
-        _parryClipEnd01: 1
-        _deathHoldDuration: 2
-        _panelWidthPaddingPx: 0
-        _panelLiftPx: 0
-        _intentLiftPx: 0
-        _tipPaddingPx: 0
+    RefIds: []
