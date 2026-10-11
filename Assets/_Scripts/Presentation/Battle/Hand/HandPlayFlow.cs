@@ -32,7 +32,7 @@ namespace _DreamKeep.Presentation
         private readonly float _flyJitterPx;
 
         // 瞄准状态：哪张牌正走"拖箭头指定目标"的模式（AnyEnemy 卡按下即登记），以及箭头是否已越过启动阈值显示出来
-        private UI_CardHolder _aimingCard;
+        private UI_CardBattle _aimingCard;
         private bool _aimingActive;
 
         // 装配：演出时长与幅度一律由门面以参数平铺传入，本类不读 Inspector
@@ -82,7 +82,7 @@ namespace _DreamKeep.Presentation
 
         // 抓起：登记拖拽身份，整张牌换到交互层最上（压过悬停那张）并掐掉在飞补间，随后由包装跟手；
         // AnyEnemy 卡在此登记进瞄准模式——包装据此改成"卡定住、拖动交给宿主"
-        public void Grab(UI_CardHolder card_)
+        public void Grab(UI_CardBattle card_)
         {
             _area.SetDragged(card_);
             _area.MoveToFocus(card_);
@@ -92,10 +92,10 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>这张牌此刻是不是走"拖箭头指定目标"的瞄准模式（按下即成立，与是否越过启动阈值无关）：包装据此决定跟手还是上报。</summary>
-        public bool IsAiming(UI_CardHolder card_) => _aimingCard == card_;
+        public bool IsAiming(UI_CardBattle card_) => _aimingCard == card_;
 
         // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色由 Tick 逐帧刷新
-        public void OnAimDragged(UI_CardHolder card_, bool onTarget_)
+        public void OnAimDragged(UI_CardBattle card_, bool onTarget_)
         {
             if (card_ != _aimingCard) return;
             _aimingActive = true;
@@ -118,7 +118,7 @@ namespace _DreamKeep.Presentation
         // 松手：普通卡以锚点（卡根 pivot＝卡下沿中点）是否落进出牌区矩形判定，瞄准卡以"是否指向了某个敌人"（aimSlot ≥ 0）判定；
         // 通过即入队并发出打牌命令，否则回位。松手瞬间已不可打、或这张牌已在拖拽途中离手（被弃置 / 回收）时也不打出——
         // 不把过期命令塞进队列等下一个玩家回合结算
-        public void Release(UI_CardHolder card_, int aimSlot_)
+        public void Release(UI_CardBattle card_, int aimSlot_)
         {
             bool aiming = card_ == _aimingCard;
             if (aiming)
@@ -143,7 +143,7 @@ namespace _DreamKeep.Presentation
         }
 
         // 拖拽被强制中断（包装禁用或回收）时直接落回槽位，不播补间；瞄准中的牌走 CancelAim 收箭头
-        public void CancelDrag(UI_CardHolder card_)
+        public void CancelDrag(UI_CardBattle card_)
         {
             if (card_ == _aimingCard)
             {
@@ -158,11 +158,11 @@ namespace _DreamKeep.Presentation
         // 回合开始对账：把仍挂在出牌区等结算的牌逐张退回手牌，全部出队后整手重排一次——行重新开缝，退回的牌与其余牌一起归位
         private void ReconcilePending()
         {
-            IReadOnlyList<UI_CardHolder> queued = _dropZone.Queue;
+            IReadOnlyList<UI_CardBattle> queued = _dropZone.Queue;
             if (queued.Count == 0) return;
 
-            List<UI_CardHolder> snapshot = new(queued); // 出队会改动原队列，先拷一份再退
-            foreach (UI_CardHolder card in snapshot) _dropZone.Remove(card);
+            List<UI_CardBattle> snapshot = new(queued); // 出队会改动原队列，先拷一份再退
+            foreach (UI_CardBattle card in snapshot) _dropZone.Remove(card);
             _area.ApplyLayout();
         }
 
@@ -172,7 +172,7 @@ namespace _DreamKeep.Presentation
         private void CancelAim()
         {
             if (_aimingCard == null) return;
-            UI_CardHolder card = _aimingCard;
+            UI_CardBattle card = _aimingCard;
             _aimingCard = null;
             _aimingActive = false;
             _arrow.Hide();
@@ -185,14 +185,14 @@ namespace _DreamKeep.Presentation
         // 起落点按对称铺开骨架错开保底不重叠，再叠随机抖动打散轨迹；域侧逐事件 await，这段播完才轮到本次抽牌入场
         private async UniTask FlyCardsAsync(int count_)
         {
-            UI_CardHolder[] cards = new UI_CardHolder[count_];
+            UI_CardBattle[] cards = new UI_CardBattle[count_];
             Vector3 from = _discardPile.transform.position;
             Vector3 to = _drawPile.transform.position;
 
             // 起飞：逐张摆在弃牌堆附近的散开点上，缩到飞行用的起始尺寸
             for (int i = 0; i < count_; i++)
             {
-                UI_CardHolder card = _area.RentFlyView();
+                UI_CardBattle card = _area.RentFlyView();
                 cards[i] = card;
                 card.Place(from + FlyOffset(i, count_) + Jitter(_discardPile.transform),
                     _discardPile.transform.rotation);
@@ -203,7 +203,7 @@ namespace _DreamKeep.Presentation
             UniTask[] flights = new UniTask[count_];
             for (int i = 0; i < count_; i++)
             {
-                UI_CardHolder card = cards[i];
+                UI_CardBattle card = cards[i];
                 _discardPile.OnCardLeft(); // 起飞即通知弃牌堆"牌离堆"，数字随之减
                 flights[i] = FlyToDrawPileAsync(card, to + FlyOffset(i, count_) + Jitter(_drawPile.transform));
             }
@@ -211,7 +211,7 @@ namespace _DreamKeep.Presentation
             await UniTask.WhenAll(flights);
             for (int i = 0; i < count_; i++) _area.ReturnFlyView(cards[i]);
 
-            async UniTask FlyToDrawPileAsync(UI_CardHolder card_, Vector3 destination_)
+            async UniTask FlyToDrawPileAsync(UI_CardBattle card_, Vector3 destination_)
             {
                 await UniTask.WhenAll(
                     card_.MoveToAsync(destination_, _drawPile.transform.rotation, _reshuffleFlyDuration),
@@ -235,12 +235,12 @@ namespace _DreamKeep.Presentation
             node_.TransformVector(new Vector2(_rng.Next(-2f, 2f), _rng.Next(-2f, 2f)) * _flyJitterPx);
 
         // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸。
-        // 槽位与峰值都按手牌区本体现算：手牌超过不缩小的张数上限后每张都有缩放，新牌不能按常态 1 落位，否则比同手牌大一截、命中面也同步变大
+        // 槽位与峰值都按手牌区本体现算：手牌超过不缩小的张数上限后每张都有缩放，新牌不能按常态 1 落位，否则比同手牌大一截、能点的范围也同步变大
         private async UniTask OnCardDrawnAsync(BE_CardDrawn drawn_)
         {
             _drawPile.OnCardLeft(); // 牌从抽牌堆起飞去手牌：先记离堆，数字在入场飞行之前就减
             CardModel model = drawn_.Card;
-            UI_CardHolder view = _area.Spawn(model);
+            UI_CardBattle view = _area.Spawn(model);
             view.SetPlayableLook(_area.CardsPlayable); // 将来敌方回合塞牌也不会漏刷
             _area.EvaluateSlot(_area.Count - 1, _area.Count, out Vector3 position, out Quaternion rotation,
                 out float slotScale);
@@ -256,7 +256,7 @@ namespace _DreamKeep.Presentation
                 view.MoveToAsync(position, rotation, _drawGrowDuration));
 
             // 入场途中卡已离场（被回收进池）则收尾不再补，避免写到已复用的卡面
-            if (!_area.TryGetView(model, out UI_CardHolder bound) || bound != view)
+            if (!_area.TryGetView(model, out UI_CardBattle bound) || bound != view)
             {
                 _area.UnmarkEntering(view);
                 return;
@@ -264,13 +264,13 @@ namespace _DreamKeep.Presentation
 
             await view.ScaleToAsync(slotScale, _drawSettleDuration);
             _area.UnmarkEntering(view);
-            _area.ApplyLayout(); // 入场期间行若有过变动（别的牌打出 / 让位），在这里一次性纠正到最新槽位与命中面
+            _area.ApplyLayout(); // 入场期间行若有过变动（别的牌打出 / 让位），在这里一次性纠正到最新槽位
         }
 
         // 轮到执行：域侧确认这张已离手（手牌成员关系到此注销），行早在松手那一刻就让过位，这里只等入队补间播完
         private async UniTask OnCardPlayedAsync(BE_CardPlayed played_)
         {
-            if (!_area.TryGetView(played_.Card, out UI_CardHolder view)) return;
+            if (!_area.TryGetView(played_.Card, out UI_CardBattle view)) return;
             _area.RemoveFromHand(view);
             _area.ApplyLayout();
 
@@ -280,7 +280,7 @@ namespace _DreamKeep.Presentation
         // 被拒退回：域侧已判明命令不生效，撤下出牌区并整手重排一次——行重新开缝，这张从队列位置飞回自己的槽位
         private UniTask OnCardPlayRejectedAsync(BE_CardPlayRejected rejected_)
         {
-            if (!_area.TryGetView(rejected_.Card, out UI_CardHolder view)) return UniTask.CompletedTask;
+            if (!_area.TryGetView(rejected_.Card, out UI_CardBattle view)) return UniTask.CompletedTask;
             if (!_dropZone.Remove(view)) return UniTask.CompletedTask;
             _area.ApplyLayout();
             return UniTask.CompletedTask;
@@ -329,7 +329,7 @@ namespace _DreamKeep.Presentation
 
             foreach (CardModel model in discarded_.Cards)
             {
-                if (!_area.TryGetView(model, out UI_CardHolder view)) continue;
+                if (!_area.TryGetView(model, out UI_CardBattle view)) continue;
                 _area.RemoveFromHand(view);
                 _dropZone.Remove(view);
                 view.Place(view.WorldPosition + Jitter(target), view.WorldRotation);
@@ -344,7 +344,7 @@ namespace _DreamKeep.Presentation
             await UniTask.WhenAll(flights);
 
             // 波内单张归宿飞行：飞向牌堆并缩到 0，落定即通知进堆、注销索引并回收进池
-            async UniTask FlyToDiscardPileAsync(UI_CardHolder view_, CardModel model_, Transform target_)
+            async UniTask FlyToDiscardPileAsync(UI_CardBattle view_, CardModel model_, Transform target_)
             {
                 await UniTask.WhenAll(
                     view_.MoveToAsync(target_.position + Jitter(target_), target_.rotation, _exitDuration),
@@ -358,7 +358,7 @@ namespace _DreamKeep.Presentation
         // 进堆通知只在落地这一帧发出，故牌堆的数字与弹跳与飞行同步；目标为 null（遗忘借道）时没有"进堆"这回事，不发通知
         private async UniTask ExitToPileAsync(CardModel model_, UI_Pile arrival_)
         {
-            if (!_area.TryGetView(model_, out UI_CardHolder view)) return;
+            if (!_area.TryGetView(model_, out UI_CardBattle view)) return;
             _area.RemoveFromHand(view);
             _dropZone.Remove(view);
             _area.ApplyLayout();

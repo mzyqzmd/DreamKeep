@@ -36,6 +36,7 @@ namespace _DreamKeep.RuntimeData
         public IReadOnlyList<CardAffix> AdditionalAffixes => _runtime.AdditionalAffixes;
         public IReadOnlyList<CardAffix> ActiveAffixes => _runtime.ActiveAffixes;
         public bool IsRetain => _runtime.IsRetain;
+        public bool IsUnableToPlay => _runtime.IsUnableToPlay;
 
         internal CardModel(CM_Static static_, CM_Runtime runtime_)
         {

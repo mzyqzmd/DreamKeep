@@ -20,7 +20,7 @@ namespace _DreamKeep.ConfigData
         private List<AffixData> _updatedAffixes = new();
 
         public string Name => _name;
-        public int Cost => _cost;
+        public int Cost => _cost;//NOTE:卡牌费用为-1表示没有费用，一般是诅咒这种不能打出的牌费用设为-1
         public Sprite Icon => _icon;
         public ECardRarity Rarity => _rarity;
         public ECardType Type => _type;

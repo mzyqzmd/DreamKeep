@@ -28,8 +28,8 @@ namespace _DreamKeep.Presentation
         [Tooltip("队列落位基准点：队位一律从它起算，在场景里拖它即整队挪位；队列牌挂在本区名下，它只当基准")] [SerializeField]
         private RectTransform _queuePoint;
 
-        private readonly List<UI_CardHolder> _queue = new();
-        private readonly Dictionary<UI_CardHolder, UniTask> _arrivals = new();
+        private readonly List<UI_CardBattle> _queue = new();
+        private readonly Dictionary<UI_CardBattle, UniTask> _arrivals = new();
 
         #region 落点判定：卡牌锚点落在本区矩形内即算打出
 
@@ -41,13 +41,13 @@ namespace _DreamKeep.Presentation
         #region 排队：收下、让位、等待与交出
 
         /// <summary>队列（按打入先后）：谁是"已打出、等结算"以它为准，手牌区判忙与回合对账都向这里查。</summary>
-        public IReadOnlyList<UI_CardHolder> Queue => _queue;
+        public IReadOnlyList<UI_CardBattle> Queue => _queue;
 
-        public bool Contains(UI_CardHolder card_) => _queue.Contains(card_);
+        public bool Contains(UI_CardBattle card_) => _queue.Contains(card_);
 
         // 收下：换到本区名下并按入队先后排位（最新入队的置首，即排在层内最下），随即起补间落位、不等它停稳——
         // 轮到执行时由调用方用 WaitArrivalAsync 等它
-        public void Enqueue(UI_CardHolder card_)
+        public void Enqueue(UI_CardBattle card_)
         {
             if (_queue.Contains(card_)) return;
             _queue.Add(card_);
@@ -55,11 +55,11 @@ namespace _DreamKeep.Presentation
             _arrivals[card_] = MoveToSlotAsync(card_, _queue.Count - 1, _moveDuration);
         }
 
-        public UniTask WaitArrivalAsync(UI_CardHolder card_) =>
+        public UniTask WaitArrivalAsync(UI_CardBattle card_) =>
             _arrivals.TryGetValue(card_, out UniTask arrival) ? arrival : UniTask.CompletedTask;
 
         // 交出：出队并让其余牌依次前移；怎么飞回手牌由调用方驱动，本区只管让它离开
-        public bool Remove(UI_CardHolder card_)
+        public bool Remove(UI_CardBattle card_)
         {
             if (!_queue.Remove(card_)) return false;
             _arrivals.Remove(card_);
@@ -72,7 +72,7 @@ namespace _DreamKeep.Presentation
         #endregion
 
         // 队位补间：位置从队列点起算、朝向取队列点的朝向、缩放逐张递减；层内先后由收下时置首保证（队首恒在最上），不在这里写
-        private UniTask MoveToSlotAsync(UI_CardHolder card_, int index_, float duration_)
+        private UniTask MoveToSlotAsync(UI_CardBattle card_, int index_, float duration_)
         {
             Vector3 position = _queuePoint.TransformPoint(_stackStepPx * index_);
             float scale = Mathf.Max(_minScale, _frontScale - _scaleStep * index_);

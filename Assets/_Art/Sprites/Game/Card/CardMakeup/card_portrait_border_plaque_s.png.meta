@@ -113,13 +113,13 @@ TextureImporter:
       name: card_portrait_border_plaque_s_0
       rect:
         serializedVersion: 2
-        x: 8
-        y: 12
-        width: 107
-        height: 56
+        x: 7
+        y: 13
+        width: 109
+        height: 55
       alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 3, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0

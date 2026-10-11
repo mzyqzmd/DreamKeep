@@ -34,7 +34,7 @@ namespace _DreamKeep.Presentation
         // 每帧对账：没在瞄准就复位目标槽位并熄灭（未拖拽时零分配早退）；瞄准中按目标集合变化重写，集合没变就一个字都不写
         private void Update()
         {
-            UI_CardHolder aimed = _handView.AimedCard;
+            UI_CardBattle aimed = _handView.AimedCard;
             if (!aimed)
             {
                 _handView.SetAimSlot(UI_HandView.DefaultAimSlot);

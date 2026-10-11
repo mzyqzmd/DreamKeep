@@ -12,7 +12,7 @@ namespace _DreamKeep.Presentation
     public sealed class UI_HandView : MonoBehaviour
     {
         [Tooltip("战斗包装预制体：池化实例化用，实例挂在手牌层之下，里面内嵌牌面")] [SerializeField]
-        private UI_CardHolder _cardPrefab;
+        private UI_CardBattle _cardPrefab;
 
         [Tooltip("出牌区：自洽的一块区域——松手时以卡牌的锚点（下沿中点）是否落在它自己的矩形内判定，队位以它内部的点为基准")]
         [FormerlySerializedAs("dropZone")]
@@ -108,21 +108,21 @@ namespace _DreamKeep.Presentation
         #region 出牌受理与瞄准事实：抓起、松手与中断一律转交出牌流程，本视图不判断规则
 
         // 抓起：AnyEnemy 卡一按下就把目标槽位清成"未指向"，防极快操作下默认值被当成有效目标打出去
-        public void OnCardGrabbed(UI_CardHolder card_)
+        public void OnCardGrabbed(UI_CardBattle card_)
         {
             _playFlow.Grab(card_);
             if (card_.Card.IsAnyEnemyTarget) SetAimSlot(NoAimSlot);
         }
 
-        public void OnCardReleased(UI_CardHolder card_) => _playFlow.Release(card_, CurrentAimSlot);
+        public void OnCardReleased(UI_CardBattle card_) => _playFlow.Release(card_, CurrentAimSlot);
 
-        public void OnCardDragCancelled(UI_CardHolder card_) => _playFlow.CancelDrag(card_);
+        public void OnCardDragCancelled(UI_CardBattle card_) => _playFlow.CancelDrag(card_);
 
         // 瞄准拖动：越过启动阈值后由包装逐帧上报，转交手牌流程刷新箭头位姿（并带上当前是否已指向合法目标）
-        public void OnAimDragged(UI_CardHolder card_) => _playFlow.OnAimDragged(card_, _aimSlot >= 0);
+        public void OnAimDragged(UI_CardBattle card_) => _playFlow.OnAimDragged(card_, _aimSlot >= 0);
 
         /// <summary>这张牌此刻是不是走瞄准模式（AnyEnemy 卡按下即成立）：包装据此决定跟手滑行还是把拖动上报给宿主。</summary>
-        public bool IsAiming(UI_CardHolder card_) => _playFlow.IsAiming(card_);
+        public bool IsAiming(UI_CardBattle card_) => _playFlow.IsAiming(card_);
 
         /// <summary>当前瞄准的目标槽位（存活敌人列表下标，-1 = 未指向敌人）：打牌命令与目标提示预览共用这一处来源，由单位侧每帧回写。</summary>
         public int CurrentAimSlot => _aimSlot;
@@ -131,8 +131,8 @@ namespace _DreamKeep.Presentation
         public void SetAimSlot(int slot_) => _aimSlot = slot_;
 
         /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
-        public UI_CardHolder AimedCard =>
-            _area.Dragged is UI_CardHolder dragged && _area.CardsPlayable &&
+        public UI_CardBattle AimedCard =>
+            _area.Dragged is UI_CardBattle dragged && _area.CardsPlayable &&
             (_playFlow.IsAiming(dragged) || _dropZone.Accepts(dragged.WorldPosition))
                 ? dragged
                 : null;
@@ -140,8 +140,8 @@ namespace _DreamKeep.Presentation
         #endregion
 
         // 抓取资格：本回合可打、这张牌真在手上（在手牌列、没在入场飞行、没让位给出牌区等结算）、没有别的牌正被拖拽。
-        // 动画一律不参与，滑行合拢中的牌照收；指针事件本来就送到最上层那张牌，所以这里只回答"它能不能抓"
-        public bool CanGrab(UI_CardHolder card_) => _area.IsInteractive(card_);
+        // 动画一律不参与，滑行合拢中的牌照收；指针事件本来就送到最上层那张牌，所以这里只回答"它能不能抓"——悬停不走这道闸门，不可打的牌也照样抬起
+        public bool CanGrab(UI_CardBattle card_) => _area.CanGrab(card_);
 
         // 指针在画布平面上的世界坐标：拖拽跟手用，换算收在手牌区本体里
         public Vector3 PointerWorldPosition() => _area.PointerWorldPosition();

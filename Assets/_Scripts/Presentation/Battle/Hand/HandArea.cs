@@ -13,7 +13,7 @@ namespace _DreamKeep.Presentation
     /// 它不管出牌流程与任何演出，也不认识战斗单位；出牌区是另一块自洽区域，这里只单向问它"在队里吗"。</summary>
     public class HandArea
     {
-        private readonly ObjectPool<UI_CardHolder> _cardPool;
+        private readonly ObjectPool<UI_CardBattle> _cardPool;
         private readonly UI_HandView _host;
         private readonly UI_PlayCardZone _dropZone;
         private readonly RectTransform _fanCenterPoint;
@@ -30,21 +30,21 @@ namespace _DreamKeep.Presentation
         private readonly float _scaleStep;
         private readonly float _minScale;
         private readonly float _unplayableDropPx;
-        private readonly List<UI_CardHolder> _hand = new();
-        private readonly Dictionary<CardModel, UI_CardHolder> _views = new();
-        private readonly HashSet<UI_CardHolder> _entering = new();
+        private readonly List<UI_CardBattle> _hand = new();
+        private readonly Dictionary<CardModel, UI_CardBattle> _views = new();
+        private readonly HashSet<UI_CardBattle> _entering = new();
 
         // 交互状态位：本回合可打、正被拖拽、正被悬停
         private bool _cardsPlayable;
-        private UI_CardHolder _draggedCard;
-        private UI_CardHolder _hoveredCard;
+        private UI_CardBattle _draggedCard;
+        private UI_CardBattle _hoveredCard;
 
         // 逐帧射线裁决的复用件：命中列表与指针数据只建一次，避免每帧产生垃圾
         private readonly List<RaycastResult> _raycastResults = new();
         private PointerEventData _pointerData;
         private EventSystem _pointerEventSystem;
 
-        public HandArea(UI_CardHolder cardPrefab_, UI_HandView host_, UI_PlayCardZone dropZone_,
+        public HandArea(UI_CardBattle cardPrefab_, UI_HandView host_, UI_PlayCardZone dropZone_,
             RectTransform fanCenterPoint_, Transform handLayer_, Transform flyLayer_, Transform focusLayer_,
             Camera canvasCamera_, float halfRunPx_, float stepPx_, float sagPx_, float tiltMaxDeg_,
             float moveDuration_, int fullCount_, float scaleStep_, float minScale_, float unplayableDropPx_)
@@ -65,7 +65,7 @@ namespace _DreamKeep.Presentation
             _scaleStep = scaleStep_;
             _minScale = minScale_;
             _unplayableDropPx = unplayableDropPx_;
-            _cardPool = new ObjectPool<UI_CardHolder>(
+            _cardPool = new ObjectPool<UI_CardBattle>(
                 () => Object.Instantiate(cardPrefab_, handLayer_),
                 view_ => view_.gameObject.SetActive(true),
                 view_ =>
@@ -85,59 +85,50 @@ namespace _DreamKeep.Presentation
         public bool CardsPlayable => _cardsPlayable;
 
         /// <summary>当前正被拖拽的牌，没在拖拽时为 null。</summary>
-        public UI_CardHolder Dragged => _draggedCard;
+        public UI_CardBattle Dragged => _draggedCard;
 
         #region 牌的去向：取牌、离手、回收与飞行借还
 
-        // 取出并登记：取池 → 绑卡 → 接入宿主 → 进手牌列 → 归手牌层 → 标记入场中（入场期间命中面关着，落位才开）
-        public UI_CardHolder Spawn(CardModel model_)
+        // 取出并登记：取池 → 绑卡 → 接入宿主 → 进手牌列 → 归手牌层 → 标记入场中（入场期间不参与悬停，落位才参与）
+        public UI_CardBattle Spawn(CardModel model_)
         {
-            UI_CardHolder view = _cardPool.Get();
+            UI_CardBattle view = _cardPool.Get();
             view.Bind(model_);
             view.SetHost(_host);
             _views[model_] = view;
             _hand.Add(view);
             MoveToHand(view); // 池里出来的实例可能残留别的父节点与兄弟位，取出即归位
             _entering.Add(view);
-            RefreshPointer(view);
             return view;
         }
 
-        // 离手：只从手牌列除名，模型索引仍保留（打出后还要按模型把它找回来），顺手关掉命中面
-        public void RemoveFromHand(UI_CardHolder card_)
-        {
-            _hand.Remove(card_);
-            RefreshPointer(card_);
-        }
+        // 离手：只从手牌列除名，模型索引仍保留（打出后还要按模型把它找回来）；离手即不参与悬停，行内判定自己会否掉
+        public void RemoveFromHand(UI_CardBattle card_) => _hand.Remove(card_);
 
         // 回收：注销模型索引并归还卡池（离场补间已由调用方等完，回收回调会清干净补间）
-        public void Release(CardModel model_, UI_CardHolder view_)
+        public void Release(CardModel model_, UI_CardBattle view_)
         {
             _views.Remove(model_);
             _cardPool.Release(view_);
         }
 
         // 借一张飞行用的包装：只取池，不入手牌列与模型索引；牌面沿用上次 Bind 的残留内容，摆位后立刻归还
-        public UI_CardHolder RentFlyView()
+        public UI_CardBattle RentFlyView()
         {
-            UI_CardHolder view = _cardPool.Get();
+            UI_CardBattle view = _cardPool.Get();
             MoveToFly(view); // 出池即换到飞行层，保证借出去的牌画在队列与手牌之上
             return view;
         }
 
-        public void ReturnFlyView(UI_CardHolder view_) => _cardPool.Release(view_);
+        public void ReturnFlyView(UI_CardBattle view_) => _cardPool.Release(view_);
 
-        public bool TryGetView(CardModel model_, out UI_CardHolder view_) => _views.TryGetValue(model_, out view_);
+        public bool TryGetView(CardModel model_, out UI_CardBattle view_) => _views.TryGetValue(model_, out view_);
 
         /// <summary>这张包装此刻是否还在手牌列里：拖拽途中被弃置或回收时，用它判"过期的松手"。</summary>
-        public bool IsInHand(UI_CardHolder card_) => _hand.Contains(card_);
+        public bool IsInHand(UI_CardBattle card_) => _hand.Contains(card_);
 
-        // 入场结束：注销入场标记，命中面随之打开
-        public void UnmarkEntering(UI_CardHolder card_)
-        {
-            _entering.Remove(card_);
-            RefreshPointer(card_);
-        }
+        // 入场结束：注销入场标记，这张牌此后可以悬停
+        public void UnmarkEntering(UI_CardBattle card_) => _entering.Remove(card_);
 
         #endregion
 
@@ -154,15 +145,18 @@ namespace _DreamKeep.Presentation
         // 刷整手牌外观：不可打时压暗，可打时恢复本色
         public void RefreshPlayableLook(bool playable_)
         {
-            foreach (UI_CardHolder card in _hand) card.SetPlayableLook(playable_);
+            foreach (UI_CardBattle card in _hand) card.SetPlayableLook(playable_);
         }
 
-        /// <summary>这张牌此刻接不接指针（按下抓取与逐帧悬停共用）：只看资格，不看动画——滑行中、正要合拢的牌照收。</summary>
-        public bool IsInteractive(UI_CardHolder card_) =>
-            _cardsPlayable && _draggedCard == null && IsInRow(card_) && !_entering.Contains(card_);
+        /// <summary>这张牌此刻参不参与悬停：只看资格，不看动画——滑行中、正要合拢的牌照收；与"本回合可打"无关，不能打的牌照样抬起放大。</summary>
+        public bool CanHover(UI_CardBattle card_) =>
+            _draggedCard == null && IsInRow(card_) && !_entering.Contains(card_);
+
+        /// <summary>这张牌此刻能不能抓：悬停资格之上再要求本回合可打。</summary>
+        public bool CanGrab(UI_CardBattle card_) => _cardsPlayable && CanHover(card_);
 
         // 拖拽身份：抓起时写入，松手与中断时清空
-        public void SetDragged(UI_CardHolder card_) => _draggedCard = card_;
+        public void SetDragged(UI_CardBattle card_) => _draggedCard = card_;
 
         public void ClearDragged() => _draggedCard = null;
 
@@ -171,17 +165,13 @@ namespace _DreamKeep.Presentation
         #region 层归属：谁此刻属于哪一层、在层内排第几
 
         // 手牌层：按行内序号插位（靠右压靠左）；不在行里（已让位、正在回收）只换层
-        public void MoveToHand(UI_CardHolder card_) => card_.MoveToLayer(_handLayer, RowIndexOf(card_));
+        public void MoveToHand(UI_CardBattle card_) => card_.MoveToLayer(_handLayer, RowIndexOf(card_));
 
-        // 飞行层：离场、洗回与遗忘借道一律追加置末；飞行的牌不再响应指针，命中面一并关掉
-        public void MoveToFly(UI_CardHolder card_)
-        {
-            card_.MoveToLayer(_flyLayer, -1);
-            RefreshPointer(card_);
-        }
+        // 飞行层：离场、洗回与遗忘借道一律追加置末；飞行的牌不再参与悬停
+        public void MoveToFly(UI_CardBattle card_) => card_.MoveToLayer(_flyLayer, -1);
 
         // 交互层：悬停与拖拽一律追加置末，后进来的那张（抓起的）自然压过悬停那张
-        public void MoveToFocus(UI_CardHolder card_) => card_.MoveToLayer(_focusLayer, -1);
+        public void MoveToFocus(UI_CardBattle card_) => card_.MoveToLayer(_focusLayer, -1);
 
         #endregion
 
@@ -204,7 +194,7 @@ namespace _DreamKeep.Presentation
             scale_ = Mathf.Max(_minScale, 1f - _scaleStep * Mathf.Max(0, count_ - _fullCount));
         }
 
-        // 整体重排：手牌增删、让位与可打状态切换后调用，也是命中面的统一刷新点。
+        // 整体重排：手牌增删、让位与可打状态切换后调用。
         // 行内序号按"行"数（已让位等结算的牌不占号，也不被排布驱动）；入场中、悬停中与被拖拽的牌各有自己的补间，
         // 这里只占位、不写姿态；姿态已经等于目标的牌不起补间，省掉空转补间与白标的画布脏标记
         public void ApplyLayout()
@@ -213,8 +203,7 @@ namespace _DreamKeep.Presentation
             int index = 0;
             for (int i = 0; i < _hand.Count; i++)
             {
-                UI_CardHolder card = _hand[i];
-                RefreshPointer(card); // 入队让位的牌在这里把关掉的命中面补上
+                UI_CardBattle card = _hand[i];
                 if (_dropZone.Contains(card)) continue;
 
                 if (card == _hoveredCard || card == _draggedCard || _entering.Contains(card))
@@ -232,7 +221,7 @@ namespace _DreamKeep.Presentation
         }
 
         // 补间回槽位：松手未命中出牌区时用，顺手把牌换回手牌层并按行内序号插位
-        public UniTask ReturnToSlotAsync(UI_CardHolder card_)
+        public UniTask ReturnToSlotAsync(UI_CardBattle card_)
         {
             if (!TryEvaluateSlot(card_, out Vector3 position, out Quaternion rotation, out float scale))
                 return UniTask.CompletedTask;
@@ -244,7 +233,7 @@ namespace _DreamKeep.Presentation
         }
 
         // 瞬移回槽位：拖拽被强制中断时用，不播补间
-        public void PlaceToSlot(UI_CardHolder card_)
+        public void PlaceToSlot(UI_CardBattle card_)
         {
             if (!TryEvaluateSlot(card_, out Vector3 position, out Quaternion rotation, out float scale)) return;
 
@@ -270,8 +259,8 @@ namespace _DreamKeep.Presentation
         // 进入姿态一律以槽位为基准（槽位位置 + 沿点朝上的抬起、朝向回正到点的朝向），故滑到一半被悬停也不会停在半途
         public void Tick()
         {
-            UI_CardHolder current = _hoveredCard;
-            UI_CardHolder target = RaycastTopCard();
+            UI_CardBattle current = _hoveredCard;
+            UI_CardBattle target = RaycastTopCard();
             if (target == current) return;
 
             if (current) ExitHover(current);
@@ -295,7 +284,7 @@ namespace _DreamKeep.Presentation
         #endregion
 
         // 行内：手牌列里还没让位给出牌区等结算的牌；行内序号即槽位序号
-        private bool IsInRow(UI_CardHolder card_) => _hand.Contains(card_) && !_dropZone.Contains(card_);
+        private bool IsInRow(UI_CardBattle card_) => _hand.Contains(card_) && !_dropZone.Contains(card_);
 
         private int RowCount()
         {
@@ -307,13 +296,13 @@ namespace _DreamKeep.Presentation
         }
 
         // 行内序号：不在行里（已让位等结算 / 已离手）返回 -1，由调用方静默
-        private int RowIndexOf(UI_CardHolder card_)
+        private int RowIndexOf(UI_CardBattle card_)
         {
             if (!IsInRow(card_)) return -1;
             int index = 0;
             for (int i = 0; i < _hand.Count; i++)
             {
-                UI_CardHolder card = _hand[i];
+                UI_CardBattle card = _hand[i];
                 if (card == card_) break;
                 if (!_dropZone.Contains(card)) index++;
             }
@@ -321,12 +310,8 @@ namespace _DreamKeep.Presentation
             return index;
         }
 
-        // 命中面刷新：只有"真在手牌行里、且不在入场飞行中"的牌才接指针
-        private void RefreshPointer(UI_CardHolder card_) =>
-            card_.SetPointerEnabled(IsInRow(card_) && !_entering.Contains(card_));
-
         // 槽位查询：以行内序号现算槽位，不在行里（已让位等结算 / 已离手）返回 false 由调用方静默
-        private bool TryEvaluateSlot(UI_CardHolder card_, out Vector3 worldPosition_, out Quaternion worldRotation_,
+        private bool TryEvaluateSlot(UI_CardBattle card_, out Vector3 worldPosition_, out Quaternion worldRotation_,
             out float scale_)
         {
             int index = RowIndexOf(card_);
@@ -342,9 +327,9 @@ namespace _DreamKeep.Presentation
             return true;
         }
 
-        // 射线裁决：按命中先后取第一张资格通过的牌；同一张卡的多个命中面只判一次。
+        // 射线裁决：按命中先后取第一张可悬停的牌；同一张卡可能被多个图形报出，只判一次。
         // 当前悬停中的牌照常作为候选参与（指针还停在它身上就是"目标不变"），因此它的进出补间不会把自己顶掉
-        private UI_CardHolder RaycastTopCard()
+        private UI_CardBattle RaycastTopCard()
         {
             if (_hand.Count == 0) return null; // 手牌空时指针下不可能有可悬停的牌，这次射线直接省掉
             EventSystem eventSystem = EventSystem.current;
@@ -360,24 +345,24 @@ namespace _DreamKeep.Presentation
             _raycastResults.Clear();
             eventSystem.RaycastAll(_pointerData, _raycastResults);
 
-            UI_CardHolder previous = null;
+            UI_CardBattle previous = null;
             foreach (RaycastResult result in _raycastResults)
             {
-                UI_CardHolder card = result.gameObject.GetComponentInParent<UI_CardHolder>();
-                if (card == previous) continue; // 同一张卡可能被多个命中面报出，只判一次
+                UI_CardBattle card = result.gameObject.GetComponentInParent<UI_CardBattle>();
+                if (card == previous) continue; // 同一张卡可能被多个图形报出，只判一次
                 previous = card;
                 if (!card) continue;
-                if (IsInteractive(card)) return card;
+                if (CanHover(card)) return card;
             }
 
             return null;
         }
 
-        // 撤下悬停：牌还在行里、本回合可打、没被拖拽或让位时，换回手牌层并按当前槽位一次还原位置、朝向与缩放；
+        // 撤下悬停：牌还在行里、没被拖拽或让位时，换回手牌层并按当前槽位一次还原位置、朝向与缩放；
         // 其余情况（离手 / 被拖走 / 已让位等结算）只清状态，交给后续补间
-        private void ExitHover(UI_CardHolder card_)
+        private void ExitHover(UI_CardBattle card_)
         {
-            if (!IsInteractive(card_))
+            if (!CanHover(card_))
             {
                 card_.ClearHover();
                 return;

@@ -17,7 +17,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string Name { get; }
         public override bool ShowDescription { get; }
-        internal override int PipelineOrder => -1;
+        internal override int PipelineOrder => -2;
 
         public override string GetDescription() => "回合结束时拥有此词条的卡牌不会进入弃牌堆";
 
