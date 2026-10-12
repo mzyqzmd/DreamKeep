@@ -34,7 +34,7 @@ namespace _DreamKeep.Presentation
 
         private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
 
-        [Tooltip("悬停时的缩放目标值（绝对值而非倍率）：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
+        [Tooltip("悬停时的缩放目标值：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
         private float _hoverScale = 1.15f;
 
         [Tooltip(
