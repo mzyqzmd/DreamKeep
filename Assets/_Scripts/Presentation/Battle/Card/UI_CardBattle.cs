@@ -18,7 +18,8 @@ namespace _DreamKeep.Presentation
     /// 按下后走哪种交互由本卡自己的目标类型回答：AnyEnemy 卡进瞄准模式——卡定住不动，拖动越过启动阈值后交给宿主去驱动目标箭头，其余卡跟手滑行；
     /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
     /// 悬停姿态的进入与还原值都由区域按槽位真源给出，本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
-    /// 位置与缩放两通道补间重开前先 Kill 同通道，补间按通道独占。</summary>
+    /// 位置与缩放两通道补间按通道独占：同目标不重开、换目标先杀旧重开——判据比"通道已声明的目标"而不是滞后的当前姿态，
+    /// 故同一帧里被连续声明两次（例如先让位、随即被驳回退回）也以第二次为准，不会把命令静默吞掉。</summary>
     public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
         [Header("牌面")] [Tooltip("攻击牌面：绑定的卡为攻击类型时切到它")] [SerializeField]
@@ -52,6 +53,13 @@ namespace _DreamKeep.Presentation
         private RectTransform _rect;
         private Tween _moveTween;
         private Tween _scaleTween;
+
+        // 两条补间通道"已声明的目标"：判"要不要重开补间"比它、不比滞后的当前姿态——补间刚建立、
+        // transform 还没挪动的同一帧里，当前姿态会把"我马上要离开的位置"误判成"已就位"
+        private Vector3 _moveTargetPosition;
+        private Quaternion _moveTargetRotation;
+        private float _scaleTarget;
+
         private bool _dragging;
         private bool _hovered;
         private Vector3 _grabOffset;
@@ -81,13 +89,13 @@ namespace _DreamKeep.Presentation
         /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已抬邻牌才动"的错位感。</summary>
         public float HoverDuration => _hoverDuration;
 
-        /// <summary>位置与朝向是否已等于目标姿态：重排按它跳过空转补间。</summary>
-        public bool IsAtPose(Vector3 worldPosition_, Quaternion worldRotation_) =>
+        // 位置与朝向是否已等于目标姿态：只作"不在飞时不起空转补间"的判据，故收回本类内部（在飞的判据比已声明的目标，见 MoveToAsync）
+        private bool IsAtPose(Vector3 worldPosition_, Quaternion worldRotation_) =>
             (_rect.position - worldPosition_).sqrMagnitude < PoseEpsilon * PoseEpsilon &&
             Quaternion.Angle(_rect.rotation, worldRotation_) < AngleEpsilon;
 
-        /// <summary>缩放是否已等于目标：重排按它跳过空转补间。</summary>
-        public bool IsAtScale(float scale_) => Mathf.Abs(transform.localScale.x - scale_) < ScaleEpsilon;
+        // 缩放是否已等于目标：同上
+        private bool IsAtScale(float scale_) => Mathf.Abs(transform.localScale.x - scale_) < ScaleEpsilon;
 
         private void Awake() => _rect = (RectTransform)transform;
 
@@ -219,12 +227,43 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 动效：位置与缩放两通道补间，重开前先 Kill 同通道
+        #region 动效：位置与缩放两通道补间，同目标不重开、换目标先 Kill 同通道
 
-        // 滑翔落位：位置与朝向按补间推进，起终点都是世界姿态
+        // 滑翔落位：位置与朝向按补间推进，起终点都是世界姿态。通道独占的判据比"通道已声明的目标"、不比当前姿态——
+        // 补间刚建立、transform 还没挪动的同一帧里，当前姿态会把"我马上要离开的位置"误判成"已就位"；
+        // 故在飞时同目标续用（返回该补间的到岸等待）、异目标杀旧重开，不在飞时已就位才不起空转补间
         public UniTask MoveToAsync(Vector3 worldPosition_, Quaternion worldRotation_, float duration_)
         {
+            if (_moveTween.IsActive())
+            {
+                if (!MatchesMoveTarget(worldPosition_, worldRotation_))
+                    StartMove(worldPosition_, worldRotation_, duration_);
+                return _moveTween.WaitAsync();
+            }
+
+            return IsAtPose(worldPosition_, worldRotation_)
+                ? UniTask.CompletedTask
+                : StartMove(worldPosition_, worldRotation_, duration_);
+        }
+
+        // 缩放走同一口径：在飞同目标续用、异目标杀旧重开，不在飞时已就位不起空转补间
+        public UniTask ScaleToAsync(float scale_, float duration_)
+        {
+            if (_scaleTween.IsActive())
+            {
+                if (Mathf.Abs(_scaleTarget - scale_) >= ScaleEpsilon) StartScale(scale_, duration_);
+                return _scaleTween.WaitAsync();
+            }
+
+            return IsAtScale(scale_) ? UniTask.CompletedTask : StartScale(scale_, duration_);
+        }
+
+        // 起一条移动补间：先记住本次目标（重开判据以它为准），再把位置与朝向按补间推进
+        private UniTask StartMove(Vector3 worldPosition_, Quaternion worldRotation_, float duration_)
+        {
             _moveTween?.Kill();
+            _moveTargetPosition = worldPosition_;
+            _moveTargetRotation = worldRotation_;
             Vector3 fromPosition = _rect.position;
             Quaternion fromRotation = _rect.rotation;
             float progress = 0f;
@@ -235,9 +274,18 @@ namespace _DreamKeep.Presentation
             return _moveTween.WaitAsync();
         }
 
-        public UniTask ScaleToAsync(float scale_, float duration_) =>
-            UiTween.PlayScalar(ref _scaleTween, () => transform.localScale.x,
+        // 起一条缩放补间：同样先记住目标；同通道独占由 UiTween 建前杀旧值保证
+        private UniTask StartScale(float scale_, float duration_)
+        {
+            _scaleTarget = scale_;
+            return UiTween.PlayScalar(ref _scaleTween, () => transform.localScale.x,
                 value_ => transform.localScale = Vector3.one * value_, scale_, duration_).WaitAsync();
+        }
+
+        // 两条通道的目标比较：阈值复用"已就位"那三项，不另立常量
+        private bool MatchesMoveTarget(Vector3 worldPosition_, Quaternion worldRotation_) =>
+            (_moveTargetPosition - worldPosition_).sqrMagnitude < PoseEpsilon * PoseEpsilon &&
+            Quaternion.Angle(_moveTargetRotation, worldRotation_) < AngleEpsilon;
 
         #endregion
 

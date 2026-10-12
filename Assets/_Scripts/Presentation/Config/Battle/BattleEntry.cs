@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -24,7 +23,7 @@ namespace _DreamKeep.Presentation
         private readonly IObjectResolver _resolver;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_ActorRoot actorRoot_, GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_,
+            UI_ActorRoot actorRoot_, [Key("Player")] GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_,
             IObjectResolver resolver_)
         {
             _loop = loop_;
@@ -40,38 +39,17 @@ namespace _DreamKeep.Presentation
         {
             SpawnPlayerView();
             SpawnEnemyViews();
-            _loop.Start().Forget();
+            _loop.Start();
         }
 
         #region 生成玩家视图：实例化到玩家槽位，枢轴（脚底中点）钉到槽位点后值传递装配
 
         private void SpawnPlayerView()
         {
-            if (!_playerViewPrefab)
-            {
-                Debug.LogError("玩家配置未接视图预制体，跳过玩家视图生成");
-                return;
-            }
-
-            Transform slot = _actorRoot.GetSlotTransform(PlayerSlot);
-            if (!slot)
-            {
-                Debug.LogError($"玩家槽位点 {PlayerSlot} 号未接线，跳过玩家视图生成");
-                return;
-            }
-
-            GameObject instance = Object.Instantiate(_playerViewPrefab, slot);
-            _resolver.InjectGameObject(instance); // 先补注入再 Bind：Bind 会立刻建初始状态槽位，槽位要用到注入好的气泡宿主
-            if (!instance.TryGetComponent(out UI_Player playerView))
-            {
-                Debug.LogError($"玩家视图预制体 {_playerViewPrefab.name} 根上缺少 UI_Player 组件");
-                Object.Destroy(instance);
-                return;
-            }
-
-            // 位置真源只有槽位点：prefab 的本地偏移不参与，枢轴即脚底中点
-            ((RectTransform)instance.transform).position = slot.position;
-            playerView.Bind(_dispatcher, _battleContext.Player);
+            GameObject player = Object.Instantiate(_playerViewPrefab, _actorRoot.GetSlotTransform(PlayerSlot));
+            _resolver.InjectGameObject(player); // 先补注入再 Bind：Bind 会立刻建初始状态槽位，槽位要用到注入好的气泡宿主
+            if (player.TryGetComponent(out UI_Player playerView))
+                playerView.Bind(_dispatcher, _battleContext.Player);
         }
 
         #endregion
@@ -80,34 +58,15 @@ namespace _DreamKeep.Presentation
 
         private void SpawnEnemyViews()
         {
-            List<Enemy> enemies = _battleContext.Enemies;
-            for (int i = 0; i < enemies.Count; i++)
+            for (int i = 0; i < _battleContext.Enemies.Count; i++)
             {
-                GameObject prefab = i < _enemyViewPrefabs.Count ? _enemyViewPrefabs[i] : null;
-                if (!prefab)
-                {
-                    Debug.LogError($"敌人 {enemies[i].Name} 的配置未接视图预制体，跳过该敌人视图");
-                    continue;
-                }
-
-                Transform slot = _actorRoot.GetSlotTransform(enemies[i].Slot);
-                if (!slot)
-                {
-                    Debug.LogError($"敌人 {enemies[i].Name} 的槽位点 {enemies[i].Slot} 号未接线，跳过该敌人视图");
-                    continue;
-                }
-
-                GameObject instance = Object.Instantiate(prefab, slot);
-                _resolver.InjectGameObject(instance); // 先补注入再 Bind：Bind 会立刻展示初始意图，图标要用到注入好的气泡宿主
-                if (!instance.TryGetComponent(out UI_Enemy enemyView))
-                {
-                    Debug.LogError($"敌人视图预制体 {prefab.name} 根上缺少 UI_Enemy 派生组件");
-                    Object.Destroy(instance);
-                    continue;
-                }
-
+                GameObject enemy =
+                    Object.Instantiate(_enemyViewPrefabs[i],
+                        _actorRoot.GetSlotTransform(_battleContext.Enemies[i].Slot));
+                _resolver.InjectGameObject(enemy); // 先补注入再 Bind：Bind 会立刻展示初始意图，图标要用到注入好的气泡宿主
                 // 意图与移动是敌人的固有能力，一次装配到位；出生摆位由 Bind 直接钉到槽位点
-                enemyView.Bind(_dispatcher, enemies[i]);
+                if (enemy.TryGetComponent(out UI_Enemy enemyView))
+                    enemyView.Bind(_dispatcher, _battleContext.Enemies[i]);
             }
         }
 

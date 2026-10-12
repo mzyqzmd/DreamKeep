@@ -32,15 +32,15 @@ namespace _DreamKeep.Presentation
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
-            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（转交给出牌流程发命令）
+            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（出牌受理时发打牌命令）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
             // 单位视图预制体一律来自配置资产：玩家走工厂注册（服务类型 GameObject，未接线留 null 交生成侧报错跳过），
             // 敌人列表与 _enemyConfigs 同源同序，由本组合根抽出转发，BattleEntry 无需认识配置
-            builder_.Register<GameObject>(_ => _playerConfig.ViewPrefab, Lifetime.Singleton);
+            builder_.RegisterInstance(_playerConfig.ViewPrefab).Keyed("Player");
             builder_.RegisterInstance(EnemyViewPrefabs());
 
             builder_.RegisterComponentInHierarchy<UI_HandView>();
-            // 三堆不订阅任何事件：数字由打牌流程在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
+            // 三堆不订阅任何事件：数字由手牌视图在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
             builder_.RegisterComponentInHierarchy<UI_DrawPile>();
             builder_.RegisterComponentInHierarchy<UI_DiscardPile>();
             builder_.RegisterComponentInHierarchy<UI_ExhaustPile>();

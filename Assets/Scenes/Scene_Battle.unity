@@ -3111,10 +3111,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ec97ef35e6a3b7469e53beb1b956f49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _stackStepPx: {x: -110, y: 20}
-  _frontScale: 0.9
+  _stackStepPx: {x: -10, y: 40}
+  _frontScale: 1
   _scaleStep: 0.05
-  _minScale: 0.6
+  _minScale: 0.5
   _moveDuration: 0.2
   _queuePoint: {fileID: 1460863854}
 --- !u!224 &1156058019
@@ -3134,7 +3134,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.26000002}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -2.380005}
+  m_AnchoredPosition: {x: 0, y: -2.380127}
   m_SizeDelta: {x: 0, y: 4.760002}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1177374418
@@ -3395,7 +3395,7 @@ MonoBehaviour:
   _fanFullCount: 6
   _fanScaleStep: 0.05
   _fanMinScale: 0.75
-  _hoverDodgePx: 160
+  _hoverDodgePx: 100
 --- !u!224 &1271725517
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3718,7 +3718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _remainEnergyText: {fileID: 602036802}
-  _exhaustedColor: {r: 0.6313726, g: 0.6313726, b: 0.6313726, a: 1}
+  _exhaustedColor: {r: 1, g: 0.03137255, b: 0.03137255, a: 1}
   _canvasGroup: {fileID: 1552040323}
   _fadeAlpha: 0.5
 --- !u!222 &1422855212

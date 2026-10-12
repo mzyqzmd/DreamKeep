@@ -5,12 +5,13 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>战斗循环：以外驱状态机（当前阶段指针 + 切换去重守卫）驱动整场战斗生命周期，也是表现层唯一的命令入口。状态机本身仅持有当前阶段，阶段推进由本循环外层驱动、切状态经宿主路由（如 EndPlayerTurn），演出期间屏蔽输入防止动画未播完时再次驱动战斗。</summary>
+    /// <summary>战斗循环：以外驱状态机（当前阶段指针 + 切换去重守卫）驱动整场战斗生命周期，也是表现层唯一的命令入口。状态机本身仅持有当前阶段，阶段推进由本循环外层驱动、切状态经宿主路由（如 EndPlayerTurn）。
+    /// 循环独占由 RunLoop 自身的守卫保证：启动与入队命令都只可能拉起一条循环，命令一律在等待态串行取出，能量校验与扣减不会被打断。</summary>
     public class BattleLoop
     {
         private readonly StateMachine<BaseState<BattleLoop>> _fsm = new();
         private readonly Queue<BattleCommand> _commandQueue = new();
-        private bool _loopRunning;
+        private bool _loopRunning; // 循环独占标志：RunLoop 进入即置位、退出即清位
 
         internal BattleContext BattleContext { get; }
         internal ActionSystem ActionSystem { get; }
@@ -48,25 +49,27 @@ namespace _DreamKeep.GameBattle
         public void EnqueueCommand(BattleCommand command_)
         {
             _commandQueue.Enqueue(command_);
-            if (_loopRunning) return;
-            _loopRunning = true;
             RunLoop().Forget();
         }
 
         #endregion
 
-        #region 启动战斗：进入战斗开始阶段，由该阶段触发开始事件后自动推进
+        #region 启动战斗：初始化状态机入口后拉起循环，由该阶段触发开始事件后自动推进
 
-        public async UniTask Start()
+        public void Start()
         {
             _fsm.Initialize(PhaseBattleStart);
-            await RunLoop();
+            RunLoop().Forget();
         }
 
         #endregion
 
+        // 循环独占：同一时刻只允许一条在跑，重复调用同步命中守卫后立即返回；
+        // 守卫在首个 await 之前同步判定并置位、finally 清位，两者之间没有异步窗口
         private async UniTask RunLoop()
         {
+            if (_loopRunning) return;
+            _loopRunning = true;
             try
             {
                 while (true)
