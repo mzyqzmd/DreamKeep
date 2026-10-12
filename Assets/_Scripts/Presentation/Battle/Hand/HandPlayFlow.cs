@@ -9,8 +9,8 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>手牌流程与演出：前半管出牌——抓起、松手、落点判定、收进出牌区等待、被拒退回、归宿离场，
     /// 其中 AnyEnemy 卡走瞄准分支（按下即卡定住，拖出箭头指向敌人）；后半订阅十一个领域事件并播全部演出。
-    /// 它是手牌区里唯一向域侧发命令、唯一 await 演出播完的角色；状态不在这里——拖拽与悬停身份在 HandArea，
-    /// "已打出、等结算"的成员关系在出牌区队列。</summary>
+    /// 它是手牌区里唯一向域侧发命令、唯一 await 演出播完的角色；瞄准状态（哪张牌、箭头是否已显示、指向哪个槽位）
+    /// 只在这里——拖拽与悬停身份在 HandArea，"已打出、等结算"的成员关系在出牌区队列。</summary>
     public class HandPlayFlow
     {
         private readonly HandArea _area;
@@ -31,9 +31,19 @@ namespace _DreamKeep.Presentation
         private readonly float _reshuffleFlySpreadMaxPx;
         private readonly float _flyJitterPx;
 
-        // 瞄准状态：哪张牌正走"拖箭头指定目标"的模式（AnyEnemy 卡按下即登记），以及箭头是否已越过启动阈值显示出来
+        // 瞄准状态：哪张牌正走"拖箭头指定目标"的模式（AnyEnemy 卡按下即登记），以及箭头是否已越过启动阈值显示出来；
+        // 纯流程内部状态——松手分流、强制中断、兜底取消与箭头显隐都读它；"按下走哪种交互"由包装读自己的卡回答，不经此路
         private UI_CardBattle _aimingCard;
         private bool _aimingActive;
+
+        private const int NoAimSlot = -1; // 尚未指向任何敌人：松手时据此取消，不打出
+
+        /// <summary>非瞄准卡的默认目标槽位：按存活列表最前一个结算（前敌、全体、随机等落点解析不读它）。</summary>
+        public const int DefaultAimSlot = 0;
+
+        // 当前指向的目标槽位（存活敌人列表下标）：由单位侧的目标提示驱动经宿主每帧回写，打牌命令与箭头命中色共用这一处；
+        // AnyEnemy 卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
+        private int _aimSlot = DefaultAimSlot;
 
         // 装配：演出时长与幅度一律由门面以参数平铺传入，本类不读 Inspector
         public HandPlayFlow(HandArea area_, UI_PlayCardZone dropZone_, BattleCommandDispatcher commandDispatcher_,
@@ -81,7 +91,8 @@ namespace _DreamKeep.Presentation
         #region 出牌受理：抓起、松手、落点判定、瞄准与回合对账
 
         // 抓起：登记拖拽身份，整张牌换到交互层最上（压过悬停那张）并掐掉在飞补间，随后由包装跟手；
-        // AnyEnemy 卡在此登记进瞄准模式——包装据此改成"卡定住、拖动交给宿主"
+        // AnyEnemy 卡在此登记进瞄准模式——松手分流与箭头生命周期以它为准（按下走哪种交互由包装读自己的卡决定，不问这里）；
+        // 同时把目标槽位清成"未指向"，防极快操作下默认值被当成有效目标打出去
         public void Grab(UI_CardBattle card_)
         {
             _area.SetDragged(card_);
@@ -89,21 +100,19 @@ namespace _DreamKeep.Presentation
             card_.KillMotion();
             _aimingCard = card_.Card.IsAnyEnemyTarget ? card_ : null;
             _aimingActive = false;
+            if (_aimingCard != null) _aimSlot = NoAimSlot;
         }
 
-        /// <summary>这张牌此刻是不是走"拖箭头指定目标"的瞄准模式（按下即成立，与是否越过启动阈值无关）：包装据此决定跟手还是上报。</summary>
-        public bool IsAiming(UI_CardBattle card_) => _aimingCard == card_;
-
         // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色由 Tick 逐帧刷新
-        public void OnAimDragged(UI_CardBattle card_, bool onTarget_)
+        public void OnAimDragged(UI_CardBattle card_)
         {
             if (card_ != _aimingCard) return;
             _aimingActive = true;
-            _arrow.Show(card_.WorldCenter, _area.PointerWorldPosition(), onTarget_);
+            _arrow.Show(card_.WorldCenter, _area.PointerWorldPosition(), _aimSlot >= 0);
         }
 
         // 瞄准的逐帧驱动：卡离手或不再被按住时兜底取消；箭头展开期间刷新位姿与颜色
-        public void Tick(bool onTarget_)
+        public void Tick()
         {
             if (_aimingCard == null) return;
             if (_area.Dragged != _aimingCard || !_area.IsInHand(_aimingCard))
@@ -112,13 +121,19 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            if (_aimingActive) _arrow.Show(_aimingCard.WorldCenter, _area.PointerWorldPosition(), onTarget_);
+            if (_aimingActive) _arrow.Show(_aimingCard.WorldCenter, _area.PointerWorldPosition(), _aimSlot >= 0);
         }
+
+        /// <summary>当前瞄准的目标槽位（存活敌人列表下标，-1 = 未指向敌人）：打牌命令与目标提示预览共用这一处来源，由单位侧每帧回写。</summary>
+        public int CurrentAimSlot => _aimSlot;
+
+        /// <summary>回写当前瞄准的目标槽位：-1 = 未指向任何敌人，松手时据此取消。</summary>
+        public void SetAimSlot(int slot_) => _aimSlot = slot_;
 
         // 松手：普通卡以锚点（卡根 pivot＝卡下沿中点）是否落进出牌区矩形判定，瞄准卡以"是否指向了某个敌人"（aimSlot ≥ 0）判定；
         // 通过即入队并发出打牌命令，否则回位。松手瞬间已不可打、或这张牌已在拖拽途中离手（被弃置 / 回收）时也不打出——
         // 不把过期命令塞进队列等下一个玩家回合结算
-        public void Release(UI_CardBattle card_, int aimSlot_)
+        public void Release(UI_CardBattle card_)
         {
             bool aiming = card_ == _aimingCard;
             if (aiming)
@@ -130,7 +145,7 @@ namespace _DreamKeep.Presentation
 
             _area.ClearDragged();
             bool accepted = _area.CardsPlayable && _area.IsInHand(card_) &&
-                (aiming ? aimSlot_ >= 0 : _dropZone.Accepts(card_.WorldPosition));
+                (aiming ? _aimSlot >= 0 : _dropZone.Accepts(card_.WorldPosition));
             if (!accepted)
             {
                 _area.ReturnToSlotAsync(card_).Forget();
@@ -139,7 +154,7 @@ namespace _DreamKeep.Presentation
 
             _dropZone.Enqueue(card_); // 收下即挂出：待结算的成员关系由出牌区队列唯一持有
             _area.ApplyLayout(); // 入队即让位：整手立刻合拢，不等域侧回声
-            _commandDispatcher.PlayCard(card_.Card, aimSlot_);
+            _commandDispatcher.PlayCard(card_.Card, _aimSlot);
         }
 
         // 拖拽被强制中断（包装禁用或回收）时直接落回槽位，不播补间；瞄准中的牌走 CancelAim 收箭头
@@ -242,8 +257,9 @@ namespace _DreamKeep.Presentation
             CardModel model = drawn_.Card;
             UI_CardBattle view = _area.Spawn(model);
             view.SetPlayableLook(_area.CardsPlayable); // 将来敌方回合塞牌也不会漏刷
-            _area.EvaluateSlot(_area.Count - 1, _area.Count, out Vector3 position, out Quaternion rotation,
-                out float slotScale);
+            int count = _area.Count;
+            _area.EvaluateSlot(count - 1, count, _area.DodgeOf(count - 1),
+                out Vector3 position, out Quaternion rotation, out float slotScale);
             view.Place(_drawPile.transform.position, _drawPile.transform.rotation);
             view.transform.localScale = Vector3.zero;
 

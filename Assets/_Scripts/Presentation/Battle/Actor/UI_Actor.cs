@@ -14,6 +14,7 @@ namespace _DreamKeep.Presentation
     /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示、悬停名牌与描边高亮、演出编排（含"演完才落账"的时序）。
     /// 骨架句柄、四条公约动画名与播放原语都在 UI_ActorAnimTool；意图与移动在 UI_Enemy；悬停演出与命中框在 UI_ActorHoverBox。</summary>
     [RequireComponent(typeof(UI_ActorAnimTool))]
+    [RequireComponent(typeof(UI_ActorHoverBox))]
     public abstract class UI_Actor : MonoBehaviour
     {
         [Header("基础配置")] [SerializeField] protected UI_HealthBar _healthBar;

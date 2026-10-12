@@ -1,13 +1,13 @@
-using System;
 using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
+using VContainer;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>敌人意图预告组：把展示意图翻译成头顶图标串并分发视觉绑定，负责生成与清空；
     /// 悬停说明由每个图标自己承接（悬停哪一张弹哪一张），组只把气泡宿主交给新生成的图标；
-    /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。</summary>
+    /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。气泡宿主随视图生成时由容器补注入。</summary>
     public sealed class UI_EnemyIntentGroup : MonoBehaviour
     {
         [Header("意图预制体")] [SerializeField] private UI_AttackIntent _attackIntentPrefab;
@@ -16,17 +16,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_MoveIntent _moveIntentPrefab;
         [SerializeField] private UI_ApplyPerkIntent _applyPerkIntentPrefab;
 
-        private UI_PopTextRoot _popTextRoot;
-
-        private UI_PopTextRoot PopTextRoot
-        {
-            get
-            {
-                if (_popTextRoot) return _popTextRoot;
-                _popTextRoot = FindFirstObjectByType<UI_PopTextRoot>();
-                return _popTextRoot ? _popTextRoot : throw new Exception("UI_EnemyIntentGroup 找不到 PopTextRoot 实例");
-            }
-        }
+        [Inject] private UI_PopTextRoot _popTextRoot; // 视图预制体由 BattleEntry 运行时生成，补注入才拿得到场景宿主
 
         #region 对外展示：按展示意图整组重建头顶图标
 
@@ -72,7 +62,7 @@ namespace _DreamKeep.Presentation
         {
             if (prefab_ == null) return null;
             var icon = Instantiate(prefab_, transform);
-            icon.Initialize(PopTextRoot);
+            icon.Initialize(_popTextRoot);
             return icon;
         }
     }

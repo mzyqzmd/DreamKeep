@@ -66,8 +66,10 @@ namespace _DreamKeep.Presentation
         [Tooltip("手牌缩放下限：手牌再多也不小于该值")] [SerializeField]
         private float _fanMinScale = 0.6f;
 
+        [Tooltip("悬停避让量（画布像素）：悬停某张牌时，它左侧的行内牌左移、右侧的右移各该距离，抬起的牌便不再挡住右邻；0 即不避让")] [SerializeField]
+        private float _hoverDodgePx = 160f;
+
         // 演出与手感的固定值：曾经是 Inspector 上的可调字段，现收进代码常量（改这些要重新编译，也不再随场景序列化）
-        private const int NoAimSlot = -1; // 瞄准尚未指向任何敌人：松手时据此取消，不打出
         private const float FanMoveDuration = 0.28f; // 手牌重排（让位、回位）的补间时长
         private const float DrawGrowDuration = 0.25f; // 抽牌飞行时长：从抽牌堆零尺寸滑到手牌槽位
         private const float DrawGrowOvershoot = 1.1f; // 抽牌途中的放大倍率：落位后再收回槽位尺寸
@@ -81,12 +83,11 @@ namespace _DreamKeep.Presentation
         private const float UnplayableDropPx = -110f; // 非我方回合整手牌的下沉量：负值向下
 
         /// <summary>非瞄准卡的默认目标槽位：按存活列表最前一个结算（前敌、全体、随机等落点解析不读它）。
-        /// 单位侧的目标提示驱动未在瞄准时也回写它，故此处是唯一来源。</summary>
-        public const int DefaultAimSlot = 0;
+        /// 单位侧的目标提示驱动未在瞄准时也回写它，故它是非瞄准时的唯一来源；真源在手牌流程（瞄准状态唯一 owner），此处是公开别名。</summary>
+        public const int DefaultAimSlot = HandPlayFlow.DefaultAimSlot;
 
         private HandArea _area;
         private HandPlayFlow _playFlow;
-        private int _aimSlot = DefaultAimSlot;
 
         // 装配：按依赖方向线性构造，参数即"谁被谁要"，构造期无前向引用、无闭包。
         // 画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）
@@ -97,7 +98,7 @@ namespace _DreamKeep.Presentation
             Camera canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             _area = new HandArea(_cardPrefab, this, _dropZone, _fanCenterPoint, _handLayer, _flyLayer, _focusLayer,
                 canvasCamera, _fanHalfRunPx, _fanStepPx, _fanSagPx, _fanTiltMaxDeg, FanMoveDuration, _fanFullCount,
-                _fanScaleStep, _fanMinScale, UnplayableDropPx);
+                _fanScaleStep, _fanMinScale, UnplayableDropPx, _hoverDodgePx);
             _playFlow = new HandPlayFlow(_area, _dropZone, commandDispatcher_, rng_, drawPile, discardPile, exhaustPile,
                 _cardArrow, DrawGrowDuration, DrawGrowOvershoot, DrawSettleDuration, ExitDuration,
                 ReshuffleFlyDuration, ReshuffleFlyScale, ReshuffleFlySpreadPx,
@@ -107,33 +108,26 @@ namespace _DreamKeep.Presentation
 
         #region 出牌受理与瞄准事实：抓起、松手与中断一律转交出牌流程，本视图不判断规则
 
-        // 抓起：AnyEnemy 卡一按下就把目标槽位清成"未指向"，防极快操作下默认值被当成有效目标打出去
-        public void OnCardGrabbed(UI_CardBattle card_)
-        {
-            _playFlow.Grab(card_);
-            if (card_.Card.IsAnyEnemyTarget) SetAimSlot(NoAimSlot);
-        }
+        // 抓起：一律转交出牌流程（AnyEnemy 卡的目标槽位复位也在那里做，防极快操作下默认值被当成有效目标打出去）
+        public void OnCardGrabbed(UI_CardBattle card_) => _playFlow.Grab(card_);
 
-        public void OnCardReleased(UI_CardBattle card_) => _playFlow.Release(card_, CurrentAimSlot);
+        public void OnCardReleased(UI_CardBattle card_) => _playFlow.Release(card_);
 
         public void OnCardDragCancelled(UI_CardBattle card_) => _playFlow.CancelDrag(card_);
 
-        // 瞄准拖动：越过启动阈值后由包装逐帧上报，转交手牌流程刷新箭头位姿（并带上当前是否已指向合法目标）
-        public void OnAimDragged(UI_CardBattle card_) => _playFlow.OnAimDragged(card_, _aimSlot >= 0);
-
-        /// <summary>这张牌此刻是不是走瞄准模式（AnyEnemy 卡按下即成立）：包装据此决定跟手滑行还是把拖动上报给宿主。</summary>
-        public bool IsAiming(UI_CardBattle card_) => _playFlow.IsAiming(card_);
+        // 瞄准拖动：越过启动阈值后由包装逐帧上报，转交手牌流程刷新箭头位姿（是否已指向合法目标由流程读槽位现算）
+        public void OnAimDragged(UI_CardBattle card_) => _playFlow.OnAimDragged(card_);
 
         /// <summary>当前瞄准的目标槽位（存活敌人列表下标，-1 = 未指向敌人）：打牌命令与目标提示预览共用这一处来源，由单位侧每帧回写。</summary>
-        public int CurrentAimSlot => _aimSlot;
+        public int CurrentAimSlot => _playFlow.CurrentAimSlot;
 
         /// <summary>回写当前瞄准的目标槽位：-1 = 未指向任何敌人，松手时据此取消。</summary>
-        public void SetAimSlot(int slot_) => _aimSlot = slot_;
+        public void SetAimSlot(int slot_) => _playFlow.SetAimSlot(slot_);
 
-        /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
+        /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
         public UI_CardBattle AimedCard =>
             _area.Dragged is var dragged && _area.CardsPlayable &&
-            (_playFlow.IsAiming(dragged) || _dropZone.Accepts(dragged.WorldPosition))
+            (dragged.Card.IsAnyEnemyTarget || _dropZone.Accepts(dragged.WorldPosition))
                 ? dragged
                 : null;
 
@@ -146,11 +140,11 @@ namespace _DreamKeep.Presentation
         // 指针在画布平面上的世界坐标：拖拽跟手用，换算收在手牌区本体里
         public Vector3 PointerWorldPosition() => _area.PointerWorldPosition();
 
-        // 每帧驱动：本体裁决悬停进出，流程刷新瞄准中的箭头并兜底校正瞄准状态；目标槽位不小于 0 即已指向合法目标，随帧下发做命中高亮
+        // 每帧驱动：本体裁决悬停进出，流程刷新瞄准中的箭头并兜底校正瞄准状态（是否已指向合法目标由流程读槽位现算）
         private void Update()
         {
             _area.Tick();
-            _playFlow.Tick(_aimSlot >= 0);
+            _playFlow.Tick();
         }
     }
 }

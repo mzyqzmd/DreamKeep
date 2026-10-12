@@ -30,6 +30,7 @@ namespace _DreamKeep.Presentation
         private readonly float _scaleStep;
         private readonly float _minScale;
         private readonly float _unplayableDropPx;
+        private readonly float _hoverDodgePx;
         private readonly List<UI_CardBattle> _hand = new();
         private readonly Dictionary<CardModel, UI_CardBattle> _views = new();
         private readonly HashSet<UI_CardBattle> _entering = new();
@@ -47,7 +48,8 @@ namespace _DreamKeep.Presentation
         public HandArea(UI_CardBattle cardPrefab_, UI_HandView host_, UI_PlayCardZone dropZone_,
             RectTransform fanCenterPoint_, Transform handLayer_, Transform flyLayer_, Transform focusLayer_,
             Camera canvasCamera_, float halfRunPx_, float stepPx_, float sagPx_, float tiltMaxDeg_,
-            float moveDuration_, int fullCount_, float scaleStep_, float minScale_, float unplayableDropPx_)
+            float moveDuration_, int fullCount_, float scaleStep_, float minScale_, float unplayableDropPx_,
+            float hoverDodgePx_)
         {
             _host = host_;
             _dropZone = dropZone_;
@@ -65,6 +67,7 @@ namespace _DreamKeep.Presentation
             _scaleStep = scaleStep_;
             _minScale = minScale_;
             _unplayableDropPx = unplayableDropPx_;
+            _hoverDodgePx = hoverDodgePx_;
             _cardPool = new ObjectPool<UI_CardBattle>(
                 () => Object.Instantiate(cardPrefab_, handLayer_),
                 view_ => view_.gameObject.SetActive(true),
@@ -127,8 +130,12 @@ namespace _DreamKeep.Presentation
         /// <summary>这张包装此刻是否还在手牌列里：拖拽途中被弃置或回收时，用它判"过期的松手"。</summary>
         public bool IsInHand(UI_CardBattle card_) => _hand.Contains(card_);
 
-        // 入场结束：注销入场标记，这张牌此后可以悬停
-        public void UnmarkEntering(UI_CardBattle card_) => _entering.Remove(card_);
+        // 入场结束：注销入场标记，这张牌此后可以悬停；若此刻正有牌悬停着，顺手把它纳入避让（它右侧的牌已让开）
+        public void UnmarkEntering(UI_CardBattle card_)
+        {
+            _entering.Remove(card_);
+            if (_hoveredCard) ApplyHoverDodge();
+        }
 
         #endregion
 
@@ -179,9 +186,10 @@ namespace _DreamKeep.Presentation
 
         // 槽位求解：x 等距张开（间距撑不破可用半宽就保持原间距，撑破则整段压缩），y 落在浅弧上，朝向取切角，
         // 不可打时在 y 上叠下沉量。弧顶（正中那张）恒落在手牌区的点上，故点被拖动、缩放、旋转时整套跟着走，
-        // 这里不需要任何基准高度，也不需要知道参差多层的父节点长什么样
-        public void EvaluateSlot(int index_, int count_, out Vector3 worldPosition_, out Quaternion worldRotation_,
-            out float scale_)
+        // 这里不需要任何基准高度，也不需要知道参差多层的父节点长什么样。
+        // dodgeX_ 只平移到最终 x 上：拱高与倾角仍按未避让的槽位 x 算，避让中的半扇手牌是一条纯水平平移、弧不变形
+        public void EvaluateSlot(int index_, int count_, float dodgeX_, out Vector3 worldPosition_,
+            out Quaternion worldRotation_, out float scale_)
         {
             float gap = count_ <= 1 ? 0f : Mathf.Min(_stepPx, 2f * _halfRunPx / (count_ - 1));
             float x = (index_ - (count_ - 1) * 0.5f) * gap;
@@ -189,9 +197,18 @@ namespace _DreamKeep.Presentation
             float offset = x / _halfRunPx;
             float y = -_sagPx * offset * offset;
             if (!_cardsPlayable) y += _unplayableDropPx;
-            worldPosition_ = _fanCenterPoint.TransformPoint(new Vector2(x, y));
+            worldPosition_ = _fanCenterPoint.TransformPoint(new Vector2(x + dodgeX_, y));
             worldRotation_ = _fanCenterPoint.rotation * Quaternion.Euler(0f, 0f, -_tiltMaxDeg * offset);
             scale_ = Mathf.Max(_minScale, 1f - _scaleStep * Mathf.Max(0, count_ - _fullCount));
+        }
+
+        /// <summary>该行内序号的牌此刻的避让量：悬停牌左侧左移、右侧右移各一档，悬停牌本身与无悬停时为 0。</summary>
+        public float DodgeOf(int index_)
+        {
+            if (_hoverDodgePx == 0f || !_hoveredCard) return 0f;
+            int hovered = RowIndexOf(_hoveredCard);
+            if (hovered < 0) return 0f;
+            return index_ > hovered ? _hoverDodgePx : index_ < hovered ? -_hoverDodgePx : 0f;
         }
 
         // 整体重排：手牌增删、让位与可打状态切换后调用。
@@ -213,7 +230,8 @@ namespace _DreamKeep.Presentation
                 }
 
                 MoveToHand(card); // 手牌层内按行内序号插位：靠右压靠左（序号没变时一个字都不写）
-                EvaluateSlot(index, count, out Vector3 position, out Quaternion rotation, out float scale);
+                EvaluateSlot(index, count, DodgeOf(index), out Vector3 position, out Quaternion rotation,
+                    out float scale);
                 index++;
                 if (!card.IsAtPose(position, rotation)) card.MoveToAsync(position, rotation, _moveDuration).Forget();
                 if (!card.IsAtScale(scale)) card.ScaleToAsync(scale, _moveDuration).Forget();
@@ -263,14 +281,20 @@ namespace _DreamKeep.Presentation
             UI_CardBattle target = RaycastTopCard();
             if (target == current) return;
 
+            _hoveredCard = target; // 先落新悬停身份：撤旧与避让都按它算
             if (current) ExitHover(current);
-            _hoveredCard = target;
-            if (!target) return;
+            if (!target)
+            {
+                ApplyHoverDodge(); // 悬停撤离：已无悬停者，两侧避让原路收回
+                return;
+            }
 
-            EvaluateSlot(RowIndexOf(target), Count, out Vector3 position, out _, out _);
+            int index = RowIndexOf(target);
+            EvaluateSlot(index, Count, 0f, out Vector3 position, out _, out _);
             MoveToFocus(target); // 悬停期间位置、朝向、缩放与所在层整段交给包装的悬停补间，这里只定基准
             target.EnterHover(position + _fanCenterPoint.TransformVector(Vector3.up * target.HoverLiftPx),
                 _fanCenterPoint.rotation);
+            ApplyHoverDodge();
         }
 
         // 让出悬停身份：切换不可打、牌离手或被拖走时调用，只清状态与身份，姿态一律交给后续补间
@@ -279,6 +303,7 @@ namespace _DreamKeep.Presentation
             if (!_hoveredCard) return;
             _hoveredCard.ClearHover();
             _hoveredCard = null;
+            ApplyHoverDodge(); // 悬停被外力撤下：两侧避让先收回（已无悬停者，各牌避让量恒 0），悬停牌自身仍交给后续重排
         }
 
         #endregion
@@ -323,7 +348,7 @@ namespace _DreamKeep.Presentation
                 return false;
             }
 
-            EvaluateSlot(index, RowCount(), out worldPosition_, out worldRotation_, out scale_);
+            EvaluateSlot(index, RowCount(), DodgeOf(index), out worldPosition_, out worldRotation_, out scale_);
             return true;
         }
 
@@ -369,8 +394,26 @@ namespace _DreamKeep.Presentation
             }
 
             MoveToHand(card_);
-            EvaluateSlot(RowIndexOf(card_), Count, out Vector3 position, out Quaternion rotation, out float scale);
+            EvaluateSlot(RowIndexOf(card_), Count, DodgeOf(RowIndexOf(card_)), out Vector3 position,
+                out Quaternion rotation, out float scale);
             card_.ExitHover(position, rotation, scale);
+        }
+
+        // 悬停避让：以悬停牌为界，左半行内牌左移、右半右移各一档（无悬停者时各牌避让量恒 0，原路归位）；
+        // 避让量口径与 DodgeOf 同一处（行内序号现算，悬停牌自身不进循环）；补间与悬停进出同时长——避让是悬停演出的一部分，要跟手。
+        // 只挪位置，不碰缩放与层归属
+        private void ApplyHoverDodge()
+        {
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                UI_CardBattle card = _hand[i];
+                if (card == _hoveredCard || card == _draggedCard || _entering.Contains(card)) continue;
+                if (!IsInRow(card)) continue;
+
+                int index = RowIndexOf(card);
+                EvaluateSlot(index, Count, DodgeOf(index), out Vector3 position, out Quaternion rotation, out _);
+                if (!card.IsAtPose(position, rotation)) card.MoveToAsync(position, rotation, card.HoverDuration).Forget();
+            }
         }
     }
 }

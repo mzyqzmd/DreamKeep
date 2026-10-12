@@ -97,7 +97,7 @@ MonoBehaviour:
   _abilityFace: {fileID: 2917342219746286562}
   _curseFace: {fileID: 214837149997107500}
   _hoverScale: 1.05
-  _hoverLiftPx: 100.8
+  _hoverLiftPx: 120
   _hoverDuration: 0.12
   _aimThresholdPx: 12
 --- !u!1001 &2450246840005135258

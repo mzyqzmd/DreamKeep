@@ -3,12 +3,14 @@ using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using VContainer;
 using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>战斗段表现层入口：按组合根转发的视图预制体生成玩家与敌人视图并值传递装配，再启动战斗循环，
-    /// 是"这场战斗从哪里开始"的唯一落点；视图一律运行时生成，场景里没有预摆的单位实例。</summary>
+    /// 是"这场战斗从哪里开始"的唯一落点；视图一律运行时生成，场景里没有预摆的单位实例。
+    /// 运行时生成的预制体进不了容器，故生成后补一次 InjectGameObject——视图上的 [Inject] 字段（如气泡宿主）由此拿到。</summary>
     public class BattleEntry : IStartable
     {
         private const int PlayerSlot = 0; // 0 号槽位恒为玩家（1~3 号为敌人，1 最靠前）
@@ -19,9 +21,11 @@ namespace _DreamKeep.Presentation
         private readonly UI_ActorRoot _actorRoot;
         private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
+        private readonly IObjectResolver _resolver;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_ActorRoot actorRoot_, GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_)
+            UI_ActorRoot actorRoot_, GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_,
+            IObjectResolver resolver_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
@@ -29,6 +33,7 @@ namespace _DreamKeep.Presentation
             _actorRoot = actorRoot_;
             _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
+            _resolver = resolver_;
         }
 
         public void Start()
@@ -56,6 +61,7 @@ namespace _DreamKeep.Presentation
             }
 
             GameObject instance = Object.Instantiate(_playerViewPrefab, slot);
+            _resolver.InjectGameObject(instance); // 先补注入再 Bind：Bind 会立刻建初始状态槽位，槽位要用到注入好的气泡宿主
             if (!instance.TryGetComponent(out UI_Player playerView))
             {
                 Debug.LogError($"玩家视图预制体 {_playerViewPrefab.name} 根上缺少 UI_Player 组件");
@@ -92,6 +98,7 @@ namespace _DreamKeep.Presentation
                 }
 
                 GameObject instance = Object.Instantiate(prefab, slot);
+                _resolver.InjectGameObject(instance); // 先补注入再 Bind：Bind 会立刻展示初始意图，图标要用到注入好的气泡宿主
                 if (!instance.TryGetComponent(out UI_Enemy enemyView))
                 {
                     Debug.LogError($"敌人视图预制体 {prefab.name} 根上缺少 UI_Enemy 派生组件");

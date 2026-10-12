@@ -2,28 +2,20 @@ using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using UnityEngine;
+using VContainer;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>状态槽位组：状态按类型去重挂在自己名下（格子布局自动排布），负责建槽、刷层与销槽；
     /// 悬停说明由每个槽位自己承接（悬停哪一格弹哪一格），组只把气泡宿主交给新建的槽位；
-    /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
+    /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。气泡宿主随视图生成时由容器补注入。</summary>
     public sealed class UI_PerkGroup : MonoBehaviour
     {
         [SerializeField] private UI_PerkSlot _perkSlotPrefab;
 
-        private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
-        private UI_PopTextRoot _popTextRoot;
+        [Inject] private UI_PopTextRoot _popTextRoot; // 视图预制体由 BattleEntry 运行时生成，补注入才拿得到场景宿主
 
-        private UI_PopTextRoot PopTextRoot
-        {
-            get
-            {
-                if (_popTextRoot) return _popTextRoot;
-                _popTextRoot = FindFirstObjectByType<UI_PopTextRoot>();
-                return _popTextRoot ? _popTextRoot : throw new Exception("UI_PerkGroup 找不到 PopTextRoot 实例");
-            }
-        }
+        private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
 
         #region 施加效果
 
@@ -38,7 +30,7 @@ namespace _DreamKeep.Presentation
             }
 
             slot = Instantiate(_perkSlotPrefab, transform);
-            slot.Initialize(PopTextRoot);
+            slot.Initialize(_popTextRoot);
             slot.Bind(perk_);
             _perkSlots[type] = slot;
         }

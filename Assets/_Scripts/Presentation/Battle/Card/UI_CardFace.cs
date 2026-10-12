@@ -81,14 +81,7 @@ namespace _DreamKeep.Presentation
 
         public void Bind(CardModel card_)
         {
-            //缓存Image和Text
-            // 收齐卡面全部图形与它们的编辑期本色：不可打外观的乘色以本色为基准，可打时逐字写回。
-            _faceImages = GetComponentsInChildren<Image>(true);
-            _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
-            _imageColors = new Color[_faceImages.Length];
-            _textColors = new Color[_faceTexts.Length];
-            for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
-            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+            EnsureCache();
             //设置卡面
             Card = card_;
             _name.text = card_.Name;
@@ -126,6 +119,19 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
+
+        // 色缓存懒建：收齐卡面全部图形与它们的编辑期本色——图形集合与本色运行期不变，首次 Bind 建一次即可反复用
+        // （不可打外观的乘色以本色为基准、可打时逐字写回）。不能放 Awake：4 张脸中 3 张 inactive 不跑 Awake，首次切到才建
+        private void EnsureCache()
+        {
+            if (_faceImages != null) return;
+            _faceImages = GetComponentsInChildren<Image>(true);
+            _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
+            _imageColors = new Color[_faceImages.Length];
+            _textColors = new Color[_faceTexts.Length];
+            for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
+            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+        }
 
         #region 不可打外观：整卡图形与文本乘同一个灰调，可打时写回本色
 
