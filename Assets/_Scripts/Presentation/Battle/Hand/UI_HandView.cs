@@ -132,7 +132,7 @@ namespace _DreamKeep.Presentation
 
         /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
         public UI_CardBattle AimedCard =>
-            _area.Dragged is UI_CardBattle dragged && _area.CardsPlayable &&
+            _area.Dragged is var dragged && _area.CardsPlayable &&
             (_playFlow.IsAiming(dragged) || _dropZone.Accepts(dragged.WorldPosition))
                 ? dragged
                 : null;

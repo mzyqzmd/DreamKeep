@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
   m_Name: Bash
   m_EditorClassIdentifier: 
-  _name: "\u75DB\u51FB\u6253\u51FB"
+  _name: "\u75DB\u51FB"
   _cost: 2
   _icon: {fileID: 21300000, guid: f96f9c1e6a6dc494ca9cfb9c30130a9f, type: 3}
   _rarity: 0

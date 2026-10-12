@@ -53,9 +53,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0593bce7f494fee9ea1a2396efa4078, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _canvasGroup: {fileID: 2433367951805244437}
   _turnText: {fileID: 3521223458190726382}
   _turnCountText: {fileID: 8281723686110288062}
-  _canvasGroup: {fileID: 2433367951805244437}
   _showScaleFrom: 1.6
   _showScaleDuration: 0.2
   _holdDuration: 0.7
