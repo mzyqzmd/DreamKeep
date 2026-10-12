@@ -37,7 +37,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("悬停时的缩放目标值（绝对值而非倍率）：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
         private float _hoverScale = 1.15f;
 
-        [Tooltip("悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")] [SerializeField]
+        [Tooltip(
+            "悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")]
+        [SerializeField]
         private float _hoverLiftPx = 100.8f;
 
         [Tooltip("悬停进出的补间时长（秒）：抬起、回正、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
@@ -160,7 +162,8 @@ namespace _DreamKeep.Presentation
         {
             if (!_aimActivated)
             {
-                if ((eventData_.position - _pressScreenPosition).sqrMagnitude < _aimThresholdPx * _aimThresholdPx) return;
+                if ((eventData_.position - _pressScreenPosition).sqrMagnitude <
+                    _aimThresholdPx * _aimThresholdPx) return;
                 _aimActivated = true;
             }
 
@@ -188,7 +191,7 @@ namespace _DreamKeep.Presentation
             if (_hovered) return;
             _hovered = true;
             MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
-            ScaleToAsync(_hoverScale, _hoverDuration).Forget();
+            ScaleToAsync(transform.localScale.x * _hoverScale, _hoverDuration).Forget();
         }
 
         // 退出：按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，补间途中进出也不会写回半截姿态

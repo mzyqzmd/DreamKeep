@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
   m_Name: PommelStrike
   m_EditorClassIdentifier: 
-  _name: "\u714E\u997C\u6253\u51FB"
+  _name: "\u5251\u67C4\u6253\u51FB"
   _cost: 1
   _icon: {fileID: 21300000, guid: da715b0634dbd5048a5270fb0ad7647e, type: 3}
   _rarity: 0

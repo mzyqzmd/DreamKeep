@@ -17,7 +17,7 @@ MonoBehaviour:
   _viewPrefab: {fileID: 235640479445222248, guid: 111909164d35d34408a26338589ab2de, type: 3}
   _startGold: 99
   _startEnergy: 3
-  _drawPerTurn: 6
+  _drawPerTurn: 10
   _startDeck:
   - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
   - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
