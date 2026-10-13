@@ -75,11 +75,11 @@ namespace _DreamKeep.Presentation
         private float _hoverDodgePx = 160f;
 
         // 演出与手感的固定值：曾经是 Inspector 上的可调字段，现收进代码常量（改这些要重新编译，也不再随场景序列化）
-        private const float FanMoveDuration = 0.28f; // 手牌重排（让位、回位）的补间时长
-        private const float DrawGrowDuration = 0.25f; // 抽牌飞行时长：从抽牌堆零尺寸滑到手牌槽位
+        private const float FanMoveDuration = 0.2f; // 手牌重排（让位、回位）的补间时长
+        private const float DrawGrowDuration = 0.2f; // 抽牌飞行时长：从抽牌堆零尺寸滑到手牌槽位
         private const float DrawGrowOvershoot = 1.1f; // 抽牌途中的放大倍率：落位后再收回槽位尺寸
         private const float DrawSettleDuration = 0.15f; // 飞行到位后收回常态尺寸的时长
-        private const float ExitDuration = 0.25f; // 离场飞向牌堆并缩到 0 的时长
+        private const float ExitDuration = 0.22f; // 离场飞向牌堆并缩到 0 的时长
         private const float ReshuffleFlyDuration = 0.2f; // 单张洗回牌从弃牌堆飞到抽牌堆的时长
         private const float ReshuffleFlyScale = 0.2f; // 洗回飞行牌的起始缩放
         private const float ReshuffleFlySpreadPx = 72f; // 洗回起落点的散开幅度
@@ -154,8 +154,9 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_DiscardReshuffled>(OnDiscardReshuffledAsync);
             eventDispatcher_.Register<BE_CardDrawn>(OnCardDrawnAsync);
             eventDispatcher_.Register<BE_CardPlayed>(OnCardPlayedAsync);
-            // 单张弃牌：打出结算后的卡离场（消耗/遗忘时域侧自动跳过），将来"弃一张"的卡效也走这里
-            eventDispatcher_.Register<BE_CardDiscarded>(discarded_ => ExitToPileAsync(discarded_.Card, discardPile));
+            // 单张弃牌：打出结算后的卡离场（消耗/遗忘时域侧自动跳过）、将来"弃一张"的卡效走离场飞行；
+            // 抽牌溢出（手牌已满）的牌从未进过手牌、没有视图，改播"从抽牌堆飞进弃牌堆"的单张小飞行
+            eventDispatcher_.Register<BE_CardDiscarded>(OnCardDiscardedAsync);
             eventDispatcher_.Register<BE_CardsDiscarded>(OnCardsDiscardedAsync);
             eventDispatcher_.Register<BE_CardExhausted>(exhausted_ => ExitToPileAsync(exhausted_.Card, exhaustPile));
             // 遗忘只借道飞往出牌区、不落堆，故不发进堆通知；永久移除与否由域侧决定，这里只播形式
@@ -597,7 +598,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 领域事件演出：十条订阅与全部演出
+        #region 领域事件演出
 
         // 洗回搬运：域侧一次搬完整摞，这里演成整波同飞——洗回多少张就飞多少张，一张飞抵即一张进堆。
         // 借来的包装只取池、不入手牌列与模型索引，牌面沿用上次 Bind 的残留内容（整段飞行都缩得很小，不为它单独刷外观）。
@@ -814,6 +815,27 @@ namespace _DreamKeep.Presentation
             ReturnView(model_, view);
         }
 
+        // 单张弃牌的来路分流：手牌区里还有这张牌的视图 → 走离场飞行（打出结算后的离场、将来"弃一张"的卡效）；
+        // 查不到视图 → 必是抽牌溢出的那类（手牌已满，牌刚从抽牌堆抽出来就被弃），改演抽牌堆飞进弃牌堆的小飞行
+        private async UniTask OnCardDiscardedAsync(BE_CardDiscarded discarded_)
+        {
+            if (TryGetView(discarded_.Card, out _))
+            {
+                await ExitToPileAsync(discarded_.Card, discardPile);
+            }
+            else
+            {
+                drawPile.OnCardLeft();
+                UI_CardBattle card = RentFlyView();
+                card.Place(drawPile.transform.position, drawPile.transform.rotation);
+                card.transform.localScale = Vector3.one * ReshuffleFlyScale;
+
+                await FlyOutAsync(card, discardPile.transform.position, discardPile.transform.rotation,
+                    ReshuffleFlyDuration);
+                discardPile.OnCardArrived();
+                ReturnFlyView(card);
+            }
+        }
         #endregion
     }
 }

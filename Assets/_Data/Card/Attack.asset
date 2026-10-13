@@ -20,6 +20,7 @@ MonoBehaviour:
   _targetType: 1
   _affixes:
   - rid: 5765983561550135300
+  - rid: 8162841690170720258
   _canUpdate: 1
   _updatedAffixes:
   - rid: 5765983561550135301
@@ -36,3 +37,6 @@ MonoBehaviour:
       data:
         _amount: 9
         _times: 1
+    - rid: 8162841690170720258
+      type: {class: AD_Retain, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

@@ -29,8 +29,7 @@ namespace _DreamKeep.Presentation
             if (_boundCreature.IsDead) return;
             ECardType type = played_.Card.Type;
             if (type != ECardType.Skill && type != ECardType.Ability) return;
-            await _animTool.PlayOnceAsync(CastAnim);
-            _animTool.PlayLoop(IdleLoopAnim);
+            await _animTool.PlayOnceAsync(CastAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
         }
     }
 }

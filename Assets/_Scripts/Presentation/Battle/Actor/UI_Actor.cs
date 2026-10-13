@@ -105,44 +105,41 @@ namespace _DreamKeep.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 死亡：标记停帧 → 播 die → 停 DeathHoldDuration 秒后自毁视图（等停帧这段不阻塞事件链）
+        // 死亡：标记停帧 → 播 die（播到最短比例即放行事件链）→ 自然播完停 1 秒后自毁视图
         protected virtual async UniTask OnActorDiedAsync(BE_ActorDied died_)
         {
             if (died_.Creature != _boundCreature || _deathAnimTriggered) return;
             _deathAnimTriggered = true;
             if (_hoverBox) _hoverBox.enabled = false; // 尸体不再响应悬停：禁用会触发它自己的兜底收起
-            await _animTool.PlayOnceAsync(DeathAnim);
-            UniTask.Delay(TimeSpan.FromSeconds(1f))
-                .ContinueWith(() =>
-                {
-                    if (this != null) Destroy(gameObject);
-                })
-                .Forget();
+            await _animTool.PlayOnceAsync(DeathAnim, onFinished_: () =>
+                UniTask.Delay(TimeSpan.FromSeconds(1f))
+                    .ContinueWith(() =>
+                    {
+                        if (this != null) Destroy(gameObject);
+                    })
+                    .Forget());
         }
 
-        // 我打人：播攻击动画，演完回待机（多段伤害逐段挥拳）
+        // 我打人：播攻击动画（播到最短比例即放行，多段伤害逐段接棒），自然播完才回待机
         protected virtual async UniTask OnDealtDamageAsync(BE_DamageDealt dealt_)
         {
             if (_boundCreature.IsDead || dealt_.Source != _boundCreature) return;
-            await _animTool.PlayOnceAsync(AttackAnim);
-            _animTool.PlayLoop(IdleLoopAnim);
+            await _animTool.PlayOnceAsync(AttackAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
         }
 
-        // 我挨打：播受击动画并刷新血与格挡。致死伤不播（die 由 BE_ActorDied 接管）、未破防无真伤也不播
+        // 我挨打：播受击动画并与动画同帧刷新血与格挡。致死伤不播（die 由 BE_ActorDied 接管）、未破防无真伤也不播
         protected virtual async UniTask OnDamagedAsync(BE_DamageDealt dealt_)
         {
             if (dealt_.Target != _boundCreature) return;
+            UniTask wait = UniTask.CompletedTask;
             if (!_boundCreature.IsDead && dealt_.Amount > dealt_.Absorbed)
-            {
-                await _animTool.PlayOnceAsync(HitAnim);
-                if (_boundCreature.IsDead) return;
-                _animTool.PlayLoop(IdleLoopAnim);
-            }
+                wait = _animTool.PlayOnceAsync(HitAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
 
-            // 域侧先扣格挡再扣血才发事件，这里演完再一起对齐真值
+            // 域侧先扣格挡再扣血才发事件，这里不等演出、与动画同帧对齐真值
             if (_blockView == null || _healthBar == null) return; // 视图可能已随死亡销毁，而托管处理器仍活着
             _blockView.SetBlock(dealt_.Target.Block);
             _healthBar.SetHealth(dealt_.Target.CurrentHp);
+            await wait;
         }
 
         // 获得格挡：没有格挡动画，只对齐显示值
