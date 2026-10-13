@@ -145,7 +145,7 @@ namespace _DreamKeep.Presentation
             // 域侧先扣格挡再扣血才发事件，这里演完再一起对齐真值
             if (_blockView == null || _healthBar == null) return; // 视图可能已随死亡销毁，而托管处理器仍活着
             _blockView.SetBlock(dealt_.Target.Block);
-            _healthBar.SetHealth(dealt_.Target.CurrentHp, true);
+            _healthBar.SetHealth(dealt_.Target.CurrentHp);
         }
 
         // 获得格挡：没有格挡动画，只对齐显示值
@@ -166,7 +166,7 @@ namespace _DreamKeep.Presentation
         protected virtual UniTask OnHealthRestoredAsync(BE_HealthRestored restored_)
         {
             if (restored_.Target == _boundCreature && _healthBar != null)
-                _healthBar.SetHealth(restored_.Target.CurrentHp, true);
+                _healthBar.SetHealth(restored_.Target.CurrentHp);
             return UniTask.CompletedTask;
         }
 

@@ -34,13 +34,12 @@ namespace _DreamKeep.Presentation
         [Tooltip("诅咒牌面：绑定的卡为诅咒类型时切到它")] [SerializeField]
         private UI_CardFace _curseFace;
 
-        private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
 
         [Tooltip("悬停时的缩放目标值：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
         private float _hoverScale = 1.15f;
 
-        [Tooltip(
-            "悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")]
+        [Tooltip("悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；" +
+                 "上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")]
         [SerializeField]
         private float _hoverLiftPx = 100.8f;
 
@@ -50,6 +49,10 @@ namespace _DreamKeep.Presentation
         [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
         private float _aimThresholdPx = 12f;
 
+        [Tooltip("词条说明气泡列与卡片右上角之间的间距（画布像素）：气泡列的第一条左上角贴 卡片矩形右上角 + 该间距")] [SerializeField]
+        private float _affixTipGapPx = 16f;
+
+        private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
         private RectTransform _rect;
         private Tween _moveTween;
         private Tween _scaleTween;
@@ -81,13 +84,18 @@ namespace _DreamKeep.Presentation
         public Quaternion WorldRotation => _rect.rotation;
 
         /// <summary>卡牌矩形的世界中心：目标箭头的起点，卡抬起、缩放、旋转时自动跟随。</summary>
-        public Vector3 WorldCenter => _rect.TransformPoint(_rect.rect.center);
+        public Vector3 WorldCenter => UiGeometry.AnchorPoint(_rect, EUiAnchor.MiddleCenter);
 
         /// <summary>悬停抬起量（画布像素）：由所在区域换算成世界的"上"向量后下发，进入姿态仍归本卡独占。</summary>
         public float HoverLiftPx => _hoverLiftPx;
 
         /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已抬邻牌才动"的错位感。</summary>
         public float HoverDuration => _hoverDuration;
+
+        /// <summary>词条说明气泡列的锚点（世界坐标）：卡片矩形沿卡"右"方向让开一个间距，
+        /// 气泡列的第一条从这句起向；卡被抬起、旋转、缩放时随之跟随。</summary>
+        public Vector3 AffixTipAnchor =>
+            UiGeometry.AnchorPoint(_rect, EUiAnchor.BottomRight) + _rect.right * (_affixTipGapPx * _rect.lossyScale.x);
 
         // 位置与朝向是否已等于目标姿态：只作"不在飞时不起空转补间"的判据，故收回本类内部（在飞的判据比已声明的目标，见 MoveToAsync）
         private bool IsAtPose(Vector3 worldPosition_, Quaternion worldRotation_) =>
@@ -191,7 +199,7 @@ namespace _DreamKeep.Presentation
             if (_hovered) return;
             _hovered = true;
             MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
-            ScaleToAsync(transform.localScale.x * _hoverScale, _hoverDuration).Forget();
+            ScaleToAsync(_hoverScale, _hoverDuration).Forget();
         }
 
         // 退出：按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，补间途中进出也不会写回半截姿态

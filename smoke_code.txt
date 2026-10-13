@@ -1,0 +1,108 @@
+UnityEngine.Application.runInBackground = true;
+var sb = new System.Text.StringBuilder();
+System.Type handT = null, popT = null;
+foreach (var asm in System.AppDomain.CurrentDomain.GetAssemblies())
+{
+    if (handT == null) handT = asm.GetType("_DreamKeep.Presentation.UI_HandView");
+    if (popT == null) popT = asm.GetType("_DreamKeep.Presentation.UI_PopTextRoot");
+}
+sb.AppendLine("types: hand=" + (handT != null) + " pop=" + (popT != null));
+if (handT == null || popT == null) return sb.ToString();
+sb.AppendLine("MoveTips exists=" + (popT.GetMethod("MoveTips") != null) + " (expect False)");
+
+var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public;
+var hands = UnityEngine.Object.FindObjectsOfType(handT, true);
+sb.AppendLine("handCount=" + hands.Length);
+if (hands.Length == 0) return sb.ToString();
+var hand = hands[0] as UnityEngine.MonoBehaviour;
+var pops = UnityEngine.Object.FindObjectsOfType(popT, true);
+sb.AppendLine("popCount=" + pops.Length);
+var pop = pops[0] as UnityEngine.MonoBehaviour;
+
+var fHover = handT.GetField("_hoveredCard", flags);
+var fViews = handT.GetField("_views", flags);
+var mTick = handT.GetMethod("TickAffixTips", flags);
+var views = fViews.GetValue(hand) as System.Collections.IDictionary;
+sb.AppendLine("views=" + (views == null ? -1 : views.Count));
+if (views == null || views.Count == 0) return sb.ToString();
+
+var cards = new System.Collections.Generic.List<UnityEngine.Component>();
+var counts = new System.Collections.Generic.List<int>();
+foreach (System.Collections.DictionaryEntry e in views)
+{
+    var card = e.Value as UnityEngine.Component;
+    var model = card.GetType().GetProperty("Card", flags).GetValue(card, null);
+    var lines = model.GetType().GetMethod("GetDescriptionLines", flags).Invoke(model, null) as System.Collections.IEnumerable;
+    int n = 0;
+    foreach (var line in lines)
+        if (line.GetType().GetField("Item2").GetValue(line) != null) n++;
+    cards.Add(card);
+    counts.Add(n);
+}
+sb.AppendLine("affixCounts=" + string.Join(",", counts.ConvertAll(x => x.ToString()).ToArray()));
+
+int idxA = -1, idxB = -1;
+for (int i = 0; i < counts.Count; i++)
+{
+    if (counts[i] <= 0) continue;
+    if (idxA < 0) idxA = i;
+    else if (idxB < 0) idxB = i;
+}
+if (idxA < 0) { sb.AppendLine("NO_AFFIX_CARD"); return sb.ToString(); }
+
+var cardA = cards[idxA];
+hand.enabled = false; // 冻结 Update，避免 TickHover 抢改我们要断言的悬停状态
+
+fHover.SetValue(hand, cardA);
+mTick.Invoke(hand, null);
+var stack = popT.GetField("_tipStack", flags).GetValue(pop) as System.Collections.IList;
+int active = 0;
+UnityEngine.Component firstActive = null;
+foreach (var t in stack)
+{
+    var c = (UnityEngine.Component)t;
+    if (!c.gameObject.activeSelf) continue;
+    active++;
+    if (firstActive == null) firstActive = c;
+}
+sb.AppendLine("A: stack=" + stack.Count + " active=" + active);
+if (firstActive != null)
+{
+    var anchor = (UnityEngine.Vector3)cardA.GetType().GetProperty("AffixTipAnchor", flags).GetValue(cardA, null);
+    sb.AppendLine("A: parentIsCard=" + (firstActive.transform.parent == cardA.transform)
+        + " posErrToAnchor=" + UnityEngine.Vector3.Distance(firstActive.transform.position, anchor).ToString("F4"));
+    var p0 = firstActive.transform.position;
+    cardA.transform.position = cardA.transform.position + new UnityEngine.Vector3(50f, 30f, 0f);
+    var p1 = firstActive.transform.position;
+    sb.AppendLine("B: followDelta=" + (p1 - p0).ToString("F2") + " (expect 50.00/30.00/0.00)");
+    cardA.transform.position = cardA.transform.position - new UnityEngine.Vector3(50f, 30f, 0f);
+    var p2 = firstActive.transform.position;
+    sb.AppendLine("B2: backDelta=" + (p2 - p0).ToString("F2") + " (expect 0.00/0.00/0.00)");
+}
+
+if (idxB >= 0)
+{
+    var cardB = cards[idxB];
+    fHover.SetValue(hand, cardB);
+    mTick.Invoke(hand, null);
+    int actB = 0;
+    bool allOnNew = true;
+    foreach (var t in stack)
+    {
+        var c = (UnityEngine.Component)t;
+        if (!c.gameObject.activeSelf) continue;
+        actB++;
+        if (c.transform.parent != cardB.transform) allOnNew = false;
+    }
+    sb.AppendLine("C: swap parentIsNewCard=" + allOnNew + " active=" + actB);
+}
+
+fHover.SetValue(hand, null);
+mTick.Invoke(hand, null);
+int actC = 0;
+foreach (var t in stack)
+    if (((UnityEngine.Component)t).gameObject.activeSelf) actC++;
+sb.AppendLine("D: afterHide active=" + actC + " (expect 0)");
+
+hand.enabled = true;
+return sb.ToString();

@@ -1,0 +1,4 @@
+﻿=== start 09:27:40
+isPlaying: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"success\":true,\"message\":\"Code executed successfully.\",\"data\":{\"result\":\"edit\",\"compiler\":\"codedom\"}}"}],"structuredContent":{"success":true,"message":"Code executed successfully.","data":{"result":"edit","compiler":"codedom"}},"isError":false}}
+play: {"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"success\":true,\"message\":\"Entered play mode.\",\"data\":null}"}],"structuredContent":{"success":true,"message":"Entered play mode.","data":null},"isError":false}}
+SMOKE:

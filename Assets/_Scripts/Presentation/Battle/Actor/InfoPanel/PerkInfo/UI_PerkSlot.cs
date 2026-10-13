@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.Utility;
 using TMPro;
@@ -21,6 +22,7 @@ namespace _DreamKeep.Presentation
         public BattlePerk Perk { get; private set; }
 
         private UI_PopTextRoot _tipHost;
+        private readonly List<(string Name, string Description)> _tip = new(1);
         private bool _tipShown;
 
         #region 对外装配与刷新：由宿主 UI_PerkGroup 注入气泡宿主并写入状态数据
@@ -54,14 +56,18 @@ namespace _DreamKeep.Presentation
         {
             if (_tipHost == null || Perk == null) return;
             _tipShown = true;
-            _tipHost.ShowTip(this, Perk.Name, Perk.GetDescription(), UiGeometry.TopCenter(this, _tipLiftPx));
+            _tip.Clear();
+            _tip.Add((Perk.Name, Perk.GetDescription()));
+            RectTransform rect = (RectTransform)transform;
+            Vector3 anchor = UiGeometry.AnchorPoint(rect, EUiAnchor.TopCenter) + rect.up * (_tipLiftPx * rect.lossyScale.y);
+            _tipHost.ShowTips(this, _tip, anchor, EUiAnchor.BottomCenter);
         }
 
         private void HideTip()
         {
             if (!_tipShown) return;
             _tipShown = false;
-            if (_tipHost) _tipHost.HideTip(this);
+            if (_tipHost) _tipHost.HideTips(this);
         }
     }
 }

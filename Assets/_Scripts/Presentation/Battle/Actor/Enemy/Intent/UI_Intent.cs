@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace _DreamKeep.Presentation.Intent
         private float _tipLiftPx = 1f;
 
         private UI_PopTextRoot _tipHost;
+        private readonly List<(string Name, string Description)> _tip = new(1);
         private EnemyIntent _intent;
         private bool _tipShown;
 
@@ -27,8 +29,11 @@ namespace _DreamKeep.Presentation.Intent
         {
             if (_tipHost == null || _intent == null) return;
             _tipShown = true;
-            _tipHost.ShowTip(this, _intent.GetIntentName(), _intent.GetDescription(),
-                UiGeometry.TopCenter(this, _tipLiftPx));
+            _tip.Clear();
+            _tip.Add((_intent.GetIntentName(), _intent.GetDescription()));
+            RectTransform rect = (RectTransform)transform;
+            Vector3 anchor = UiGeometry.AnchorPoint(rect, EUiAnchor.TopCenter) + rect.up * (_tipLiftPx * rect.lossyScale.y);
+            _tipHost.ShowTips(this, _tip, anchor, EUiAnchor.BottomCenter);
         }
 
         public void OnPointerExit(PointerEventData eventData_) => HideTip();
@@ -39,7 +44,7 @@ namespace _DreamKeep.Presentation.Intent
         {
             if (!_tipShown) return;
             _tipShown = false;
-            if (_tipHost) _tipHost.HideTip(this);
+            if (_tipHost) _tipHost.HideTips(this);
         }
     }
 }

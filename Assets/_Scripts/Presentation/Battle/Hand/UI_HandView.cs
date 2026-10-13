@@ -110,6 +110,12 @@ namespace _DreamKeep.Presentation
         private UI_CardBattle _aimingCard;
         private bool _aimingActive;
 
+        // 词条说明气泡列的会话：弹层宿主、当前挂着气泡列的牌与它这一份内容
+        // （换卡才重建，并把整列重挂到新卡名下，其后随卡自动跟随）
+        private UI_PopTextRoot _popTextRoot;
+        private UI_CardBattle _tipCard;
+        private readonly List<(string Name, string Description)> _affixTips = new();
+
         // 当前指向的目标槽位（存活敌人列表下标）：由单位侧的目标提示驱动每帧回写，打牌命令与箭头命中色共用这一处；
         // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
         private int _aimSlot = DefaultAimSlot;
@@ -119,20 +125,22 @@ namespace _DreamKeep.Presentation
         private PointerEventData _pointerData;
         private EventSystem _pointerEventSystem;
 
-        // 每帧驱动：先裁决悬停进出，再刷新瞄准中的箭头并兜底校正瞄准状态
+        // 每帧驱动：先裁决悬停进出，再刷新瞄准中的箭头并兜底校正瞄准状态，最后按悬停牌对账词条说明气泡列
         private void Update()
         {
             TickHover();
             TickAim();
+            TickAffixTips();
         }
 
         // 装配：解析画布相机、建卡池、订阅十一条领域事件。画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）
         [Inject]
         public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_,
-            Rng rng_)
+            Rng rng_, UI_PopTextRoot popTextRoot_)
         {
             _commandDispatcher = commandDispatcher_;
             _rng = rng_;
+            _popTextRoot = popTextRoot_;
             _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             _cardPool = new ObjectPool<UI_CardBattle>(
                 () => Instantiate(_cardPrefab, _handLayer),
@@ -511,6 +519,24 @@ namespace _DreamKeep.Presentation
             target.EnterHover(position + _fanCenterPoint.TransformVector(Vector3.up * target.HoverLiftPx),
                 _fanCenterPoint.rotation);
             ApplyHoverDodge();
+        }
+
+        // 词条说明气泡列的对账：悬停牌（且没在拖拽）身上"不展示描述"的词条，在卡片右上角自上而下叠列说明。
+        // 整列挂在悬停牌自己名下，随卡抬起、缩放与换层自动跟随，故同一张卡一次写入即够（不再每帧写位置）；
+        // 换卡才重建内容并把整列重挂过去，悬停身份被清、开拖、牌离手都落到这里收起
+        private void TickAffixTips()
+        {
+            UI_CardBattle card = _draggedCard ? null : _hoveredCard;
+            if (card == _tipCard) return;
+
+            if (_tipCard) _popTextRoot.HideTips(_tipCard);
+            _tipCard = card;
+            if (!card) return;
+
+            _affixTips.Clear();
+            foreach ((string text, CardAffix affix) in card.Card.GetDescriptionLines())
+                if (affix != null) _affixTips.Add((text, affix.GetDescription()));
+            if (_affixTips.Count > 0) _popTextRoot.ShowTips(card, _affixTips, card.AffixTipAnchor, EUiAnchor.BottomLeft, card.transform);
         }
 
         // 让出悬停身份：切换不可打、牌离手或被拖走时调用，只清状态与身份，姿态一律交给后续补间

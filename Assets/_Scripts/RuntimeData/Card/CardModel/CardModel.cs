@@ -49,29 +49,36 @@ namespace _DreamKeep.RuntimeData
         public CardModel ToMutable() => new(_static, _runtime.Clone());
 
         #endregion
-        
+
         public string GetTypeDescription() => _static.GetTypeDescription();
 
-        public string GetDescription()
+        #region 卡面文案：逐行出口与纯文本描述
+
+        /// <summary>卡面逐行文案：目标提示行与普通词条行的 Affix 为 null，不展示描述的词条那一行 Text 即词条名并带出该词条——
+        /// 卡面的关键词行样式与词条说明气泡都只认这一份判据，行序即卡面从上到下的顺序。</summary>
+        public IReadOnlyList<(string Text, CardAffix Affix)> GetDescriptionLines()
         {
-            StringBuilder description = new();
-            switch (_static.TargetType)
+            List<(string Text, CardAffix Affix)> lines = new();
+            string targetLine = _static.TargetType switch
             {
-                case ECardTargetType.Player:
-                case ECardTargetType.FrontEnemy: break;
-                case ECardTargetType.AllEnemy:
-                    description.AppendLine("对全体目标:"); break;
-                case ECardTargetType.RandomEnemy:
-                    description.AppendLine("对随机目标:"); break;
-                case ECardTargetType.AnyEnemy:
-                    description.AppendLine("指定目标:"); break;
-                default: throw new ArgumentOutOfRangeException();
+                ECardTargetType.Player or ECardTargetType.FrontEnemy => string.Empty,
+                ECardTargetType.AllEnemy => "对全体目标:",
+                ECardTargetType.RandomEnemy => "对随机目标:",
+                ECardTargetType.AnyEnemy => "指定目标:",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            if (!string.IsNullOrEmpty(targetLine)) lines.Add((targetLine, null));
+            for (int i = 0; i < ActiveAffixes.Count; i++)
+            {
+                CardAffix affix = ActiveAffixes[i];
+                lines.Add(affix.ShowDescription ? (affix.GetDescription(), null) : (affix.Name, affix));
             }
 
-            for (var i = 0; i < ActiveAffixes.Count; i++)
-                description.AppendLine(ActiveAffixes[i].GetDescription());
-            return description.ToString();
+            return lines;
         }
+
+        #endregion
 
         #region 升级：切换生效词条到已升级集，纯运行时操作不回查配置
 

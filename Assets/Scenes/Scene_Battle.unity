@@ -2504,6 +2504,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
   _turnCountPopTipPrefab: {fileID: 1797641832291381066, guid: 1f39b7ad9a64618468cb19f474f34254, type: 3}
+  _stackSpacingPx: 12
 --- !u!1 &983776710
 GameObject:
   m_ObjectHideFlags: 0
@@ -2924,7 +2925,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: -155}
+  m_AnchoredPosition: {x: 0, y: -170}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1127662405
@@ -3390,12 +3391,12 @@ MonoBehaviour:
   _fanCenterPoint: {fileID: 1117339986}
   _fanHalfRunPx: 720
   _fanStepPx: 200
-  _fanSagPx: 50
+  _fanSagPx: 40
   _fanTiltMaxDeg: 10
   _fanFullCount: 6
   _fanScaleStep: 0.05
   _fanMinScale: 0.75
-  _hoverDodgePx: 100
+  _hoverDodgePx: 190
 --- !u!224 &1271725517
 RectTransform:
   m_ObjectHideFlags: 0

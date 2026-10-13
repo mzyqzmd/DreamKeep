@@ -7,61 +7,51 @@ using UnityEngine.UI;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>血条组件：Slider 数值滚动补间（DOTween 单通道）+ 滚动文本 + 按血量占比从色带染 Fill，
-    /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
+    /// <summary>血条组件：Fill 与血量数字一律瞬时到域真值，其后的滞后条按锚点补间收拢，露出"刚刚掉了多少"的橙色缺口；
+    /// 回血不做滞后演出；Slider 满值恒为 1、按占比驱动；只认 UI_Actor 转发来的域真值，自己不订事件不判规则。</summary>
     public sealed class UI_HealthBar : MonoBehaviour
     {
         [Header("血条")] [SerializeField] private Gradient _gradient;
         [SerializeField] private Slider _healthSlider;
+        [SerializeField] private Image _fillLag;
         [SerializeField] private TextMeshProUGUI _healthText;
 
-        [Tooltip("血量补间时长（秒）：受伤与回血的滚动速度")] [SerializeField]
-        private float _healthTweenDuration = 0.25f;
+        [Tooltip("滞后条补间时长（秒）：掉血后橙色缺口收拢的速度")] [SerializeField]
+        private float _fillLagDuration = 0.5f;
 
         private Creature _creature;
-        private Image _fillImage;
-        private Tween _healthTween;
+        private Tween _fillLagTween;
 
-        private void OnDestroy() => _healthTween?.Kill();
+        private void OnDestroy() => _fillLagTween?.Kill();
 
         #region 初始化
 
-        // 初始化：装配期调用——缓存 Fill、按域真值直写血量，不播补间
+        // 初始化：装配期调用——缓存 Fill、把 Slider 定为占比通道（满值 1），再按域真值直写血量
         public void Initialize(Creature creature_)
         {
             _creature = creature_;
-            _fillImage = _healthSlider.fillRect ? _healthSlider.fillRect.GetComponent<Image>() : null;
-            _healthSlider.maxValue = _creature.MaxHp;
-            SetHealth(_creature.CurrentHp, false);
+            SetHealth(_creature.CurrentHp);
         }
 
         #endregion
 
         #region 设置血量
 
-        // 血量：animate_ 为 false 直写（开局初值），为 true 且值有变才起补间；补间途中再来一次则 Kill 旧的从当前值续走
-        public void SetHealth(int current_, bool animate_)
+        // 血量：Slider 与文本一律瞬时到真值；animate_ 为 true 且这次是真掉血时，滞后条才补间收拢
+        public void SetHealth(int current_)
         {
+            _fillLagTween?.Kill(); // 回血与直写路径也要收掉在跑的滞后补间，否则它会继续往旧目标压
             int current = Mathf.Clamp(current_, 0, _creature.MaxHp);
-            _healthTween?.Kill();
-            if (animate_ && !Mathf.Approximately(_healthSlider.value, current))
-            {
-                UiTween.PlayScalar(ref _healthTween, () => _healthSlider.value, WriteHealthVisual, current,
-                    _healthTweenDuration);
-                return;
-            }
-
-            WriteHealthVisual(current);
+            float normalized = (float)current / _creature.MaxHp;
+            _healthSlider.value = normalized;
+            _healthText.text = $"{current}/{_creature.MaxHp}";
+            UiTween.PlayScalar(ref _fillLagTween, () => _fillLag.rectTransform.anchorMax.x, WriteFillLag, normalized,
+                _fillLagDuration);
         }
+
+        // 滞后条：与 Slider 驱动 Fill 同款的锚点伸缩，只写横向上限；数值相等时两根条的矩形逐像素重合
+        private void WriteFillLag(float normalized_) => _fillLag.rectTransform.anchorMax = new Vector2(normalized_, 1f);
 
         #endregion
-
-        // 血条的可视三件套：Slider 值、滚动文本与按血量占比从色带取的 Fill 颜色，补间与直写共用
-        private void WriteHealthVisual(float value_)
-        {
-            _healthSlider.value = value_;
-            _healthText.text = $"{Mathf.RoundToInt(value_)}/{_creature.MaxHp}";
-            if (_fillImage) _fillImage.color = _gradient.Evaluate(value_ / _creature.MaxHp);
-        }
     }
 }
