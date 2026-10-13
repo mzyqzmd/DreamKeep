@@ -1,6 +1,5 @@
 using _DreamKeep.RuntimeData;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace _DreamKeep.Presentation.Intent
 {
@@ -9,7 +8,7 @@ namespace _DreamKeep.Presentation.Intent
     public sealed class UI_ApplyPerkIntent : UI_Intent
     {
         private static readonly int IsSelf = Animator.StringToHash("IsSelf");
-        [SerializeField] private Image _icon;
+
         [SerializeField] private Animator _anim;
 
         public void Bind(EI_ApplyPerk applyPerk_)

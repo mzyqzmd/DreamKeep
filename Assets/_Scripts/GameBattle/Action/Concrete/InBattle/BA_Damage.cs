@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 
@@ -14,19 +15,18 @@ namespace _DreamKeep.GameBattle
             BaseAmount = amount_;
         }
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             foreach (Creature target in Targets)
             {
                 if (target.IsDead) continue;
 
-                int final = BaseAmount;
-                int absorbed = target.Block < final ? target.Block : final;
+                int absorbed = Math.Min(target.Block, BaseAmount);
                 target.Block -= absorbed;
-                target.CurrentHp -= final - absorbed;
+                target.CurrentHp -= BaseAmount - absorbed;
 
-                events.Add(new BE_DamageDealt(Source, target, final, absorbed));
+                events.Add(new BE_DamageDealt(Source, target, BaseAmount, absorbed));
                 if (target.IsDead)
                     events.Add(new BE_ActorDied(target, Source));
             }

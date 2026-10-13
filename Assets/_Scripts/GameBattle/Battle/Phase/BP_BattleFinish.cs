@@ -24,11 +24,10 @@ namespace _DreamKeep.GameBattle
             foreach (CardModel runCard in context.ErasedRunCards)
                 player.Deck.Remove(runCard);
 
-            await PlayEvents(new BE_BattleEnded(context.IsVictory));
+            await PlayEvent(new BE_BattleEnded(context.IsVictory));
 
             // 表现层已收到结束事件，战斗态可以清空；局内卡组保留
             player.EndCombat();
-            await base.RunAsync();
         }
 
         #endregion

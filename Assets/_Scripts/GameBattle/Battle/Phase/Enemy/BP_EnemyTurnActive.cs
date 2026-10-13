@@ -32,7 +32,7 @@ namespace _DreamKeep.GameBattle
 
                 enemy.AdvanceIntent();
                 if (enemy.Creature.IsDead) continue;
-                await PlayEvents(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
+                await PlayEvent(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
             }
         }
 

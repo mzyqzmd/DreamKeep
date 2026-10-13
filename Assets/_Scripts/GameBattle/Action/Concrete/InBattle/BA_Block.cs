@@ -6,12 +6,12 @@ namespace _DreamKeep.GameBattle
     /// <summary>格挡动作：为目标累加格挡，格挡优先吸收后续伤害。</summary>
     public sealed class BA_Block : BattleAction
     {
-        /// <summary>可被 Pre 钩子修改的格挡值。</summary>
-        public int Amount { get; set; }
+        /// <summary>格挡值。</summary>
+        public int Amount { get; }
 
         public BA_Block(Creature source_, List<Creature> targets_, int amount_) : base(source_, targets_) => Amount = amount_;
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             foreach (Creature target in Targets)

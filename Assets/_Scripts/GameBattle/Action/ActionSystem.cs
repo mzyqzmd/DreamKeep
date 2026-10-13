@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
@@ -10,10 +9,9 @@ namespace _DreamKeep.GameBattle
         private readonly Queue<BattleAction> _queue = new();
         private readonly BattleContext _battleContext;
         private readonly BattleEventDispatcher _dispatcher;
+        private bool _performing; // 排空独占：重复调用在首个 await 之前同步命中守卫后返回
 
-        public bool IsPerforming { get; private set; }
-
-        public ActionSystem(BattleContext battleContext_, BattleEventDispatcher dispatcher_ = null)
+        public ActionSystem(BattleContext battleContext_, BattleEventDispatcher dispatcher_)
         {
             _battleContext = battleContext_;
             _dispatcher = dispatcher_;
@@ -29,29 +27,23 @@ namespace _DreamKeep.GameBattle
 
         public async UniTask PerformAllAsync()
         {
-            if (IsPerforming) return;
-            IsPerforming = true;
+            if (_performing) return;
+            _performing = true;
             while (_queue.Count > 0)
-                await ResolveAsync(_queue.Dequeue());
-            IsPerforming = false;
+            {
+                List<IBattleEvent> events = _queue.Dequeue().Execute(_battleContext);
+                await _dispatcher.PlayAsync(events);
+            }
+
+            _performing = false;
         }
 
         #endregion
 
-        #region 单个动作执行：Execute 改状态并返回事件，随后 await 演出
+        #region 阶段事件统一播放：供 BattlePhase 在 PerformAll 之外播放流程级事件
 
-        private async UniTask ResolveAsync(BattleAction action_)
-        {
-            List<IBattleEvent> events = action_.Execute(_battleContext);
-            if (_dispatcher == null) return;
-            await _dispatcher.PlayAsync(events);
-        }
+        public UniTask PlayAsync(IBattleEvent battleEvent_) => _dispatcher.PlayAsync(battleEvent_);
 
-        #endregion
-
-        #region 阶段事件统一播放：供 BattlePhase 在 PerformAll 之外播放流程级事件，dispatcher 为空时跳过
-        public UniTask PlayAsync(IReadOnlyList<IBattleEvent> events_)
-            => _dispatcher == null ? UniTask.CompletedTask : _dispatcher.PlayAsync(events_);
         #endregion
     }
 }

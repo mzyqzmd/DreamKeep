@@ -18,15 +18,22 @@ namespace _DreamKeep.GameBattle
             handlers.Add(e => handler_((TEvent)e));
         }
 
+        /// <summary>顺序播放一批事件：逐条 await 该类型的全部处理器，未注册的事件跳过。</summary>
         public async UniTask PlayAsync(IReadOnlyList<IBattleEvent> events_)
         {
-            foreach (IBattleEvent e in events_)
-            {
-                if (!_handlers.TryGetValue(e.GetType(), out List<Func<IBattleEvent, UniTask>> handlers)) continue;
-                // 索引遍历：分派期不增删处理器（注册只发生在注入期），无需快照拷贝
-                for (int i = 0; i < handlers.Count; i++)
-                    await handlers[i](e);
-            }
+            for (int i = 0; i < events_.Count; i++)
+                await DispatchAsync(events_[i]);
+        }
+
+        /// <summary>播放单条事件：阶段层只产出这一条事件时直接走它，免去为它包一个列表。</summary>
+        public UniTask PlayAsync(IBattleEvent battleEvent_) => DispatchAsync(battleEvent_);
+
+        // 单条分派：索引遍历，分派期不增删处理器（注册只发生在注入期），无需快照拷贝
+        private async UniTask DispatchAsync(IBattleEvent battleEvent_)
+        {
+            if (!_handlers.TryGetValue(battleEvent_.GetType(), out List<Func<IBattleEvent, UniTask>> handlers)) return;
+            for (int i = 0; i < handlers.Count; i++)
+                await handlers[i](battleEvent_);
         }
     }
 }

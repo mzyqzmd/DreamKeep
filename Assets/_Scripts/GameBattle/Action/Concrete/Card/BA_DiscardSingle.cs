@@ -18,7 +18,7 @@ namespace _DreamKeep.GameBattle
             _sourcePile = sourcePile_;
         }
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             PlayerCombatState state = battleContext_.Player.CombatState;

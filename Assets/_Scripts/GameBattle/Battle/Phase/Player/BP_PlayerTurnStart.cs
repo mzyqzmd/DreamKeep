@@ -20,7 +20,7 @@ namespace _DreamKeep.GameBattle
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_TurnStarted(_owner.BattleContext.TurnCount, true));
+            await PlayEvent(new BE_TurnStarted(_owner.BattleContext.TurnCount, true));
 
             Player player = _owner.BattleContext.Player;
             List<Creature> self = new List<Creature> { player.Creature };
@@ -37,7 +37,7 @@ namespace _DreamKeep.GameBattle
             await actions.PerformAllAsync();
 
             // 抽牌全部落稳才开窗：此后主循环立刻推进到等待型进行阶段，除本阶段收尾外没有别的时机能发出该信号
-            await PlayEvents(new BE_PlayerTurnActiveStarted());
+            await PlayEvent(new BE_PlayerTurnActiveStarted());
         }
 
         #endregion

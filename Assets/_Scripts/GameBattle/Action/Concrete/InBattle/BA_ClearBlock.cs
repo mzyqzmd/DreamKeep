@@ -8,7 +8,7 @@ namespace _DreamKeep.GameBattle
     {
         public BA_ClearBlock(Creature source_, List<Creature> targets_) : base(source_, targets_) { }
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             foreach (Creature target in Targets)

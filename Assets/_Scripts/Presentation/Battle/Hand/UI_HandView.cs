@@ -317,20 +317,6 @@ namespace _DreamKeep.Presentation
 
         #region 资格：可打状态、抓取与悬停
 
-        // 切换可打状态：返回是否真的变了，调用方据此决定要不要跑清悬停、重排、刷外观那一串
-        private bool SetPlayable(bool playable_)
-        {
-            if (_cardsPlayable == playable_) return false;
-            _cardsPlayable = playable_;
-            return true;
-        }
-
-        // 刷整手牌外观：不可打时压暗，可打时恢复本色
-        private void RefreshPlayableLook(bool playable_)
-        {
-            foreach (UI_CardBattle card in _hand) card.SetPlayableLook(playable_);
-        }
-
         /// <summary>这张牌此刻参不参与悬停：只看资格，不看动画——滑行中、正要合拢的牌照收；与"本回合可打"无关，不能打的牌照样抬起放大。</summary>
         private bool CanHover(UI_CardBattle card_) =>
             _draggedCard == null && IsInRow(card_) && !_entering.Contains(card_);
@@ -585,9 +571,10 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
+            int index = RowIndexOf(card_);
             MoveToHand(card_);
-            EvaluateSlot(RowIndexOf(card_), RowCount(), DodgeOf(RowIndexOf(card_)), out Vector3 position,
-                out Quaternion rotation, out float scale);
+            EvaluateSlot(index, RowCount(), DodgeOf(index), out Vector3 position, out Quaternion rotation,
+                out float scale);
             card_.ExitHover(position, rotation, scale);
         }
 
@@ -766,7 +753,8 @@ namespace _DreamKeep.Presentation
         // 再按槽位整体重排（位置、缩放与所在层一起回位），最后统一刷整手牌外观；状态没变则什么都不动
         private void ApplyPlayable(bool playable_)
         {
-            if (!SetPlayable(playable_)) return;
+            if (_cardsPlayable == playable_) return;
+            _cardsPlayable = playable_;
             if (!playable_)
             {
                 CancelAim();
@@ -774,7 +762,7 @@ namespace _DreamKeep.Presentation
             }
 
             ApplyLayout();
-            RefreshPlayableLook(playable_);
+            foreach (UI_CardBattle card in _hand) card.SetPlayableLook(playable_);
         }
 
         // 批量弃牌波：整手未保留的牌同帧各自飞向弃牌堆并缩到 0，全部落地才算波次播完（其后域侧才推进到状态衰减与敌方回合）。

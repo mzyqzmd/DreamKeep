@@ -11,7 +11,7 @@ namespace _DreamKeep.GameBattle
 
         public BA_Exhaust(Creature source_, List<Creature> targets_, CardModel cardToExhaust_) : base(source_, targets_) => _cardToExhaust = cardToExhaust_;
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             PlayerCombatState state = battleContext_.Player.CombatState;

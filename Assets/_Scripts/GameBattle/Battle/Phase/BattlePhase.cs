@@ -16,8 +16,7 @@ namespace _DreamKeep.GameBattle
         /// <summary>阶段主逻辑：由 BattleLoop 在切换后 await 驱动，可 await 动作演出。</summary>
         public virtual UniTask RunAsync() => UniTask.CompletedTask;
 
-        /// <summary>阶段事件统一播放：本地收集的事件经 ActionSystem 交给表现层 await。</summary>
-        protected UniTask PlayEvents(params IBattleEvent[] events_)
-            => _owner.ActionSystem.PlayAsync(events_);
+        /// <summary>阶段事件播放：本阶段产出的这一条事件经 ActionSystem 交给表现层 await。</summary>
+        protected UniTask PlayEvent(IBattleEvent battleEvent_) => _owner.ActionSystem.PlayAsync(battleEvent_);
     }
 }

@@ -18,13 +18,11 @@ namespace _DreamKeep.GameBattle
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_BattleStarted());
+            await PlayEvent(new BE_BattleStarted());
 
             List<Enemy> enemies = _owner.BattleContext.GetAliveEnemies();
             foreach (Enemy enemy in enemies)
-                await PlayEvents(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
-
-            await base.RunAsync();
+                await PlayEvent(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
         }
 
         #endregion

@@ -11,6 +11,8 @@ namespace _DreamKeep.Presentation
         [Header("格挡")] [SerializeField] private Animator _anim;
         [SerializeField] private TextMeshProUGUI _blockAmount;
 
+        private static readonly int BlockShow = Animator.StringToHash("Show"); // 动画参数名只哈希一次，避免每次写值都重算
+
         private int _shownBlock = -1;
 
         // 初始化：装配期调用——按域真值直写格挡初值
@@ -24,7 +26,7 @@ namespace _DreamKeep.Presentation
             if (_shownBlock == block_) return;
             _shownBlock = block_;
             _blockAmount.text = block_ > 0 ? block_.ToString() : "";
-            _anim.SetBool(Animator.StringToHash("Show"), block_ > 0);
+            _anim.SetBool(BlockShow, block_ > 0);
         }
 
         #endregion

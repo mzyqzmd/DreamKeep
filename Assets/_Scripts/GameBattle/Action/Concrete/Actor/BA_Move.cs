@@ -10,7 +10,7 @@ namespace _DreamKeep.GameBattle
 
         public BA_Move(Enemy enemy_) : base(enemy_.Creature, new List<Creature> { enemy_.Creature }) => _enemy = enemy_;
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             int toSlot = ResolveTargetSlot(battleContext_);

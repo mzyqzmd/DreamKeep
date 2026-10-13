@@ -59,9 +59,13 @@ namespace _DreamKeep.Presentation
                 }
 
                 _handView.SetAimSlot(slot);
-                targets = slot < 0
-                    ? new List<Creature>()
-                    : CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player, slot);
+                if (slot < 0)
+                {
+                    HideAll(); // 指针不在任何敌人命中框内：本轮没有目标，直接熄灭返回（与"解析出空集"等价，省一张空表）
+                    return;
+                }
+
+                targets = CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player, slot);
             }
             else
             {

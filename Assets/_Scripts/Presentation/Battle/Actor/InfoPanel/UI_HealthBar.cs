@@ -37,7 +37,7 @@ namespace _DreamKeep.Presentation
 
         #region 设置血量
 
-        // 血量：Slider 与文本一律瞬时到真值；animate_ 为 true 且这次是真掉血时，滞后条才补间收拢
+        // 血量：Slider 与文本一律瞬时到真值；滞后条从它当前位置补间到同一占比——掉血时滞后条落在真值之后，露出橙色缺口
         public void SetHealth(int current_)
         {
             _fillLagTween?.Kill(); // 回血与直写路径也要收掉在跑的滞后补间，否则它会继续往旧目标压

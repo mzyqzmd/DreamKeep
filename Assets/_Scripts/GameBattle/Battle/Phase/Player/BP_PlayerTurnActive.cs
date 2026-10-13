@@ -16,12 +16,6 @@ namespace _DreamKeep.GameBattle
 
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnEnd;
 
-        #region 阶段异步逻辑：等待型阶段不产生演出，主循环也不会驱动本方法（只分发 HandleCommand），保留空实现仅作入口钩子的位置说明
-
-        public override UniTask RunAsync() => UniTask.CompletedTask;
-
-        #endregion
-
         #region 命令分派：等待型阶段唯一处理玩家意图的入口，由 BattleLoop 在等待态取出命令后调用
 
         public async UniTask HandleCommand(BattleCommand command_)
@@ -46,23 +40,11 @@ namespace _DreamKeep.GameBattle
             BattleContext context = _owner.BattleContext;
             PlayerCombatState state = context.Player.CombatState;
 
-            // 卡可能已在更早的队列里离手，不在手牌即视为命令失效；广播拒绝让视图把牌退回手牌
-            if (!state.Hand.Contains(card_))
+            // 三种打不出的情形一律广播拒绝，让视图把牌从出牌区退回手牌原槽位：
+            // 卡可能已在更早的队列里离手、能量不足、带「不能被打出」词条
+            if (!state.Hand.Contains(card_) || state.CurrentEnergy < card_.Cost.Value || card_.IsUnableToPlay)
             {
-                await PlayEvents(new BE_CardPlayRejected(card_));
-                return;
-            }
-
-            if (state.CurrentEnergy < card_.Cost.Value)
-            {
-                await PlayEvents(new BE_CardPlayRejected(card_));
-                return;
-            }
-
-            // 带「不能被打出」词条的牌一律拒绝：视图据此把牌从出牌区退回手牌原槽位
-            if (card_.IsUnableToPlay)
-            {
-                await PlayEvents(new BE_CardPlayRejected(card_));
+                await PlayEvent(new BE_CardPlayRejected(card_));
                 return;
             }
 

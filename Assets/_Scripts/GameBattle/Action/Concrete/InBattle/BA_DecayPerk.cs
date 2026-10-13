@@ -13,7 +13,7 @@ namespace _DreamKeep.GameBattle
         public BA_DecayPerk(Creature source_, List<Creature> targets_, EPerkDecayTiming timing_) : base(source_, targets_) =>
             _timing = timing_;
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             foreach (Creature target in Targets)

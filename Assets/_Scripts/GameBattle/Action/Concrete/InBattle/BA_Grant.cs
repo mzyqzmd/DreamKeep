@@ -1,15 +1,17 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>给予动作：为手牌中指定张数的卡动态追加一个词条，支持运行时增删。</summary>
+    /// <summary>给予动作：为手牌中指定张数的卡动态追加一个词条（只增不删，移除由其他动作负责）。</summary>
     public sealed class BA_Grant : BattleAction
     {
-        /// <summary>可被 Pre 钩子修改的授予张数。</summary>
-        public int Count { get; set; }
-        /// <summary>可被 Pre 钩子替换的词条原型，实际授予时逐张克隆。</summary>
-        public CardAffix Granted { get; set; }
+        /// <summary>授予张数。</summary>
+        public int Count { get; }
+
+        /// <summary>词条原型，实际授予时逐张克隆。</summary>
+        public CardAffix Granted { get; }
 
         public BA_Grant(Creature source_, List<Creature> targets_, int count_, CardAffix granted_)
             : base(source_, targets_)
@@ -18,10 +20,10 @@ namespace _DreamKeep.GameBattle
             Granted = granted_;
         }
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             CardPile hand = battleContext_.Player.CombatState.Hand;
-            int granted = Count < hand.Count ? Count : hand.Count;
+            int granted = Math.Min(Count, hand.Count);
             for (int i = 0; i < granted; i++)
                 hand.Cards[i].AddAffix(Granted.Clone());
             return new List<IBattleEvent>();

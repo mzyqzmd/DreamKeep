@@ -22,9 +22,11 @@ namespace _DreamKeep.GameBattle
         #region 预览落点：表现层提示专用，与结算共用同一份映射
 
         /// <summary>预览这张牌会命中的目标：与结算共用同一解析，故"提示的是谁就一定打到谁"；
-        /// 随机目标无法预告，直接返回空（顺带避免预览消耗随机源）。</summary>
+        /// 随机目标预告不出具体是哪一只，这里点亮全部存活敌人（且不消耗随机源）。</summary>
         public static List<Creature> PreviewTargets(BattleContext battleContext_, CardModel card_, Player player_, int aimSlot_) =>
-            card_.IsRandomEnemyTarget ?ToCreatures(battleContext_.GetAliveEnemies()) : ResolveTarget(battleContext_, card_, player_, aimSlot_);
+            card_.IsRandomEnemyTarget
+                ? ToCreatures(battleContext_.GetAliveEnemies())
+                : ResolveTarget(battleContext_, card_, player_, aimSlot_);
 
         #endregion
 

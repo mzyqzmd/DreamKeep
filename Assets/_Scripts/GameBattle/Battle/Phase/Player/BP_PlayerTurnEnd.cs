@@ -19,7 +19,7 @@ namespace _DreamKeep.GameBattle
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_PlayerTurnEnded());
+            await PlayEvent(new BE_PlayerTurnEnded());
 
             BattleContext context = _owner.BattleContext;
             Player player = context.Player;

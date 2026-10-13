@@ -17,10 +17,7 @@ namespace _DreamKeep.GameBattle
             Targets = targets_;
         }
 
-        /// <summary>由动作系统调用，子类不覆写。</summary>
-        public List<IBattleEvent> Execute(BattleContext battleContext_) => OnExecute(battleContext_);
-
-        /// <summary>由子类实现：同步改战斗态并返回本次产生的领域事件列表。</summary>
-        protected abstract List<IBattleEvent> OnExecute(BattleContext battleContext_);
+        /// <summary>同步改战斗态并返回本次产生的领域事件列表，由动作系统调用。</summary>
+        public abstract List<IBattleEvent> Execute(BattleContext battleContext_);
     }
 }

@@ -6,8 +6,7 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>敌人回合开始阶段：清空敌人上回合残留的格挡，为意图结算做准备。</summary>
-    /// <remarks>敌人当前无获取格挡的途径时本循环短路；保留是为敌人防御意图预留。</remarks>
+    /// <summary>敌人回合开始阶段：清空敌人上回合残留的格挡，并让回合开始时机（TurnStart）的状态层数递减，为意图结算做准备。</summary>
     public sealed class BP_EnemyTurnStart : BattlePhase
     {
         public BP_EnemyTurnStart(BattleLoop owner_) : base(owner_)
@@ -16,11 +15,11 @@ namespace _DreamKeep.GameBattle
 
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnActive;
 
-        #region 阶段异步逻辑：逐敌人清格挡后等待演出
+        #region 阶段异步逻辑：逐敌人清格挡与衰减状态后等待演出
 
         public override async UniTask RunAsync()
         {
-            await PlayEvents(new BE_TurnStarted(_owner.BattleContext.TurnCount, false));
+            await PlayEvent(new BE_TurnStarted(_owner.BattleContext.TurnCount, false));
             ActionSystem actions = _owner.ActionSystem;
 
             foreach (Enemy enemy in _owner.BattleContext.Enemies)

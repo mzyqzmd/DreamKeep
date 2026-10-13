@@ -86,14 +86,17 @@ namespace _DreamKeep.Presentation
 
         public void Bind(CardModel card_)
         {
-            // 色缓存懒建：收齐卡面全部图形与它们的编辑期本色——图形集合与本色运行期不变，首次 Bind 建一次即可反复用
-            if (_faceImages != null) return;
-            _faceImages = GetComponentsInChildren<Image>(true);
-            _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
-            _imageColors = new Color[_faceImages.Length];
-            _textColors = new Color[_faceTexts.Length];
-            for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
-            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+            // 色缓存懒建：收齐卡面全部图形与它们的编辑期本色——图形集合与本色运行期不变，首次 Bind 建一次即可反复用。
+            // 守卫只包这一段：卡池复用的实例每次 Bind 都要重写内容，否则内容会停在上一次绑定的那张卡
+            if (_faceImages == null)
+            {
+                _faceImages = GetComponentsInChildren<Image>(true);
+                _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
+                _imageColors = new Color[_faceImages.Length];
+                _textColors = new Color[_faceTexts.Length];
+                for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
+                for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+            }
             //设置卡面
             Card = card_;
             _name.text = card_.Name;

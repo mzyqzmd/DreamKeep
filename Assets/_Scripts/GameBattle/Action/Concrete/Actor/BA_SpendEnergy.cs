@@ -6,12 +6,12 @@ namespace _DreamKeep.GameBattle
     /// <summary>消耗能量动作：从玩家扣除当前能量，用于打出卡牌，能量是否足够由阶段侧先行校验。</summary>
     public sealed class BA_SpendEnergy : BattleAction
     {
-        /// <summary>可被 Pre 钩子修改的消耗量。</summary>
-        public int Amount { get; set; }
+        /// <summary>消耗量。</summary>
+        public int Amount { get; }
 
         public BA_SpendEnergy(Creature source_, List<Creature> targets_, int amount_) : base(source_, targets_) => Amount = amount_;
 
-        protected override List<IBattleEvent> OnExecute(BattleContext battleContext_)
+        public override List<IBattleEvent> Execute(BattleContext battleContext_)
         {
             List<IBattleEvent> events = new();
             PlayerCombatState state = battleContext_.Player.CombatState;

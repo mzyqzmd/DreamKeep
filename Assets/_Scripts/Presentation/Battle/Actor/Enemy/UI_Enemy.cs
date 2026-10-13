@@ -74,7 +74,7 @@ namespace _DreamKeep.Presentation
 
             // 杀旧补间再开新的；播完或被杀都放行等待方
             _moveTween?.Kill();
-            _moveTween = ((RectTransform)transform).DOMove(slot.position, _moveDuration).SetEase(_moveEase);
+            _moveTween = transform.DOMove(slot.position, _moveDuration).SetEase(_moveEase);
             await _moveTween.WaitAsync();
         }
 
