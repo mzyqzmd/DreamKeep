@@ -9,7 +9,7 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>弹层宿主：挂在场景 Canvas_Pop/PopTextRoot 上，持有本战斗的弹层文本——
-    /// 说明气泡（悬停类：内容、锚点、对齐点与挂载宿主都由调用方给，此处只管实例复用、对齐与叠列定位）
+    /// 说明气泡（悬停类：内容、锚点、对齐点与挂载宿主都由调用方给，此处只管实例取还、对齐与叠列定位）
     /// 与回合横幅（公告类：自订阅 BE_TurnStarted 转发展示）；运行期不认识具体调用方（仅装配期注入事件门面）。</summary>
     public sealed class UI_PopTextRoot : MonoBehaviour
     {
@@ -20,8 +20,11 @@ namespace _DreamKeep.Presentation
         private float _stackSpacingPx = 12f;
 
         private UI_TurnCountPopTip _turnCountPopTip;
-        private readonly List<UI_DescriptionPopTip> _tipStack = new();
+        private readonly List<UI_DescriptionPopTip> _shownTips = new(); // 当前这一列的展示名单（按叠列顺序）：归还只认它
+        private MonoObjectPool<UI_DescriptionPopTip> _tipPool;
         private object _tipsRequester;
+
+        private void Awake() => _tipPool = new MonoObjectPool<UI_DescriptionPopTip>(transform);
 
         #region 说明气泡：同一发起者的一条或多条说明按锚点与对齐点排开
 
@@ -32,44 +35,38 @@ namespace _DreamKeep.Presentation
             EUiAnchor tipAnchor_, Transform parent_ = null)
         {
             _tipsRequester = requester_;
+            ClearTips(); // 上一列整列归还：气泡不按列位常驻，每次展示都是一轮取用
+
             Vector2 pivot = UiGeometry.Pivot(tipAnchor_);
             Transform host = parent_ ? parent_ : transform;
             for (int i = 0; i < tips_.Count; i++)
             {
-                UI_DescriptionPopTip tip = GetStackTip(i);
+                UI_DescriptionPopTip tip = _tipPool.Get(_descriptionPopTipPrefab);
                 tip.SetContent(tips_[i].Name, tips_[i].Description);
                 ((RectTransform)tip.transform).pivot = pivot;
                 tip.transform.SetParent(host, false); // 保留本地姿态：气泡尺寸随宿主缩放，位置紧接着按世界锚点重写
-                tip.gameObject.SetActive(true);
                 tip.transform.SetAsLastSibling();
-            }
-
-            for (int i = tips_.Count; i < _tipStack.Count; i++)
-            {
-                _tipStack[i].gameObject.SetActive(false);
-                _tipStack[i].transform.SetParent(host, false); // 未用的条目也同父，下次复用时不必再判
+                _shownTips.Add(tip);
             }
 
             PlaceStackTips(worldPosition_, pivot);
         }
 
-        /// <summary>收起整列：只认当前发起者（气泡留挂原位，下次展示时整列重挂到新宿主）。</summary>
+        /// <summary>收起整列：只认当前发起者（气泡随归还失活，下次展示时再取用）。</summary>
         public void HideTips(object requester_)
         {
             if (_tipsRequester != requester_) return;
             _tipsRequester = null;
-            for (int i = 0; i < _tipStack.Count; i++) _tipStack[i].gameObject.SetActive(false);
+            ClearTips();
         }
 
         #endregion
 
-        // 取第 index_ 个列内气泡：不够就懒建一个（只展示不参与指针裁决，命中面已由预制体整体关闭）
-        private UI_DescriptionPopTip GetStackTip(int index_)
+        // 整列归还池：归还即失活入桶，展示名单同时清空
+        private void ClearTips()
         {
-            if (index_ < _tipStack.Count) return _tipStack[index_];
-            UI_DescriptionPopTip tip = Instantiate(_descriptionPopTipPrefab, transform);
-            _tipStack.Add(tip);
-            return tip;
+            for (int i = 0; i < _shownTips.Count; i++) _tipPool.Release(_shownTips[i]);
+            _shownTips.Clear();
         }
 
         // 按对齐点排位：底沿贴锚点（pivot 的 y 为 0）整列向上长，顶沿与居中则向下长；
@@ -78,11 +75,9 @@ namespace _DreamKeep.Presentation
         {
             Vector3 anchor = worldAnchor_;
             float step = pivot_.y > 0f ? -1f : 1f;
-            for (int i = 0; i < _tipStack.Count; i++)
+            for (int i = 0; i < _shownTips.Count; i++)
             {
-                UI_DescriptionPopTip tip = _tipStack[i];
-                if (!tip.gameObject.activeSelf) continue;
-                RectTransform rect = (RectTransform)tip.transform;
+                RectTransform rect = (RectTransform)_shownTips[i].transform;
                 rect.position = anchor;
                 LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
                 anchor = rect.TransformPoint(new Vector3(0f, step * (rect.rect.height + _stackSpacingPx), 0f));

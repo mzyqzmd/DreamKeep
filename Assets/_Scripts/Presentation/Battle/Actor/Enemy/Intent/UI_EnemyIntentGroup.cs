@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
+using _DreamKeep.Utility;
 using UnityEngine;
 using VContainer;
 
@@ -18,13 +20,20 @@ namespace _DreamKeep.Presentation
 
         [Inject] private UI_PopTextRoot _popTextRoot; // 视图预制体由 BattleEntry 运行时生成，补注入才拿得到场景宿主
 
+        // 当前展示的图标（按排列顺序）：归还只认自己这份名单，不扫子物体——池的空闲实例也挂在本组名下
+        private readonly List<UI_Intent> _icons = new();
+        private MonoObjectPool<UI_Intent> _iconPool;
+
+        private void Awake() => _iconPool = new MonoObjectPool<UI_Intent>(transform);
+
         #region 对外展示：按展示意图整组重建头顶图标
 
-        /// <summary>重建图标组：清空旧图标后按意图类型递归生成并分发绑定，null 即清空；
-        /// 悬停中重建会销毁旧图标（OnDisable 收起气泡），指针下一帧重新进入新图标再弹，最多一帧闪烁。</summary>
+        /// <summary>重建图标组：旧图标整组归还池（归还即失活，触发 OnDisable 收起气泡），再按意图类型递归生成并分发绑定，null 即清空；
+        /// 指针下一帧重新进入新图标再弹，最多一帧闪烁。</summary>
         public void Show(EnemyIntent intent_)
         {
-            for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
+            for (int i = 0; i < _icons.Count; i++) _iconPool.Release(_icons[i]);
+            _icons.Clear();
             if (intent_ != null) Append(intent_);
         }
 
@@ -57,12 +66,14 @@ namespace _DreamKeep.Presentation
             }
         }
 
-        // 生成图标并注入气泡宿主：图标自己承接悬停说明
+        // 取图标并注入气泡宿主：图标自己承接悬停说明；取出的实例在池里埋过兄弟位，先挪到末尾再登记，排列顺序即生成顺序
         private T Spawn<T>(T prefab_) where T : UI_Intent
         {
             if (prefab_ == null) return null;
-            var icon = Instantiate(prefab_, transform);
+            T icon = (T)_iconPool.Get(prefab_);
             icon.Initialize(_popTextRoot);
+            icon.transform.SetAsLastSibling();
+            _icons.Add(icon);
             return icon;
         }
     }

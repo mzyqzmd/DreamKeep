@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
+using _DreamKeep.Utility;
 using UnityEngine;
 using VContainer;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>状态槽位组：状态按类型去重挂在自己名下（格子布局自动排布），负责建槽、刷层与销槽；
+    /// <summary>状态槽位组：状态按类型去重挂在自己名下（格子布局自动排布），负责取槽、刷层与归槽；
     /// 悬停说明由每个槽位自己承接（悬停哪一格弹哪一格），组只把气泡宿主交给新建的槽位；
     /// 只认 UI_Actor 转发来的域真值，自己不订事件不判规则。气泡宿主随视图生成时由容器补注入。</summary>
     public sealed class UI_PerkGroup : MonoBehaviour
@@ -16,6 +17,9 @@ namespace _DreamKeep.Presentation
         [Inject] private UI_PopTextRoot _popTextRoot; // 视图预制体由 BattleEntry 运行时生成，补注入才拿得到场景宿主
 
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
+        private MonoObjectPool<UI_PerkSlot> _slotPool;
+
+        private void Awake() => _slotPool = new MonoObjectPool<UI_PerkSlot>(transform);
 
         #region 施加效果
 
@@ -29,7 +33,7 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            slot = Instantiate(_perkSlotPrefab, transform);
+            slot = _slotPool.Get(_perkSlotPrefab);
             slot.Initialize(_popTextRoot);
             slot.Bind(perk_);
             _perkSlots[type] = slot;
@@ -41,10 +45,11 @@ namespace _DreamKeep.Presentation
             if (_perkSlots.TryGetValue(perk_.GetType(), out UI_PerkSlot slot)) slot.RefreshLayers();
         }
 
-        // 移除效果：按效果类型找到槽位销毁（事件携带的是挂载实例，与槽位绑定的原型不同源，只能按类型对号）
+        // 移除效果：按效果类型找到槽位归还池（归还即失活，槽位自己的 OnDisable 顺带收掉悬着的气泡）；
+        // 事件携带的是挂载实例，与槽位绑定的原型不同源，只能按类型对号
         public void RemovePerk(BattlePerk perk_)
         {
-            if (_perkSlots.Remove(perk_.GetType(), out UI_PerkSlot slot)) Destroy(slot.gameObject);
+            if (_perkSlots.Remove(perk_.GetType(), out UI_PerkSlot slot)) _slotPool.Release(slot);
         }
 
         #endregion

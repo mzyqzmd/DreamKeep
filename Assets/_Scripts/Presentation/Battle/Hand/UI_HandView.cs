@@ -6,7 +6,6 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.Pool;
 using UnityEngine.Serialization;
 using VContainer;
 
@@ -97,7 +96,7 @@ namespace _DreamKeep.Presentation
         private BattleCommandDispatcher _commandDispatcher;
         private Rng _rng;
         private Camera _canvasCamera;
-        private ObjectPool<UI_CardBattle> _cardPool;
+        private MonoObjectPool<UI_CardBattle> _cardPool;
         private readonly List<UI_CardBattle> _hand = new();
         private readonly Dictionary<CardModel, UI_CardBattle> _views = new();
         private readonly HashSet<UI_CardBattle> _entering = new();
@@ -142,17 +141,14 @@ namespace _DreamKeep.Presentation
             _rng = rng_;
             _popTextRoot = popTextRoot_;
             _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
-            _cardPool = new ObjectPool<UI_CardBattle>(
-                () => Instantiate(_cardPrefab, _handLayer),
-                view_ => view_.gameObject.SetActive(true),
-                view_ =>
-                {
-                    view_.KillMotion();
-                    view_.gameObject.SetActive(false);
-                    _entering.Remove(view_); // 回收即注销入场标记与交互身份，防实例复用后残留旧状态
-                    if (_hoveredCard == view_) _hoveredCard = null;
-                    if (_draggedCard == view_) _draggedCard = null;
-                }, defaultCapacity: 10, maxSize: 64); // 池上限要容得下"手牌 + 一整摞飞行牌"
+            // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西
+            _cardPool = new MonoObjectPool<UI_CardBattle>(_handLayer, 64, onReturn_: view_ =>
+            {
+                view_.KillMotion();
+                _entering.Remove(view_); // 回收即注销入场标记与交互身份，防实例复用后残留旧状态
+                if (_hoveredCard == view_) _hoveredCard = null;
+                if (_draggedCard == view_) _draggedCard = null;
+            });
 
             // 事件清单一处看完，各事件的演出在下面
             eventDispatcher_.Register<BE_DiscardReshuffled>(OnDiscardReshuffledAsync);
@@ -275,7 +271,7 @@ namespace _DreamKeep.Presentation
         // 取出并登记：取池 → 绑卡 → 接入宿主 → 进手牌列 → 归手牌层 → 标记入场中（入场期间不参与悬停，落位才参与）
         private UI_CardBattle Spawn(CardModel model_)
         {
-            UI_CardBattle view = _cardPool.Get();
+            UI_CardBattle view = _cardPool.Get(_cardPrefab);
             view.Bind(model_);
             view.SetHost(this);
             _views[model_] = view;
@@ -298,7 +294,7 @@ namespace _DreamKeep.Presentation
         // 借一张飞行用的包装：只取池，不入手牌列与模型索引；牌面沿用上次 Bind 的残留内容，摆位后立刻归还
         private UI_CardBattle RentFlyView()
         {
-            UI_CardBattle view = _cardPool.Get();
+            UI_CardBattle view = _cardPool.Get(_cardPrefab);
             MoveToFly(view); // 出池即换到飞行层，保证借出去的牌画在队列与手牌之上
             return view;
         }
