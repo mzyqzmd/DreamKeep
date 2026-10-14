@@ -9,7 +9,7 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌演出器：与手牌区本体同挂一个节点，订阅全部十一条领域事件，把域侧的决定演成手牌的动作——
-    /// 抽牌入场、打出离场、被拒退回、批量弃牌波、离场与遗忘飞行、洗回整波，以及回合开闸/落闸与战斗结束收起。
+    /// 抽牌入场、打出离场、被拒退回、批量弃牌波、离场与遗忘飞行、洗回通告，以及回合开闸/落闸与战斗结束收起。
     /// 它只编排演出与通知牌堆，手牌区的状态、布局与卡池一律经本体的内部服务面代劳；演出与手感的时长幅度都在 Inspector 上可调。</summary>
     public sealed class UI_HandShow : MonoBehaviour
     {
@@ -27,21 +27,15 @@ namespace _DreamKeep.Presentation
         [Tooltip("离场飞向牌堆并缩到 0 的时长（秒）")] [SerializeField]
         private float _exitDuration = 0.22f;
 
-        [Header("洗回演出")]
-        [Tooltip("单张洗回牌从弃牌堆飞到抽牌堆的时长（秒）")] [SerializeField]
-        private float _reshuffleFlyDuration = 0.2f;
-
-        [Tooltip("洗回飞行牌的起始缩放")] [SerializeField]
-        private float _reshuffleFlyScale = 0.2f;
-
-        [Tooltip("洗回起落点的散开量（画布像素）：x = 横向按序号对称铺开的单张间距，y = 纵向奇偶反向的散开量（取 x 的一半即旧的等比观感）")] [SerializeField]
-        private Vector2 _reshuffleFlySpreadPx = new(200f, 100f);
-
-        [Tooltip("洗回牌流两轴的跨度上限（画布像素）：x 与 y 各自压缩对应方向，张数越多每张越挤，牌流不会铺出屏")] [SerializeField]
-        private Vector2 _reshuffleFlySpreadMaxPx = new(240f, 120f);
-
-        [Tooltip("弃牌波与洗回波起落点的随机抖动幅度（画布像素）：只打散重叠轨迹、不改朝向")] [SerializeField]
+        [Header("弃牌波与溢出弃牌")]
+        [Tooltip("弃牌波起落点的随机抖动幅度（画布像素）：只打散重叠轨迹、不改朝向")] [SerializeField]
         private float _flyJitterPx = 24f;
+
+        [Tooltip("溢出弃牌小飞行（手牌已满时抽到的牌从抽牌堆飞进弃牌堆）的起始缩放")] [SerializeField]
+        private float _overflowFlyScale = 0.2f;
+
+        [Tooltip("溢出弃牌小飞行的时长（秒）")] [SerializeField]
+        private float _overflowFlyDuration = 0.2f;
 
         private UI_HandView _handView;
         private Rng _rng;
@@ -70,43 +64,17 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_BattleEnded>(OnBattleEndedAsync);
         }
 
-        // 洗回搬运：域侧一次搬完整摞，这里演成整波同飞——洗回多少张就飞多少张，一张飞抵即一张进堆。
-        // 借来的包装只取池、不入手牌列与模型索引，牌面沿用上次 Bind 的残留内容（整段飞行都缩得很小，不为它单独刷外观）。
-        // 起落点按对称铺开骨架错开保底不重叠，再叠随机抖动打散轨迹；域侧逐事件 await，这段播完才轮到本次抽牌入场
-        private async UniTask OnDiscardReshuffledAsync(BE_DiscardReshuffled reshuffled_)
+        // 洗回通告：域侧一次搬完整摞，这里不再演飞行（牌从弃牌堆飞进抽牌堆玩家看不到），
+        // 只把两堆数字对到位、让进堆的抽牌堆弹一下（弹跳幅度由 UI_Pile 统一给），随即放行——抽牌紧接着进行
+        private UniTask OnDiscardReshuffledAsync(BE_DiscardReshuffled reshuffled_)
         {
-            UI_CardBattle[] cards = new UI_CardBattle[reshuffled_.Count];
-            Vector3 from = _handView.DiscardPile.transform.position;
-            Vector3 to = _handView.DrawPile.transform.position;
-
-            // 起飞：逐张摆在弃牌堆附近的散开点上，缩到飞行用的起始尺寸
             for (int i = 0; i < reshuffled_.Count; i++)
-            {
-                UI_CardBattle card = _handView.RentFlyView();
-                cards[i] = card;
-                card.Place(from + FlyOffset(i, reshuffled_.Count) + Jitter(_handView.DiscardPile.transform),
-                    _handView.DiscardPile.transform.rotation);
-                card.transform.localScale = Vector3.one * _reshuffleFlyScale;
-            }
+                _handView.DiscardPile.OnCardLeft(); // 弃牌堆数字掉到活值下界（不弹）
 
-            // 同帧全部起飞，一张落地就通知抽牌堆进了一张（数字随之加并弹一下）
-            UniTask[] flights = new UniTask[reshuffled_.Count];
             for (int i = 0; i < reshuffled_.Count; i++)
-            {
-                UI_CardBattle card = cards[i];
-                _handView.DiscardPile.OnCardLeft(); // 起飞即通知弃牌堆"牌离堆"，数字随之减
-                flights[i] = FlyToDrawPileAsync(card,
-                    to + FlyOffset(i, reshuffled_.Count) + Jitter(_handView.DrawPile.transform));
-            }
+                _handView.DrawPile.OnCardArrived(); // 抽牌堆数字涨到活值，并在进堆处弹一下
 
-            await UniTask.WhenAll(flights);
-            for (int i = 0; i < reshuffled_.Count; i++) _handView.ReturnFlyView(cards[i]);
-
-            async UniTask FlyToDrawPileAsync(UI_CardBattle card_, Vector3 destination_)
-            {
-                await FlyOutAsync(card_, destination_, _handView.DrawPile.transform.rotation, _reshuffleFlyDuration);
-                _handView.DrawPile.OnCardArrived();
-            }
+            return UniTask.CompletedTask;
         }
 
         // 抽牌入场：取出登记 → 按当前可打状态刷一次外观 → 零尺寸置于抽牌堆 → 新牌起飞即让老牌让位 → 放大滑翔 → 落位后收正尺寸。
@@ -249,30 +217,20 @@ namespace _DreamKeep.Presentation
                 _handView.DrawPile.OnCardLeft();
                 UI_CardBattle card = _handView.RentFlyView();
                 card.Place(_handView.DrawPile.transform.position, _handView.DrawPile.transform.rotation);
-                card.transform.localScale = Vector3.one * _reshuffleFlyScale;
+                card.transform.localScale = Vector3.one * _overflowFlyScale;
 
                 await FlyOutAsync(card, _handView.DiscardPile.transform.position,
-                    _handView.DiscardPile.transform.rotation, _reshuffleFlyDuration);
+                    _handView.DiscardPile.transform.rotation, _overflowFlyDuration);
                 _handView.DiscardPile.OnCardArrived();
                 _handView.ReturnFlyView(card);
             }
-        }
-
-        // 飞行牌的起落点错开量：横向按序号对称铺开、纵向奇偶反向；两轴各自按上限压缩，张数越多每张越挤。
-        // 幅度按画布像素给，再按抽牌堆节点的 画布像素→世界 换算成世界向量
-        private Vector3 FlyOffset(int index_, int count_)
-        {
-            Vector2 step = count_ <= 1 ? Vector2.zero : Vector2.Min(_reshuffleFlySpreadPx, _reshuffleFlySpreadMaxPx / (count_ - 1));
-            float lateral = (index_ - (count_ - 1) * 0.5f) * step.x;
-            float vertical = (index_ % 2 == 0 ? 1f : -1f) * step.y;
-            return _handView.DrawPile.transform.TransformVector(new Vector2(lateral, vertical));
         }
 
         // 起落点的随机抖动：±幅度内均匀分布的画布像素，经节点换算成世界向量，只打散重叠轨迹、不改朝向
         private Vector3 Jitter(Transform node_) =>
             node_.TransformVector(new Vector2(_rng.Next(-2f, 2f), _rng.Next(-2f, 2f)) * _flyJitterPx);
 
-        // 飞到目标姿态并缩到 0：三处归宿飞行（离场、弃牌波、洗回）共用的成品段落；起落点的抖动与进堆通知留在各自调用点
+        // 飞到目标姿态并缩到 0：三处归宿飞行（离场、弃牌波、溢出弃牌）共用的成品段落；起落点的抖动与进堆通知留在各自调用点
         private UniTask FlyOutAsync(UI_CardBattle view_, Vector3 position_, Quaternion rotation_, float duration_) =>
             UniTask.WhenAll(
                 view_.MoveToAsync(position_, rotation_, duration_),

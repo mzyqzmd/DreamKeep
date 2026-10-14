@@ -35,7 +35,7 @@ namespace _DreamKeep.Presentation
         [Tooltip("消耗堆视图：消耗与遗忘卡归宿的飞行终点")] [SerializeField]
         private UI_ExhaustPile exhaustPile;
 
-        [Header("卡牌层")] [Tooltip("飞行层：离场、洗回与遗忘借道飞行的牌")] [SerializeField]
+        [Header("卡牌层")] [Tooltip("飞行层：离场与遗忘借道飞行的牌")] [SerializeField]
         private RectTransform _flyLayer;
 
         [Tooltip("手牌层：手牌停在这里，层内按手牌序号排位（靠右压靠左）")] [SerializeField]
@@ -245,7 +245,7 @@ namespace _DreamKeep.Presentation
         // 本回合可不可打：演出器抽牌入场时按它刷一次外观
         internal bool CardsPlayable => _cardsPlayable;
 
-        // 手牌区的点：悬停器换算抬起方向与朝向
+        // 手牌区的点：悬停器换算朝向，指针锚点位也按它换算
         internal RectTransform FanCenterPoint => _fanCenterPoint;
 
         // 出牌区与三堆：演出器的队位等待、出队、归宿飞行与数字兜底用
@@ -327,7 +327,7 @@ namespace _DreamKeep.Presentation
         // 手牌层：按行内序号插位（靠右压靠左）；不在行里（已让位、正在回收）只换层
         internal void MoveToHand(UI_CardBattle card_) => card_.MoveToLayer(_handLayer, RowIndexOf(card_));
 
-        // 飞行层：离场、洗回与遗忘借道一律追加置末；飞行的牌不再参与悬停
+        // 飞行层：离场与遗忘借道一律追加置末；飞行的牌不再参与悬停
         internal void MoveToFly(UI_CardBattle card_) => card_.MoveToLayer(_flyLayer, -1);
 
         // 交互层：悬停与拖拽一律追加置末，后进来的那张（抓起的）自然压过悬停那张
@@ -454,7 +454,7 @@ namespace _DreamKeep.Presentation
 
         #region 指针：坐标换算
 
-        // 指针在画布平面上的世界坐标：拖拽跟手、箭头指向与落点判定共用。画布是 ScreenSpaceCamera，换算必须传画布相机
+        // 指针在画布平面上的世界坐标：拖拽跟随、箭头指向与落点判定共用。画布是 ScreenSpaceCamera，换算必须传画布相机
         public Vector3 PointerWorldPosition()
         {
             RectTransformUtility.ScreenPointToWorldPointInRectangle(_fanCenterPoint,
@@ -462,6 +462,11 @@ namespace _DreamKeep.Presentation
                 _canvasCamera, out Vector3 world);
             return world;
         }
+
+        // 指针锚点位：让"卡锚点（下沿中点）上方 AnchorLiftPx 的点"与指针重合时，卡应处的世界位置。
+        // 悬停对齐与拖拽跟随共用这一处（按手牌区的点换算，与卡自身缩放无关，故两态切换无跳变）
+        internal Vector3 PointerAnchorPosition(UI_CardBattle card_) =>
+            PointerWorldPosition() - _fanCenterPoint.TransformVector(Vector3.up * card_.AnchorLiftPx);
 
         #endregion
 

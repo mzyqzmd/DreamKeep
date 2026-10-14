@@ -10,18 +10,22 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌悬停器：与手牌区本体同挂一个节点，每帧由本体的 Update 驱动。一次射线裁决出指针下可悬停的那张牌，
-    /// 演出它的抬起与退出、两侧行内牌的避让，并把它的词条说明对账到弹层列——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
+    /// 演出它的对齐与退出、两侧行内牌的避让，并把它的词条说明对账到弹层列——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
     /// 悬停身份与避让量都长在这里：本体排布时来问（IsHovered / DodgeOf），牌落位与被回收时来通知。</summary>
     public sealed class UI_HandHover : MonoBehaviour
     {
         [Tooltip("悬停避让量（画布像素）：悬停某张牌时，它左侧的行内牌左移、右侧的右移各该距离，抬起的牌便不再挡住右邻；0 即不避让")] [SerializeField]
         private float _hoverDodgePx = 160f;
 
+        [Tooltip("悬停撤销宽限（秒）：刚进入悬停的滑入期间指针可能短暂脱卡（卡还在滑），这段时间内不撤销；抓起拖拽与移向别的牌不受影响")] [SerializeField]
+        private float _hoverGraceDuration = 0.15f;
+
         private UI_HandView _handView;
         private UI_PopTextRoot _popTextRoot;
 
         // 悬停会话：当前悬停的那张牌、挂着词条气泡列的牌与它这一份内容（换牌才重建，并把整列重挂到新牌名下）
         private UI_CardBattle _hoveredCard;
+        private float _hoverGraceUntil; // 撤销宽限的截止时刻：滑入期间指针短暂脱卡也不撤销
         private UI_CardBattle _tipCard;
         private readonly List<(string Name, string Description)> _affixTips = new();
 
@@ -40,12 +44,16 @@ namespace _DreamKeep.Presentation
         #region 对外入口：由本体每帧驱动与查询
 
         // 每帧裁定一次悬停：指针下没有可交互的牌时目标为 null，等价于退出；次序是"先定目标 → 撤旧 → 写新"。
-        // 进入姿态一律以槽位为基准（槽位位置 + 沿点朝上的抬起、朝向回正到点的朝向），故滑到一半被悬停也不会停在半途
+        // 进入姿态一律把"卡锚点上方该距离的点"对齐到指针（朝向回正到点的朝向），指针遂停在卡内该高度，
+        // 故从卡边缘进入也不会因卡自身移动被甩出卡面；只对齐一次，之后指针在卡内移动卡不动
         internal void TickHover()
         {
             UI_CardBattle current = _hoveredCard;
             UI_CardBattle target = RaycastTopCard();
             if (target == current) return;
+            // 撤销宽限：刚进入悬停的滑入期间卡还在滑，指针可能短暂脱卡——这段时间内不撤销；
+            // 抓起拖拽（此后归拖拽跟随接管）与命中另一张可悬停牌都不受宽限影响
+            if (!target && current && !_handView.DraggedCard && Time.time < _hoverGraceUntil) return;
 
             _hoveredCard = target; // 先落新悬停身份：撤旧与避让都按它算
             if (current) ExitHover(current);
@@ -55,11 +63,9 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            int index = _handView.RowIndexOf(target);
-            _handView.EvaluateSlot(index, _handView.RowCount(), 0f, out Vector3 position, out _, out _);
             _handView.MoveToFocus(target); // 悬停期间位置、朝向、缩放与所在层整段交给包装的悬停补间，这里只定基准
-            target.EnterHover(position + _handView.FanCenterPoint.TransformVector(Vector3.up * target.HoverLiftPx),
-                _handView.FanCenterPoint.rotation);
+            target.EnterHover(_handView.PointerAnchorPosition(target), _handView.FanCenterPoint.rotation);
+            _hoverGraceUntil = Time.time + _hoverGraceDuration;
             ApplyHoverDodge();
         }
 

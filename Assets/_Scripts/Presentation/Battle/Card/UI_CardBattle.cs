@@ -15,9 +15,11 @@ namespace _DreamKeep.Presentation
     /// 换层走 MoveToLayer 唯一通道且一律保世界位置，故各层矩形怎么摆都不会错位。
     /// 能不能抓一律问宿主闸门（非我方回合、还在入场飞行中、已让出牌区等结算的牌都抓不起来），本卡只报事件不判规则；
     /// 悬停不受可打限制：不能打的牌照样抬起来给你看，只是按下去抓不动、拖不出去；
-    /// 按下后走哪种交互由本卡自己的目标类型回答：AnyEnemy 卡进瞄准模式——卡定住不动，拖动越过启动阈值后交给宿主去驱动目标箭头，其余卡跟手滑行；
+    /// 按下后走哪种交互由本卡自己的目标类型回答：AnyEnemy 卡进瞄准模式——卡定住不动，拖动越过启动阈值后交给宿主去驱动目标箭头，
+    /// 其余卡以阻尼插值跟随指针（鼠标停下也会自己滑到位）；
     /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
-    /// 悬停姿态的进入与还原值都由区域按槽位真源给出，本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
+    /// 悬停进入的对齐位由区域按"锚点上方该距离的点落在指针处"给出，还原值仍由区域按槽位真源给出，
+    /// 本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
     /// 位置与缩放两通道补间按通道独占：同目标不重开、换目标先杀旧重开——判据比"通道已声明的目标"而不是滞后的当前姿态，
     /// 故同一帧里被连续声明两次（例如先让位、随即被驳回退回）也以第二次为准，不会把命令静默吞掉。</summary>
     public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
@@ -38,12 +40,12 @@ namespace _DreamKeep.Presentation
         [Tooltip("悬停时的缩放目标值：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
         private float _hoverScale = 1.15f;
 
-        [Tooltip("悬停时沿区域的'上'抬起的画布像素：抬高才不会被相邻手牌压住，方向与幅度按所在区域换算成世界向量后下发；" +
-                 "上移量不得超过 卡半高 ×（悬停缩放 − 手牌槽位缩放），否则指针擦着卡的下边缘进入时会被甩出卡面、反复进出地抖")]
+        [Tooltip("卡锚点（下沿中点）上方该距离（画布像素）：悬停对齐与拖拽跟随共用——让这个点与指针重合，指针便停在卡内这个高度，" +
+                 "悬停时不再把指针甩出卡面（在边缘进入也不会反复进出地抖）")]
         [SerializeField]
-        private float _hoverLiftPx = 100.8f;
+        private float _anchorLiftPx = 120f;
 
-        [Tooltip("悬停进出的补间时长（秒）：抬起、回正、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
+        [Tooltip("悬停进出的补间时长（秒）：对齐、回正、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
         private float _hoverDuration = 0.12f;
 
         [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
@@ -51,6 +53,9 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("词条说明气泡列与卡片右下角之间的间距（画布像素）：气泡列的第一条左下角贴 卡片矩形右下角 + 该间距，整列向上叠")] [SerializeField]
         private float _affixTipGapPx = 16f;
+
+        [Tooltip("拖拽跟随的时间常数（秒）：越小越跟手、越大拖尾越明显；鼠标停下时卡会自己滑到指针锚点位")] [SerializeField]
+        private float _dragFollowDamp = 0.15f;
 
         private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
         private RectTransform _rect;
@@ -65,7 +70,6 @@ namespace _DreamKeep.Presentation
 
         private bool _dragging;
         private bool _hovered;
-        private Vector3 _grabOffset;
         private Vector2 _pressScreenPosition;
 
         // "已就位"的判定阈值：重排据此跳过空转补间（位置差不足 0.01 世界单位约合 1.4 画布像素，肉眼不可见）
@@ -77,23 +81,23 @@ namespace _DreamKeep.Presentation
 
         public CardModel Card => _face.Card;
 
-        /// <summary>当前世界位置（卡根 pivot＝卡下沿中点）：拖拽跟手、落点判定与悬停抬起都以这个锚点起算。</summary>
+        /// <summary>当前世界位置（卡根 pivot＝卡下沿中点）：拖拽跟随、落点判定与悬停对齐都以这个锚点起算。</summary>
         public Vector3 WorldPosition => _rect.position;
 
         /// <summary>当前世界朝向：起飞抖动等需要原位重写姿态的场合与 WorldPosition 配对使用。</summary>
         public Quaternion WorldRotation => _rect.rotation;
 
-        /// <summary>卡牌矩形的世界中心：目标箭头的起点，卡抬起、缩放、旋转时自动跟随。</summary>
+        /// <summary>卡牌矩形的世界中心：目标箭头的起点，卡对齐、缩放、旋转时自动跟随。</summary>
         public Vector3 WorldCenter => UiGeometry.AnchorPoint(_rect, EUiAnchor.MiddleCenter);
 
-        /// <summary>悬停抬起量（画布像素）：由所在区域换算成世界的"上"向量后下发，进入姿态仍归本卡独占。</summary>
-        public float HoverLiftPx => _hoverLiftPx;
+        /// <summary>锚点上方距离（画布像素）：悬停对齐与拖拽跟随共用，由所在区域换算成世界的"上"向量后与指针重合。</summary>
+        public float AnchorLiftPx => _anchorLiftPx;
 
         /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已抬邻牌才动"的错位感。</summary>
         public float HoverDuration => _hoverDuration;
 
         /// <summary>词条说明气泡列的锚点（世界坐标）：卡片矩形沿卡"右"方向让开一个间距，
-        /// 气泡列的第一条从这句起向；卡被抬起、旋转、缩放时随之跟随。</summary>
+        /// 气泡列的第一条从这句起向；卡被对齐、旋转、缩放时随之跟随。</summary>
         public Vector3 AffixTipAnchor =>
             UiGeometry.AnchorPoint(_rect, EUiAnchor.BottomRight) + _rect.right * (_affixTipGapPx * _rect.lossyScale.x);
 
@@ -106,6 +110,15 @@ namespace _DreamKeep.Presentation
         private bool IsAtScale(float scale_) => Mathf.Abs(transform.localScale.x - scale_) < ScaleEpsilon;
 
         private void Awake() => _rect = (RectTransform)transform;
+
+        // 拖拽跟随：非瞄准卡每帧向"锚点上方该距离的点落在指针处"的目标指数插值趋近——鼠标停下卡也会自己滑到位；
+        // 瞄准卡（AnyEnemy）定住不跟手，只由 DragAim 上报阈值与指针；牌已离手（拖拽途中被弃置 / 结算中）则让位给后续飞行
+        private void Update()
+        {
+            if (!_dragging || Card.IsAnyEnemyTarget || !Host.IsInRow(this)) return;
+            _rect.position = Vector3.Lerp(_rect.position,
+                Host.PointerAnchorPosition(this), 1f - Mathf.Exp(-Time.deltaTime / _dragFollowDamp));
+        }
 
         public void SetHost(UI_HandView host_) => Host = host_;
 
@@ -137,7 +150,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 拖拽：按下先问宿主能不能抓、拖动跟手、松手与中断交宿主处置
+        #region 拖拽：按下先问宿主能不能抓、拖动由 Update 阻尼跟随、松手与中断交宿主处置
 
         // 按下：UGUI 只会把事件送到指针下最上层那张牌，它不可抓就静默忽略，不穿透到下面那张；无宿主即没被手牌区管，同样静默
         public void OnPointerDown(PointerEventData eventData)
@@ -145,21 +158,15 @@ namespace _DreamKeep.Presentation
             if (!Host || !Host.CanGrab(this)) return;
             _dragging = true;
             _pressScreenPosition = eventData.position;
-            _grabOffset = Host.PointerWorldPosition() - WorldPosition;
             Host.OnCardGrabbed(this);
         }
 
-        // 拖动：瞄准模式（AnyEnemy 卡）下卡牌定住不跟手，越过启动阈值后把拖动交给宿主去驱动目标箭头；其余仍是跟手滑行
+        // 拖动：瞄准模式（AnyEnemy 卡）下卡牌定住不跟手，越过启动阈值后把拖动交给宿主去驱动目标箭头；
+        // 其余卡不在这里写位姿——跟随由 Update 的阻尼插值统一驱动，故指针不动卡也会继续滑到位
         public void OnDrag(PointerEventData eventData)
         {
             if (!_dragging) return;
-            if (Card.IsAnyEnemyTarget)
-            {
-                DragAim(eventData);
-                return;
-            }
-
-            Place(Host.PointerWorldPosition() - _grabOffset, _rect.rotation);
+            if (Card.IsAnyEnemyTarget) DragAim(eventData);
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -190,9 +197,9 @@ namespace _DreamKeep.Presentation
             Host.OnCardDragCancelled(this);
         }
 
-        #region 悬停进出：区域裁定出唯一悬停牌后调用，进入按槽位拎起，退出按槽位真源一次还原
+        #region 悬停进出：区域裁定出唯一悬停牌后调用，进入按指针锚点对齐，退出按槽位真源一次还原
 
-        // 进入：按区域给的槽位姿态拎起——位置取"槽位 + 抬起"、朝向回正到区域的基准朝向（与槽位求解同源），同时放大；
+        // 进入：按区域给的指针锚点位对齐——位置取"锚点上方该距离的点落在指针处"、朝向回正到区域的基准朝向，同时放大；
         // 换层已由区域先行完成，这里只管姿态
         public void EnterHover(Vector3 worldPosition_, Quaternion worldRotation_)
         {

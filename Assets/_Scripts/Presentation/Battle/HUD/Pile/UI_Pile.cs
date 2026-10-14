@@ -13,8 +13,8 @@ namespace _DreamKeep.Presentation
         [Tooltip("计数文本：显示本堆张数")] [SerializeField]
         protected TextMeshProUGUI _countText;
 
-        [Header("进堆弹跳")] [Tooltip("弹跳幅度：0.08 即最多放大 8%")] [SerializeField]
-        private float _popScale = 0.08f;
+        [Header("进堆弹跳")] [Tooltip("弹跳幅度：0.15 即最多放大 15%")] [SerializeField]
+        private float _popScale = 0.15f;
 
         [Tooltip("放大到峰值用的时长（秒）：极短，起来要快")] [SerializeField]
         private float _popUpDuration = 0.05f;

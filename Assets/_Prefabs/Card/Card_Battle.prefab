@@ -97,10 +97,11 @@ MonoBehaviour:
   _abilityFace: {fileID: 2917342219746286562}
   _curseFace: {fileID: 214837149997107500}
   _hoverScale: 1.15
-  _hoverLiftPx: 170
+  _anchorLiftPx: 275
   _hoverDuration: 0.12
   _aimThresholdPx: 12
   _affixTipGapPx: 16
+  _dragFollowDamp: 0.06
 --- !u!1001 &2450246840005135258
 PrefabInstance:
   m_ObjectHideFlags: 0
