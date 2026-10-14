@@ -40,8 +40,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(EnemyViewPrefabs());
 
             builder_.RegisterComponentInHierarchy<UI_HandView>();
-            // 悬停器与演出器与本体同挂一个节点：演出器订阅全部十一条事件，注册位置紧随本体，保住"手牌演出先于玩家 cast"的时序
-            builder_.RegisterComponentInHierarchy<UI_HandHover>();
+            // 演出器与本体同挂一个节点：它订阅全部十一条事件，注册位置紧随本体，保住"手牌演出先于玩家 cast"的时序
             builder_.RegisterComponentInHierarchy<UI_HandShow>();
             // 三堆不订阅任何事件：数字由手牌视图在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
             builder_.RegisterComponentInHierarchy<UI_DrawPile>();

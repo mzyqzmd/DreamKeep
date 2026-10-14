@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3089666871626543797}
   - component: {fileID: 1601333615257302181}
   - component: {fileID: 8948393726579575890}
+  - component: {fileID: 3554680180188300329}
   m_Layer: 5
   m_Name: AttackIntent
   m_TagString: Untagged
@@ -89,7 +90,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55892b6b42f141ffac40e4241277bb90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tipLiftPx: 1
   _icon: {fileID: 1601333615257302181}
   _damageText: {fileID: 4008295492930701585}
   _damage0_5: {fileID: 21300000, guid: aa3106e8356920c4abe1cb57de663755, type: 3}
@@ -97,6 +97,26 @@ MonoBehaviour:
   _damage11_20: {fileID: 21300000, guid: 09849792b56481c4db3df672c24316d8, type: 3}
   _damage21_30: {fileID: 21300000, guid: 9761d15693bd9f5469cff97b4de1a325, type: 3}
   _damageMax: {fileID: 21300000, guid: a3d728c44c941e14eb27401d6c24d209, type: 3}
+--- !u!114 &3554680180188300329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7047702698490831987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}
 --- !u!1 &8583651474406725573
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: f1f0f0f1de72ec54f89090cf6ab7c048
+guid: 71e763b8d54bdca488c532ba4d5920df
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -43,13 +43,13 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
-  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteBorder: {x: 18, y: 14, z: 18, w: 15}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -110,22 +110,22 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: settings_tab_selected_0
+      name: hover_tip_0
       rect:
         serializedVersion: 2
-        x: 6
-        y: 7
-        width: 502
-        height: 168
+        x: 3
+        y: 2
+        width: 314
+        height: 92
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 24, y: 24, z: 18, w: 21}
+      border: {x: 16, y: 13, z: 16, w: 12}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c3cdf964bf590b74781ddc3d5c227af1
-      internalID: 1065937369
+      spriteID: 94eaaa87c4b889d48b7ca01b98da3a95
+      internalID: -110751376
       vertices: []
       indices: 
       edges: []
@@ -134,14 +134,14 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 0
+    internalID: 1537655665
     vertices: []
     indices: 
     edges: []
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      settings_tab_selected_0: 1065937369
+      hover_tip_0: -110751376
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

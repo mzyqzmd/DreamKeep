@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
@@ -21,7 +22,9 @@ namespace _DreamKeep.Presentation
     /// 悬停进入的对齐位由区域按"锚点上方该距离的点落在指针处"给出，还原值仍由区域按槽位真源给出，
     /// 本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
     /// 位置与缩放两通道补间按通道独占：同目标不重开、换目标先杀旧重开——判据比"通道已声明的目标"而不是滞后的当前姿态，
-    /// 故同一帧里被连续声明两次（例如先让位、随即被驳回退回）也以第二次为准，不会把命令静默吞掉。</summary>
+    /// 故同一帧里被连续声明两次（例如先让位、随即被驳回退回）也以第二次为准，不会把命令静默吞掉。
+    /// 词条说明交给同节点的气泡发起器（外部驱动）：内容随绑定写入，显隐由手牌区按自己的悬停裁决调它。</summary>
+    [RequireComponent(typeof(UI_HoverTip))]
     public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
         [Header("牌面")] [Tooltip("攻击牌面：绑定的卡为攻击类型时切到它")] [SerializeField]
@@ -51,16 +54,17 @@ namespace _DreamKeep.Presentation
         [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
         private float _aimThresholdPx = 12f;
 
-        [Tooltip("词条说明气泡列与卡片右下角之间的间距（画布像素）：气泡列的第一条左下角贴 卡片矩形右下角 + 该间距，整列向上叠")] [SerializeField]
-        private float _affixTipGapPx = 16f;
-
         [Tooltip("拖拽跟随的时间常数（秒）：越小越跟手、越大拖尾越明显；鼠标停下时卡会自己滑到指针锚点位")] [SerializeField]
         private float _dragFollowDamp = 0.15f;
 
         private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
+        private UI_HoverTip _hoverTip;
         private RectTransform _rect;
         private Tween _moveTween;
         private Tween _scaleTween;
+
+        // 词条说明的内容（复用列表）：Bind 时按牌面的逐行文案重填一次，再整列递给气泡发起器
+        private readonly List<(string Name, string Description)> _affixTips = new();
 
         // 两条补间通道"已声明的目标"：判"要不要重开补间"比它、不比滞后的当前姿态——补间刚建立、
         // transform 还没挪动的同一帧里，当前姿态会把"我马上要离开的位置"误判成"已就位"
@@ -96,10 +100,8 @@ namespace _DreamKeep.Presentation
         /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已抬邻牌才动"的错位感。</summary>
         public float HoverDuration => _hoverDuration;
 
-        /// <summary>词条说明气泡列的锚点（世界坐标）：卡片矩形沿卡"右"方向让开一个间距，
-        /// 气泡列的第一条从这句起向；卡被对齐、旋转、缩放时随之跟随。</summary>
-        public Vector3 AffixTipAnchor =>
-            UiGeometry.AnchorPoint(_rect, EUiAnchor.BottomRight) + _rect.right * (_affixTipGapPx * _rect.lossyScale.x);
+        /// <summary>词条说明的气泡发起器：显隐由手牌区在它裁决出"该显示"的时刻调用，内容已随 Bind 写入。</summary>
+        public UI_HoverTip HoverTip => _hoverTip;
 
         // 位置与朝向是否已等于目标姿态：只作"不在飞时不起空转补间"的判据，故收回本类内部（在飞的判据比已声明的目标，见 MoveToAsync）
         private bool IsAtPose(Vector3 worldPosition_, Quaternion worldRotation_) =>
@@ -109,7 +111,11 @@ namespace _DreamKeep.Presentation
         // 缩放是否已等于目标：同上
         private bool IsAtScale(float scale_) => Mathf.Abs(transform.localScale.x - scale_) < ScaleEpsilon;
 
-        private void Awake() => _rect = (RectTransform)transform;
+        private void Awake()
+        {
+            _rect = (RectTransform)transform;
+            _hoverTip = GetComponent<UI_HoverTip>();
+        }
 
         // 拖拽跟随：非瞄准卡每帧向"锚点上方该距离的点落在指针处"的目标指数插值趋近——鼠标停下卡也会自己滑到位；
         // 瞄准卡（AnyEnemy）定住不跟手，只由 DragAim 上报阈值与指针；牌已离手（拖拽途中被弃置 / 结算中）则让位给后续飞行
@@ -144,6 +150,11 @@ namespace _DreamKeep.Presentation
             }
 
             _face.Bind(card_);
+            // 词条说明随绑定写一次：只认带出词条的行（其余行由牌面自己陈列），整列为空时气泡不弹
+            _affixTips.Clear();
+            foreach ((string text, CardAffix affix) in card_.GetDescriptionLines())
+                if (affix != null) _affixTips.Add((text, affix.GetDescription()));
+            _hoverTip.SetContents(_affixTips);
         }
 
         public void SetPlayableLook(bool playable_) => _face.SetPlayableLook(playable_);
@@ -189,6 +200,7 @@ namespace _DreamKeep.Presentation
         #endregion
 
         // 拖动中被禁用（回收 / 关闭）时直接落回槽位，不停在半途；悬停状态一并清掉，防实例复用后 EnterHover 被早退挡掉
+        // （悬着的词条气泡由同节点的气泡发起器自己的 OnDisable 收掉）
         private void OnDisable()
         {
             ClearHover();

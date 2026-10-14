@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6980385964264122640}
   - component: {fileID: 3244748537314421812}
   - component: {fileID: 6129203891287704884}
+  - component: {fileID: 8085560018884706631}
   m_Layer: 5
   m_Name: HealIntent
   m_TagString: Untagged
@@ -89,7 +90,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d17b56ed0d445e09ef9406a23d5e2f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tipLiftPx: 1
 --- !u!95 &6129203891287704884
 Animator:
   serializedVersion: 5
@@ -111,3 +111,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &8085560018884706631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4105395667889794573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2471242281154050393}
   - component: {fileID: 4808077870620195035}
   - component: {fileID: 598634092805720755}
+  - component: {fileID: 7855175351606276079}
   m_Layer: 5
   m_Name: ApplyPerkIntent
   m_TagString: Untagged
@@ -89,8 +90,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e800b9eaf7c04747bd30dd654ff1d8ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tipLiftPx: 1
-  _icon: {fileID: 2471242281154050393}
   _anim: {fileID: 598634092805720755}
 --- !u!95 &598634092805720755
 Animator:
@@ -113,3 +112,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7855175351606276079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5227705409782785847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}

@@ -3,13 +3,12 @@ using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using UnityEngine;
-using VContainer;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>敌人意图预告组：把展示意图翻译成头顶图标串并分发视觉绑定，负责生成与清空；
-    /// 悬停说明由每个图标自己承接（悬停哪一张弹哪一张），组只把气泡宿主交给新生成的图标；
-    /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。气泡宿主随视图生成时由容器补注入。</summary>
+    /// 悬停说明由每个图标自己承接（悬停哪一张弹哪一张，气泡内容在图标 Bind 时喂给它的气泡发起器）；
+    /// 刷新归持有它的敌人视图 UI_Enemy，自己不订阅域事件。</summary>
     public sealed class UI_EnemyIntentGroup : MonoBehaviour
     {
         [Header("意图预制体")] [SerializeField] private UI_AttackIntent _attackIntentPrefab;
@@ -17,8 +16,6 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_HealIntent _healIntentPrefab;
         [SerializeField] private UI_MoveIntent _moveIntentPrefab;
         [SerializeField] private UI_ApplyPerkIntent _applyPerkIntentPrefab;
-
-        [Inject] private UI_PopTextRoot _popTextRoot; // 视图预制体由 BattleEntry 运行时生成，补注入才拿得到场景宿主
 
         // 当前展示的图标（按排列顺序）：归还只认自己这份名单，不扫子物体——池的空闲实例也挂在本组名下
         private readonly List<UI_Intent> _icons = new();
@@ -28,7 +25,7 @@ namespace _DreamKeep.Presentation
 
         #region 对外展示：按展示意图整组重建头顶图标
 
-        /// <summary>重建图标组：旧图标整组归还池（归还即失活，触发 OnDisable 收起气泡），再按意图类型递归生成并分发绑定，null 即清空；
+        /// <summary>重建图标组：旧图标整组归还池（归还即失活，图标自己的气泡发起器顺带收掉气泡），再按意图类型递归生成并分发绑定，null 即清空；
         /// 指针下一帧重新进入新图标再弹，最多一帧闪烁。</summary>
         public void Show(EnemyIntent intent_)
         {
@@ -66,12 +63,12 @@ namespace _DreamKeep.Presentation
             }
         }
 
-        // 取图标并注入气泡宿主：图标自己承接悬停说明；取出的实例在池里埋过兄弟位，先挪到末尾再登记，排列顺序即生成顺序
+        // 取图标：图标自己承接悬停说明（内容在它的 Bind 里喂给气泡发起器）；
+        // 取出的实例在池里埋过兄弟位，先挪到末尾再登记，排列顺序即生成顺序
         private T Spawn<T>(T prefab_) where T : UI_Intent
         {
             if (prefab_ == null) return null;
             T icon = (T)_iconPool.Get(prefab_);
-            icon.Initialize(_popTextRoot);
             icon.transform.SetAsLastSibling();
             _icons.Add(icon);
             return icon;

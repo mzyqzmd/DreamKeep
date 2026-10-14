@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5608163205087310990}
   - component: {fileID: 892379056519793092}
   - component: {fileID: 6011476612811729227}
+  - component: {fileID: 1151028716001070124}
   m_Layer: 5
   m_Name: PerkSlot
   m_TagString: Untagged
@@ -108,6 +109,26 @@ MonoBehaviour:
   _duration: 0.2
   _ease: 27
   _targetToScale: {fileID: 0}
+--- !u!114 &1151028716001070124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064935813846794878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}
 --- !u!1 &7348670735517556035
 GameObject:
   m_ObjectHideFlags: 0

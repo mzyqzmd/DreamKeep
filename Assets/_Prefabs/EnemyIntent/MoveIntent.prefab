@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6404691707589813686}
   - component: {fileID: 6856655943348080542}
   - component: {fileID: 7781957280644226546}
+  - component: {fileID: 4730037855355286170}
   m_Layer: 5
   m_Name: MoveIntent
   m_TagString: Untagged
@@ -89,7 +90,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b979a5415cb847bca4bf83fe9be63eeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tipLiftPx: 1
 --- !u!95 &7781957280644226546
 Animator:
   serializedVersion: 5
@@ -111,3 +111,23 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4730037855355286170
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8052108936594930933}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1316534909793262091}
   - component: {fileID: 1298706873294856101}
   - component: {fileID: 151538870004541080}
+  - component: {fileID: 1760449464602413554}
   m_Layer: 5
   m_Name: BlockIntent
   m_TagString: Untagged
@@ -110,4 +111,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23624979fc384edab764213510b5fae3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tipLiftPx: 1
+--- !u!114 &1760449464602413554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5945145821439482464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 0
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 1
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipAnchor: 7
+  _tipParent: {fileID: 0}

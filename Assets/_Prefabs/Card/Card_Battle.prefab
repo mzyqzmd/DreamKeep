@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1074204879851599601}
   - component: {fileID: 307441361647879174}
   - component: {fileID: 5931782861234890128}
+  - component: {fileID: 8983310850963364521}
   m_Layer: 0
   m_Name: Card_Battle
   m_TagString: Untagged
@@ -100,8 +101,27 @@ MonoBehaviour:
   _anchorLiftPx: 275
   _hoverDuration: 0.12
   _aimThresholdPx: 12
-  _affixTipGapPx: 16
   _dragFollowDamp: 0.06
+--- !u!114 &8983310850963364521
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927256767321244307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _trigger: 1
+  _isStaticContents: 0
+  _tipName: 
+  _tipDescription: 
+  _startAnchor: 8
+  _tipOffsetPx: {x: 16, y: 0}
+  _tipAnchor: 6
+  _tipParent: {fileID: 5339906804015178326}
 --- !u!1001 &2450246840005135258
 PrefabInstance:
   m_ObjectHideFlags: 0

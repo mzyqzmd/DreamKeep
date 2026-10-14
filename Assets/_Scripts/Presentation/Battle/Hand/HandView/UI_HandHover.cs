@@ -1,16 +1,14 @@
 using System.Collections.Generic;
-using _DreamKeep.RuntimeData;
-using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using VContainer;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌悬停器：与手牌区本体同挂一个节点，每帧由本体的 Update 驱动。一次射线裁决出指针下可悬停的那张牌，
-    /// 演出它的对齐与退出、两侧行内牌的避让，并把它的词条说明对账到弹层列——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
+    /// 演出它的对齐与退出、两侧行内牌的避让，并把它的词条说明对账到卡自己的气泡发起器——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
+    /// 卡的"悬停"只能由这里裁决（叠牌下事件驱动会抖、瞄准中指针离开卡但气泡要留），故卡上的气泡发起器是外部驱动模式，显隐一律由本处调。
     /// 悬停身份与避让量都长在这里：本体排布时来问（IsHovered / DodgeOf），牌落位与被回收时来通知。</summary>
     public sealed class UI_HandHover : MonoBehaviour
     {
@@ -21,13 +19,11 @@ namespace _DreamKeep.Presentation
         private float _hoverGraceDuration = 0.15f;
 
         private UI_HandView _handView;
-        private UI_PopTextRoot _popTextRoot;
 
-        // 悬停会话：当前悬停的那张牌、挂着词条气泡列的牌与它这一份内容（换牌才重建，并把整列重挂到新牌名下）
+        // 悬停会话：当前悬停的那张牌、挂着词条气泡列的牌
         private UI_CardBattle _hoveredCard;
         private float _hoverGraceUntil; // 撤销宽限的截止时刻：滑入期间指针短暂脱卡也不撤销
         private UI_CardBattle _tipCard;
-        private readonly List<(string Name, string Description)> _affixTips = new();
 
         // 逐帧射线裁决的复用件：命中列表与指针数据只建一次，避免每帧产生垃圾
         private readonly List<RaycastResult> _raycastResults = new();
@@ -36,10 +32,6 @@ namespace _DreamKeep.Presentation
 
         // 生命周期：本体由 RequireComponent 保证同节点必有
         private void Awake() => _handView = GetComponent<UI_HandView>();
-
-        // 装配：气泡列的宿主（注入时机早于首次驱动，无碍）
-        [Inject]
-        public void Construct(UI_PopTextRoot popTextRoot_) => _popTextRoot = popTextRoot_;
 
         #region 对外入口：由本体每帧驱动与查询
 
@@ -69,23 +61,17 @@ namespace _DreamKeep.Presentation
             ApplyHoverDodge();
         }
 
-        // 词条说明气泡列的对账：正在拖拽的那张牌优先，其次正在悬停的那张——它身上"不展示描述"的词条在卡片右下角外侧向上叠列说明。
-        // 悬停转拖拽是同一张牌，判据早退不重建，故拖拽与瞄准全程照常显示、随卡移动（玩家决定打不打时正需要对照关键词）；
-        // 整列挂在牌自己名下，随卡抬起、缩放、换层与拖动自动跟随，故同一张牌一次写入即够（不再每帧写位置）；
-        // 换牌才重建内容并把整列重挂过去，指针离开、松手受理（此后牌交给出牌区排队与结算）、牌离手都落到这里收起
+        // 词条说明气泡列的显隐对账：正在拖拽的那张牌优先，其次正在悬停的那张；内容在卡牌 Bind 时已随绑定写入它的气泡发起器，
+        // 这里只管"该由谁显示"——换牌才切换一次，故悬停转拖拽是同一张牌时不重建、拖拽与瞄准全程照常显示并随卡移动
+        // （玩家决定打不打时正需要对照关键词）；指针离开、松手受理（此后牌交给出牌区排队与结算）、牌离手都落到这里收起
         internal void TickAffixTips()
         {
             UI_CardBattle card = _handView.DraggedCard ? _handView.DraggedCard : _hoveredCard;
             if (card == _tipCard) return;
 
-            if (_tipCard) _popTextRoot.HideTips(_tipCard);
+            if (_tipCard) _tipCard.HoverTip.Hide();
             _tipCard = card;
-            if (!card) return;
-
-            _affixTips.Clear();
-            foreach ((string text, CardAffix affix) in card.Card.GetDescriptionLines())
-                if (affix != null) _affixTips.Add((text, affix.GetDescription()));
-            if (_affixTips.Count > 0) _popTextRoot.ShowTips(card, _affixTips, card.AffixTipAnchor, EUiAnchor.BottomLeft, card.transform);
+            if (card) card.HoverTip.Show(); // 无词条说明的牌内容为空，Show 内部早退
         }
 
         // 让出悬停身份：切到不可打等状态时由本体调用，只清状态与身份，姿态一律交给后续补间
