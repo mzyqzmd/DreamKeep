@@ -27,19 +27,21 @@ Write-Output 'REFRESH:'
 CallMcp $refresh $sid
 
 # 4) poll editor state until not compiling
+$raw = ''
 for ($i = 0; $i -lt 60; $i++) {
     $raw = CallMcp '{"jsonrpc":"2.0","id":3,"method":"resources/read","params":{"uri":"mcpforunity://editor/state"}}' $sid
     if ($raw -match '"is_compiling"\s*:\s*false') { Write-Output "STATE(iter=$i): $raw"; break }
     Start-Sleep -Seconds 2
 }
+Write-Output "STATE_FINAL: $raw"
 
-# 5) console errors
-Write-Output 'CONSOLE_ERRORS:'
-CallMcp '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"read_console","arguments":{"types":["error"],"count":50}}}' $sid
+# 5) console errors & warnings
+Write-Output 'CONSOLE_ERRORS_WARNINGS:'
+CallMcp '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"read_console","arguments":{"types":["error","warning"],"count":50}}}' $sid
 
 # 6) timestamps
 Write-Output 'TIMESTAMPS:'
 Get-ChildItem 'D:\Unity\Projects\DreamKeep\Library\ScriptAssemblies\_DreamKeep.Presentation.dll' |
     Select-Object LastWriteTime, Name | Format-Table -AutoSize | Out-String | Write-Output
-Get-ChildItem 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Pop\PopRoot\UI_PopTextRoot.cs', 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Hand\UI_HandView.cs' |
+Get-ChildItem 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Pop\UI_PopTextRoot.cs', 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Card\UI_CardFace.cs', 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Card\UI_CardBattle.cs', 'D:\Unity\Projects\DreamKeep\Assets\_Scripts\Presentation\Battle\Hand\HandView\UI_HandView.cs' |
     Select-Object LastWriteTime, Name | Format-Table -AutoSize | Out-String | Write-Output

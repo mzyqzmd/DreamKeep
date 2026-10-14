@@ -9,7 +9,7 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>弹层宿主：挂在场景 Canvas_Pop/PopTextRoot 上，持有本战斗的弹层文本——
-    /// 说明气泡（悬停类：内容、锚点、对齐点与挂载宿主都由调用方给，此处只管实例取还、对齐与叠列定位）
+    /// 说明气泡（弹出时机由调用方定，悬停类与拖拽类同为一路：内容、锚点、对齐点与挂载宿主都由调用方给，此处只管实例取还、对齐与叠列定位）
     /// 与回合横幅（公告类：自订阅 BE_TurnStarted 转发展示）；运行期不认识具体调用方（仅装配期注入事件门面）。</summary>
     public sealed class UI_PopTextRoot : MonoBehaviour
     {

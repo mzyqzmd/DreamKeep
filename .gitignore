@@ -106,6 +106,7 @@ Desktop.ini
 *.bak
 
 # AI 辅助工具目录（仅取消跟踪，物理文件保留在本地）
+.workbuddy/
 .codebuddy/
 .lingma/
 

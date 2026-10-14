@@ -49,7 +49,7 @@ namespace _DreamKeep.Presentation
         [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
         private float _aimThresholdPx = 12f;
 
-        [Tooltip("词条说明气泡列与卡片右上角之间的间距（画布像素）：气泡列的第一条左上角贴 卡片矩形右上角 + 该间距")] [SerializeField]
+        [Tooltip("词条说明气泡列与卡片右下角之间的间距（画布像素）：气泡列的第一条左下角贴 卡片矩形右下角 + 该间距，整列向上叠")] [SerializeField]
         private float _affixTipGapPx = 16f;
 
         private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张

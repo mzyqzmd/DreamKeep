@@ -46,7 +46,7 @@ namespace _DreamKeep.Presentation
                 onFinished_?.Invoke();
             }
 
-            // 结束或被新的播放请求顶掉：一律放行等待，免得等待挂死；被顶掉的那次不算播完，不编排收尾
+            // 结束或被新的播放请求顶掉：一律放行等待，免得等待挂死；只有仍是最新那条才编排收尾（被顶掉的票号已作废）
             void OnEnded()
             {
                 released.TrySetResult();

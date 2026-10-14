@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示、悬停名牌与描边高亮、演出编排（含"演完才落账"的时序）。
+    /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示、悬停名牌与描边高亮、演出编排（数字与动画同帧、同条事件内各演出并行）。
     /// 骨架句柄、四条公约动画名与播放原语都在 UI_ActorAnimTool；意图与移动在 UI_Enemy；悬停演出与命中框在 UI_ActorHoverBox。</summary>
     [RequireComponent(typeof(UI_ActorAnimTool))]
     [RequireComponent(typeof(UI_ActorHoverBox))]
@@ -105,7 +105,7 @@ namespace _DreamKeep.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 死亡：标记停帧 → 播 die（播到最短比例即放行事件链）→ 自然播完停 1 秒后自毁视图
+        // 死亡：播 die（播到最短比例即放行事件链）→ 自然播完停留 1 秒后自毁视图
         protected virtual async UniTask OnActorDiedAsync(BE_ActorDied died_)
         {
             if (died_.Creature != _boundCreature || _deathAnimTriggered) return;

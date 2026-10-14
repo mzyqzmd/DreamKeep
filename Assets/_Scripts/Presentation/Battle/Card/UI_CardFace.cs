@@ -140,7 +140,7 @@ namespace _DreamKeep.Presentation
 
         public void SetPlayableLook(bool playable_)
         {
-            // 描述文本的书写：不展示描述的词条那一行只写词条名（黄 + 下划线，说明交给悬停气泡），其余行原样。
+            // 描述文本的书写：不展示描述的词条那一行只写词条名（黄 + 下划线，说明交给悬停/拖拽时弹出的气泡），其余行原样。
             string keywordColor = ColorUtility.ToHtmlStringRGB(
                 playable_ ? _affixNameColor : _affixNameColor * _unplayableTint);
             StringBuilder description = new();
