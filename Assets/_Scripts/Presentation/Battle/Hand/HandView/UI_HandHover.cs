@@ -7,7 +7,8 @@ using UnityEngine.InputSystem;
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌悬停器：与手牌区本体同挂一个节点，每帧由本体的 Update 驱动。一次射线裁决出指针下可悬停的那张牌，
-    /// 演出它的对齐与退出、两侧行内牌的避让，并把它的词条说明对账到卡自己的气泡发起器——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
+    /// 演出它的原位抬起（卡留在自己槽位上方、只做垂直抬起 + 放大，不跟随指针）与退出、两侧行内牌的避让，
+    /// 并把它的词条说明对账到卡自己的气泡发起器——悬停转拖拽是同一张牌，拖拽中照常显示、随卡走。
     /// 卡的"悬停"只能由这里裁决（叠牌下事件驱动会抖、瞄准中指针离开卡但气泡要留），故卡上的气泡发起器是外部驱动模式，显隐一律由本处调。
     /// 悬停身份与避让量都长在这里：本体排布时来问（IsHovered / DodgeOf），牌落位与被回收时来通知。</summary>
     public sealed class UI_HandHover : MonoBehaviour
@@ -15,14 +16,18 @@ namespace _DreamKeep.Presentation
         [Tooltip("悬停避让量（画布像素）：悬停某张牌时，它左侧的行内牌左移、右侧的右移各该距离，抬起的牌便不再挡住右邻；0 即不避让")] [SerializeField]
         private float _hoverDodgePx = 160f;
 
-        [Tooltip("悬停撤销宽限（秒）：刚进入悬停的滑入期间指针可能短暂脱卡（卡还在滑），这段时间内不撤销；抓起拖拽与移向别的牌不受影响")] [SerializeField]
+        [Tooltip("悬停抬起量（画布像素）：悬停时卡牌留在自己的槽位上方，只沿手牌区\"上\"方向垂直抬起该距离——原位抬起、不跟随指针；" +
+                 "同时决定牌面下部多大范围不触发悬停预览（要抬多少就留多少）")] [SerializeField]
+        private float _hoverLiftPx = 120f;
+
+        [Tooltip("悬停撤销宽限（秒）：刚进入悬停的抬起期间指针可能短暂脱卡（卡还在往上抬），这段时间内不撤销；抓起拖拽与移向别的牌不受影响")] [SerializeField]
         private float _hoverGraceDuration = 0.15f;
 
         private UI_HandView _handView;
 
         // 悬停会话：当前悬停的那张牌、挂着词条气泡列的牌
         private UI_CardBattle _hoveredCard;
-        private float _hoverGraceUntil; // 撤销宽限的截止时刻：滑入期间指针短暂脱卡也不撤销
+        private float _hoverGraceUntil; // 撤销宽限的截止时刻：抬起期间指针短暂脱卡也不撤销
         private UI_CardBattle _tipCard;
 
         // 逐帧射线裁决的复用件：命中列表与指针数据只建一次，避免每帧产生垃圾
@@ -36,16 +41,21 @@ namespace _DreamKeep.Presentation
         #region 对外入口：由本体每帧驱动与查询
 
         // 每帧裁定一次悬停：指针下没有可交互的牌时目标为 null，等价于退出；次序是"先定目标 → 撤旧 → 写新"。
-        // 进入姿态一律把"卡锚点上方该距离的点"对齐到指针（朝向回正到点的朝向），指针遂停在卡内该高度，
-        // 故从卡边缘进入也不会因卡自身移动被甩出卡面；只对齐一次，之后指针在卡内移动卡不动
+        // 进入姿态取卡自己的槽位抬起位（原位抬起、朝向回正：只往上抬、不读指针），鼠标横移不会把它带走；
+        // 只抬起一次，之后指针在卡内移动卡不动，指针离开卡面即撤销回位
         internal void TickHover()
         {
             UI_CardBattle current = _hoveredCard;
             UI_CardBattle target = RaycastTopCard();
             if (target == current) return;
-            // 撤销宽限：刚进入悬停的滑入期间卡还在滑，指针可能短暂脱卡——这段时间内不撤销；
+            // 撤销宽限：刚进入悬停的抬起期间指针可能短暂脱卡（卡还在往上抬），这段时间内不撤销；
             // 抓起拖拽（此后归拖拽跟随接管）与命中另一张可悬停牌都不受宽限影响
             if (!target && current && !_handView.DraggedCard && Time.time < _hoverGraceUntil) return;
+
+            // 进入前先按槽位真源取抬起位：取不到（不在行内）就当作没命中，静默
+            Vector3 position = default;
+            Quaternion rotation = default;
+            if (target && !TryGetRaisedPose(target, out position, out rotation)) target = null;
 
             _hoveredCard = target; // 先落新悬停身份：撤旧与避让都按它算
             if (current) ExitHover(current);
@@ -56,7 +66,7 @@ namespace _DreamKeep.Presentation
             }
 
             _handView.MoveToFocus(target); // 悬停期间位置、朝向、缩放与所在层整段交给包装的悬停补间，这里只定基准
-            target.EnterHover(_handView.PointerAnchorPosition(target), _handView.FanCenterPoint.rotation);
+            target.EnterHover(position, rotation);
             _hoverGraceUntil = Time.time + _hoverGraceDuration;
             ApplyHoverDodge();
         }
@@ -110,7 +120,8 @@ namespace _DreamKeep.Presentation
         #endregion
 
         // 射线裁决：按命中先后取第一张可悬停的牌；同一张卡可能被多个图形报出，只判一次。
-        // 当前悬停中的牌照常作为候选参与（指针还停在它身上就是"目标不变"），因此它的进出补间不会把自己顶掉
+        // 当前悬停中的牌照常作为候选参与（指针还停在它身上就是"目标不变"），因此它的进出补间不会把自己顶掉；
+        // 其余候选还要过入区判定（指针得落在抬起后仍能覆盖的位置，牌面下部一个抬起高度的范围不触发悬停预览）
         private UI_CardBattle RaycastTopCard()
         {
             if (_handView.Hand.Count == 0) return null; // 手牌空时指针下不可能有可悬停的牌，这次射线直接省掉
@@ -127,17 +138,60 @@ namespace _DreamKeep.Presentation
             _raycastResults.Clear();
             eventSystem.RaycastAll(_pointerData, _raycastResults);
 
+            Vector3 pointerWorld = _handView.PointerWorldPosition(); // 入区判定用的指针世界点，每帧只算一次
             UI_CardBattle previous = null;
             foreach (RaycastResult result in _raycastResults)
             {
                 UI_CardBattle card = result.gameObject.GetComponentInParent<UI_CardBattle>();
                 if (card == previous) continue; // 同一张卡可能被多个图形报出，只判一次
                 previous = card;
-                if (!card) continue;
-                if (_handView.CanHover(card)) return card;
+                if (!card || !_handView.CanHover(card)) continue;
+                if (card == _hoveredCard) return card; // 当前悬停牌照常参与：指针还停在同一张牌的画面上就是"目标不变"
+                if (CanEnterHover(card, pointerWorld)) return card;
             }
 
             return null;
+        }
+
+        // 槽位姿态：按卡的行内序号取槽位（可叠加悬停避让量），取不到（不在行内）即 false——
+        // 悬停的进入、退出与让位三条路共用这一处换算
+        private bool TryGetSlotPose(UI_CardBattle card_, float dodgeX_, out Vector3 worldPosition_,
+            out Quaternion worldRotation_, out float scale_)
+        {
+            int index = _handView.RowIndexOf(card_);
+            if (index < 0)
+            {
+                worldPosition_ = default;
+                worldRotation_ = default;
+                scale_ = 1f;
+                return false;
+            }
+
+            _handView.EvaluateSlot(index, _handView.RowCount(), dodgeX_, out worldPosition_, out worldRotation_, out scale_);
+            return true;
+        }
+
+        // 槽位抬起位：按卡自己的槽位（不含悬停避让——成为悬停牌后它自己的避让量恒 0）沿手牌区"上"方向抬起一段，
+        // 朝向回正到手牌区的基准朝向（浅弧的倾角不带进来）；一律读槽位真源、与指针在哪里无关，故鼠标横移不会把卡带走
+        private bool TryGetRaisedPose(UI_CardBattle card_, out Vector3 worldPosition_, out Quaternion worldRotation_)
+        {
+            worldRotation_ = _handView.FanCenterPoint.rotation;
+            if (!TryGetSlotPose(card_, 0f, out worldPosition_, out _, out _)) return false;
+            worldPosition_ += _handView.FanCenterPoint.TransformVector(Vector3.up * _hoverLiftPx);
+            return true;
+        }
+
+        // 入区判定：指针要落在"这张牌抬起后的画面内"才触发悬停——进入后卡归位抬起，指针仍在卡面上，
+        // 因而不会出现"进入即脱卡、撤销又重进"的反复闪；牌面下部一个抬起高度的范围、以及横向上越出归位后牌面的部分
+        // 都不触发悬停预览（点击、抓取与拖拽不受此限，它们不看悬停）
+        private bool CanEnterHover(UI_CardBattle card_, Vector3 pointerWorld_)
+        {
+            if (!TryGetRaisedPose(card_, out Vector3 raisedPosition, out Quaternion raisedRotation)) return false;
+            Vector3 offset = pointerWorld_ - raisedPosition;
+            Rect rect = ((RectTransform)card_.transform).rect;
+            return Vector3.Dot(offset, raisedRotation * Vector3.up) >= 0f &&
+                   Mathf.Abs(Vector3.Dot(offset, raisedRotation * Vector3.right)) <=
+                   rect.width * 0.5f * Mathf.Abs(card_.transform.lossyScale.x);
         }
 
         // 撤下悬停：牌还在行里、没被拖拽或让位时，换回手牌层并按当前槽位一次还原位置、朝向与缩放；
@@ -150,10 +204,9 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            int index = _handView.RowIndexOf(card_);
             _handView.MoveToHand(card_);
-            _handView.EvaluateSlot(index, _handView.RowCount(), DodgeOf(index), out Vector3 position,
-                out Quaternion rotation, out float scale);
+            if (!TryGetSlotPose(card_, DodgeOf(_handView.RowIndexOf(card_)), out Vector3 position,
+                    out Quaternion rotation, out float scale)) return;
             card_.ExitHover(position, rotation, scale);
         }
 
@@ -167,11 +220,10 @@ namespace _DreamKeep.Presentation
             {
                 UI_CardBattle card = hand[i];
                 if (card == _hoveredCard || card == _handView.DraggedCard || _handView.IsEntering(card)) continue;
-                if (!_handView.IsInRow(card)) continue;
 
-                int index = _handView.RowIndexOf(card);
-                _handView.EvaluateSlot(index, _handView.RowCount(), DodgeOf(index), out Vector3 position,
-                    out Quaternion rotation, out _);
+                // 不在行里（已让位等结算 / 已离手）的牌不参与让位，槽位也取不到
+                if (!TryGetSlotPose(card, DodgeOf(_handView.RowIndexOf(card)), out Vector3 position,
+                        out Quaternion rotation, out _)) continue;
                 card.MoveToAsync(position, rotation, card.HoverDuration).Forget();
             }
         }

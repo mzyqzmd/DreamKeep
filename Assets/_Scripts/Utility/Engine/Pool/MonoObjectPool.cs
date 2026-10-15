@@ -60,10 +60,7 @@ namespace _DreamKeep.Utility
             }
 
             if (!_originOf.Remove(instance_, out T prefab_))
-            {
-                Debug.LogError($"MonoObjectPool：归还了非本池实例或已归还的实例 {instance_.name}", instance_);
-                return;
-            }
+                throw new Exception($"MonoObjectPool：归还了非本池实例或已归还的实例 {instance_.name}");
 
             // 归还即出表：重复归还下一次自然查不到
             Stack<T> idle = IdleOf(prefab_);

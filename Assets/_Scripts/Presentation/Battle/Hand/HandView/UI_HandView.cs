@@ -259,7 +259,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 牌的去向：取牌、离手、回收与飞行借还
+        #region 牌的去向：取牌、离手与回收
 
         // 取出并登记：取池 → 绑卡 → 接入宿主 → 进手牌列 → 归手牌层 → 标记入场中（入场期间不参与悬停，落位才参与）
         internal UI_CardBattle Spawn(CardModel model_)
@@ -283,16 +283,6 @@ namespace _DreamKeep.Presentation
             _views.Remove(model_);
             _cardPool.Release(view_);
         }
-
-        // 借一张飞行用的包装：只取池，不入手牌列与模型索引；牌面沿用上次 Bind 的残留内容，摆位后立刻归还
-        internal UI_CardBattle RentFlyView()
-        {
-            UI_CardBattle view = _cardPool.Get(_cardPrefab);
-            MoveToFly(view); // 出池即换到飞行层，保证借出去的牌画在队列与手牌之上
-            return view;
-        }
-
-        internal void ReturnFlyView(UI_CardBattle view_) => _cardPool.Release(view_);
 
         internal bool TryGetView(CardModel model_, out UI_CardBattle view_) => _views.TryGetValue(model_, out view_);
 
@@ -463,8 +453,8 @@ namespace _DreamKeep.Presentation
             return world;
         }
 
-        // 指针锚点位：让"卡锚点（下沿中点）上方 AnchorLiftPx 的点"与指针重合时，卡应处的世界位置。
-        // 悬停对齐与拖拽跟随共用这一处（按手牌区的点换算，与卡自身缩放无关，故两态切换无跳变）
+        // 指针锚点位：让"卡锚点（下沿中点）上方 AnchorLiftPx 的点"与指针重合时，卡应处的世界位置——拖拽跟手专用，
+        // 悬停抬起不读指针（按手牌区的点换算，与卡自身缩放无关，故拖动起始无跳变）
         internal Vector3 PointerAnchorPosition(UI_CardBattle card_) =>
             PointerWorldPosition() - _fanCenterPoint.TransformVector(Vector3.up * card_.AnchorLiftPx);
 

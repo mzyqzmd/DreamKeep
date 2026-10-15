@@ -115,13 +115,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _trigger: 1
+  _startAnchor: 2
+  _tipAnchor: 0
+  _tipOffsetPx: {x: 16, y: 0}
+  _tipParent: {fileID: 5339906804015178326}
+  _stackSpacingPx: 12
   _isStaticContents: 0
   _tipName: 
   _tipDescription: 
-  _startAnchor: 8
-  _tipOffsetPx: {x: 16, y: 0}
-  _tipAnchor: 6
-  _tipParent: {fileID: 5339906804015178326}
 --- !u!1001 &2450246840005135258
 PrefabInstance:
   m_ObjectHideFlags: 0

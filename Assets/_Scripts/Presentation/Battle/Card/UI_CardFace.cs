@@ -35,6 +35,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("卡牌费用部分：费用为负的卡整块隐藏")] [SerializeField]
         private GameObject _cardCost;
 
+        [Tooltip("升级后卡牌名字字体颜色")] [SerializeField]
+        private Color _upgradeNameColor = Color.green;
+
         [Tooltip("不可打时整卡乘的暗灰色")] [SerializeField]
         private Color _unplayableTint = new(0.45f, 0.45f, 0.5f);
 
@@ -97,6 +100,7 @@ namespace _DreamKeep.Presentation
                 for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
                 for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
             }
+
             //设置卡面
             Card = card_;
             _name.text = card_.Name;
@@ -155,9 +159,22 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _faceImages.Length; i++)
                 _faceImages[i].color = playable_ ? _imageColors[i] : _imageColors[i] * _unplayableTint;
             for (int i = 0; i < _faceTexts.Length; i++)
-                _faceTexts[i].color = playable_ ? _textColors[i] : _textColors[i] * _unplayableTint;
+            {
+                // 名字基色随升级状态：升级为绿色、否则白；不可打再统一乘暗灰
+                Color baseColor = _faceTexts[i] == _name
+                    ? (Card.IsUpgraded ? _upgradeNameColor : Color.white)
+                    : _textColors[i];
+                _faceTexts[i].color = playable_ ? baseColor : baseColor * _unplayableTint;
+            }
         }
 
         #endregion
+
+        [Button("卡牌升级测试按钮", EButtonEnableMode.Playmode)]
+        public void Upgrade()
+        {
+            Card.Upgrade();
+            Bind(Card);
+        }
     }
 }
