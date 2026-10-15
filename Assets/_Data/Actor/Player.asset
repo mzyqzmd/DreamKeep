@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25e46d4c148741eeb3eb3f818faf7c70, type: 3}
   m_Name: Player
   m_EditorClassIdentifier: 
-  _name: "\u6218\u58EB"
+  _name: "\u94C1\u7532\u6218\u58EB"
   _maxHP: 80
   _viewPrefab: {fileID: 235640479445222248, guid: 111909164d35d34408a26338589ab2de, type: 3}
   _startGold: 99

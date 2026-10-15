@@ -24,8 +24,8 @@ namespace _DreamKeep.Presentation
         [Tooltip("气泡以自身何处贴住起点：底沿贴锚点（BottomCenter）整列向上长，顶沿与居中则向下长")] [SerializeField]
         private EUiAnchor _tipAnchor = EUiAnchor.BottomCenter;
 
-        [Tooltip("起点的像素偏移，走本对象局部轴向（随本对象旋转与缩放）：如 (0,1) 即沿本对象\"上\"让开 1 像素")] [SerializeField]
-        private Vector2 _tipOffsetPx = new(0f, 1f);
+        [Tooltip("起点的像素偏移，走本对象局部轴向（随本对象旋转与缩放）：如 (0,5) 即沿本对象\"上\"让开 5 像素")] [SerializeField]
+        private Vector2 _tipOffsetPx = new(0f, 5f);
 
         [Tooltip("气泡挂载父级：空 = 挂弹层宿主自身（不随本对象缩放移动）；拖自己 = 随本对象抬起、缩放与拖动（卡牌即如此）")] [SerializeField]
         private Transform _tipParent;

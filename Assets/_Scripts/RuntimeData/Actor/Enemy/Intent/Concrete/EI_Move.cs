@@ -4,6 +4,6 @@ namespace _DreamKeep.RuntimeData
     public sealed class EI_Move : EnemyIntent
     {
         public override string GetIntentName() => "前进";
-        public override string GetDescription() => "这名敌人将要向玩家方向前进一个槽位，站最前时触发特殊意图";
+        public override string GetDescription() => "这名敌人将要向玩家方向前进一个槽位，\n站最前时触发特殊意图";
     }
 }

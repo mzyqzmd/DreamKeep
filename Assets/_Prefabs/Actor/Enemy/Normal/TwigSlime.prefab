@@ -817,6 +817,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: InfoPanel
       objectReference: {fileID: 0}
+    - target: {fileID: 7927300397748222405, guid: 0caba99f5bd81b94ab93fa4b100b55ab, type: 3}
+      propertyPath: m_text
+      value: "\u6811\u679D\u53F2\u83B1\u59C6"
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
