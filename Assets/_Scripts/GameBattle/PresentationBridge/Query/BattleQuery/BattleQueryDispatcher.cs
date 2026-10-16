@@ -33,12 +33,14 @@ namespace _DreamKeep.GameBattle
             => CardAffixResolver.PreviewTargets(_battleContext, card_, _battleContext.Player, aimSlot_);
 
         /// <summary>预览玩家打出的卡造成的伤害：来源内定玩家，未瞄准目标时传 null（只算来源侧修正）。</summary>
-        public int PreviewCardDamage(Creature target_, int baseAmount_)
-            => DamageHook.Resolve(_battleContext, _battleContext.Player.Creature, target_, baseAmount_);
+        // TODO 修正来源显示：卡面/气泡将来要写"9（力量+2）"时，由表现层传入 sourceOut_ 接住贡献者列表（现在无人传，零开销）
+        public int PreviewCardDamage(Creature target_, int baseAmount_, List<BattlePerk> sourceOut_ = null)
+            => DamageHook.Resolve(_battleContext, _battleContext.Player.Creature, target_, baseAmount_, sourceOut_);
 
         /// <summary>预览敌人意图造成的伤害：目标内定玩家。</summary>
-        public int PreviewIntentDamage(Creature source_, int baseAmount_)
-            => DamageHook.Resolve(_battleContext, source_, _battleContext.Player.Creature, baseAmount_);
+        // TODO 修正来源显示：意图图标将来要标出"谁改了这个值"时，由表现层传入 sourceOut_（现在无人传，零开销）
+        public int PreviewIntentDamage(Creature source_, int baseAmount_, List<BattlePerk> sourceOut_ = null)
+            => DamageHook.Resolve(_battleContext, source_, _battleContext.Player.Creature, baseAmount_, sourceOut_);
 
         #endregion
     }

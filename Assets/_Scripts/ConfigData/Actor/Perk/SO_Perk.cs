@@ -1,12 +1,10 @@
-using System;
 using UnityEngine;
 
 namespace _DreamKeep.ConfigData
 {
-    /// <summary>战斗状态配置模板：资产里被 [SerializeReference] 引用的静态定义，只描述"这类状态是什么"；
-    /// 运行时挂在生物身上的是 RuntimeData 侧由 PerkBaker 烘焙出的独立实例。</summary>
-    [Serializable]
-    public abstract class PerkData
+    /// <summary>战斗状态定义：一份资产描述"这类状态是什么"（图标、显示名、衰减时机），全局唯一真源，运行期只读；
+    /// 挂在生物身上的是 RuntimeData 侧由 PerkBaker 烘焙出的独立实例，层数与数值修正都只改实例。</summary>
+    public abstract class SO_Perk : ScriptableObject
     {
         [SerializeField] private Sprite _icon;
 

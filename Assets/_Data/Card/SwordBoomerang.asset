@@ -21,18 +21,23 @@ MonoBehaviour:
   _affixes:
   - rid: 8162841622129934340
   _canUpdate: 1
-  _updatedAffixes:
-  - rid: 8162841622129934341
+  _upgrades:
+  - rid: 8162841763913924625
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 8162841622129934340
       type: {class: AD_Damage, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 3
         _times: 3
-    - rid: 8162841622129934341
-      type: {class: AD_Damage, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+    - rid: 8162841763913924625
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 3
-        _times: 4
+        _value: 2
+        _additive: 1
+        _multiplier: 1
+        _perk:
+          rid: -2

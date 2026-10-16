@@ -8,7 +8,8 @@ namespace _DreamKeep.GameBattle
     {
         #region 建队：先解析落点，再按词条类型逐个转动作后整体返回
 
-        public static List<BattleAction> Build(BattleContext battleContext_, CardModel card_, Player player_, int aimSlot_)
+        public static List<BattleAction> Build(BattleContext battleContext_, CardModel card_, Player player_,
+            int aimSlot_)
         {
             List<Creature> targets = ResolveTarget(battleContext_, card_, player_, aimSlot_);
             List<BattleAction> actions = new List<BattleAction>();
@@ -23,7 +24,8 @@ namespace _DreamKeep.GameBattle
 
         /// <summary>预览这张牌会命中的目标：与结算共用同一解析，故"提示的是谁就一定打到谁"；
         /// 随机目标预告不出具体是哪一只，这里点亮全部存活敌人（且不消耗随机源）。</summary>
-        public static List<Creature> PreviewTargets(BattleContext battleContext_, CardModel card_, Player player_, int aimSlot_) =>
+        public static List<Creature> PreviewTargets(BattleContext battleContext_, CardModel card_, Player player_,
+            int aimSlot_) =>
             card_.IsRandomEnemyTarget
                 ? ToCreatures(battleContext_.GetAliveEnemies())
                 : ResolveTarget(battleContext_, card_, player_, aimSlot_);
@@ -31,14 +33,16 @@ namespace _DreamKeep.GameBattle
         #endregion
 
         /// <summary>落点解析：自标卡先判自身，避免空场时打不出防御牌；其余落点针对存活敌人。</summary>
-        private static List<Creature> ResolveTarget(BattleContext battleContext_, CardModel card_, Player player_, int aimSlot_)
+        private static List<Creature> ResolveTarget(BattleContext battleContext_, CardModel card_, Player player_,
+            int aimSlot_)
         {
             if (card_.IsSelfTarget) return new List<Creature> { player_.Creature };
 
             List<Enemy> alive = battleContext_.GetAliveEnemies();
             if (alive.Count == 0) return new List<Creature>();
             if (card_.IsAllEnemyTarget) return ToCreatures(alive);
-            if (card_.IsRandomEnemyTarget) return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)].Creature };
+            if (card_.IsRandomEnemyTarget)
+                return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)].Creature };
             if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0].Creature };
             if (card_.IsAnyEnemyTarget) return new List<Creature> { alive[aimSlot_].Creature };
             return new List<Creature>();

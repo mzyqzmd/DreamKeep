@@ -39,10 +39,12 @@ namespace _DreamKeep.Presentation
         #endregion
 
         /// <summary>渲染一次伤害数值：修正后的值经 UiValueText 着色；未推门面按原值输出。</summary>
-        public string Render(int baseAmount_) =>
-            UiValueText.Value(_queryDispatcher == null
-                    ? baseAmount_
-                    : _queryDispatcher.PreviewCardDamage(_target, baseAmount_),
+        // TODO 修正来源显示：将来要把"9（力量+2）"这类来源写进卡面/气泡时，在此接住门面返回的贡献者列表并展开成文本（现在只显示最终值）
+        public string Render(int baseAmount_)
+        {
+            if (_queryDispatcher == null) return baseAmount_.ToString();
+            return UiValueText.Value(_queryDispatcher.PreviewCardDamage(_target, baseAmount_),
                 baseAmount_, _boostColor, _reduceColor);
+        }
     }
 }

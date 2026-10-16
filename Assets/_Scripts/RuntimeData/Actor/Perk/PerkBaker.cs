@@ -2,18 +2,18 @@ using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态烘焙器：把配置模板烘成运行时实例，参数在烘焙期读一次；未登记类型静默跳过。</summary>
+    /// <summary>状态烘焙器：把状态定义资产烘成运行时实例，可改数值在烘焙期拷进实例；未登记类型静默跳过。</summary>
     public static class PerkBaker
     {
-        #region 按配置烘焙一个运行时状态实例，未登记类型返回 null
+        #region 按定义烘焙一个运行时状态实例，未登记类型返回 null
 
-        public static BattlePerk Bake(PerkData data_) => data_ switch
+        public static BattlePerk Bake(SO_Perk data_) => data_ switch
         {
-            PD_Vulnerable vulnerable => new BP_Vulnerable(vulnerable),
-            PD_Weak weak => new BP_Weak(weak),
-            PD_Strength strength => new BP_Strength(strength),
-            PD_Burn burn => new BP_Burn(burn),
-            PD_Regen regen => new BP_Regen(regen),
+            SO_Vulnerable vulnerable => new BP_Vulnerable(vulnerable),
+            SO_Weak weak => new BP_Weak(weak),
+            SO_Strength strength => new BP_Strength(strength),
+            SO_Poison poison => new BP_Poison(poison),
+            SO_Regen regen => new BP_Regen(regen),
             _ => null,
         };
 

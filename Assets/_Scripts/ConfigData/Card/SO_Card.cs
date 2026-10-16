@@ -17,7 +17,7 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private bool _canUpdate;
 
         [ShowIf("_canUpdate")] [SerializeReference, SubclassSelector]
-        private List<AffixData> _updatedAffixes = new();
+        private List<UpgradeData> _upgrades = new();
 
         public string Name => _name;
         public int Cost => _cost;//NOTE:卡牌费用为-1表示没有费用，一般是诅咒这种不能打出的牌费用设为-1
@@ -26,7 +26,7 @@ namespace _DreamKeep.ConfigData
         public ECardType Type => _type;
         public ECardTargetType TargetType => _targetType;
         public List<AffixData> Affixes => _affixes;
-        public List<AffixData> UpdatedAffixes => _updatedAffixes;
+        public List<UpgradeData> Upgrades => _upgrades;
         public bool CanUpdate => _canUpdate;
     }
 }

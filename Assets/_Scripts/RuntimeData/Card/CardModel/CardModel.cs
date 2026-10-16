@@ -80,7 +80,7 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        #region 升级：切换生效词条到已升级集，纯运行时操作不回查配置
+        #region 升级：把配置里的升级补丁应用到基础词条上，纯运行时操作不回查配置
 
         public void Upgrade()
         {

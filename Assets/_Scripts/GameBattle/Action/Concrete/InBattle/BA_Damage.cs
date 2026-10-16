@@ -4,11 +4,11 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>伤害动作：先扣格挡再扣血；结算时逐目标经数值修正管线（力量/虚弱/易伤）求最终值，
-    /// 纯状态结算（灼烧）可显式关闭修正。</summary>
+    /// <summary>伤害动作：先扣格挡再扣血；结算时逐目标经数值修正管线求最终值，
+    /// 修正源由各状态覆写 BattlePerk 的修正虚方法自行声明；纯状态结算（中毒）由触发 resolver 显式关闭修正。</summary>
     public sealed class BA_Damage : BattleAction
     {
-        /// <summary>是否参与数值修正：灼烧等纯状态结算传 false，不吃力量/虚弱/易伤。</summary>
+        /// <summary>是否参与数值修正：由触发 resolver 对中毒等纯状态结算传 false。</summary>
         private readonly bool _applyModifiers;
 
         /// <summary>基础伤害值（未修正）。</summary>

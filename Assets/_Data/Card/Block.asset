@@ -20,11 +20,9 @@ MonoBehaviour:
   _targetType: 0
   _affixes:
   - rid: 5765983356684075010
-  - rid: 8162841690170720259
-  - rid: 8162841763913924610
   _canUpdate: 1
-  _updatedAffixes:
-  - rid: 5765983356684075011
+  _upgrades:
+  - rid: 8162841763913924615
   references:
     version: 2
     RefIds:
@@ -32,21 +30,9 @@ MonoBehaviour:
       type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 5
-    - rid: 5765983356684075011
-      type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+    - rid: 8162841763913924615
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 8
-    - rid: 8162841690170720259
-      type: {class: AD_Retain, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
-    - rid: 8162841763913924610
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk:
-          rid: 8162841763913924612
-        _layers: 3
-    - rid: 8162841763913924612
-      type: {class: PD_Vulnerable, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _icon: {fileID: 21300000, guid: f944b9f8717a8ad4e98fa33350f203bf, type: 3}
-        _ratio: 0.5
+        _value: 3
+        _additive: 3
+        _multiplier: 1

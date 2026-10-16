@@ -2,8 +2,9 @@ using System;
 
 namespace _DreamKeep.Utility
 {
+    /// <summary>一条数值修正：加值与乘率，作用顺序为先加后乘。</summary>
     [Serializable]
-    public struct StatModifier : IEquatable<StatModifier>
+    public struct StatModifier
     {
         public float additive;
         public float multiplier;
@@ -12,14 +13,6 @@ namespace _DreamKeep.Utility
         {
             additive = additive_;
             multiplier = multiplier_;
-        }
-
-        public readonly bool Equals(StatModifier other)
-        {
-            if (additive == other.additive &&
-                multiplier == other.multiplier)
-                return true;
-            return false;
         }
     }
 }

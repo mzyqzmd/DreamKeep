@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>敌人回合结束阶段：逐敌人结算回合末状态（灼烧/再生）并衰减，随后推进回合计数，一回合到此结束。</summary>
+    /// <summary>敌人回合结束阶段：逐敌人结算回合末状态（中毒/再生）并衰减，随后推进回合计数，一回合到此结束。</summary>
     public sealed class BP_EnemyTurnEnd : BattlePhase
     {
         public BP_EnemyTurnEnd(BattleLoop owner_) : base(owner_)
@@ -27,7 +27,7 @@ namespace _DreamKeep.GameBattle
                 if (enemy.Creature.IsDead) continue;
                 List<Creature> self = new List<Creature> { enemy.Creature };
 
-                // 回合末状态结算（灼烧 → 再生）先于衰减：宿主自己的回合边界
+                // 回合末状态结算（中毒 → 再生）先于衰减：宿主自己的回合边界
                 List<BattleAction> triggered = new();
                 HookTrigger.CollectTurnEnd(enemy.Creature, self, triggered);
                 for (int i = 0; i < triggered.Count; i++)

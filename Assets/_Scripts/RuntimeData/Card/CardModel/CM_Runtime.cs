@@ -5,7 +5,7 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>运行时状态容器：卡进战斗克隆出的可变副本，持有游戏中会改变的数据（费用、升级态、词条）。
-    /// 词条分两套烘焙集（未升级 / 已升级）与一套运行时追加集，生效集按升级态现算并缓存，升级只是切档。
+    /// 词条只有一套烘焙基础集与一套运行时追加集，升级靠烘焙期解析好的补丁现改数值/追加词条/移除词条；
     /// 不含任何静态配置；可变性守卫与词条操作均在此实现。克隆时仅深拷贝本容器，静态配置由 CardModel 共享引用。</summary>
     internal class CM_Runtime
     {
@@ -14,10 +14,10 @@ namespace _DreamKeep.RuntimeData
         internal ModifiableStat Cost { get; }
         internal bool IsUpgraded { get; private set; }
 
-        /// <summary>运行时追加的词条，跨升级档保留。</summary>
+        /// <summary>运行时追加的词条：升级追加与「给予」效果的追加都落在这里。</summary>
         internal List<CardAffix> AdditionalAffixes { get; } = new();
 
-        /// <summary>当前生效的词条集：按升级态取一套烘焙词条，再并入运行时追加的词条。</summary>
+        /// <summary>当前生效的词条集：基础词条（升级后跳过被移除的）再并入追加词条。</summary>
         internal IReadOnlyList<CardAffix> ActiveAffixes => _activeAffixes;
 
         /// <summary>保留词条权重恒为最小且插入稳定，只要存在必在首位。</summary>
@@ -30,52 +30,78 @@ namespace _DreamKeep.RuntimeData
         /// <summary>是否为卡组原型：原型上除升级外的写操作一律抛异常。</summary>
         private readonly bool _isCanonical;
         private readonly List<CardAffix> _baseAffixes = new();
-        private readonly List<CardAffix> _upgradedAffixes = new();
         private readonly List<CardAffix> _activeAffixes = new();
+        private readonly List<CM_ValuePatch> _valuePatches = new();        // 升级补丁·改数值（烘焙期解析）
+        private readonly List<CardAffix> _upgradeAddedAffixes = new();     // 升级补丁·追加词条（烘焙期解析）
+        private readonly List<int> _upgradeRemovedIndexes = new();         // 升级补丁·移除词条：基础词条下标
 
         internal CM_Runtime(string name_, int cost_, bool isCanonical_)
+            : this(name_, new ModifiableStat(cost_), isCanonical_)
+        {
+        }
+
+        private CM_Runtime(string name_, ModifiableStat cost_, bool isCanonical_)
         {
             _name = name_;
-            Cost = new ModifiableStat(cost_);
+            Cost = cost_;
             _isCanonical = isCanonical_;
         }
 
-        #region 烘焙期专用：写入两套词条并重建生效集，供配置烘焙调用
+        #region 烘焙期专用：写入基础词条与升级补丁并重建生效集，供配置烘焙调用
 
-        internal void SetBakedAffixes(List<CardAffix> baseAffixes_, List<CardAffix> upgradedAffixes_)
+        internal void SetBakedContent(List<CardAffix> baseAffixes_, List<CM_ValuePatch> valuePatches_,
+            List<CardAffix> upgradeAddedAffixes_, List<int> upgradeRemovedIndexes_)
         {
             _baseAffixes.Clear();
             _baseAffixes.AddRange(baseAffixes_);
-            _upgradedAffixes.Clear();
-            _upgradedAffixes.AddRange(upgradedAffixes_);
+            _valuePatches.Clear();
+            _valuePatches.AddRange(valuePatches_);
+            _upgradeAddedAffixes.Clear();
+            _upgradeAddedAffixes.AddRange(upgradeAddedAffixes_);
+            _upgradeRemovedIndexes.Clear();
+            _upgradeRemovedIndexes.AddRange(upgradeRemovedIndexes_);
             RebuildActive();
         }
 
         #endregion
 
-        #region 切换升级档：生效词条集换成已升级集，运行时追加的词条保留
+        #region 升级：应用补丁现改数值与词条集，一次性且不可逆；原型上调用抛异常
 
         internal void Upgrade()
         {
-            if (IsUpgraded || _upgradedAffixes.Count == 0) return;
+            if (_isCanonical) throw new InvalidOperationException("卡原型不可在运行时被改动，请先经 CardModel.ToMutable() 克隆出可变副本。");
+            if (IsUpgraded) return;
+
             IsUpgraded = true;
+            for (int i = 0; i < _valuePatches.Count; i++)
+                ApplyPatch(_valuePatches[i]);
+            for (int i = 0; i < _upgradeAddedAffixes.Count; i++)
+                InsertOrdered(AdditionalAffixes, _upgradeAddedAffixes[i].Clone());
             RebuildActive();
         }
 
         #endregion
 
-        #region 克隆一份可变副本：两套词条与追加词条逐条深拷贝、费用取当前值、升级态保留、打散原型标记
+        #region 克隆一份可变副本：值与移除标记随克隆，补丁只随"未升级"那份
 
         internal CM_Runtime Clone()
         {
-            CM_Runtime copy = new(_name, Cost.Value, false);
+            CM_Runtime copy = new(_name, Cost.Clone(), false);
             for (int i = 0; i < _baseAffixes.Count; i++)
                 copy._baseAffixes.Add(_baseAffixes[i].Clone());
-            for (int i = 0; i < _upgradedAffixes.Count; i++)
-                copy._upgradedAffixes.Add(_upgradedAffixes[i].Clone());
             for (int i = 0; i < AdditionalAffixes.Count; i++)
                 copy.AdditionalAffixes.Add(AdditionalAffixes[i].Clone());
+            copy._upgradeRemovedIndexes.AddRange(_upgradeRemovedIndexes);
             copy.IsUpgraded = IsUpgraded;
+
+            // 未升级副本带着补丁（之后自己升级的结果与源一致）；已升级副本不带，否则会在已含修正的值上再施加一遍
+            if (!IsUpgraded)
+            {
+                copy._valuePatches.AddRange(_valuePatches);
+                for (int i = 0; i < _upgradeAddedAffixes.Count; i++)
+                    copy._upgradeAddedAffixes.Add(_upgradeAddedAffixes[i].Clone());
+            }
+
             copy.RebuildActive();
             return copy;
         }
@@ -93,13 +119,34 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        /// <summary>重建生效集：按升级态取一套烘焙词条，再有序并入追加词条。</summary>
+        // 应用一条升级补丁：层数补丁加在状态原型上，卡级费用直接加在容器上，其余按通道找到数值容器
+        private void ApplyPatch(CM_ValuePatch patch_)
+        {
+            if (patch_.Kind == null)
+            {
+                ((CA_ApplyPerk)_baseAffixes[patch_.AffixIndex]).Perk.AddLayers((int)patch_.Modifier.additive);
+                return;
+            }
+
+            if (patch_.AffixIndex < 0)
+            {
+                Cost.Add(patch_.Modifier);
+                return;
+            }
+
+            CM_ValuePatch.StatOf(patch_.Kind.Value, _baseAffixes[patch_.AffixIndex]).Add(patch_.Modifier);
+        }
+
+        /// <summary>重建生效集：基础词条（升级后跳过被移除的下标）与追加词条分别有序并入。</summary>
         private void RebuildActive()
         {
             _activeAffixes.Clear();
-            List<CardAffix> baked = IsUpgraded && _upgradedAffixes.Count > 0 ? _upgradedAffixes : _baseAffixes;
-            for (int i = 0; i < baked.Count; i++)
-                InsertOrdered(_activeAffixes, baked[i]);
+            for (int i = 0; i < _baseAffixes.Count; i++)
+            {
+                if (IsUpgraded && _upgradeRemovedIndexes.Contains(i)) continue;
+                InsertOrdered(_activeAffixes, _baseAffixes[i]);
+            }
+
             for (int i = 0; i < AdditionalAffixes.Count; i++)
                 InsertOrdered(_activeAffixes, AdditionalAffixes[i]);
         }

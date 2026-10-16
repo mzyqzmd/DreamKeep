@@ -8,15 +8,15 @@ namespace _DreamKeep.RuntimeData
     public sealed class CA_GainEnergy : CardAffix
     {
         internal CA_GainEnergy(AD_GainEnergy gainEnergy_) : this(gainEnergy_.Name, gainEnergy_.ShowDescriptionCardView,
-            gainEnergy_.Amount)
+            new ModifiableStat(gainEnergy_.Amount))
         {
         }
 
-        private CA_GainEnergy(string name_, bool showDescription_, int amount_)
+        private CA_GainEnergy(string name_, bool showDescription_, ModifiableStat amount_)
         {
             Name = name_;
             ShowDescription = showDescription_;
-            Amount = new ModifiableStat(amount_);
+            Amount = amount_;
         }
 
         public override string Name { get; }
@@ -24,7 +24,7 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Amount { get; }
         internal override int PipelineOrder => 4;
 
-        // 数值属能量通道、修正未接入，暂原值输出
+        // 数值属能量通道：升级增量走容器已生效，战斗内的能量修正通道尚未接入
         public override string GetDescription(IValueRenderer valueRenderer_ = null)
         {
             StringBuilder sb = new();
@@ -36,9 +36,9 @@ namespace _DreamKeep.RuntimeData
             return sb.ToString();
         }
 
-        #region 深拷贝一份独立词条
+        #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
 
-        public override CardAffix Clone() => new CA_GainEnergy(Name, ShowDescription, Amount.Value);
+        public override CardAffix Clone() => new CA_GainEnergy(Name, ShowDescription, Amount.Clone());
 
         #endregion
     }

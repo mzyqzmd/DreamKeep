@@ -7,15 +7,15 @@ namespace _DreamKeep.RuntimeData
     public sealed class CA_Grant : CardAffix
     {
         internal CA_Grant(AD_Grant grant_, CardAffix grantedAffix_)
-            : this(grant_.Name, grant_.ShowDescriptionCardView, grant_.Count, grantedAffix_)
+            : this(grant_.Name, grant_.ShowDescriptionCardView, new ModifiableStat(grant_.Count), grantedAffix_)
         {
         }
 
-        private CA_Grant(string name_, bool showDescription_, int count_, CardAffix grantedAffix_)
+        private CA_Grant(string name_, bool showDescription_, ModifiableStat count_, CardAffix grantedAffix_)
         {
             Name = name_;
             ShowDescription = showDescription_;
-            Count = new ModifiableStat(count_);
+            Count = count_;
             GrantedAffix = grantedAffix_;
         }
 
@@ -25,11 +25,11 @@ namespace _DreamKeep.RuntimeData
         public CardAffix GrantedAffix { get; }
         internal override int PipelineOrder => 5;
 
-        // 数量属追加词条通道、修正未接入，暂原值输出
+        // 数量属追加词条通道：升级增量走容器已生效，战斗内的数量修正通道尚未接入
         public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"打出后为 {Count.Value} 张牌追加 {GrantedAffix.Name} 词条";
 
-        #region 深拷贝一份独立词条，被授予的词条递归克隆，避免多张卡共享同一实例
-        public override CardAffix Clone() => new CA_Grant(Name, ShowDescription, Count.Value, GrantedAffix.Clone());
+        #region 深拷贝一份独立词条，被授予的词条递归克隆，数值容器连同已生效的修正一并带走
+        public override CardAffix Clone() => new CA_Grant(Name, ShowDescription, Count.Clone(), GrantedAffix.Clone());
         #endregion
     }
 }
