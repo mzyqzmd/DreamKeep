@@ -19,7 +19,7 @@ namespace _DreamKeep.RuntimeData
         public override bool ShowDescription { get; }
         internal override int PipelineOrder => 7;
 
-        public override string GetDescription() => "打出后消耗自身本场战斗\n不再被抽到";
+        public override string GetDescription(IValueRenderer valueRenderer_ = null) => "打出后消耗自身本场战斗\n不再被抽到";
 
         #region 深拷贝一份独立词条
 

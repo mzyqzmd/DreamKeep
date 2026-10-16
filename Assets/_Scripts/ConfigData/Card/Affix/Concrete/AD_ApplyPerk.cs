@@ -8,10 +8,10 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Affix/施加效果")]
     public sealed class AD_ApplyPerk : AffixData
     {
-        [SerializeReference,SubclassSelector] private BattlePerk _perk;
+        [SerializeReference,SubclassSelector] private PerkData _perk;
         [SerializeField] private int _layers;
 
-        public BattlePerk Perk => _perk;
+        public PerkData Perk => _perk;
         public int Layers => _layers;
         public override string Name => "施加效果";
     }

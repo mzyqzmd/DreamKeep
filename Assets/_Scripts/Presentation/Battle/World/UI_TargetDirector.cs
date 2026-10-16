@@ -6,26 +6,26 @@ using VContainer;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>目标提示驱动：每帧读手牌区暴露的瞄准事实（瞄准中的牌、目标槽位、指针世界坐标），用玩法层的只读预览
+    /// <summary>目标提示驱动：每帧读手牌区暴露的瞄准事实（瞄准中的牌、目标槽位、指针世界坐标），用上行门面的只读查询
     /// 解析出"这张牌真正会命中的目标"，再查 ActorRoot 登记的单位视图、由它的命中框点亮对应目标、熄灭其余；箭头瞄准时
     /// 它还负责把"指针落在哪个敌人命中框内"解析成存活列表下标并回写手牌侧，于是打牌命令与提示共用同一个目标。
     /// 它归战斗单位侧：手牌侧只提供中立事实、不认识任何单位，落点规则也只有玩法层一份。</summary>
     public sealed class UI_TargetDirector : MonoBehaviour
     {
         private UI_HandView _handView;
-        private BattleContext _battleContext;
+        private BattleQueryDispatcher _queryDispatcher;
         private UI_ActorRoot _actorRoot;
         private readonly List<Creature> _shownTargets = new();
 
         private const int NoAimSlot = -1; // 指针没有指向任何敌人
 
-        #region 对外暴露的装配入口：容器注入手牌视图、战斗态与单位区
+        #region 对外暴露的装配入口：容器注入手牌视图、查询门面与单位区
 
         [Inject]
-        public void Construct(UI_HandView handView_, BattleContext battleContext_, UI_ActorRoot actorRoot_)
+        public void Construct(UI_HandView handView_, BattleQueryDispatcher queryDispatcher_, UI_ActorRoot actorRoot_)
         {
             _handView = handView_;
-            _battleContext = battleContext_;
+            _queryDispatcher = queryDispatcher_;
             _actorRoot = actorRoot_;
         }
 
@@ -42,17 +42,17 @@ namespace _DreamKeep.Presentation
                 return;
             }
 
-            List<Creature> targets;
+            IReadOnlyList<Creature> targets;
             if (aimed.Card.IsAnyEnemyTarget)
             {
                 // 箭头瞄准：指针落在哪个敌人的命中框内就取哪个（按存活列表顺序，都没命中为 -1），
                 // 按该下标回写手牌侧，再用同一份玩法层落点解析——提示的是谁，松手打的就是谁
                 Vector3 pointerWorld = _handView.PointerWorldPosition();
-                List<Enemy> alive = _battleContext.GetAliveEnemies();
+                IReadOnlyList<Creature> alive = _queryDispatcher.GetAliveEnemies();
                 int slot = NoAimSlot;
                 for (int i = 0; i < alive.Count; i++)
                 {
-                    UI_ActorHoverBox box = GetHoverBox(alive[i].Creature);
+                    UI_ActorHoverBox box = GetHoverBox(alive[i]);
                     if (!box || !box.ContainsWorldPoint(pointerWorld)) continue;
                     slot = i;
                     break;
@@ -65,14 +65,16 @@ namespace _DreamKeep.Presentation
                     return;
                 }
 
-                targets = CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player, slot);
+                targets = _queryDispatcher.PreviewTargets(aimed.Card, slot);
             }
             else
             {
                 // 拖拽瞄准（拖到出牌区）：落点规则只有玩法层一份，按手牌侧给出的目标槽位预览
-                targets = CardAffixResolver.PreviewTargets(_battleContext, aimed.Card, _battleContext.Player,
-                    _handView.CurrentAimSlot);
+                targets = _queryDispatcher.PreviewTargets(aimed.Card, _handView.CurrentAimSlot);
             }
+
+            // 数值预览输入：把这张牌真正会命中的目标集合回传手牌侧（有无变化由手牌侧的每帧差分兜底）
+            _handView.SetPreviewTargets(targets);
 
             // 目标集合比较：顺序由玩法层的解析确定，逐项等值即可；没变就早退，不做任何开关
             if (targets.Count == _shownTargets.Count)

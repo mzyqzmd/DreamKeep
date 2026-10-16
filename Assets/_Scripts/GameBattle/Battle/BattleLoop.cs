@@ -14,6 +14,7 @@ namespace _DreamKeep.GameBattle
 
         internal BattleContext BattleContext { get; }
         internal ActionSystem ActionSystem { get; }
+        internal BattleEventDispatcher EventDispatcher { get; }
 
         internal int DrawPerTurn { get; }
 
@@ -26,12 +27,13 @@ namespace _DreamKeep.GameBattle
         internal BattlePhase PhaseEnemyTurnEnd { get; }
         internal BattlePhase PhaseBattleFinish { get; }
 
-        public BattleLoop(BattleContext battleContext_, int drawPerTurn_, BattleEventDispatcher dispatcher_)
+        public BattleLoop(BattleContext battleContext_, int drawPerTurn_, BattleEventDispatcher eventDispatcher_)
         {
             BattleContext = battleContext_;
             DrawPerTurn = drawPerTurn_;
+            EventDispatcher = eventDispatcher_;
 
-            ActionSystem = new ActionSystem(battleContext_, dispatcher_);
+            ActionSystem = new ActionSystem(battleContext_, eventDispatcher_);
 
             PhaseBattleStart = new BP_BattleStart(this);
             PhasePlayerTurnStart = new BP_PlayerTurnStart(this);

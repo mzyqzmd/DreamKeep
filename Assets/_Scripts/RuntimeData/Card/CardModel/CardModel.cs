@@ -55,8 +55,8 @@ namespace _DreamKeep.RuntimeData
         #region 卡面文案：逐行出口与纯文本描述
 
         /// <summary>卡面逐行文案：目标提示行与普通词条行的 Affix 为 null，不展示描述的词条那一行 Text 即词条名并带出该词条——
-        /// 卡面的关键词行样式与词条说明气泡都只认这一份判据，行序即卡面从上到下的顺序。</summary>
-        public IReadOnlyList<(string Text, CardAffix Affix)> GetDescriptionLines()
+        /// 卡面的关键词行样式与词条说明气泡都只认这一份判据，行序即卡面从上到下的顺序；数值型词条的数值经渲染器着色，传 null 即纯文本描述。</summary>
+        public IReadOnlyList<(string Text, CardAffix Affix)> GetDescriptionLines(IValueRenderer valueRenderer_ = null)
         {
             List<(string Text, CardAffix Affix)> lines = new();
             string targetLine = _static.TargetType switch
@@ -72,7 +72,7 @@ namespace _DreamKeep.RuntimeData
             for (int i = 0; i < ActiveAffixes.Count; i++)
             {
                 CardAffix affix = ActiveAffixes[i];
-                lines.Add(affix.ShowDescription ? (affix.GetDescription(), null) : (affix.Name, affix));
+                lines.Add(affix.ShowDescription ? (affix.GetDescription(valueRenderer_), null) : (affix.Name, affix));
             }
 
             return lines;

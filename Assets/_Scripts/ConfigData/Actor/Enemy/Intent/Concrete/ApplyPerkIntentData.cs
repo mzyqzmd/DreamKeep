@@ -7,11 +7,11 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Intent/施加效果")]
     public sealed class ApplyPerkIntentData : IntentData
     {
-        [SerializeReference, SubclassSelector] private BattlePerk _perk;
+        [SerializeReference, SubclassSelector] private PerkData _perk;
         [SerializeField] private int _layers;
         [SerializeField] private bool _isSelf;
 
-        public BattlePerk Perk => _perk;
+        public PerkData Perk => _perk;
         public int Layers => _layers;
         public bool IsSelf => _isSelf;
     }

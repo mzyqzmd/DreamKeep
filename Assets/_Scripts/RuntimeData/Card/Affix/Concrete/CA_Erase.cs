@@ -19,7 +19,7 @@ namespace _DreamKeep.RuntimeData
         public override bool ShowDescription { get; }
         internal override int PipelineOrder => 6;
 
-        public override string GetDescription() => "打出后从整局游戏中\n永久移除自身";
+        public override string GetDescription(IValueRenderer valueRenderer_ = null) => "打出后从整局游戏中\n永久移除自身";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Erase(Name, ShowDescription);

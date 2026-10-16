@@ -17,6 +17,6 @@ namespace _DreamKeep.GameBattle
         public virtual UniTask RunAsync() => UniTask.CompletedTask;
 
         /// <summary>阶段事件播放：本阶段产出的这一条事件经 ActionSystem 交给表现层 await。</summary>
-        protected UniTask PlayEvent(IBattleEvent battleEvent_) => _owner.ActionSystem.PlayAsync(battleEvent_);
+        protected UniTask PlayEvent(IBattleEvent battleEvent_) => _owner.EventDispatcher.PlayAsync(battleEvent_);
     }
 }

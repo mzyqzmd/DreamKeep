@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
+using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
@@ -61,8 +62,13 @@ namespace _DreamKeep.Presentation
         private Tween _moveTween;
         private Tween _scaleTween;
 
-        // 词条说明的内容（复用列表）：Bind 时按牌面的逐行文案重填一次，再整列递给气泡发起器
+        // 词条说明的内容（复用列表）：Bind 时按牌面的逐行文案重填一次，预览变化时经同源渲染重填，再递给气泡发起器
         private readonly List<(string Name, string Description)> _affixTips = new();
+
+        // 数值预览台账（复用列表）：上一次渲染的目标与各伤害词条的最终值——每帧对账先算进草稿，变了才接受并重建
+        private Creature _previewTarget;
+        private readonly List<int> _previewShown = new();
+        private readonly List<int> _previewDraft = new();
 
         // 两条补间通道"已声明的目标"：判"要不要重开补间"比它、不比滞后的当前姿态——补间刚建立、
         // transform 还没挪动的同一帧里，当前姿态会把"我马上要离开的位置"误判成"已就位"
@@ -148,14 +154,62 @@ namespace _DreamKeep.Presentation
             }
 
             _face.Bind(card_);
-            // 词条说明随绑定写一次：只认带出词条的行（其余行由牌面自己陈列），整列为空时气泡不弹
+            // 预览台账随卡重置：防池化实例把上一张卡的修正值串到新卡（手牌区下一帧的预览对账会重填）
+            _previewTarget = null;
+            _previewShown.Clear();
+            _previewDraft.Clear();
+            // 词条说明随绑定写一次（纯文本——此时牌面门面刚清空，渲染器退化原值；下一帧预览对账换成带修正值的版本）：
+            // 只认带出词条的行（其余行由牌面自己陈列），整列为空时气泡不弹
+            IValueRenderer tipRenderer = _face.TipValueRenderer;
             _affixTips.Clear();
-            foreach ((string text, CardAffix affix) in card_.GetDescriptionLines())
-                if (affix != null) _affixTips.Add((text, affix.GetDescription()));
+            foreach ((string text, CardAffix affix) in card_.GetDescriptionLines(tipRenderer))
+                if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));
             _hoverTip.SetContents(_affixTips);
         }
 
         public void SetPlayableLook(bool playable_) => _face.SetPlayableLook(playable_);
+
+        #endregion
+
+        #region 数值预览：每帧差分刷新卡面与气泡
+
+        /// <summary>刷新数值预览（手牌区对账调用）：目标或任一伤害词条的最终值变化才重建卡面与气泡，未变零字符串构建。</summary>
+        public void RefreshPreview(BattleQueryDispatcher queryDispatcher_, Creature target_)
+        {
+            _previewDraft.Clear();
+            IReadOnlyList<CardAffix> affixes = Card.ActiveAffixes;
+            for (int i = 0; i < affixes.Count; i++)
+                if (affixes[i] is CA_Damage damage)
+                    _previewDraft.Add(queryDispatcher_.PreviewCardDamage(target_, damage.Amount.Value));
+
+            bool changed = target_ != _previewTarget || _previewDraft.Count != _previewShown.Count;
+            if (!changed)
+            {
+                for (int i = 0; i < _previewDraft.Count; i++)
+                {
+                    if (_previewDraft[i] == _previewShown[i]) continue;
+                    changed = true;
+                    break;
+                }
+
+                if (!changed) return;
+            }
+
+            _previewTarget = target_;
+            _previewShown.Clear();
+            _previewShown.AddRange(_previewDraft);
+
+            // 卡面：写入预览门面后重建描述（数值着色写在牌面文本里；不可打时随整卡压暗由牌面自理）
+            _face.SetPreviewContext(queryDispatcher_, target_);
+            _face.RebuildDescription();
+
+            // 气泡：与卡面同源（同一修正口径与配色，不随卡面压暗），正显示中立即重刷
+            IValueRenderer tipRenderer = _face.TipValueRenderer;
+            _affixTips.Clear();
+            foreach ((string text, CardAffix affix) in Card.GetDescriptionLines(tipRenderer))
+                if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));
+            _hoverTip.SetContents(_affixTips);
+        }
 
         #endregion
 
@@ -175,7 +229,15 @@ namespace _DreamKeep.Presentation
         public void OnDrag(PointerEventData eventData)
         {
             if (!_dragging) return;
-            if (Card.IsAnyEnemyTarget) DragAim(eventData);
+            if (Card.IsAnyEnemyTarget)
+            {
+                // 瞄准拖动：指针越过启动阈值才通知宿主，此后每帧都通知（箭头随指针刷新）；阈值前什么都不做，故纯点击不留痕迹。
+                // 阈值判定无需本地锁存：按下位置每次按下重置、指针越过后再拖回阈值内也无妨——箭头已展开的视觉状态由流程锁存，
+                // 它的每帧驱动照旧刷新位姿与颜色，与本卡是否继续上报无关
+                if ((eventData.position - _pressScreenPosition).sqrMagnitude <
+                    _aimThresholdPx * _aimThresholdPx) return;
+                Host.OnAimDragged(this);
+            }
         }
 
         public void OnPointerUp(PointerEventData eventData)
@@ -183,16 +245,6 @@ namespace _DreamKeep.Presentation
             if (!_dragging) return;
             _dragging = false;
             Host.OnCardReleased(this); // 瞄准与否由宿主分流：松手后是打出还是回位都不在这里判断
-        }
-
-        // 瞄准拖动：指针越过启动阈值才通知宿主，此后每帧都通知（箭头随指针刷新）；阈值前什么都不做，故纯点击不留痕迹。
-        // 阈值判定无需本地锁存：按下位置每次按下重置、指针越过后再拖回阈值内也无妨——箭头已展开的视觉状态由流程锁存，
-        // 它的每帧驱动照旧刷新位姿与颜色，与本卡是否继续上报无关
-        private void DragAim(PointerEventData eventData_)
-        {
-            if ((eventData_.position - _pressScreenPosition).sqrMagnitude <
-                _aimThresholdPx * _aimThresholdPx) return;
-            Host.OnAimDragged(this);
         }
 
         #endregion

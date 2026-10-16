@@ -10,13 +10,15 @@ namespace _DreamKeep.Presentation
     /// 涨满（每张 0.04 秒、整段最多 0.6 秒）后才轮到抽牌入场。</summary>
     public sealed class UI_DrawPile : UI_Pile
     {
-        private CardPile _drawPile;
-        protected override int LiveCount => _drawPile.Count;
+        private readonly BQ_PileCount _query = new(EPileKind.Draw);
+        private BattleQueryDispatcher _queryDispatcher;
+
+        protected override int LiveCount => _queryDispatcher.PileCount(_query);
 
         [Inject]
-        public void Construct(BattleContext battleContext_)
+        public void Construct(BattleQueryDispatcher queryDispatcher_)
         {
-            _drawPile = battleContext_.Player.CombatState.DrawPile;
+            _queryDispatcher = queryDispatcher_;
             SyncToLive(); // 进战即显示：此时抽牌堆已是洗好的整副牌
         }
     }

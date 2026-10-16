@@ -24,7 +24,10 @@ namespace _DreamKeep.Presentation
         protected override void Configure(IContainerBuilder builder_)
         {
             Rng rng = new(_seed);
-            builder_.RegisterInstance(rng);
+            // 随机流分两条、各带 key：玩法的洗牌与随机目标走域流（经 BattleContext.Rng 取），表现层的装饰性随机（弃牌波抖动）走表现流。
+            // 两条都带 key 之后，任何不加 key 的 [Inject] Rng 都会在容器构建期直接报错——谁想要哪条流必须在注入点写清楚
+            builder_.RegisterInstance(rng).Keyed("Battle"); // 域流：当前无 [Inject] 消费者，刻意留口
+            builder_.RegisterInstance(new Rng(System.Environment.TickCount)).Keyed("Presentation"); // 表现流：弃牌波起落点抖动
             BattleContext battleContext = BattleSetup.Create(_playerConfig, _enemyConfigs, rng);
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();
@@ -32,7 +35,8 @@ namespace _DreamKeep.Presentation
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
-            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被 UI_HandView 的 [Inject] 要（出牌受理时发打牌命令）
+            builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）
+            builder_.RegisterInstance(new BattleQueryDispatcher(battleContext)); // 被视图的 [Inject] 要（预览查询与牌堆张数）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
             // 单位视图预制体一律来自配置资产：玩家走工厂注册（服务类型 GameObject，未接线留 null 交生成侧报错跳过），
             // 敌人列表与 _enemyConfigs 同源同序，由本组合根抽出转发，BattleEntry 无需认识配置

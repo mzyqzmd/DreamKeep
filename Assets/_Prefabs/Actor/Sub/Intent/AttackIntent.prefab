@@ -95,7 +95,7 @@ MonoBehaviour:
   _damage0_5: {fileID: 21300000, guid: aa3106e8356920c4abe1cb57de663755, type: 3}
   _damage6_10: {fileID: 21300000, guid: 64c5f22d42bc65749ae953893c18876f, type: 3}
   _damage11_20: {fileID: 21300000, guid: 09849792b56481c4db3df672c24316d8, type: 3}
-  _damage21_30: {fileID: 21300000, guid: 9761d15693bd9f5469cff97b4de1a325, type: 3}
+  _damage21_40: {fileID: 21300000, guid: 9761d15693bd9f5469cff97b4de1a325, type: 3}
   _damageMax: {fileID: 21300000, guid: a3d728c44c941e14eb27401d6c24d209, type: 3}
 --- !u!114 &3554680180188300329
 MonoBehaviour:
@@ -110,13 +110,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _trigger: 0
+  _startAnchor: 1
+  _tipAnchor: 7
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipParent: {fileID: 0}
+  _stackSpacingPx: 12
   _isStaticContents: 0
   _tipName: 
   _tipDescription: 
-  _startAnchor: 1
-  _tipOffsetPx: {x: 0, y: 1}
-  _tipAnchor: 7
-  _tipParent: {fileID: 0}
 --- !u!1 &8583651474406725573
 GameObject:
   m_ObjectHideFlags: 0

@@ -86,6 +86,7 @@ namespace _DreamKeep.Presentation
 
         // 域侧协作者、卡池与手牌台账
         private BattleCommandDispatcher _commandDispatcher;
+        private BattleQueryDispatcher _queryDispatcher;
         private Camera _canvasCamera;
         private MonoObjectPool<UI_CardBattle> _cardPool;
         private readonly List<UI_CardBattle> _hand = new();
@@ -103,26 +104,31 @@ namespace _DreamKeep.Presentation
         // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
         private int _aimSlot = DefaultAimSlot;
 
+        // 当前瞄准牌的目标集合（由单位侧的目标提示驱动每帧回传）：数值预览的目标侧修正只取"唯一目标"那一档
+        private IReadOnlyList<Creature> _previewTargets;
+
         // 同节点的悬停器：悬停身份、避让量与词条气泡都长在它身上，这里只留引用与调用（RequireComponent 保证它必有）
         private UI_HandHover _hover;
 
         // 生命周期：取悬停器引用（与本体同节点，缺失会在首次驱动处直接报出来）
         private void Awake() => _hover = GetComponent<UI_HandHover>();
 
-        // 每帧驱动：先让悬停器裁决悬停进出，再刷新瞄准中的箭头并兜底校正瞄准状态，最后按拖拽牌（优先）与悬停牌对账词条说明气泡列
+        // 每帧驱动：先让悬停器裁决悬停进出，再刷新瞄准中的箭头并兜底校正瞄准状态，后按拖拽牌（优先）与悬停牌对账词条说明气泡列，最后对账整手牌的数值预览
         private void Update()
         {
             _hover.TickHover();
             TickAim();
             _hover.TickAffixTips();
+            TickPreview();
         }
 
-        // 装配：解析画布相机、建卡池。画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
+        // 装配：解析画布相机、建卡池；两个上行门面分别供出牌命令与数值预览查询。画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
         // 十一条领域事件的订阅在演出器、悬停裁决在悬停器，各自在他们的装配处
         [Inject]
-        public void Construct(BattleCommandDispatcher commandDispatcher_)
+        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleQueryDispatcher queryDispatcher_)
         {
             _commandDispatcher = commandDispatcher_;
+            _queryDispatcher = queryDispatcher_;
             _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西
             _cardPool = new MonoObjectPool<UI_CardBattle>(_handLayer, 64, onReturn_: view_ =>
@@ -193,12 +199,30 @@ namespace _DreamKeep.Presentation
         /// <summary>回写当前瞄准的目标槽位：-1 = 未指向任何敌人，松手时据此取消。</summary>
         public void SetAimSlot(int slot_) => _aimSlot = slot_;
 
+        /// <summary>回传当前瞄准牌的目标集合（单位侧的目标提示驱动每帧调用；未瞄准或未解析出目标时传 null）。</summary>
+        public void SetPreviewTargets(IReadOnlyList<Creature> targets_) => _previewTargets = targets_;
+
         /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
         public UI_CardBattle AimedCard =>
             _draggedCard && _cardsPlayable &&
             (_draggedCard.Card.IsAnyEnemyTarget || _dropZone.Accepts(_draggedCard.WorldPosition))
                 ? _draggedCard
                 : null;
+
+        // 数值预览的逐帧驱动：整手每帧对账——平时只含来源侧修正（力量/虚弱），正在瞄准且已指向目标的牌叠加唯一目标的目标侧修正
+        //（多目标/随机卡的候选不止一个时不叠加）；未变的卡在卡视图内部差分早退，零字符串构建
+        private void TickPreview()
+        {
+            UI_CardBattle aimed = AimedCard;
+            Creature target = aimed != null && _aimSlot >= 0 && _previewTargets != null && _previewTargets.Count == 1
+                ? _previewTargets[0]
+                : null;
+            for (int i = 0; i < _hand.Count; i++)
+            {
+                UI_CardBattle card = _hand[i];
+                card.RefreshPreview(_queryDispatcher, card == aimed ? target : null);
+            }
+        }
 
         // 瞄准的逐帧驱动：卡离手或不再被按住时兜底取消；箭头展开期间刷新位姿与颜色
         private void TickAim()

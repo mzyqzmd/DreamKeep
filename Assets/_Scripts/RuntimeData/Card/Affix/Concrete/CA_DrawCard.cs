@@ -22,7 +22,8 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Count { get; }
         internal override int PipelineOrder => 3;
 
-        public override string GetDescription() => $"抽 {Count.Value} 张牌";
+        // 数值属抽牌数通道、修正未接入，暂原值输出
+        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"抽 {Count.Value} 张牌";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_DrawCard(Name, ShowDescription, Count.Value);

@@ -28,15 +28,11 @@ namespace _DreamKeep.GameBattle
             List<Creature> self = new List<Creature> { player.Creature };
             ActionSystem actions = _owner.ActionSystem;
 
-            // 灼烧属受到伤害：无来源纯状态结算（Source=null 不触发任何人的攻击演出），可被格挡吸收，但不吃力量/虚弱/易伤修正
-            int burn = player.Creature.GetPerkLayers<BP_Burn>();
-            if (burn > 0)
-                actions.Enqueue(new BA_Damage(null, self, burn));
-
-            // 再生同灼烧：无来源纯状态结算，事件只带目标
-            int regen = player.Creature.GetPerkLayers<BP_Regen>();
-            if (regen > 0)
-                actions.Enqueue(new BA_Heal(null, self, regen));
+            // 回合末状态结算（灼烧 → 再生）：行为与顺序由触发管线统一给出，灼烧显式关闭数值修正
+            List<BattleAction> triggered = new();
+            HookTrigger.CollectTurnEnd(player.Creature, self, triggered);
+            for (int i = 0; i < triggered.Count; i++)
+                actions.Enqueue(triggered[i]);
 
             await actions.PerformAllAsync();
 

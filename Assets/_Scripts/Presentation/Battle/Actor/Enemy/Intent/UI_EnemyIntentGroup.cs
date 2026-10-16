@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.GameBattle;
 using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
@@ -32,6 +33,14 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _icons.Count; i++) _iconPool.Release(_icons[i]);
             _icons.Clear();
             if (intent_ != null) Append(intent_);
+        }
+
+        /// <summary>刷新数值预览（敌人视图每帧对账调用）：对当前攻击意图逐个重算修正后伤害（等值短路在图标内，未变零写入）。</summary>
+        public void RefreshPreviews(BattleQueryDispatcher queryDispatcher_, Creature source_)
+        {
+            for (int i = 0; i < _icons.Count; i++)
+                if (_icons[i] is UI_AttackIntent attack)
+                    attack.RefreshPreview(queryDispatcher_, source_);
         }
 
         #endregion

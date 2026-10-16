@@ -9,13 +9,15 @@ namespace _DreamKeep.Presentation
     /// 遗忘的牌只借道此处回收、域侧不入本堆（永久移出卡组），故不计数、也不弹。</summary>
     public sealed class UI_ExhaustPile : UI_Pile
     {
-        private CardPile _exhaustPile;
-        protected override int LiveCount => _exhaustPile.Count;
+        private readonly BQ_PileCount _query = new(EPileKind.Exhaust);
+        private BattleQueryDispatcher _queryDispatcher;
+
+        protected override int LiveCount => _queryDispatcher.PileCount(_query);
 
         [Inject]
-        public void Construct(BattleContext battleContext_)
+        public void Construct(BattleQueryDispatcher queryDispatcher_)
         {
-            _exhaustPile = battleContext_.Player.CombatState.ExhaustPile;
+            _queryDispatcher = queryDispatcher_;
             SyncToLive(); // 进战即显示：开局无消耗
         }
     }

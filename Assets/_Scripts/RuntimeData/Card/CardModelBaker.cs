@@ -57,8 +57,9 @@ namespace _DreamKeep.RuntimeData
         private static CardAffix ToApplyPerk(AD_ApplyPerk applyPerk_)
         {
             if (applyPerk_.Perk == null) return null;
-            // 配置里的状态是模板：克隆出独立实例后再叠加词条给出的层数
-            BattlePerk runtimePerk = applyPerk_.Perk.Clone();
+            // 配置里的状态是模板：烘出独立运行时实例后再叠加词条给出的层数
+            BattlePerk runtimePerk = PerkBaker.Bake(applyPerk_.Perk);
+            if (runtimePerk == null) return null;
             runtimePerk.AddLayers(applyPerk_.Layers);
             return new CA_ApplyPerk(applyPerk_, runtimePerk);
         }

@@ -22,7 +22,8 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Amount { get; }
         internal override int PipelineOrder => 1;
 
-        public override string GetDescription() => $"获得 {Amount.Value} 点格挡";
+        // 数值属格挡通道、修正未接入，暂原值输出
+        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"获得 {Amount.Value} 点格挡";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Block(Name, ShowDescription, Amount.Value);

@@ -78,7 +78,8 @@ namespace _DreamKeep.GameBattle
             {
                 PerkEntry entry = startPerks_[i];
                 if (entry?.Perk == null) continue;
-                BattlePerk perk = entry.Perk.Clone();
+                BattlePerk perk = PerkBaker.Bake(entry.Perk);
+                if (perk == null) continue;
                 perk.AddLayers(entry.Layers);
                 creature_.ApplyPerk(perk);
             }

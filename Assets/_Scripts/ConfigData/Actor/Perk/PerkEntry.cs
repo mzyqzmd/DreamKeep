@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace _DreamKeep.ConfigData
 {
-    /// <summary>初始状态条目：perk 模板与出场层数——BattlePerk.Layers 是私有 setter、配置模板恒 0，层数只能随条目配置（同 ApplyPerkIntentData 的 _perk/_layers 先例）。</summary>
+    /// <summary>初始状态条目：perk 配置模板与出场层数——模板不携带层数，层数只能随条目配置（同 ApplyPerkIntentData 的 _perk/_layers 先例）。</summary>
     [Serializable]
     public class PerkEntry
     {
-        [SerializeReference, SubclassSelector] private BattlePerk _perk;
+        [SerializeReference, SubclassSelector] private PerkData _perk;
         [SerializeField] private int _layers;
 
-        public BattlePerk Perk => _perk;
+        public PerkData Perk => _perk;
         public int Layers => _layers;
     }
 }

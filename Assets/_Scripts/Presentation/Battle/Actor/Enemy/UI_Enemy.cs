@@ -4,6 +4,7 @@ using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
+using VContainer;
 
 namespace _DreamKeep.Presentation
 {
@@ -16,8 +17,16 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Ease _moveEase = Ease.OutQuad;
 
         private Enemy _boundEnemy;
+        private BattleQueryDispatcher _queryDispatcher;
 
         private Tween _moveTween;
+
+        // 意图数值的逐帧对账：攻击意图的伤害随修正实时刷新（等值短路在图标内，未变零写入）；未绑定或已死亡早退
+        private void Update()
+        {
+            if (_boundCreature == null || _boundCreature.IsDead) return;
+            RefreshIntentPreviews();
+        }
 
         // 销毁：先收掉自己的移动补间，再转调基类注销登记
         protected override void OnDestroy()
@@ -26,7 +35,11 @@ namespace _DreamKeep.Presentation
             base.OnDestroy();
         }
 
-        #region 装配入口：由生成侧在 Instantiate 后注入装配
+        #region 装配入口：生成侧注入上行门面、Instantiate 后值传递装配
+
+        /// <summary>注入查询门面：意图数值预览的查询出口（生成侧 InjectGameObject 先于 Bind 调用）。</summary>
+        [Inject]
+        public void Construct(BattleQueryDispatcher queryDispatcher_) => _queryDispatcher = queryDispatcher_;
 
         /// <summary>统一装配：绑敌人 → 转调基类（演出、面板与共享事件）→ 订阅意图与移动 → 展示当前预告意图 → 钉到出生槽位。</summary>
         public void Bind(BattleEventDispatcher eventDispatcher_, Enemy enemy_)
@@ -36,6 +49,7 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_EnemyIntentChanged>(OnIntentChangedAsync);
             eventDispatcher_.Register<BE_EnemyMoved>(OnEnemyMovedAsync);
             _intentGroup.Show(_boundEnemy.PreviewIntent);
+            RefreshIntentPreviews(); // 新图标立即带修正值，不闪基础值
 
             // 出生摆位：不补间，直接钉到当前槽位点
             _moveTween?.Kill();
@@ -57,11 +71,12 @@ namespace _DreamKeep.Presentation
 
         #region 敌人独有演绎
 
-        // 意图变动：刷新头顶图标组
+        // 意图变动：刷新头顶图标组（新图标立即按当前修正值重写一遍）
         private UniTask OnIntentChangedAsync(BE_EnemyIntentChanged changed_)
         {
             if (changed_.Enemy != _boundEnemy) return UniTask.CompletedTask;
             _intentGroup.Show(changed_.Intent);
+            RefreshIntentPreviews();
             return UniTask.CompletedTask;
         }
 
@@ -79,5 +94,9 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
+
+        // 意图预览对账：来源=敌人自己（力量/虚弱吃敌人侧，目标为玩家的易伤吃玩家侧，均由门面内定）
+        private void RefreshIntentPreviews() =>
+            _intentGroup.RefreshPreviews(_queryDispatcher, _boundCreature);
     }
 }

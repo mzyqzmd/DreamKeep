@@ -8,13 +8,13 @@ namespace _DreamKeep.GameBattle
     {
         private readonly Queue<BattleAction> _queue = new();
         private readonly BattleContext _battleContext;
-        private readonly BattleEventDispatcher _dispatcher;
+        private readonly BattleEventDispatcher _eventDispatcher;
         private bool _performing; // 排空独占：重复调用在首个 await 之前同步命中守卫后返回
 
-        public ActionSystem(BattleContext battleContext_, BattleEventDispatcher dispatcher_)
+        public ActionSystem(BattleContext battleContext_, BattleEventDispatcher eventDispatcher_)
         {
             _battleContext = battleContext_;
-            _dispatcher = dispatcher_;
+            _eventDispatcher = eventDispatcher_;
         }
 
         #region 入队一个动作，队列不设上限且永不丢动作
@@ -32,17 +32,11 @@ namespace _DreamKeep.GameBattle
             while (_queue.Count > 0)
             {
                 List<IBattleEvent> events = _queue.Dequeue().Execute(_battleContext);
-                await _dispatcher.PlayAsync(events);
+                await _eventDispatcher.PlayAsync(events);
             }
 
             _performing = false;
         }
-
-        #endregion
-
-        #region 阶段事件统一播放：供 BattlePhase 在 PerformAll 之外播放流程级事件
-
-        public UniTask PlayAsync(IBattleEvent battleEvent_) => _dispatcher.PlayAsync(battleEvent_);
 
         #endregion
     }

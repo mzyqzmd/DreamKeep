@@ -37,9 +37,10 @@ namespace _DreamKeep.Presentation
         // 生命周期：本体由 RequireComponent 保证同节点必有
         private void Awake() => _handView = GetComponent<UI_HandView>();
 
-        // 装配：取域侧事件与随机数；事件清单一处看完，各事件的演出在下面
+        // 装配：取域侧事件与表现层随机流；事件清单一处看完，各事件的演出在下面。
+        // 随机数取带 key 的表现流：抖动只打散轨迹，不该推进玩法随机（洗牌与随机目标）那一条流
         [Inject]
-        public void Construct(BattleEventDispatcher eventDispatcher_, Rng rng_)
+        public void Construct(BattleEventDispatcher eventDispatcher_, [Key("Presentation")] Rng rng_)
         {
             _rng = rng_;
             eventDispatcher_.Register<BE_DiscardReshuffled>(OnDiscardReshuffledAsync);

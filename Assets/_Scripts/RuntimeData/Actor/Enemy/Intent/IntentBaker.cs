@@ -43,11 +43,12 @@ namespace _DreamKeep.RuntimeData
             };
         }
 
-        /// <summary>状态从配置模板克隆出独立实例，再叠加意图给出的层数。</summary>
+        /// <summary>状态从配置模板烘出独立运行时实例，再叠加意图给出的层数。</summary>
         private static EnemyIntent ToApplyPerk(ApplyPerkIntentData data_)
         {
             if (data_.Perk == null) return null;
-            BattlePerk perk = data_.Perk.Clone();
+            BattlePerk perk = PerkBaker.Bake(data_.Perk);
+            if (perk == null) return null;
             perk.AddLayers(data_.Layers);
             return new EI_ApplyPerk(perk, data_.IsSelf);
         }
