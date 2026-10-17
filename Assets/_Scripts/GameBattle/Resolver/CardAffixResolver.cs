@@ -64,7 +64,9 @@ namespace _DreamKeep.GameBattle
             {
                 case CA_Damage damage:
                     for (int i = 0; i < damage.Times.Value; i++)
-                        actions_.Add(new BA_Damage(source_, targets_, damage.Amount.Value));
+                        actions_.Add(card_.IsRandomEnemyTarget
+                            ? new BA_DamageRandomEnemy(source_, damage.Amount.Value)
+                            : new BA_Damage(source_, targets_, damage.Amount.Value));
                     break;
                 case CA_Block block:
                     actions_.Add(new BA_Block(source_, targets_, block.Amount.Value));
