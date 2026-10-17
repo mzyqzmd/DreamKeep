@@ -23,6 +23,7 @@ MonoBehaviour:
   _canUpdate: 1
   _upgrades:
   - rid: 8162841763913924613
+  - rid: 8162841783749050375
   references:
     version: 2
     RefIds:
@@ -36,4 +37,10 @@ MonoBehaviour:
       data:
         _value: 1
         _additive: 3
+        _multiplier: 1
+    - rid: 8162841783749050375
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 0
+        _additive: -1
         _multiplier: 1

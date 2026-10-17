@@ -28,7 +28,7 @@ namespace _DreamKeep.RuntimeData
         /// <summary>伤害值经渲染器着色（修正求值与颜色归表现层），次数不参与。</summary>
         public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
-            string amount = valueRenderer_?.Render(Amount.Value, EStatChannel.Damage) ?? Amount.Value.ToString();
+            string amount = valueRenderer_?.Render(Amount.Value, Amount.Value, EStatChannel.Damage) ?? Amount.Value.ToString();
             return Times.Value > 1 ? $"造成 {amount} 点伤害 {Times.Value} 次" : $"造成 {amount} 点伤害";
         }
 

@@ -10,7 +10,7 @@ namespace _DreamKeep.RuntimeData
         /// <summary>卡面是否显示描述；为 false 时由表现层生成 tip。</summary>
         public abstract bool ShowDescription { get; }
 
-        /// <summary>逐条描述：数值型词条把基础值交给渲染器，不感知修正与颜色；渲染器为 null 即按原值纯文本输出。</summary>
+        /// <summary>逐条描述：数值型词条把基准值与当前值交给渲染器，不感知修正与颜色；渲染器为 null 即按当前值纯文本输出。</summary>
         public abstract string GetDescription(IStatRenderer valueRenderer_ = null);
 
         #region 深拷贝一份独立词条，供战斗卡与「给予」使用，避免多张卡共享同一实例

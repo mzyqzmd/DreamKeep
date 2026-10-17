@@ -26,7 +26,7 @@ namespace _DreamKeep.RuntimeData
         /// <summary>格挡值经渲染器着色（修正求值与颜色归表现层），升级增量已由数值容器承载。</summary>
         public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
-            string amount = valueRenderer_?.Render(Amount.Value, EStatChannel.Block) ?? Amount.Value.ToString();
+            string amount = valueRenderer_?.Render(Amount.Value, Amount.Value, EStatChannel.Block) ?? Amount.Value.ToString();
             return $"获得 {amount} 点格挡";
         }
 

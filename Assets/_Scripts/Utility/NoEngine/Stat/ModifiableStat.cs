@@ -12,6 +12,9 @@ namespace _DreamKeep.Utility
 
         public ModifiableStat(int baseValue_) => _baseValue = baseValue_;
 
+        /// <summary>修正前的基准值（配置里的原始数值）。</summary>
+        public int BaseValue => _baseValue;
+
         /// <summary>修正后的当前值。</summary>
         public int Value
         {

@@ -97,7 +97,7 @@ MonoBehaviour:
   _skillFace: {fileID: 1205379755748929341}
   _abilityFace: {fileID: 2917342219746286562}
   _curseFace: {fileID: 214837149997107500}
-  _hoverScale: 1.15
+  _hoverScale: 1.05
   _anchorLiftPx: 275
   _hoverDuration: 0.12
   _aimThresholdPx: 12

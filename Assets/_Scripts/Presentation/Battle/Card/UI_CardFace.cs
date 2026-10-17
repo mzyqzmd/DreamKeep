@@ -40,6 +40,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("升级后卡牌名字字体颜色")] [SerializeField]
         private Color _upgradeNameColor = Color.green;
 
+        [Tooltip("费用低于基础值时的字体颜色（减费提示，高于或等于保持本色）")] [SerializeField]
+        private Color _costLowerColor = Color.green;
+
         [Tooltip("不可打时整卡乘的暗灰色")] [SerializeField]
         private Color _unplayableTint = new(0.45f, 0.45f, 0.5f);
 
@@ -101,8 +104,8 @@ namespace _DreamKeep.Presentation
         // 生命周期：建两个数值渲染器组（颜色取编辑器值；卡面款的压暗随可打状态在 SetPlayableLook 里更新）
         private void Awake()
         {
-            _faceValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor);
-            _tipValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor);
+            _faceValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
+            _tipValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
         }
 
         #region 绑定卡面：刷新内容与外观，并把运行时卡模型收在牌面上
@@ -129,8 +132,7 @@ namespace _DreamKeep.Presentation
             _type.text = card_.GetTypeDescription();
             _icon.sprite = card_.Icon;
             // 描述文本不在这里写：关键词行的黄色要随可打状态一起压暗，故与整卡外观同在 SetPlayableLook 里刷新
-            // 费用为负即无费用，整块费用不展示；其余卡照常写数字
-            _cost.text = card_.Cost.Value.ToString();
+            // 费用为负即无费用，整块费用不展示；文本与颜色由 SetPlayableLook 经渲染器统一写（随不可打压暗）
             _cardCost.SetActive(card_.Cost.Value >= 0);
             // 按稀有度换边框三图；不需要换图的牌面（如诅咒）保持编辑器里摆好的固定外观
             if (_needCardSources)
@@ -169,7 +171,9 @@ namespace _DreamKeep.Presentation
             _playable = playable_;
             // 卡面数值的颜色跟着压暗走（富文本标签色盖得住组件色，必须显式预乘）；气泡款恒原色不动
             Color tint = playable_ ? Color.white : _unplayableTint;
-            _faceValueRenderer.SetColors(_valueBoostColor * tint, _valueReduceColor * tint);
+            _faceValueRenderer.SetColors(_valueBoostColor * tint, _valueReduceColor * tint, _costLowerColor * tint);
+            _cost.text = _faceValueRenderer.Render(Card.Cost.BaseValue, Card.Cost.Value, EStatChannel.Cost);
+
             RebuildDescription();
             for (int i = 0; i < _faceImages.Length; i++)
                 _faceImages[i].color = playable_ ? _imageColors[i] : _imageColors[i] * _unplayableTint;

@@ -94,7 +94,7 @@ namespace _DreamKeep.GameBattle
             int value = (int)((baseAmount_ + modifier_.additive) * modifier_.multiplier);
             if (value > modifier_.cap) value = modifier_.cap;
             if (value < modifier_.floor) value = modifier_.floor;
-            return Math.Max(0, value);
+            return value;
         }
     }
 }
