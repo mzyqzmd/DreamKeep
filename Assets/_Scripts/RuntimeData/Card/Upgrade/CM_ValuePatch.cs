@@ -9,14 +9,14 @@ namespace _DreamKeep.RuntimeData
     /// 其中层数补丁以 null 表示"改的是状态原型的层数"。</summary>
     internal sealed class CM_ValuePatch
     {
-        internal ECardValue? Kind { get; }
+        internal EUpgradeChannel? Kind { get; }
 
         /// <summary>目标词条在基础词条列表中的下标；卡级费用为 -1（不落在词条上）。</summary>
         internal int AffixIndex { get; }
 
         internal StatModifier Modifier { get; }
 
-        internal CM_ValuePatch(ECardValue? kind_, int affixIndex_, StatModifier modifier_)
+        internal CM_ValuePatch(EUpgradeChannel? kind_, int affixIndex_, StatModifier modifier_)
         {
             Kind = kind_;
             AffixIndex = affixIndex_;
@@ -25,13 +25,13 @@ namespace _DreamKeep.RuntimeData
 
         #region 值通道 → 该词条承载的数值容器（费用与"施加状态层数"不在此列，取不到即返回 null）
 
-        internal static ModifiableStat StatOf(ECardValue kind_, CardAffix affix_) => kind_ switch
+        internal static ModifiableStat StatOf(EUpgradeChannel kind_, CardAffix affix_) => kind_ switch
         {
-            ECardValue.Damage => affix_ is CA_Damage damage ? damage.Amount : null,
-            ECardValue.DamageTimes => affix_ is CA_Damage damage ? damage.Times : null,
-            ECardValue.Block => affix_ is CA_Block block ? block.Amount : null,
-            ECardValue.DrawCount => affix_ is CA_DrawCard drawCard ? drawCard.Count : null,
-            ECardValue.EnergyGain => affix_ is CA_GainEnergy gainEnergy ? gainEnergy.Amount : null,
+            EUpgradeChannel.Damage => affix_ is CA_Damage damage ? damage.Amount : null,
+            EUpgradeChannel.DamageTimes => affix_ is CA_Damage damage ? damage.Times : null,
+            EUpgradeChannel.Block => affix_ is CA_Block block ? block.Amount : null,
+            EUpgradeChannel.DrawCount => affix_ is CA_DrawCard drawCard ? drawCard.Count : null,
+            EUpgradeChannel.EnergyGain => affix_ is CA_GainEnergy gainEnergy ? gainEnergy.Amount : null,
             _ => null,
         };
 

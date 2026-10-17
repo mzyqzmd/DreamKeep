@@ -7,6 +7,6 @@ namespace _DreamKeep.ConfigData
     public sealed class SO_Regen : SO_Perk
     {
         public override string Name => "再生";
-        public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.TurnEnd;
+        public override EPerkSettleTiming SettleTiming => EPerkSettleTiming.TurnEnd;
     }
 }

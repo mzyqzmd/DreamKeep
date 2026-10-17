@@ -7,6 +7,6 @@ namespace _DreamKeep.ConfigData
     public sealed class SO_Strength : SO_Perk
     {
         public override string Name => "力量";
-        public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.None;
+        public override EPerkSettleTiming SettleTiming => EPerkSettleTiming.None;
     }
 }

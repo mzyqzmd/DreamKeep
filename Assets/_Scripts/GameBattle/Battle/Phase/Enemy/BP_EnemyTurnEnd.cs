@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>敌人回合结束阶段：逐敌人结算回合末状态（中毒/再生）并衰减，随后推进回合计数，一回合到此结束。</summary>
+    /// <summary>敌人回合结束阶段：逐敌人结算回合末状态，随后推进回合计数，一回合到此结束。</summary>
     public sealed class BP_EnemyTurnEnd : BattlePhase
     {
         public BP_EnemyTurnEnd(BattleLoop owner_) : base(owner_)
@@ -15,7 +15,7 @@ namespace _DreamKeep.GameBattle
 
         public override BaseState<BattleLoop> Next => _owner.PhasePlayerTurnStart;
 
-        #region 阶段异步逻辑：逐敌人结算回合末状态并衰减，等待演出后推进回合计数
+        #region 阶段异步逻辑：逐敌人结算回合末状态，等待演出后推进回合计数
 
         public override async UniTask RunAsync()
         {
@@ -27,13 +27,8 @@ namespace _DreamKeep.GameBattle
                 if (enemy.Creature.IsDead) continue;
                 List<Creature> self = new List<Creature> { enemy.Creature };
 
-                // 回合末状态结算（中毒 → 再生）先于衰减：宿主自己的回合边界
-                List<BattleAction> triggered = new();
-                HookTrigger.CollectTurnEnd(enemy.Creature, self, triggered);
-                for (int i = 0; i < triggered.Count; i++)
-                    actions.Enqueue(triggered[i]);
-
-                actions.Enqueue(new BA_DecayPerk(enemy.Creature, self, EPerkDecayTiming.TurnEnd));
+                // 回合末结算：宿主自己的回合边界，先触发效果再递减层数
+                actions.Enqueue(new BA_SettlePerk(enemy.Creature, self, EPerkSettleTiming.TurnEnd));
             }
 
             await actions.PerformAllAsync();

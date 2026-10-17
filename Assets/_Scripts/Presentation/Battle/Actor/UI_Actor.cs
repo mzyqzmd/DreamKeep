@@ -77,7 +77,7 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_BlockCleared>(OnBlockClearedAsync);
             eventDispatcher_.Register<BE_HealthRestored>(OnHealthRestoredAsync);
             eventDispatcher_.Register<BE_PerkApplied>(OnPerkAppliedAsync);
-            eventDispatcher_.Register<BE_PerkDecayed>(OnPerkDecayedAsync);
+            eventDispatcher_.Register<BE_PerkSettled>(OnPerkSettledAsync);
             eventDispatcher_.Register<BE_PerkRemoved>(OnPerkRemovedAsync);
             _boundCreature = creature_;
             // 把自己注册给_actorRoot
@@ -171,10 +171,10 @@ namespace _DreamKeep.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 状态层数递减：刷新对应槽位的层数显示
-        protected virtual UniTask OnPerkDecayedAsync(BE_PerkDecayed decayed_)
+        // 状态结算：刷新对应槽位的层数显示
+        protected virtual UniTask OnPerkSettledAsync(BE_PerkSettled settled_)
         {
-            if (decayed_.Target == _boundCreature && _perkGroup != null) _perkGroup.RefreshPerkLayers(decayed_.Perk);
+            if (settled_.Target == _boundCreature && _perkGroup != null) _perkGroup.RefreshPerkLayers(settled_.Perk);
             return UniTask.CompletedTask;
         }
 

@@ -37,7 +37,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
   - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
   - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
+  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
+  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
+  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
   _startPerks: []
-  references:
-    version: 2
-    RefIds: []

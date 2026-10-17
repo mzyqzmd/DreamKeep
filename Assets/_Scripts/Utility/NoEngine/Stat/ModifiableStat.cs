@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 namespace _DreamKeep.Utility
 {
-    /// <summary>可修正数值：持有基础值与生效中的修正列表，当前值 = (基础值 + Σ加值) 逐条乘算后的整数四舍五入结果；
+    /// <summary>可修正数值：持有基础值与生效中的修正列表，当前值 = (基础值 + Σ加值) 逐条乘算后取整，
+    /// 再按各修正给出的上下限折叠（下限取最大、上限取最小）后截断；
     /// 修正随克隆一并带走（升级这类永久改动必须活着进战斗）；变更一律经动作系统。</summary>
     public class ModifiableStat
     {
@@ -18,15 +19,22 @@ namespace _DreamKeep.Utility
             {
                 if (_modifiers == null) return _baseValue;
 
-                float additive = 0;
+                int additive = 0;
                 float multiplier = 1f;
+                int floor = int.MinValue;
+                int cap = int.MaxValue;
                 foreach (StatModifier modifier in _modifiers)
                 {
                     additive += modifier.additive;
                     multiplier *= modifier.multiplier;
+                    if (modifier.floor > floor) floor = modifier.floor;
+                    if (modifier.cap < cap) cap = modifier.cap;
                 }
 
-                return (int)((_baseValue + additive) * multiplier);
+                int value = (int)((_baseValue + additive) * multiplier);
+                if (value > cap) value = cap;
+                if (value < floor) value = floor;
+                return value;
             }
         }
 

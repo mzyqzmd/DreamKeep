@@ -6,7 +6,7 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>敌人回合开始阶段：清空敌人上回合残留的格挡，并让回合开始时机（TurnStart）的状态层数递减，为意图结算做准备。</summary>
+    /// <summary>敌人回合开始阶段：清空敌人上回合残留的格挡，再结算回合开始时机（TurnStart）的状态，为意图结算做准备。</summary>
     public sealed class BP_EnemyTurnStart : BattlePhase
     {
         public BP_EnemyTurnStart(BattleLoop owner_) : base(owner_)
@@ -15,7 +15,7 @@ namespace _DreamKeep.GameBattle
 
         public override BaseState<BattleLoop> Next => _owner.PhaseEnemyTurnActive;
 
-        #region 阶段异步逻辑：逐敌人清格挡与衰减状态后等待演出
+        #region 阶段异步逻辑：逐敌人清格挡与结算状态后等待演出
 
         public override async UniTask RunAsync()
         {
@@ -27,7 +27,7 @@ namespace _DreamKeep.GameBattle
                 if (enemy.Creature.IsDead) continue;
                 List<Creature> self = new List<Creature> { enemy.Creature };
                 actions.Enqueue(new BA_ClearBlock(enemy.Creature, self));
-                actions.Enqueue(new BA_DecayPerk(enemy.Creature, self, EPerkDecayTiming.TurnStart));
+                actions.Enqueue(new BA_SettlePerk(enemy.Creature, self, EPerkSettleTiming.TurnStart));
             }
 
             await actions.PerformAllAsync();

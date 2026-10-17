@@ -23,8 +23,12 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Amount { get; }
         internal override int PipelineOrder => 1;
 
-        // 数值属格挡通道：升级增量走容器已生效，战斗内的格挡修正通道尚未接入
-        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"获得 {Amount.Value} 点格挡";
+        /// <summary>格挡值经渲染器着色（修正求值与颜色归表现层），升级增量已由数值容器承载。</summary>
+        public override string GetDescription(IStatRenderer valueRenderer_ = null)
+        {
+            string amount = valueRenderer_?.Render(Amount.Value, EStatChannel.Block) ?? Amount.Value.ToString();
+            return $"获得 {amount} 点格挡";
+        }
 
         #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_Block(Name, ShowDescription, Amount.Clone());

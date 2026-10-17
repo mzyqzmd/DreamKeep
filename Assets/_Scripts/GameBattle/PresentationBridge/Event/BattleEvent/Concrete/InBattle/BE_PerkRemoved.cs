@@ -3,7 +3,7 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>状态移除：回合结束衰减归零把状态从生物身上摘除，Perk 是被摘下的挂载实例，供表现层删对应槽位。</summary>
+    /// <summary>状态移除：回合边界结算归零把状态从生物身上摘除，Perk 是被摘下的挂载实例，供表现层删对应槽位。</summary>
     public struct BE_PerkRemoved : IBattleEvent
     {
         public Creature Target { get; }

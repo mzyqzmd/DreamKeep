@@ -24,7 +24,7 @@ namespace _DreamKeep.RuntimeData
         internal override int PipelineOrder => 3;
 
         // 数值属抽牌数通道：升级增量走容器已生效，战斗内的抽牌修正通道尚未接入
-        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"抽 {Count.Value} 张牌";
+        public override string GetDescription(IStatRenderer valueRenderer_ = null) => $"抽 {Count.Value} 张牌";
 
         #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_DrawCard(Name, ShowDescription, Count.Clone());

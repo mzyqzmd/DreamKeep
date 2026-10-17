@@ -22,7 +22,7 @@ namespace _DreamKeep.RuntimeData
         public BattlePerk Perk { get; }
         internal override int PipelineOrder => 2;
 
-        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"对目标施加 {Perk.Layers} 层{Perk.Name}";
+        public override string GetDescription(IStatRenderer valueRenderer_ = null) => $"对目标施加 {Perk.Layers} 层{Perk.Name}";
 
         #region 深拷贝一份独立词条，状态原型连同层数一并克隆
 

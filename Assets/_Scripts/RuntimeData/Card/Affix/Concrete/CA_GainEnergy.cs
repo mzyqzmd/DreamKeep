@@ -25,7 +25,7 @@ namespace _DreamKeep.RuntimeData
         internal override int PipelineOrder => 4;
 
         // 数值属能量通道：升级增量走容器已生效，战斗内的能量修正通道尚未接入
-        public override string GetDescription(IValueRenderer valueRenderer_ = null)
+        public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
             StringBuilder sb = new();
             sb.Append("获得 ");

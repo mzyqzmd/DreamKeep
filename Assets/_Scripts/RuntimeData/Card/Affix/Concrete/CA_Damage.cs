@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using _DreamKeep.ConfigData;
 using _DreamKeep.Utility;
 
@@ -28,12 +26,10 @@ namespace _DreamKeep.RuntimeData
         internal override int PipelineOrder => 0;
 
         /// <summary>伤害值经渲染器着色（修正求值与颜色归表现层），次数不参与。</summary>
-        public override string GetDescription(IValueRenderer valueRenderer_ = null)
+        public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
-            if (valueRenderer_ == null) throw new NullReferenceException("此处需要文本renderer但是此处为空!");
-            StringBuilder sb = new($"造成 {valueRenderer_.Render(Amount.Value)} 点伤害");
-            if (Times.Value > 1) sb.Append($" {Times.Value} 次");
-            return sb.ToString();
+            string amount = valueRenderer_?.Render(Amount.Value, EStatChannel.Damage) ?? Amount.Value.ToString();
+            return Times.Value > 1 ? $"造成 {amount} 点伤害 {Times.Value} 次" : $"造成 {amount} 点伤害";
         }
 
         #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走

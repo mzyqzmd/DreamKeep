@@ -160,7 +160,7 @@ namespace _DreamKeep.Presentation
             _previewDraft.Clear();
             // 词条说明随绑定写一次（纯文本——此时牌面门面刚清空，渲染器退化原值；下一帧预览对账换成带修正值的版本）：
             // 只认带出词条的行（其余行由牌面自己陈列），整列为空时气泡不弹
-            IValueRenderer tipRenderer = _face.TipValueRenderer;
+            IStatRenderer tipRenderer = _face.TipValueRenderer;
             _affixTips.Clear();
             foreach ((string text, CardAffix affix) in card_.GetDescriptionLines(tipRenderer))
                 if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));
@@ -173,14 +173,23 @@ namespace _DreamKeep.Presentation
 
         #region 数值预览：每帧差分刷新卡面与气泡
 
-        /// <summary>刷新数值预览（手牌区对账调用）：目标或任一伤害词条的最终值变化才重建卡面与气泡，未变零字符串构建。</summary>
+        /// <summary>刷新数值预览（手牌区对账调用）：目标或任一伤害/格挡词条的最终值变化才重建卡面与气泡，未变零字符串构建。</summary>
         public void RefreshPreview(BattleQueryDispatcher queryDispatcher_, Creature target_)
         {
             _previewDraft.Clear();
             IReadOnlyList<CardAffix> affixes = Card.ActiveAffixes;
             for (int i = 0; i < affixes.Count; i++)
-                if (affixes[i] is CA_Damage damage)
-                    _previewDraft.Add(queryDispatcher_.PreviewCardDamage(target_, damage.Amount.Value));
+            {
+                switch (affixes[i])
+                {
+                    case CA_Damage damage:
+                        _previewDraft.Add(queryDispatcher_.PreviewCardDamage(target_, damage.Amount.Value));
+                        break;
+                    case CA_Block block:
+                        _previewDraft.Add(queryDispatcher_.PreviewCardBlock(target_, block.Amount.Value));
+                        break;
+                }
+            }
 
             bool changed = target_ != _previewTarget || _previewDraft.Count != _previewShown.Count;
             if (!changed)
@@ -204,7 +213,7 @@ namespace _DreamKeep.Presentation
             _face.RebuildDescription();
 
             // 气泡：与卡面同源（同一修正口径与配色，不随卡面压暗），正显示中立即重刷
-            IValueRenderer tipRenderer = _face.TipValueRenderer;
+            IStatRenderer tipRenderer = _face.TipValueRenderer;
             _affixTips.Clear();
             foreach ((string text, CardAffix affix) in Card.GetDescriptionLines(tipRenderer))
                 if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));

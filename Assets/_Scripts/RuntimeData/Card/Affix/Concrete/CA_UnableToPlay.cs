@@ -20,7 +20,7 @@ namespace _DreamKeep.RuntimeData
         public override bool ShowDescription { get; }
         internal override int PipelineOrder => -1;
 
-        public override string GetDescription(IValueRenderer valueRenderer_ = null) => "这张牌无法被打出";
+        public override string GetDescription(IStatRenderer valueRenderer_ = null) => "这张牌无法被打出";
 
         #region 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_UnableToPlay(Name, ShowDescription);

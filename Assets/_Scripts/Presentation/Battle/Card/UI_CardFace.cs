@@ -14,7 +14,7 @@ namespace _DreamKeep.Presentation
     /// 无费用卡隐藏费用块，不可打时整卡压暗；换图开关关掉的牌面（如诅咒）保持编辑器里摆好的固定外观。
     /// 它不参与任何交互：不处理指针事件、不管位置与缩放，只被战斗卡（UI_CardBattle）持有并转发调用；
     /// 战斗卡与展示卡共用这一张预制体，区别只在"有没有被包一层战斗卡"——图鉴之类的静态界面直接用它即纯展示卡。
-    /// 数值预览由两个渲染器实例承接：卡面文本用压暗款、悬停气泡用原色款（求值与着色规则都住在 DamageValueRenderer，本类只配置颜色与转发）。</summary>
+    /// 数值预览由两个渲染器承接：卡面文本用压暗款、悬停气泡用原色款（求值与着色规则住在 CardValueRenderer，本类只配置颜色与转发）。</summary>
     public sealed class UI_CardFace : MonoBehaviour
     {
         [Header("文本")] [Tooltip("卡面费用文本")] [SerializeField]
@@ -52,10 +52,10 @@ namespace _DreamKeep.Presentation
         [Tooltip("数值被修正得更低时的颜色（红）")] [SerializeField]
         private Color _valueReduceColor = new(1f, 0.36f, 0.36f);
 
-        // 预览状态：可打标记与两个数值渲染器实例（卡面文本款按不可打状态压暗、气泡款恒原色；门面与目标由手牌区每帧推入）
+        // 预览状态：可打标记与两个数值渲染器（卡面文本款按不可打状态压暗、气泡款恒原色；门面与目标由手牌区每帧推入）
         private bool _playable = true;
-        private DamageValueRenderer _faceValueRenderer;
-        private DamageValueRenderer _tipValueRenderer;
+        private CardValueRenderer _faceValueRenderer;
+        private CardValueRenderer _tipValueRenderer;
 
         #region 卡牌资源引用
 
@@ -98,11 +98,11 @@ namespace _DreamKeep.Presentation
 
         public CardModel Card { get; private set; }
 
-        // 生命周期：建两个数值渲染器（颜色取编辑器值；卡面款的压暗随可打状态在 SetPlayableLook 里更新）
+        // 生命周期：建两个数值渲染器组（颜色取编辑器值；卡面款的压暗随可打状态在 SetPlayableLook 里更新）
         private void Awake()
         {
-            _faceValueRenderer = new DamageValueRenderer(_valueBoostColor, _valueReduceColor);
-            _tipValueRenderer = new DamageValueRenderer(_valueBoostColor, _valueReduceColor);
+            _faceValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor);
+            _tipValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor);
         }
 
         #region 绑定卡面：刷新内容与外观，并把运行时卡模型收在牌面上
@@ -185,7 +185,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 数值预览：门面转发与描述重建（求值与着色的唯一落点是 DamageValueRenderer）
+        #region 数值预览：门面转发与描述重建（求值与着色的唯一落点是 CardValueRenderer）
 
         /// <summary>写入数值预览门面与目标（手牌区对账时推入；门面为空时数值按原值纯文本渲染，目标为 null 时目标侧修正不参与）。</summary>
         public void SetPreviewContext(BattleQueryDispatcher queryDispatcher_, Creature target_)
@@ -195,7 +195,7 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>气泡用渲染器：与卡面同一份修正与配色，但不随卡面压暗（浮层独立于整卡灰调）；气泡内容由战斗卡收集。</summary>
-        public IValueRenderer TipValueRenderer => _tipValueRenderer;
+        public IStatRenderer TipValueRenderer => _tipValueRenderer;
 
         /// <summary>重建描述文本：不展示描述的词条那一行只写词条名（黄 + 下划线，说明交给悬停/拖拽时弹出的气泡），
         /// 其余行的数值经渲染器着色（高绿低红、相等无色），不可打时颜色随整卡压暗。</summary>

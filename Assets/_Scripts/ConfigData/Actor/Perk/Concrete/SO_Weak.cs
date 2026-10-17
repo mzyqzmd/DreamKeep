@@ -11,6 +11,6 @@ namespace _DreamKeep.ConfigData
         public float Ratio => _ratio;
 
         public override string Name => "虚弱";
-        public override EPerkDecayTiming DecayTiming => EPerkDecayTiming.TurnEnd;
+        public override EPerkSettleTiming SettleTiming => EPerkSettleTiming.TurnEnd;
     }
 }

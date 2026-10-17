@@ -12,7 +12,7 @@ namespace _DreamKeep.RuntimeData
             SO_Vulnerable vulnerable => new BP_Vulnerable(vulnerable),
             SO_Weak weak => new BP_Weak(weak),
             SO_Strength strength => new BP_Strength(strength),
-            SO_Poison poison => new BP_Poison(poison),
+            SO_Dexterity dexterity => new BP_Dexterity(dexterity),
             SO_Regen regen => new BP_Regen(regen),
             _ => null,
         };

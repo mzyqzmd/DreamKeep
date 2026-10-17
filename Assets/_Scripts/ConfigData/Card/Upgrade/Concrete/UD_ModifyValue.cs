@@ -9,12 +9,12 @@ namespace _DreamKeep.ConfigData
     [AddTypeMenu("Upgrade/改数值")]
     public sealed class UD_ModifyValue : UpgradeData
     {
-        [SerializeField] private ECardValue _value;
-        [SerializeField] private float _additive; // 加值
+        [SerializeField] private EUpgradeChannel _value;
+        [SerializeField] private int _additive; // 加值
         [SerializeField] private float _multiplier = 1f; // 乘率，升级一般不用
 
-        public ECardValue Value => _value;
-        public float Additive => _additive;
+        public EUpgradeChannel Value => _value;
+        public int Additive => _additive;
         public float Multiplier => _multiplier;
     }
 }

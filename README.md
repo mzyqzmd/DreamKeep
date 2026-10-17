@@ -111,7 +111,7 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 外部包
 - 五个牌堆（抽牌堆 / 手牌 / 打出堆 / 弃牌堆 / 消耗堆）+ 局内卡组跨战斗保留
 - 敌人意图系统：意图配置 → 烘焙 → 运行时意图 → 头顶图标预告 → 执行 → 推进下一条
 - 纵深阵型：0 号玩家 + 1~3 号敌人槽位，敌人可前进/回绕，槽位占用判定
-- 状态（Perk）系统：施加/叠加/层数递减/归零移除，中毒与再生已接入回合结算
+- 状态（Perk）系统：结算时机声明（回合开始 / 回合结束 / 常驻）、施加与叠加、结算时先触发效果再递减层数、归零移除；再生已接入回合结算，力量/敏捷按通道修正伤害与格挡
 - 完整表现层：Spine 动画演出（攻击/受击/死亡/施法，非全阻塞并行）、血条滞后条、格挡显隐、状态槽位、意图气泡、目标高亮、手牌弧形排布与悬停避让、拖拽瞄准箭头、弃牌波与洗回波演出
 
 **近期收口与优化（2026-10-13 ~ 2026-10-15）**
@@ -125,7 +125,7 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 外部包
 
 - 卡牌 6 张（Attack / Bash / Block / ForgottenRitual / PommelStrike / SwordBoomerang）
 - 敌人 1 种（树枝史莱姆 TwigSlime，含四条意图 + 最前槽位替换意图）、玩家 1 套
-- 状态 5 种（中毒 / 再生 / 力量 / 易伤 / 虚弱）
+- 状态 5 种（再生 / 力量 / 敏捷 / 易伤 / 虚弱）
 - 词条 10 种
 - 预制体若干（卡面 4 种、意图图标 5 种、单位 2 种、面板与弹层）
 - 编辑器工具集 ToolBoxHub（文件夹着色、层级图标等）
@@ -141,7 +141,6 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 外部包
 | 商店 / 金币                      | `SO_Player._startGold` 已定义，零消费                                                                               |
 | 遗物 / 药水槽 / 法球槽               | `Player` 类注释里记名不落字段，共 7 项待落地                                                                                 |
 | 格挡 / 治疗意图图标不显示数值             | 占位视图类，玩家无法预判敌人数值                                                                                             |
-| 敌方意图不结算敌人身上的中毒 / 再生          | 玩家侧已接入，敌方侧只做层数衰减                                                                                             |
 | 单局内的地图 / 楼层 / 敌人编排           | 战斗是唯一场景（`Scene_Battle.unity`），跑图系统未开写                                                                        |
 | 事件订阅只增不减                     | `BattleEventDispatcher` 无 `Unregister`，单位视图销毁后处理器仍留在字典里（当前靠表现层 null 检查兜住，无实际 bug）                            |
 | 最后一处场景查找                     | `UI_HoverTip` 用 `FindFirstObjectByType<UI_PopTextRoot>()` 懒查弹层宿主（静态缓存 + 伪空重查），建议改为 `[Inject]` 注入以彻底零全局查找     |
@@ -161,7 +160,7 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 外部包
 ### 阶段二：补齐战斗内的功能空洞（最高优先级）
 
 1. **`BA_Damage` 接入状态修正**：`BP_Strength` 加值、`BP_Weak` 减伤、`BP_Vulnerable` 增伤，与 `ModifiableStat` 的"先加值再乘算"语义对齐。一行改动让三个状态从无效变有效，玩家立刻可感知——**收益最高**。
-2. 敌人意图结算接入敌人身上的中毒 / 再生。
+2. 敌人意图结算接入敌人身上的再生。
 3. 格挡 / 治疗意图图标补数值展示。
 4. 战斗结束奖励流程（填 `BP_BattleFinish.HandleCommand`）。
 5. `UI_HoverTip` 的弹层宿主改为 `[Inject]` 注入，消除最后一处场景查找。

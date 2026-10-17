@@ -58,14 +58,14 @@ namespace _DreamKeep.RuntimeData
         }
         #endregion
 
-        #region 回合边界：衰减指定时机的状态层数，归零项移除并逐个带回，供动作侧发移除事件
+        #region 回合边界：结算指定时机的状态层数（递减一层），归零项移除并逐个带回，供动作侧发移除事件
 
-        public List<BattlePerk> DecayPerks(EPerkDecayTiming timing_)
+        public List<BattlePerk> SettlePerks(EPerkSettleTiming timing_)
         {
             List<BattlePerk> removed = new();
             for (int i = _powers.Count - 1; i >= 0; i--)
             {
-                if (_powers[i].DecayTiming != timing_) continue;
+                if (_powers[i].SettleTiming != timing_) continue;
                 _powers[i].AddLayers(-1);
                 if (_powers[i].Layers > 0) continue;
                 removed.Add(_powers[i]);

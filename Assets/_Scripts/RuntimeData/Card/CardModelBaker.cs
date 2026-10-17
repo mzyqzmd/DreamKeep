@@ -88,9 +88,9 @@ namespace _DreamKeep.RuntimeData
             {
                 // 改数值：卡级费用固定落在下标 -1，其余通道先找出承载它的那条词条
                 case UD_ModifyValue modifyValue:
-                    if (modifyValue.Value == ECardValue.Cost)
+                    if (modifyValue.Value == EUpgradeChannel.Cost)
                     {
-                        valuePatches_.Add(new CM_ValuePatch(ECardValue.Cost, -1, ToModifier(modifyValue)));
+                        valuePatches_.Add(new CM_ValuePatch(EUpgradeChannel.Cost, -1, ToModifier(modifyValue)));
                         break;
                     }
 
@@ -125,7 +125,7 @@ namespace _DreamKeep.RuntimeData
             new(modifyValue_.Additive, modifyValue_.Multiplier);
 
         // 找承载指定通道的基础词条下标：复用运行时同一张"通道 → 数值容器"映射表
-        private static int IndexOfValueChannel(ECardValue kind_, List<CardAffix> baseAffixes_)
+        private static int IndexOfValueChannel(EUpgradeChannel kind_, List<CardAffix> baseAffixes_)
         {
             for (int i = 0; i < baseAffixes_.Count; i++)
                 if (CM_ValuePatch.StatOf(kind_, baseAffixes_[i]) != null) return i;

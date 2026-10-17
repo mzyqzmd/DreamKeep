@@ -3,7 +3,7 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>格挡动作：为目标累加格挡，格挡优先吸收后续伤害。</summary>
+    /// <summary>格挡动作：为目标累加格挡（逐目标经 Hook 求最终值），格挡优先吸收后续伤害。</summary>
     public sealed class BA_Block : BattleAction
     {
         /// <summary>格挡值。</summary>
@@ -17,8 +17,11 @@ namespace _DreamKeep.GameBattle
             foreach (Creature target in Targets)
             {
                 if (target.IsDead) continue;
-                target.Block += Amount;
-                events.Add(new BE_BlockGained(target, Amount));
+
+                // 修正逐目标求值：同一动作对不同状态的目标结算不同值
+                int amount = Hook.Resolve(battleContext_, EStatChannel.Block, Source, target, Amount);
+                target.Block += amount;
+                events.Add(new BE_BlockGained(target, amount));
             }
             return events;
         }

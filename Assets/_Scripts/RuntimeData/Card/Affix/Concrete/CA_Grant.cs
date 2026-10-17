@@ -26,7 +26,7 @@ namespace _DreamKeep.RuntimeData
         internal override int PipelineOrder => 5;
 
         // 数量属追加词条通道：升级增量走容器已生效，战斗内的数量修正通道尚未接入
-        public override string GetDescription(IValueRenderer valueRenderer_ = null) => $"打出后为 {Count.Value} 张牌追加 {GrantedAffix.Name} 词条";
+        public override string GetDescription(IStatRenderer valueRenderer_ = null) => $"打出后为 {Count.Value} 张牌追加 {GrantedAffix.Name} 词条";
 
         #region 深拷贝一份独立词条，被授予的词条递归克隆，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_Grant(Name, ShowDescription, Count.Clone(), GrantedAffix.Clone());
