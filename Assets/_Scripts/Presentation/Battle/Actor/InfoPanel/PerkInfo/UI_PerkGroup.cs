@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
@@ -15,8 +17,15 @@ namespace _DreamKeep.Presentation
 
         private readonly Dictionary<Type, UI_PerkSlot> _perkSlots = new();
         private MonoObjectPool<UI_PerkSlot> _slotPool;
+        private IObjectResolver _resolver;
 
-        private void Awake() => _slotPool = new MonoObjectPool<UI_PerkSlot>(transform);
+        // 池化槽位只在新建时补一次容器注入（槽位上的气泡发起器等依赖），复用实例不重复注入；
+        // Awake 早于 Construct，闭包里读字段而不是捕获局部变量
+        private void Awake() => _slotPool = new MonoObjectPool<UI_PerkSlot>(transform,
+            onCreate_: slot_ => _resolver.InjectGameObject(slot_.gameObject));
+
+        [Inject]
+        public void Construct(IObjectResolver resolver_) => _resolver = resolver_;
 
         #region 施加效果
 

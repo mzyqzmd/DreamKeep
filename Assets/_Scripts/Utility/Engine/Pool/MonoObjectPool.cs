@@ -11,6 +11,7 @@ namespace _DreamKeep.Utility
     {
         private readonly Transform _parent;
         private readonly int _maxSize;
+        private readonly Action<T> _onCreate;
         private readonly Action<T> _onGet;
         private readonly Action<T> _onReturn;
 
@@ -18,11 +19,14 @@ namespace _DreamKeep.Utility
         private readonly Dictionary<T, Stack<T>> _idle = new(); // 预制体 → 空闲实例栈（一桶一预制体）
 
         /// <summary>建池：parent_ 为新建实例的出生父节点；maxSize_ 为每桶缓存上限，超出的归还直接销毁；
+        /// onCreate_ 只在真正实例化时触发一次（容器注入等一次性装配），池内复用不重复调用；
         /// onGet_/onReturn_ 为消费者特有的取出刷新与归还复位。</summary>
-        public MonoObjectPool(Transform parent_, int maxSize_ = 32, Action<T> onGet_ = null, Action<T> onReturn_ = null)
+        public MonoObjectPool(Transform parent_, int maxSize_ = 32, Action<T> onCreate_ = null, Action<T> onGet_ = null,
+            Action<T> onReturn_ = null)
         {
             _parent = parent_;
             _maxSize = maxSize_;
+            _onCreate = onCreate_;
             _onGet = onGet_;
             _onReturn = onReturn_;
         }
@@ -41,7 +45,12 @@ namespace _DreamKeep.Utility
                 if (instance) break; // 宿主销毁带走的伪空实例：直接丢弃，它早已不在用表里
             }
 
-            if (!instance) instance = UnityEngine.Object.Instantiate(prefab_, _parent);
+            if (!instance)
+            {
+                instance = UnityEngine.Object.Instantiate(prefab_, _parent);
+                _onCreate?.Invoke(instance); // 一次性装配：只在新实例上补注入，复用实例的依赖早已就位
+            }
+
             _originOf[instance] = prefab_; // 新实例与复用实例同一行登记，语义即"当前在用"
 
             instance.gameObject.SetActive(true);

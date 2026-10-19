@@ -5,6 +5,7 @@ using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using VContainer;
 
 namespace _DreamKeep.Presentation
 {
@@ -47,22 +48,15 @@ namespace _DreamKeep.Presentation
 
         private bool _shown;
 
-        // 弹层宿主：全场景唯一（场景对象 Canvas_Pop/PopTextRoot）。预制体拖不到它、池化生成的对象也拿不到容器注入，
-        // 故首次用时懒查一次、全局共享；读到假 null（宿主被销毁或换了场景）重查
-        private static UI_PopTextRoot _host;
+        // 弹层宿主：全场景唯一（场景对象 Canvas_Pop/PopTextRoot），一律由战斗容器注入
+        private UI_PopTextRoot _host;
 
-        // 懒查弹层宿主：找不到即场景缺弹层，直接报错
-        private static UI_PopTextRoot Host
-        {
-            get
-            {
-                if (!_host) _host = FindFirstObjectByType<UI_PopTextRoot>();
-                return !_host
-                    ? throw new InvalidOperationException("[UI_HoverTip] 场景里找不到 UI_PopTextRoot，说明气泡没有弹层宿主可用")
-                    : _host;
-            }
-        }
+        // 装配：宿主由容器注入（场景实例走自动注入、池化实例走池的新建回调）；
+        // 没有注入说明这条生成路径漏了 InjectGameObject，直接报错而不是运行时静默找不到气泡
+        [Inject]
+        public void Construct(UI_PopTextRoot host_) => _host = host_;
 
+     
         // 静态内容在装配时一次性预填；动态内容由宿主在数据变化时注入（两串都空即当作无内容）
         private void Awake()
         {
@@ -83,8 +77,8 @@ namespace _DreamKeep.Presentation
             Vector3 anchor = UiGeometry.AnchorPoint((RectTransform)transform, _startAnchor) +
                              transform.TransformVector(new Vector3(_tipOffsetPx.x, _tipOffsetPx.y, 0f));
             Vector2 pivot = UiGeometry.Pivot(_tipAnchor);
-            Transform mount = _tipParent ? _tipParent : Host.transform;
-            IReadOnlyList<UI_DescriptionPopTip> bubbles = Host.AcquireColumn(this, _contents.Count);
+            Transform mount = _tipParent ? _tipParent : _host.transform;
+            IReadOnlyList<UI_DescriptionPopTip> bubbles = _host.AcquireColumn(this, _contents.Count);
             float step = pivot.y > 0f ? -1f : 1f; // 底沿贴锚点（pivot.y 为 0）向上长，顶/居中则向下长
             for (int i = 0; i < bubbles.Count; i++)
                 anchor = PlaceBubble(bubbles[i], pivot, mount, anchor, step, _stackSpacingPx, _contents[i]);

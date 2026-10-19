@@ -4,6 +4,8 @@ using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
@@ -21,8 +23,15 @@ namespace _DreamKeep.Presentation
         // 当前展示的图标（按排列顺序）：归还只认自己这份名单，不扫子物体——池的空闲实例也挂在本组名下
         private readonly List<UI_Intent> _icons = new();
         private MonoObjectPool<UI_Intent> _iconPool;
+        private IObjectResolver _resolver;
 
-        private void Awake() => _iconPool = new MonoObjectPool<UI_Intent>(transform);
+        // 池化图标只在新建时补一次容器注入（图标上的气泡发起器等依赖），复用实例不重复注入；
+        // Awake 早于 Construct，闭包里读字段而不是捕获局部变量
+        private void Awake() => _iconPool = new MonoObjectPool<UI_Intent>(transform,
+            onCreate_: icon_ => _resolver.InjectGameObject(icon_.gameObject));
+
+        [Inject]
+        public void Construct(IObjectResolver resolver_) => _resolver = resolver_;
 
         #region 对外展示：按展示意图整组重建头顶图标
 

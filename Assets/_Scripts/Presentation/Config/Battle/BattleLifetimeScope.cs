@@ -53,8 +53,15 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             builder_.RegisterComponentInHierarchy<UI_PopTextRoot>(); // 弹层宿主：[Inject] 订阅 BE_TurnStarted 转发回合横幅
+            builder_.RegisterComponentInHierarchy<UI_NumberPopDirector>(); // 数字漂字导演：订伤害/回血事件，按语义驱动弹层
             builder_.RegisterComponentInHierarchy<UI_TargetDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
             builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场单位区：槽位点坐标来源（出生摆位与移动补间）+ 单位视图登记表（目标提示按生物查视图）
+            // 场景里预摆的悬停发起器既不经过池、也不会被 RegisterComponentInHierarchy 逐个覆盖：装配期只对组件本身补一次注入。
+            // 刻意不注入整个层级，避免把已注册场景组件（如 EndTurnButton / EnergyRemain）的 [Inject] 再跑一遍造成重复订阅。
+            builder_.RegisterBuildCallback(resolver_ =>
+            {
+                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+            });
             builder_.RegisterEntryPoint<BattleEntry>();
         }
 

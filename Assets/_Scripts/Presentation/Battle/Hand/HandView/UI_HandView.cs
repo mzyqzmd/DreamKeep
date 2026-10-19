@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using VContainer;
+using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
@@ -125,19 +126,23 @@ namespace _DreamKeep.Presentation
         // 装配：解析画布相机、建卡池；两个上行门面分别供出牌命令与数值预览查询。画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
         // 十一条领域事件的订阅在演出器、悬停裁决在悬停器，各自在他们的装配处
         [Inject]
-        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleQueryDispatcher queryDispatcher_)
+        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleQueryDispatcher queryDispatcher_,
+            IObjectResolver resolver_)
         {
             _commandDispatcher = commandDispatcher_;
             _queryDispatcher = queryDispatcher_;
             _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
-            // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西
-            _cardPool = new MonoObjectPool<UI_CardBattle>(_handLayer, 64, onReturn_: view_ =>
-            {
-                view_.KillMotion();
-                _entering.Remove(view_); // 回收即注销入场标记与交互身份，防实例复用后残留旧状态
-                _hover.OnViewReleased(view_);
-                if (_draggedCard == view_) _draggedCard = null;
-            });
+            // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西；
+            // 新建实例只在这时补一次容器注入（卡上的气泡发起器等依赖），池内复用不重复注入
+            _cardPool = new MonoObjectPool<UI_CardBattle>(_handLayer, 64,
+                onCreate_: view_ => resolver_.InjectGameObject(view_.gameObject),
+                onReturn_: view_ =>
+                {
+                    view_.KillMotion();
+                    _entering.Remove(view_); // 回收即注销入场标记与交互身份，防实例复用后残留旧状态
+                    _hover.OnViewReleased(view_);
+                    if (_draggedCard == view_) _draggedCard = null;
+                });
         }
 
         #region 出牌受理与瞄准事实

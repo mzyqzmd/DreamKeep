@@ -113,7 +113,7 @@ MonoBehaviour:
   _startAnchor: 1
   _tipAnchor: 7
   _tipOffsetPx: {x: 0, y: 1}
-  _tipParent: {fileID: 0}
+  _tipParent: {fileID: 6369628092964456586}
   _stackSpacingPx: 12
   _isStaticContents: 0
   _tipName: 

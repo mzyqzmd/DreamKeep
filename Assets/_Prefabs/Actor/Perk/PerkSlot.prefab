@@ -122,13 +122,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _trigger: 0
+  _startAnchor: 1
+  _tipAnchor: 7
+  _tipOffsetPx: {x: 0, y: 1}
+  _tipParent: {fileID: 813137523486038118}
+  _stackSpacingPx: 12
   _isStaticContents: 0
   _tipName: 
   _tipDescription: 
-  _startAnchor: 1
-  _tipOffsetPx: {x: 0, y: 1}
-  _tipAnchor: 7
-  _tipParent: {fileID: 0}
 --- !u!1 &7348670735517556035
 GameObject:
   m_ObjectHideFlags: 0
