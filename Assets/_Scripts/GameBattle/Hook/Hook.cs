@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
@@ -51,7 +50,7 @@ namespace _DreamKeep.GameBattle
                 BP_Dexterity dexterity => dexterity.GetModifier(channel_, host_, source_, target_),
                 BP_Weak weak => weak.GetModifier(channel_, host_, source_, target_),
                 BP_Vulnerable vulnerable => vulnerable.GetModifier(channel_, host_, source_, target_),
-                _ => throw new ArgumentOutOfRangeException($"未登记的状态类型：{perk_}")
+                _ => StatModifier.Neutral
             };
 
         // 折叠：遍历玩家与全部敌人身上的状态，死亡宿主不参与

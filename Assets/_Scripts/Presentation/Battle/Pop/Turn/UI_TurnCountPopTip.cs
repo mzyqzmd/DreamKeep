@@ -5,7 +5,7 @@ using UnityEngine;
 namespace _DreamKeep.Presentation
 {
     /// <summary>回合横幅公告：回合开始时显示"第 X 回合"与"玩家回合/敌人回合"，纯视图、不订事件不认识容器——
-    /// 懒生成与事件订阅归 UI_PopTextRoot。时间线为 _turnText 从放大收拢到目标尺寸入场、停留、整层渐隐后自收（SetActive(false)），
+    /// 懒生成与事件订阅归 PopRoot。时间线为 _turnText 从放大收拢到目标尺寸入场、停留、整层渐隐后自收（SetActive(false)），
     /// 播放与抽牌等回合演出同屏并行（fire-and-forget，不由域侧 await）；重复触发即杀旧时间线重播。</summary>
     public sealed class UI_TurnCountPopTip : MonoBehaviour
     {

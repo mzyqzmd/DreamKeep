@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>说明气泡：标题与描述的复用弹板，内容由 UI_PopTextRoot 在弹出时写入；
-    /// 标题为空自动收起标题行（意图类说明只有描述），显隐与定位全归宿主管。</summary>
+    /// <summary>说明气泡：标题与描述的复用弹板，内容由发起器（UI_HoverTip）在弹出时写入；
+    /// 标题为空自动收起标题行（意图类说明只有描述），实例取还归 PopRoot、显隐与定位归发起器。</summary>
     public sealed class UI_DescriptionPopTip : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _name;

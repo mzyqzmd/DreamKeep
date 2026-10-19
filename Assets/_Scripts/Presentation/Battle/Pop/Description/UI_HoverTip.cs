@@ -10,7 +10,7 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>说明气泡发起器：需要"指针悬停弹说明气泡"的对象挂上它即可用——内容可提前在 Inspector 配置（静态），
-    /// 也可由宿主在数据变化时注入（动态，单条或整列）；气泡视图与弹层宿主只管"实例取还与唯一列守卫"（UI_PopTextRoot），
+    /// 也可由宿主在数据变化时注入（动态，单条或整列）；气泡视图与弹层中枢只管"实例取还与唯一列守卫"（PopRoot），
     /// 本组件接管"起排点 + 朝向 + 间距 + 逐条累排"的整列定位，只回答"谁被悬停、弹什么、弹在哪"。
     /// 触发分两种模式：默认自己接 UGUI 指针事件（挂上即用）；外部驱动模式不响应指针，由调用方在它判定出的时刻调 Show/Hide
     /// （手牌上的卡牌即这一种——卡的"悬停"由手牌区每帧射线裁决，瞄准中指针离开卡但气泡要留、打出瞬间要立刻收，与指针事件并不一致）。</summary>
@@ -28,7 +28,7 @@ namespace _DreamKeep.Presentation
         [Tooltip("起点的像素偏移，走本对象局部轴向（随本对象旋转与缩放）：如 (0,5) 即沿本对象\"上\"让开 5 像素")] [SerializeField]
         private Vector2 _tipOffsetPx = new(0f, 5f);
 
-        [Tooltip("气泡挂载父级：空 = 挂弹层宿主自身（不随本对象缩放移动）；拖自己 = 随本对象抬起、缩放与拖动（卡牌即如此）")] [SerializeField]
+        [Tooltip("气泡挂载父级：空 = 挂本对象自身（随本对象移动、缩放与旋转）；也可拖到别的节点上跟随它")] [SerializeField]
         private Transform _tipParent;
 
         [Tooltip("叠列气泡之间的垂直间距（画布像素）：多条内容（如卡牌词条）一条压一条地往反方向排")] [SerializeField]
@@ -48,13 +48,13 @@ namespace _DreamKeep.Presentation
 
         private bool _shown;
 
-        // 弹层宿主：全场景唯一（场景对象 Canvas_Pop/PopTextRoot），一律由战斗容器注入
-        private UI_PopTextRoot _host;
+        // 弹层中枢：全场景唯一（场景根 GameRoot），一律由战斗容器注入
+        private PopRoot _host;
 
         // 装配：宿主由容器注入（场景实例走自动注入、池化实例走池的新建回调）；
         // 没有注入说明这条生成路径漏了 InjectGameObject，直接报错而不是运行时静默找不到气泡
         [Inject]
-        public void Construct(UI_PopTextRoot host_) => _host = host_;
+        public void Construct(PopRoot host_) => _host = host_;
 
      
         // 静态内容在装配时一次性预填；动态内容由宿主在数据变化时注入（两串都空即当作无内容）
@@ -77,7 +77,7 @@ namespace _DreamKeep.Presentation
             Vector3 anchor = UiGeometry.AnchorPoint((RectTransform)transform, _startAnchor) +
                              transform.TransformVector(new Vector3(_tipOffsetPx.x, _tipOffsetPx.y, 0f));
             Vector2 pivot = UiGeometry.Pivot(_tipAnchor);
-            Transform mount = _tipParent ? _tipParent : _host.transform;
+            Transform mount = _tipParent ? _tipParent : transform;
             IReadOnlyList<UI_DescriptionPopTip> bubbles = _host.AcquireColumn(this, _contents.Count);
             float step = pivot.y > 0f ? -1f : 1f; // 底沿贴锚点（pivot.y 为 0）向上长，顶/居中则向下长
             for (int i = 0; i < bubbles.Count; i++)

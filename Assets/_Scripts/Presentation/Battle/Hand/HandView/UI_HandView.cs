@@ -12,7 +12,8 @@ using VContainer.Unity;
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌区本体：一块自洽的手牌区——卡池与牌的去向、以手牌区的点为准的排布、拖拽与瞄准、出牌受理，
-    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，目标提示驱动读瞄准事实并回写目标槽位。
+    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，目标提示驱动读瞄准事实并下发瞄准结果；
+    /// 瞄准结果的权威值住在驱动里，这里只保留它每帧下发的同步缓存、只读不写。
     /// 每帧的次序由这里的 Update 集中驱动（先悬停裁决、再瞄准、后词条气泡）；悬停裁决与避让长在同节点的 UI_HandHover、
     /// 十一条领域事件的演出长在同节点的 UI_HandShow，两者经本类的内部服务面读写这里的状态。</summary>
     [RequireComponent(typeof(UI_HandHover))]
@@ -80,9 +81,6 @@ namespace _DreamKeep.Presentation
         [Tooltip("非我方回合整手牌的下沉量（画布像素）：负值向下")] [SerializeField]
         private float _unplayableDropPx = -110f;
 
-        /// <summary>非瞄准卡的默认目标槽位：按存活列表最前一个结算（前敌、全体、随机等落点解析不读它）。</summary>
-        public const int DefaultAimSlot = 0;
-
         private const int NoAimSlot = -1; // 尚未指向任何敌人：松手时据此取消，不打出
 
         // 域侧协作者、卡池与手牌台账
@@ -101,11 +99,10 @@ namespace _DreamKeep.Presentation
         private UI_CardBattle _aimingCard;
         private bool _aimingActive;
 
-        // 当前指向的目标槽位（存活敌人列表下标）：由单位侧的目标提示驱动每帧回写，打牌命令与箭头命中色共用这一处；
+        // 瞄准结果的两个同步缓存：目标槽位（存活敌人列表下标）与目标集合，由单位侧的目标提示驱动每帧一次性下发（SetAimResult）。
+        // 本类只读不写、不自行推导——松手当帧必须能同步读到槽位，故不能等驱动的下一次 Update；
         // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
-        private int _aimSlot = DefaultAimSlot;
-
-        // 当前瞄准牌的目标集合（由单位侧的目标提示驱动每帧回传）：数值预览的目标侧修正只取"唯一目标"那一档
+        private int _aimSlot = NoAimSlot;
         private IReadOnlyList<Creature> _previewTargets;
 
         // 同节点的悬停器：悬停身份、避让量与词条气泡都长在它身上，这里只留引用与调用（RequireComponent 保证它必有）
@@ -198,14 +195,13 @@ namespace _DreamKeep.Presentation
             _cardArrow.Show(card_.WorldCenter, PointerWorldPosition(), _aimSlot >= 0);
         }
 
-        /// <summary>当前瞄准的目标槽位（存活敌人列表下标，-1 = 未指向敌人）：打牌命令与目标提示预览共用这一处来源，由单位侧每帧回写。</summary>
-        public int CurrentAimSlot => _aimSlot;
-
-        /// <summary>回写当前瞄准的目标槽位：-1 = 未指向任何敌人，松手时据此取消。</summary>
-        public void SetAimSlot(int slot_) => _aimSlot = slot_;
-
-        /// <summary>回传当前瞄准牌的目标集合（单位侧的目标提示驱动每帧调用；未瞄准或未解析出目标时传 null）。</summary>
-        public void SetPreviewTargets(IReadOnlyList<Creature> targets_) => _previewTargets = targets_;
+        /// <summary>接收瞄准结果（目标提示驱动每帧一次性下发）：槽位 -1 = 未指向任何敌人（松手据此取消），
+        /// 目标集合未瞄准或解析不出目标时为 null；两个值同帧生效，不存在只更新一半的中间态。</summary>
+        public void SetAimResult(int slot_, IReadOnlyList<Creature> targets_)
+        {
+            _aimSlot = slot_;
+            _previewTargets = targets_;
+        }
 
         /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
         public UI_CardBattle AimedCard =>

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -83,10 +84,12 @@ namespace _DreamKeep.Presentation
         // 队列被 SyncToLive 清空、或宿主途中销毁时立即收工，等待方一并放行
         private async UniTask DrainAsync()
         {
+            // 销毁令牌只在宿主活着时取一次：对象被销毁后再取会抛 MissingReferenceException（停 Play 打断在途节奏时命中）
+            CancellationToken destroyToken = destroyCancellationToken;
             _draining = true;
             _drained = new UniTaskCompletionSource();
             float start = Time.time;
-            while (_pending != 0 && !destroyCancellationToken.IsCancellationRequested)
+            while (_pending != 0 && !destroyToken.IsCancellationRequested)
             {
                 bool arriving = _pending > 0;
                 _pending += arriving ? -1 : 1;
@@ -99,7 +102,7 @@ namespace _DreamKeep.Presentation
                 if (_pending == 0) break;
                 float remain = Mathf.Max(_stepMaxDuration - (Time.time - start), 0f);
                 float step = Mathf.Min(_stepInterval, remain / Mathf.Abs(_pending));
-                await UniTask.Delay(TimeSpan.FromSeconds(step), cancellationToken: destroyCancellationToken)
+                await UniTask.Delay(TimeSpan.FromSeconds(step), cancellationToken: destroyToken)
                     .SuppressCancellationThrow();
             }
 

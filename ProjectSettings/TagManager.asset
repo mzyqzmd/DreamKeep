@@ -44,9 +44,6 @@ TagManager:
   - name: World
     uniqueID: 3664633677
     locked: 0
-  - name: Pop
-    uniqueID: 1166622463
-    locked: 0
   - name: HUD
     uniqueID: 643022223
     locked: 0

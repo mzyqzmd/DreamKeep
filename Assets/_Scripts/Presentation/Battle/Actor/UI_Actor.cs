@@ -36,7 +36,7 @@ namespace _DreamKeep.Presentation
         public Shader OutlineShader => _outlineShader;
         public Material SkeletonMaterial => _skeletonMaterial;
 
-        /// <summary>单位命中框：悬停演出、目标提示点亮与箭头命中判定都在它那里，由 UI_TargetDirector 取用。</summary>
+        /// <summary>单位命中框：悬停演出、目标提示点亮与箭头命中判定都在它那里，由 TargetDirector 取用。</summary>
         public UI_ActorHoverBox HoverBox => _hoverBox;
 
         /// <summary>绑定的域侧生物：事件按它过滤，血量、格挡与状态真值都从它读。</summary>

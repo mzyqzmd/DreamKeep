@@ -6,7 +6,7 @@ using UnityEngine;
 namespace _DreamKeep.Presentation
 {
     /// <summary>数字飘字：一次伤害/治疗/格挡提示的单条表现实例，只负责"写文字、按形态播动作、播完通知宿主回收"；
-    /// 实例取还与挂载归 UI_PopTextRoot。Rise = 向上缓慢飘升并渐隐，Toss = 斜上抛出后受重力下坠。
+    /// 实例取还与挂载归 PopRoot（挂到单位视图下）。Rise = 向上缓慢飘升并渐隐，Toss = 斜上抛出后受重力下坠。
     /// 位移单位统一为画布像素（anchoredPosition），形态与时长参数全部留在预制体 Inspector。</summary>
     public sealed class UI_NumberPopTip : MonoBehaviour
     {
