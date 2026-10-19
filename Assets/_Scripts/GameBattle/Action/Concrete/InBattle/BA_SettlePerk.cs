@@ -29,7 +29,7 @@ namespace _DreamKeep.GameBattle
                     events.Add(new BE_PerkRemoved(target, removed));
 
                 // 幸存者：本时机结算后仍挂载的实例，层数已递减，逐个广播供表现层对齐显示
-                foreach (BattlePerk survived in target.Powers)
+                foreach (BattlePerk survived in target.Perks)
                     if (survived.SettleTiming == _timing) events.Add(new BE_PerkSettled(target, survived));
             }
 

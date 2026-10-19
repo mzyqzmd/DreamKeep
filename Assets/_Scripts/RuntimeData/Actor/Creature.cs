@@ -7,14 +7,14 @@ namespace _DreamKeep.RuntimeData
     /// 伤害、格挡与状态结算一律只作用于它，不区分阵营。</summary>
     public class Creature
     {
-        private readonly List<BattlePerk> _powers = new();
+        private readonly List<BattlePerk> _perks = new();
 
         public int CurrentHp { get; set; }
         public int MaxHp { get; }
         public int Block { get; set; }
 
         public bool IsDead => CurrentHp <= 0;
-        public IReadOnlyList<BattlePerk> Powers => _powers;
+        public IReadOnlyList<BattlePerk> Perks => _perks;
 
         public Creature(int maxHp_)
         {
@@ -25,15 +25,15 @@ namespace _DreamKeep.RuntimeData
         #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回挂载实例供动作侧发事件
         public BattlePerk ApplyPerk(BattlePerk perk_)
         {
-            for (int i = 0; i < _powers.Count; i++)
+            for (int i = 0; i < _perks.Count; i++)
             {
-                if (_powers[i].GetType() != perk_.GetType()) continue;
-                _powers[i].AddLayers(perk_.Layers);
-                return _powers[i];
+                if (_perks[i].GetType() != perk_.GetType()) continue;
+                _perks[i].AddLayers(perk_.Layers);
+                return _perks[i];
             }
 
             BattlePerk mounted = perk_.Clone();
-            _powers.Add(mounted);
+            _perks.Add(mounted);
             return mounted;
         }
         #endregion
@@ -41,8 +41,8 @@ namespace _DreamKeep.RuntimeData
         #region 查询指定状态类型的层数，未挂载时返回 0
         public int GetPerkLayers<T>() where T : BattlePerk
         {
-            for (int i = 0; i < _powers.Count; i++)
-                if (_powers[i] is T typed)
+            for (int i = 0; i < _perks.Count; i++)
+                if (_perks[i] is T typed)
                     return typed.Layers;
             return 0;
         }
@@ -51,8 +51,8 @@ namespace _DreamKeep.RuntimeData
         #region 查询指定状态类型的第一份实例，未挂载时返回 null
         public T GetPerk<T>() where T : BattlePerk
         {
-            for (int i = 0; i < _powers.Count; i++)
-                if (_powers[i] is T typed)
+            for (int i = 0; i < _perks.Count; i++)
+                if (_perks[i] is T typed)
                     return typed;
             return null;
         }
@@ -63,13 +63,13 @@ namespace _DreamKeep.RuntimeData
         public List<BattlePerk> SettlePerks(EPerkSettleTiming timing_)
         {
             List<BattlePerk> removed = new();
-            for (int i = _powers.Count - 1; i >= 0; i--)
+            for (int i = _perks.Count - 1; i >= 0; i--)
             {
-                if (_powers[i].SettleTiming != timing_) continue;
-                _powers[i].AddLayers(-1);
-                if (_powers[i].Layers > 0) continue;
-                removed.Add(_powers[i]);
-                _powers.RemoveAt(i);
+                if (_perks[i].SettleTiming != timing_) continue;
+                _perks[i].AddLayers(-1);
+                if (_perks[i].Layers > 0) continue;
+                removed.Add(_perks[i]);
+                _perks.RemoveAt(i);
             }
 
             return removed;

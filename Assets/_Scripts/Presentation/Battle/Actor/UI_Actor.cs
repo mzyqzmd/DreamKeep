@@ -90,7 +90,7 @@ namespace _DreamKeep.Presentation
             _healthBar.Initialize(creature_);
             _blockView.Initialize(creature_);
             // 初始状态随装配自带perk
-            foreach (var p in creature_.Powers)
+            foreach (var p in creature_.Perks)
                 _perkGroup.AddPerk(p);
         }
 

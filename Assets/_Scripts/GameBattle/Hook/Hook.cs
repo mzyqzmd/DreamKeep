@@ -42,7 +42,7 @@ namespace _DreamKeep.GameBattle
         internal static void Settle(Creature host_, EPerkSettleTiming timing_, List<Creature> self_,
             List<BattleAction> actions_)
         {
-            IReadOnlyList<BattlePerk> powers = host_.Powers;
+            IReadOnlyList<BattlePerk> powers = host_.Perks;
             for (int i = 0; i < powers.Count; i++)
             {
                 if (powers[i].SettleTiming != timing_) continue;
@@ -64,7 +64,7 @@ namespace _DreamKeep.GameBattle
         {
             if (host_.IsDead) return;
 
-            IReadOnlyList<BattlePerk> powers = host_.Powers;
+            IReadOnlyList<BattlePerk> powers = host_.Perks;
             for (int i = 0; i < powers.Count; i++)
             {
                 StatModifier modifier = GetModifier(powers[i], channel_, host_, source_, target_);
