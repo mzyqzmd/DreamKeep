@@ -14,10 +14,11 @@ namespace _DreamKeep.Utility
         public int cap;
 
         /// <summary>中性修正：不改变任何值。禁止用 default 代替——struct 的 cap 默认是 0，会把值钳成 0。</summary>
-        public static StatModifier Neutral => new(0, 1f, int.MinValue, int.MaxValue);
+        public static StatModifier Neutral => new(0);
 
         /// <summary>是否不改变任何值。</summary>
-        public bool IsNeutral => additive == 0 && Mathf.Approximately(multiplier, 1f) && floor == int.MinValue && cap == int.MaxValue;
+        public bool IsNeutral => additive == 0 && Mathf.Approximately(multiplier, 1f) && floor == int.MinValue &&
+                                 cap == int.MaxValue;
 
         public StatModifier(int additive_, float multiplier_ = 1f, int floor_ = int.MinValue, int cap_ = int.MaxValue)
         {
