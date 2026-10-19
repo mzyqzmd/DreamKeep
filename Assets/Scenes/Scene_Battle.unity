@@ -3789,12 +3789,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9164ae47e8c19d6418605f7d5ff04b1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _damageColor: {r: 0.95, g: 0.28, b: 0.22, a: 1}
+  _damageColor: {r: 1, g: 0.28, b: 0.22, a: 1}
   _healColor: {r: 0.35, g: 0.92, b: 0.45, a: 1}
   _blockColor: {r: 0.55, g: 0.82, b: 1, a: 1}
   _liftPx: 40
   _jitterPx: 18
-  _blockSideOffsetPx: 70
 --- !u!1 &983776710
 GameObject:
   m_ObjectHideFlags: 0

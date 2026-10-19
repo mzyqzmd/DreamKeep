@@ -12,7 +12,7 @@ namespace _DreamKeep.Presentation
     /// 实例取还与播放归 UI_PopTextRoot。</summary>
     public sealed class UI_NumberPopDirector : MonoBehaviour
     {
-        [Header("颜色")] [SerializeField] private Color _damageColor = new(0.95f, 0.28f, 0.22f);
+        [Header("颜色")] [SerializeField] private Color _damageColor = new(1f, 0.28f, 0.22f);
         [SerializeField] private Color _healColor = new(0.35f, 0.92f, 0.45f);
         [SerializeField] private Color _blockColor = new(0.55f, 0.82f, 1f);
 
@@ -21,9 +21,6 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("数字起点的横向随机抖动（画布像素）：多段伤害同时出现时错开")] [SerializeField]
         private float _jitterPx = 18f;
-
-        [Tooltip("同时弹「格挡！」与伤害数字时的左右错开量（画布像素）")] [SerializeField]
-        private float _blockSideOffsetPx = 70f;
 
         private UI_PopTextRoot _popRoot;
         private UI_ActorRoot _actorRoot;
@@ -46,16 +43,14 @@ namespace _DreamKeep.Presentation
             if (!_actorRoot.TryGetView(dealt_.Target, out UI_Actor view)) return UniTask.CompletedTask;
             RectTransform body = (RectTransform)view.Skeleton.transform;
             Vector3 anchor = AnchorOf(body);
-            bool blocked = dealt_.Absorbed > 0;
             int hpLoss = dealt_.Amount - dealt_.Absorbed;
 
-            if (blocked)
+            if (hpLoss <= 0 && dealt_.Absorbed > 0)
                 _popRoot.ShowNumber("格挡！", _blockColor, ENumberPopTipType.Rise,
-                    Along(body, anchor, -_blockSideOffsetPx));
-            if (hpLoss > 0)
+                    Along(body, anchor, _rng.Next(-_jitterPx, _jitterPx)));
+            else
                 _popRoot.ShowNumber(hpLoss.ToString(), _damageColor, ENumberPopTipType.Toss,
-                    Along(body, anchor,
-                        (blocked ? _blockSideOffsetPx : 0f) + _rng.Next(-_jitterPx, _jitterPx)));
+                    Along(body, anchor, _rng.Next(-_jitterPx, _jitterPx)));
             return UniTask.CompletedTask;
         }
 
