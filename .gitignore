@@ -109,6 +109,7 @@ Desktop.ini
 .workbuddy/
 .codebuddy/
 .lingma/
+/[Aa]ssets/[Ss]creenshots
 
 # Asset Store Tools 插件（官方模板中默认注释，此处启用）
 /[Aa]ssets/AssetStoreTools*
