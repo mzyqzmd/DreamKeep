@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Card_Ripple
-  m_Shader: {fileID: -6465566751694194690, guid: d64b47d3d3aeab74cb0e894193474201, type: 3}
+  m_Shader: {fileID: 4800000, guid: 7f3c1a95d24b4e0fa8c6b1e5d93a4c72, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -42,11 +42,24 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BUILTIN_QueueControl: 0
-    - _BUILTIN_QueueOffset: 0
-    - _ease: 0.1
-    - _modulo_width: 0.03
-    - _ripple_speed: 0.41
-    - _width: -0.01
-    m_Colors: []
+    - _Aspect: 1.5
+    - _ColorMask: 15
+    - _CornerRadius: 0.07
+    - _EdgeInset: 0.12
+    - _FadePower: 4
+    - _Phase: 0
+    - _Range: 0.15
+    - _Softness: 0.3
+    - _Speed: 0.8
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _Strength: 1.2
+    - _Thickness: 0.7
+    - _UseUIAlphaClip: 0
+    - _WaveCount: 6
+    m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
