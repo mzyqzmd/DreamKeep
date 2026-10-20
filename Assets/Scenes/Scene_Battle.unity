@@ -7533,6 +7533,7 @@ GameObject:
   - component: {fileID: 2091153469}
   - component: {fileID: 2091153471}
   - component: {fileID: 2091153472}
+  - component: {fileID: 2091153473}
   m_Layer: 0
   m_Name: GameRoot
   m_TagString: Untagged
@@ -7609,6 +7610,20 @@ MonoBehaviour:
   _liftPx: 40
   _jitterPx: 18
   _turnBannerParent: {fileID: 1899820126}
+--- !u!114 &2091153473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091153467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d640cfcf415e7e64fa620b83f05f0b36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hitVfxPrefab: {fileID: 838563072901894158, guid: e04fa0363da77ae439e1d73fbedfad55, type: 3}
+  _healVfxPrefab: {fileID: 4641491347814169546, guid: 780bfe3cedf2ddd43beb5d9cb5b4c26c, type: 3}
 --- !u!1 &2096025520
 GameObject:
   m_ObjectHideFlags: 0

@@ -103,14 +103,11 @@ namespace _DreamKeep.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 回血：域侧不封顶，数字只报真正加上去的那部分；没有实际恢复就不弹
+        // 回血：Amount 已是实际回复量（域侧钳到上限），没有真正恢复就不弹数字；回血特效由 VfxRoot 照播，零回复也播
         private UniTask OnHealthRestoredAsync(BE_HealthRestored restored_)
         {
-            Creature creature = restored_.Target;
-            int actual = Mathf.Min(creature.CurrentHp, creature.MaxHp) -
-                         Mathf.Min(creature.CurrentHp - restored_.Amount, creature.MaxHp);
-            if (actual <= 0) return UniTask.CompletedTask;
-            ShowNumber(actual.ToString(), _healColor, ENumberPopTipType.Rise, creature);
+            if (restored_.Amount > 0)
+                ShowNumber(restored_.Amount.ToString(), _healColor, ENumberPopTipType.Rise, restored_.Target);
             return UniTask.CompletedTask;
         }
 

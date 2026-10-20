@@ -11,6 +11,6 @@ namespace _DreamKeep.ConfigData
         public float Ratio => _ratio;
 
         public override string Name => "易伤";
-        public override EPerkSettleTiming SettleTiming => EPerkSettleTiming.TurnEnd;
+        public override EPerkSettleTiming SettleTiming => EPerkSettleTiming.TurnStart;
     }
 }

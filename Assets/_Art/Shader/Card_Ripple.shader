@@ -1,4 +1,4 @@
-Shader "DreamKeep/UI/Card Ripple"
+Shader "DreamKeep/Card/Card Ripple"
 {
     Properties
     {

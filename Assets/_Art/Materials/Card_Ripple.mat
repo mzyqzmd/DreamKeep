@@ -48,7 +48,7 @@ Material:
     - _EdgeInset: 0.12
     - _FadePower: 4
     - _Phase: 0
-    - _Range: 0.15
+    - _Range: 0.12
     - _Softness: 0.3
     - _Speed: 0.8
     - _Stencil: 0
