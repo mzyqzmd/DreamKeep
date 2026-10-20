@@ -11,12 +11,14 @@ using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>手牌区本体：一块自洽的手牌区——卡池与牌的去向、以手牌区的点为准的排布、拖拽与瞄准、出牌受理，
-    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，目标提示驱动读瞄准事实并下发瞄准结果；
-    /// 瞄准结果的权威值住在驱动里，这里只保留它每帧下发的同步缓存、只读不写。
-    /// 每帧的次序由这里的 Update 集中驱动（先悬停裁决、再瞄准、后词条气泡）；悬停裁决与避让长在同节点的 UI_HandHover、
-    /// 十一条领域事件的演出长在同节点的 UI_HandShow，两者经本类的内部服务面读写这里的状态。</summary>
+    /// <summary>手牌区本体：一块自洽的手牌区——卡池与牌的去向、以手牌区的点为准的排布、拖拽与出牌受理，
+    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，目标提示驱动读瞄准事实并下发瞄准结果。
+    /// 每帧只驱动两件与目标无关的事（悬停裁决、词条气泡）；瞄准态与整手数值预览长在同节点的 UI_HandAim，
+    /// 由目标提示驱动算完瞄准结果后经 ApplyAimResult 连同驱动，故这里没有瞄准相关的每帧入口。
+    /// 三者同挂本节点、都经本类的内部服务面读写这里的状态：UI_HandHover 管悬停与避让、UI_HandAim 管瞄准、
+    /// UI_HandShow 管十一条领域事件的演出。</summary>
     [RequireComponent(typeof(UI_HandHover))]
+    [RequireComponent(typeof(UI_HandAim))]
     [RequireComponent(typeof(UI_HandShow))]
     public sealed class UI_HandView : MonoBehaviour
     {
@@ -45,9 +47,6 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("交互层：悬停与拖拽的牌（排在最后，永远画在最上层）")] [SerializeField]
         private RectTransform _focusLayer;
-
-        [Header("目标箭头")] [Tooltip("瞄准 AnyEnemy 卡时从卡牌中心指向指针的箭头：位姿由本视图每帧驱动")] [SerializeField]
-        private UI_CardArrow _cardArrow;
 
         [Header("手牌区")]
         [Tooltip("手牌区的点：手牌弧的顶点，也就是正中那张牌的锚点。全部槽位都按它换算成世界姿态——在 Scene 里拖它即整手挪位，缩放与旋转同样生效")]
@@ -81,53 +80,45 @@ namespace _DreamKeep.Presentation
         [Tooltip("非我方回合整手牌的下沉量（画布像素）：负值向下")] [SerializeField]
         private float _unplayableDropPx = -110f;
 
-        private const int NoAimSlot = -1; // 尚未指向任何敌人：松手时据此取消，不打出
-
         // 域侧协作者、卡池与手牌台账
         private BattleCommandDispatcher _commandDispatcher;
-        private BattleQueryDispatcher _queryDispatcher;
         private Camera _canvasCamera;
         private MonoObjectPool<UI_CardBattle> _cardPool;
         private readonly List<UI_CardBattle> _hand = new();
         private readonly Dictionary<CardModel, UI_CardBattle> _views = new();
         private readonly HashSet<UI_CardBattle> _entering = new();
 
-        // 交互状态位：本回合可打、正被拖拽；瞄准状态（哪张牌、箭头是否已显示）只在这里，
+        // 交互状态位：本回合可打、正被拖拽；瞄准状态（哪张牌、箭头是否已显示）长在同节点的瞄准器里，
         // "按下走哪种交互"由包装读自己的卡回答，不经此路
         private bool _cardsPlayable;
         private UI_CardBattle _draggedCard;
-        private UI_CardBattle _aimingCard;
-        private bool _aimingActive;
 
-        // 瞄准结果的两个同步缓存：目标槽位（存活敌人列表下标）与目标集合，由单位侧的目标提示驱动每帧一次性下发（SetAimResult）。
-        // 本类只读不写、不自行推导——松手当帧必须能同步读到槽位，故不能等驱动的下一次 Update；
-        // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
-        private int _aimSlot = NoAimSlot;
-        private IReadOnlyList<Creature> _previewTargets;
-
-        // 同节点的悬停器：悬停身份、避让量与词条气泡都长在它身上，这里只留引用与调用（RequireComponent 保证它必有）
+        // 同节点的两个协作组件：悬停身份、避让量与词条气泡长在悬停器上，瞄准态与整手数值预览长在瞄准器上，
+        // 这里只留引用与调用（RequireComponent 保证它们必有）
         private UI_HandHover _hover;
+        private UI_HandAim _aim;
 
-        // 生命周期：取悬停器引用（与本体同节点，缺失会在首次驱动处直接报出来）
-        private void Awake() => _hover = GetComponent<UI_HandHover>();
+        // 生命周期：取同节点协作组件的引用
+        private void Awake()
+        {
+            _hover = GetComponent<UI_HandHover>();
+            _aim = GetComponent<UI_HandAim>();
+        }
 
-        // 每帧驱动：先让悬停器裁决悬停进出，再刷新瞄准中的箭头并兜底校正瞄准状态，后按拖拽牌（优先）与悬停牌对账词条说明气泡列，最后对账整手牌的数值预览
+        // 每帧驱动：悬停裁决与词条气泡都与目标无关，放在这里自成一体；瞄准相关的每帧由目标提示驱动在下发结果时驱动
         private void Update()
         {
             _hover.TickHover();
-            TickAim();
             _hover.TickAffixTips();
-            TickPreview();
         }
 
-        // 装配：解析画布相机、建卡池；两个上行门面分别供出牌命令与数值预览查询。画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
-        // 十一条领域事件的订阅在演出器、悬停裁决在悬停器，各自在他们的装配处
+        // 装配：解析画布相机、建卡池；上行门面只取供出牌命令的那一个（数值预览查询已随瞄准器走）。
+        // 画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
+        // 十一条领域事件的订阅在演出器、悬停裁决在悬停器、瞄准态的注入在瞄准器，各自在他们的装配处
         [Inject]
-        public void Construct(BattleCommandDispatcher commandDispatcher_, BattleQueryDispatcher queryDispatcher_,
-            IObjectResolver resolver_)
+        public void Construct(BattleCommandDispatcher commandDispatcher_, IObjectResolver resolver_)
         {
             _commandDispatcher = commandDispatcher_;
-            _queryDispatcher = queryDispatcher_;
             _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
             // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西；
             // 新建实例只在这时补一次容器注入（卡上的气泡发起器等依赖），池内复用不重复注入
@@ -145,16 +136,13 @@ namespace _DreamKeep.Presentation
         #region 出牌受理与瞄准事实
 
         // 抓起：登记拖拽身份，整张牌换到交互层最上（压过悬停那张）并掐掉在飞补间，随后由包装跟手；
-        // 瞄准卡在此登记进瞄准模式——松手分流与箭头生命周期以它为准；同时把目标槽位清成"未指向"，
-        // 防极快操作下默认值被当成有效目标打出去
+        // 瞄准资格（本卡目标类型是否为 AnyEnemy）与槽位复位交给瞄准器，它据此决定松手分流与箭头生命周期
         public void OnCardGrabbed(UI_CardBattle card_)
         {
             _draggedCard = card_;
             MoveToFocus(card_);
             card_.KillMotion();
-            _aimingCard = card_.Card.IsAnyEnemyTarget ? card_ : null;
-            _aimingActive = false;
-            if (_aimingCard != null) _aimSlot = NoAimSlot;
+            _aim.OnGrabbed(card_);
         }
 
         // 松手：普通卡以锚点（卡根 pivot＝卡下沿中点）是否落进出牌区矩形判定，瞄准卡以"是否指向了某个敌人"（aimSlot ≥ 0）判定；
@@ -162,12 +150,11 @@ namespace _DreamKeep.Presentation
         // 不把过期命令塞进队列等下一个玩家回合结算
         public void OnCardReleased(UI_CardBattle card_)
         {
-            bool aiming = card_ == _aimingCard;
-            if (aiming) EndAim(); // 松手即收箭头与瞄准身份
+            bool aiming = _aim.Release(card_, out int aimSlot); // 松手即收箭头与瞄准身份，并取回当帧槽位
 
             ClearDragged();
             bool accepted = _cardsPlayable && IsInHand(card_) &&
-                            (aiming ? _aimSlot >= 0 : _dropZone.Accepts(card_.WorldPosition));
+                            (aiming ? aimSlot >= 0 : _dropZone.Accepts(card_.WorldPosition));
             if (!accepted)
             {
                 ReturnToSlotAsync(card_).Forget();
@@ -176,32 +163,22 @@ namespace _DreamKeep.Presentation
 
             _dropZone.Enqueue(card_); // 收下即挂出：待结算的成员关系由出牌区队列唯一持有
             ApplyLayout(); // 入队即让位：整手立刻合拢，不等域侧回声
-            _commandDispatcher.PlayCard(card_.Card, _aimSlot);
+            _commandDispatcher.PlayCard(card_.Card, aimSlot);
         }
 
         // 拖拽被强制中断（包装禁用或回收）时直接落回槽位，不播补间；瞄准中的牌顺手收掉箭头与瞄准身份
         public void OnCardDragCancelled(UI_CardBattle card_)
         {
-            if (card_ == _aimingCard) EndAim();
-            ClearDragged();
-            PlaceToSlot(card_);
+            _aim.Cancel(card_);
+            DropAimDrag(card_);
         }
 
-        // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色由每帧驱动刷新
-        public void OnAimDragged(UI_CardBattle card_)
-        {
-            if (card_ != _aimingCard) return;
-            _aimingActive = true;
-            _cardArrow.Show(card_.WorldCenter, PointerWorldPosition(), _aimSlot >= 0);
-        }
+        // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色随瞄准结果的下发刷新
+        public void OnAimDragged(UI_CardBattle card_) => _aim.OnDragged(card_);
 
-        /// <summary>接收瞄准结果（目标提示驱动每帧一次性下发）：槽位 -1 = 未指向任何敌人（松手据此取消），
-        /// 目标集合未瞄准或解析不出目标时为 null；两个值同帧生效，不存在只更新一半的中间态。</summary>
-        public void SetAimResult(int slot_, IReadOnlyList<Creature> targets_)
-        {
-            _aimSlot = slot_;
-            _previewTargets = targets_;
-        }
+        /// <summary>接收瞄准结果并连同消费（目标提示驱动每帧下发）：槽位 -1 = 未指向任何敌人（松手据此取消），
+        /// 目标集合未瞄准或解析不出目标时为 null；两个值同帧生效，且刷新在同一次调用里发生，不存在只更新一半的中间态。</summary>
+        public void ApplyAimResult(int slot_, IReadOnlyList<Creature> targets_) => _aim.ApplyResult(slot_, targets_);
 
         /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
         public UI_CardBattle AimedCard =>
@@ -209,53 +186,6 @@ namespace _DreamKeep.Presentation
             (_draggedCard.Card.IsAnyEnemyTarget || _dropZone.Accepts(_draggedCard.WorldPosition))
                 ? _draggedCard
                 : null;
-
-        // 数值预览的逐帧驱动：整手每帧对账——平时只含来源侧修正（力量/虚弱），正在瞄准且已指向目标的牌叠加唯一目标的目标侧修正
-        //（多目标/随机卡的候选不止一个时不叠加）；未变的卡在卡视图内部差分早退，零字符串构建
-        private void TickPreview()
-        {
-            UI_CardBattle aimed = AimedCard;
-            Creature target = aimed != null && _aimSlot >= 0 && _previewTargets != null && _previewTargets.Count == 1
-                ? _previewTargets[0]
-                : null;
-            for (int i = 0; i < _hand.Count; i++)
-            {
-                UI_CardBattle card = _hand[i];
-                card.RefreshPreview(_queryDispatcher, card == aimed ? target : null);
-            }
-        }
-
-        // 瞄准的逐帧驱动：卡离手或不再被按住时兜底取消；箭头展开期间刷新位姿与颜色
-        private void TickAim()
-        {
-            if (_aimingCard == null) return;
-            if (_draggedCard != _aimingCard || !IsInHand(_aimingCard))
-            {
-                CancelAim();
-                return;
-            }
-
-            if (_aimingActive) _cardArrow.Show(_aimingCard.WorldCenter, PointerWorldPosition(), _aimSlot >= 0);
-        }
-
-        // 取消瞄准：收箭头、清身份，把牌瞬移回槽位（兜底与状态切换路径，不播补间）
-        private void CancelAim()
-        {
-            if (_aimingCard == null) return;
-            UI_CardBattle card = _aimingCard;
-            EndAim();
-            ClearDragged();
-            PlaceToSlot(card);
-        }
-
-        // 收瞄准：清身份并收起箭头（箭头对"从未展开"是空操作）
-        private void EndAim()
-        {
-            if (_aimingCard == null) return;
-            _aimingCard = null;
-            _aimingActive = false;
-            _cardArrow.Hide();
-        }
 
         #endregion
 
@@ -281,6 +211,13 @@ namespace _DreamKeep.Presentation
 
         // 入场中：悬停器避让要跳过正在入场的牌
         internal bool IsEntering(UI_CardBattle card_) => _entering.Contains(card_);
+
+        // 打断瞄准中的拖拽：清拖拽身份并把这张牌瞬移回槽位（不播补间）——瞄准器的兜底取消与包装的中断上报共用
+        internal void DropAimDrag(UI_CardBattle card_)
+        {
+            ClearDragged();
+            PlaceToSlot(card_);
+        }
 
         #endregion
 
@@ -312,7 +249,7 @@ namespace _DreamKeep.Presentation
         internal bool TryGetView(CardModel model_, out UI_CardBattle view_) => _views.TryGetValue(model_, out view_);
 
         /// <summary>这张包装此刻是否还在手牌列里：拖拽途中被弃置或回收时，用它判"过期的松手"。</summary>
-        private bool IsInHand(UI_CardBattle card_) => _hand.Contains(card_);
+        internal bool IsInHand(UI_CardBattle card_) => _hand.Contains(card_);
 
         // 入场结束：注销入场标记，这张牌此后可以悬停；若此刻正有牌悬停着，通知悬停器把它纳入避让（它两侧的行已让开）
         internal void UnmarkEntering(UI_CardBattle card_)
@@ -506,7 +443,7 @@ namespace _DreamKeep.Presentation
             _cardsPlayable = playable_;
             if (!playable_)
             {
-                CancelAim();
+                _aim.CancelActive();
                 _hover.ClearHover();
             }
 

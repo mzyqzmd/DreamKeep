@@ -65,8 +65,7 @@ namespace _DreamKeep.Presentation
         // 词条说明的内容（复用列表）：Bind 时按牌面的逐行文案重填一次，预览变化时经同源渲染重填，再递给气泡发起器
         private readonly List<(string Name, string Description)> _affixTips = new();
 
-        // 数值预览台账（复用列表）：上一次渲染的目标与各伤害词条的最终值——每帧对账先算进草稿，变了才接受并重建
-        private Creature _previewTarget;
+        // 数值预览台账（复用列表）：上一次渲染的各伤害/格挡词条最终值——每帧对账先算进草稿，变了才接受并重建
         private readonly List<int> _previewShown = new();
         private readonly List<int> _previewDraft = new();
 
@@ -155,7 +154,6 @@ namespace _DreamKeep.Presentation
 
             _face.Bind(card_);
             // 预览台账随卡重置：防池化实例把上一张卡的修正值串到新卡（手牌区下一帧的预览对账会重填）
-            _previewTarget = null;
             _previewShown.Clear();
             _previewDraft.Clear();
             // 词条说明随绑定写一次（纯文本——此时牌面门面刚清空，渲染器退化原值；下一帧预览对账换成带修正值的版本）：
@@ -173,9 +171,13 @@ namespace _DreamKeep.Presentation
 
         #region 数值预览：每帧差分刷新卡面与气泡
 
-        /// <summary>刷新数值预览（手牌区对账调用）：目标或任一伤害/格挡词条的最终值变化才重建卡面与气泡，未变零字符串构建。</summary>
-        public void RefreshPreview(BattleQueryDispatcher queryDispatcher_, Creature target_)
+        /// <summary>刷新数值预览（手牌区对账调用）：任一伤害/格挡词条的最终值变化才重建卡面与气泡，未变零字符串构建。
+        /// 目标集合按"各目标的最终值是否一致"折叠求值，多目标卡在全体一致时也能显示准确数字。</summary>
+        public void RefreshPreview(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
         {
+            // 门面与目标集合每帧先推：卡面与气泡共用同一份，任何一次重建（如可打状态切换）都按当帧的目标算，不留旧值
+            _face.SetPreviewContext(queryDispatcher_, targets_);
+
             _previewDraft.Clear();
             IReadOnlyList<CardAffix> affixes = Card.ActiveAffixes;
             for (int i = 0; i < affixes.Count; i++)
@@ -183,17 +185,19 @@ namespace _DreamKeep.Presentation
                 switch (affixes[i])
                 {
                     case CA_Damage damage:
-                        _previewDraft.Add(queryDispatcher_.PreviewCardDamage(target_, damage.Amount.Value));
+                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, damage.Amount.Value,
+                            EStatChannel.Damage));
                         break;
                     case CA_Block block:
-                        _previewDraft.Add(queryDispatcher_.PreviewCardBlock(target_, block.Amount.Value));
+                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, block.Amount.Value,
+                            EStatChannel.Block));
                         break;
                 }
             }
 
-            bool changed = target_ != _previewTarget || _previewDraft.Count != _previewShown.Count;
-            if (!changed)
+            if (_previewDraft.Count == _previewShown.Count)
             {
+                bool changed = false;
                 for (int i = 0; i < _previewDraft.Count; i++)
                 {
                     if (_previewDraft[i] == _previewShown[i]) continue;
@@ -204,12 +208,10 @@ namespace _DreamKeep.Presentation
                 if (!changed) return;
             }
 
-            _previewTarget = target_;
             _previewShown.Clear();
             _previewShown.AddRange(_previewDraft);
 
-            // 卡面：写入预览门面后重建描述（数值着色写在牌面文本里；不可打时随整卡压暗由牌面自理）
-            _face.SetPreviewContext(queryDispatcher_, target_);
+            // 卡面：重建描述（数值着色写在牌面文本里；不可打时随整卡压暗由牌面自理）
             _face.RebuildDescription();
 
             // 气泡：与卡面同源（同一修正口径与配色，不随卡面压暗），正显示中立即重刷

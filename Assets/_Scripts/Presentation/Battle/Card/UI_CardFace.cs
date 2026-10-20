@@ -191,11 +191,12 @@ namespace _DreamKeep.Presentation
 
         #region 数值预览：门面转发与描述重建（求值与着色的唯一落点是 CardValueRenderer）
 
-        /// <summary>写入数值预览门面与目标（手牌区对账时推入；门面为空时数值按原值纯文本渲染，目标为 null 时目标侧修正不参与）。</summary>
-        public void SetPreviewContext(BattleQueryDispatcher queryDispatcher_, Creature target_)
+        /// <summary>写入数值预览门面与目标集合（手牌区对账时推入；门面为空时数值按原值纯文本渲染，
+        /// 目标集合为空或为 null 时目标侧修正不参与）。卡面与气泡两个渲染器推同一份，两者天然一致。</summary>
+        public void SetPreviewContext(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
         {
-            _faceValueRenderer.SetContext(queryDispatcher_, target_);
-            _tipValueRenderer.SetContext(queryDispatcher_, target_);
+            _faceValueRenderer.SetContext(queryDispatcher_, targets_);
+            _tipValueRenderer.SetContext(queryDispatcher_, targets_);
         }
 
         /// <summary>气泡用渲染器：与卡面同一份修正与配色，但不随卡面压暗（浮层独立于整卡灰调）；气泡内容由战斗卡收集。</summary>

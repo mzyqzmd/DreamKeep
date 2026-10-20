@@ -65,7 +65,12 @@ MonoBehaviour:
   _nameBanner: {fileID: 7281236441497068088}
   _typePlaque: {fileID: 2735017895408675010}
   _cardCost: {fileID: 4081130648507916262}
+  _upgradeNameColor: {r: 0, g: 1, b: 0, a: 1}
+  _costLowerColor: {r: 0, g: 1, b: 0, a: 1}
   _unplayableTint: {r: 0.45, g: 0.45, b: 0.5, a: 1}
+  _affixNameColor: {r: 0.9622642, g: 0.893509, b: 0.0127091, a: 1}
+  _valueBoostColor: {r: 0, g: 1, b: 0, a: 1}
+  _valueReduceColor: {r: 1, g: 0.36, b: 0.36, a: 1}
   _needCardSources: 1
   _normalBorder: {fileID: 21300000, guid: 83c9f0ef240148540952be0a811206e3, type: 3}
   _normalNameBanner: {fileID: 21300000, guid: e578a6cae61741b43b489a5772a7618b, type: 3}

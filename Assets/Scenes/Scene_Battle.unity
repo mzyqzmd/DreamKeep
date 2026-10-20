@@ -4695,6 +4695,7 @@ GameObject:
   - component: {fileID: 1271725516}
   - component: {fileID: 1271725519}
   - component: {fileID: 1271725518}
+  - component: {fileID: 1271725520}
   m_Layer: 0
   m_Name: HandView
   m_TagString: Untagged
@@ -4722,7 +4723,6 @@ MonoBehaviour:
   _flyLayer: {fileID: 1416226193}
   _handLayer: {fileID: 1683338860}
   _focusLayer: {fileID: 1817952189}
-  _cardArrow: {fileID: 1038128322}
   _fanCenterPoint: {fileID: 1117339986}
   _fanHalfRunPx: 650
   _fanStepPx: 200
@@ -4787,6 +4787,18 @@ MonoBehaviour:
   _hoverDodgePx: 190
   _hoverLiftPx: 180
   _hoverGraceDuration: 0.15
+--- !u!114 &1271725520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1271725515}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5947c7781f449446b9c1f9fdabd9729, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1311576490
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -112,7 +112,7 @@ namespace _DreamKeep.Presentation
             _deathAnimTriggered = true;
             if (_hoverBox) _hoverBox.enabled = false; // 尸体不再响应悬停：禁用会触发它自己的兜底收起
             await _animTool.PlayOnceAsync(DeathAnim, onFinished_: () =>
-                UniTask.Delay(TimeSpan.FromSeconds(1f))
+                UniTask.Delay(TimeSpan.FromSeconds(0.2f))
                     .ContinueWith(() =>
                     {
                         if (this != null) Destroy(gameObject);
