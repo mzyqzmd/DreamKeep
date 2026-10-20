@@ -1,0 +1,22 @@
+{
+    "name": "_DreamKeep.GameRun",
+    "rootNamespace": "_DreamKeep.GameRun",
+    "references": [
+        "_DreamKeep.GameBattle",
+        "_DreamKeep.GameEvent",
+        "_DreamKeep.GameRest",
+        "_DreamKeep.GameShop",
+        "_DreamKeep.RuntimeData",
+        "_DreamKeep.ConfigData",
+        "_DreamKeep.Utility"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

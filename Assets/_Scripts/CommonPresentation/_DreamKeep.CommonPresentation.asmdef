@@ -1,0 +1,28 @@
+{
+    "name": "_DreamKeep.CommonPresentation",
+    "rootNamespace": "_DreamKeep.CommonPresentation",
+    "references": [
+        "_DreamKeep.Utility",
+        "_DreamKeep.ConfigData",
+        "_DreamKeep.RuntimeData",
+        "_DreamKeep.GameBattle",
+        "_DreamKeep.GameEvent",
+        "_DreamKeep.GameRun",
+        "_DreamKeep.GameRest",
+        "_DreamKeep.GameShop",
+        "_DreamKeep.EngineUtility",
+        "UniTask",
+        "VContainer",
+        "NaughtyAttributes.Core",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

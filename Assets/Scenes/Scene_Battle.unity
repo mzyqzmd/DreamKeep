@@ -6759,6 +6759,107 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1830223132}
   m_CullTransparentMesh: 1
+--- !u!1 &1832317763
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1832317764}
+  - component: {fileID: 1832317768}
+  - component: {fileID: 1832317767}
+  - component: {fileID: 1832317766}
+  - component: {fileID: 1832317765}
+  m_Layer: 0
+  m_Name: GameBattleRoot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1832317764
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832317763}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2091153468}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1832317765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832317763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21a7c6f1ae0d4c045a75726c1c0ebc7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _turnCountPopTipPrefab: {fileID: 1797641832291381066, guid: 1f39b7ad9a64618468cb19f474f34254, type: 3}
+  _damageColor: {r: 1, g: 0.28, b: 0.22, a: 1}
+  _healColor: {r: 0.35, g: 0.92, b: 0.45, a: 1}
+  _blockColor: {r: 0.55, g: 0.82, b: 1, a: 1}
+  _liftPx: 40
+  _jitterPx: 18
+  _turnBannerParent: {fileID: 1899820126}
+--- !u!114 &1832317766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832317763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d640cfcf415e7e64fa620b83f05f0b36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hitScale: 1
+  _healScale: 1
+--- !u!114 &1832317767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832317763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbe4fbbb521ea99419ffc662256d2c9a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1832317768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832317763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29747c7697aabd54cb86ed74d9157180, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  _playerConfig: {fileID: 11400000, guid: b7f8360722262a7439bd1988ad163188, type: 2}
+  _enemyConfigs:
+  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
+  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
+  _seed: 12345
 --- !u!1 &1837311531
 GameObject:
   m_ObjectHideFlags: 0
@@ -7530,10 +7631,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2091153468}
-  - component: {fileID: 2091153469}
-  - component: {fileID: 2091153471}
-  - component: {fileID: 2091153472}
-  - component: {fileID: 2091153473}
+  - component: {fileID: 2091153475}
+  - component: {fileID: 2091153474}
   m_Layer: 0
   m_Name: GameRoot
   m_TagString: Untagged
@@ -7553,10 +7652,11 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1832317764}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2091153469
+--- !u!114 &2091153474
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7565,65 +7665,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 2091153467}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29747c7697aabd54cb86ed74d9157180, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  parentReference:
-    TypeName: 
-  autoRun: 1
-  autoInjectGameObjects: []
-  _playerConfig: {fileID: 11400000, guid: b7f8360722262a7439bd1988ad163188, type: 2}
-  _enemyConfigs:
-  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
-  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
-  _seed: 12345
---- !u!114 &2091153471
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2091153467}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbe4fbbb521ea99419ffc662256d2c9a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &2091153472
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2091153467}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21a7c6f1ae0d4c045a75726c1c0ebc7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
-  _turnCountPopTipPrefab: {fileID: 1797641832291381066, guid: 1f39b7ad9a64618468cb19f474f34254, type: 3}
-  _numberPopTipPrefab: {fileID: 6842653926454003922, guid: dcfe99971d3f05a4581d28e9a51ad25c, type: 3}
-  _damageColor: {r: 1, g: 0.28, b: 0.22, a: 1}
-  _healColor: {r: 0.35, g: 0.92, b: 0.45, a: 1}
-  _blockColor: {r: 0.55, g: 0.82, b: 1, a: 1}
-  _liftPx: 40
-  _jitterPx: 18
-  _turnBannerParent: {fileID: 1899820126}
---- !u!114 &2091153473
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2091153467}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d640cfcf415e7e64fa620b83f05f0b36, type: 3}
+  m_Script: {fileID: 11500000, guid: 18e901a911c34fe44823da1c67fca56b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _hitVfxPrefab: {fileID: 838563072901894158, guid: e04fa0363da77ae439e1d73fbedfad55, type: 3}
   _healVfxPrefab: {fileID: 4641491347814169546, guid: 780bfe3cedf2ddd43beb5d9cb5b4c26c, type: 3}
+--- !u!114 &2091153475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091153467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0f21b68d2309749b340f81dab547f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
+  _numberPopTipPrefab: {fileID: 6842653926454003922, guid: dcfe99971d3f05a4581d28e9a51ad25c, type: 3}
 --- !u!1 &2096025520
 GameObject:
   m_ObjectHideFlags: 0

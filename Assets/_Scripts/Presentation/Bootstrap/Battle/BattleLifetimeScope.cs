@@ -4,6 +4,8 @@ using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
+using _DreamKeep.CommonPresentation;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
 
 namespace _DreamKeep.Presentation
@@ -55,10 +57,12 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             // 弹层中枢与目标提示驱动与组合根同挂 GameRoot：它们不绘制 UI，只订阅事件驱动弹层与点亮目标单位
-            builder_.RegisterComponentInHierarchy<PopRoot>(); // 弹层中枢：订伤害/回血/回合开始，数字飘字与回合横幅都在这里取还
-            // 特效中枢：订伤害/回血，把一次性特效播到目标单位身上；与弹层中枢各自独立订阅同一事件
-            builder_.RegisterComponentInHierarchy<VFXRoot>();
-            builder_.RegisterComponentInHierarchy<TargetDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
+            builder_.RegisterComponentInHierarchy<PopFactory>(); // 通用弹层工厂：说明气泡与数字飘字的池
+            builder_.RegisterComponentInHierarchy<VfxFactory>(); // 通用特效工厂：一次性特效的池
+            builder_.RegisterComponentInHierarchy<BattlePopRoot>(); // 战斗弹层编排：订伤害/回血/回合开始，决定弹什么、弹在哪
+            // 战斗特效编排：订伤害/回血，决定播什么、摆在哪；与弹层编排各自独立订阅同一事件
+            builder_.RegisterComponentInHierarchy<BattleVfxRoot>();
+            builder_.RegisterComponentInHierarchy<BattleTargetDirector>(); // 目标提示驱动：读手牌瞄准事实，按玩法层预览点亮目标单位
             builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场单位区：槽位点坐标来源（出生摆位与移动补间）+ 单位视图登记表（目标提示按生物查视图）
             // 场景里预摆的悬停发起器既不经过池、也不会被 RegisterComponentInHierarchy 逐个覆盖：装配期只对组件本身补一次注入。
             // 刻意不注入整个层级，避免把已注册场景组件（如 EndTurnButton / EnergyRemain）的 [Inject] 再跑一遍造成重复订阅。
