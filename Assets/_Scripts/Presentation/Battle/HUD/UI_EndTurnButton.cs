@@ -1,5 +1,4 @@
 using _DreamKeep.GameBattle;
-using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -46,9 +45,9 @@ namespace _DreamKeep.Presentation
         public void Construct(BattleCommandDispatcher commandDispatcher_, BattleEventDispatcher eventDispatcher_)
         {
             _commandDispatcher = commandDispatcher_;
-            eventDispatcher_.Register<BE_TurnStarted>(OnTurnStartedAsync);
-            eventDispatcher_.Register<BE_PlayerTurnActiveStarted>(OnPlayerTurnActiveStartedAsync);
-            eventDispatcher_.Register<BE_BattleEnded>(OnBattleEndedAsync);
+            eventDispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
+            eventDispatcher_.Register<BE_PlayerTurnActiveStarted>(OnPlayerTurnActiveStarted);
+            eventDispatcher_.Register<BE_BattleEnded>(OnBattleEnded);
         }
 
         #endregion
@@ -87,28 +86,25 @@ namespace _DreamKeep.Presentation
         }
 
         // 回合开始：刷新文案并一律关闸（抽牌演出期间不可点），开闸只由操作窗口开启事件负责
-        private UniTask OnTurnStartedAsync(BE_TurnStarted started_)
+        private void OnTurnStarted(BE_TurnStarted started_)
         {
             _text.text = $"结束第{started_.TurnCount}回合";
             _interactive = false;
             ApplyLook();
-            return UniTask.CompletedTask;
         }
 
         // 操作窗口开启：玩家回合进行阶段的唯一开闸点
-        private UniTask OnPlayerTurnActiveStartedAsync(BE_PlayerTurnActiveStarted started_)
+        private void OnPlayerTurnActiveStarted(BE_PlayerTurnActiveStarted started_)
         {
             _interactive = true;
             ApplyLook();
-            return UniTask.CompletedTask;
         }
 
         // 战斗结束：不再有下一个回合，一律不可交互
-        private UniTask OnBattleEndedAsync(BE_BattleEnded ended_)
+        private void OnBattleEnded(BE_BattleEnded ended_)
         {
             _interactive = false;
             ApplyLook();
-            return UniTask.CompletedTask;
         }
     }
 }

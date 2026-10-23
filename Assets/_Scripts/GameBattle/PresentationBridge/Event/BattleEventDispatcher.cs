@@ -20,6 +20,14 @@ namespace _DreamKeep.GameBattle
             handlers.Add(e => handler_((TEvent)e));
         }
 
+        /// <summary>注册不等待演出的处理器：事件链不会因它停顿时，用这个重载，处理器不必伪装成返回 UniTask 的异步方法。</summary>
+        public void Register<TEvent>(Action<TEvent> handler_) where TEvent : IBattleEvent =>
+            Register<TEvent>(e =>
+            {
+                handler_(e);
+                return UniTask.CompletedTask;
+            });
+
         /// <summary>顺序播放一批事件：逐条 await，一条事件内部的各处理器并行，未注册的事件跳过。</summary>
         public async UniTask PlayAsync(IReadOnlyList<IBattleEvent> events_)
         {

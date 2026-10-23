@@ -21,14 +21,14 @@ namespace _DreamKeep.RuntimeData
 
         #region 取堆：牌堆分类到具体牌堆的唯一映射
 
-        public CardPile Pile(EPileKind kind_) => kind_ switch
+        public CardPile Pile(EPileType type_) => type_ switch
         {
-            EPileKind.Draw => DrawPile,
-            EPileKind.Hand => Hand,
-            EPileKind.Discard => DiscardPile,
-            EPileKind.Exhaust => ExhaustPile,
-            EPileKind.Play => PlayPile,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind_)),
+            EPileType.Draw => DrawPile,
+            EPileType.Hand => Hand,
+            EPileType.Discard => DiscardPile,
+            EPileType.Exhaust => ExhaustPile,
+            EPileType.Play => PlayPile,
+            _ => throw new ArgumentOutOfRangeException(nameof(type_)),
         };
 
         #endregion

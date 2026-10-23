@@ -4,8 +4,9 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>战斗结束终态：按被遗忘的局内卡幂等回写卡组，派发战斗结束事件，随后清空战斗态并静默停驻。</summary>
-    public sealed class BP_BattleFinish : BattlePhase, IBattleCommandReceiver
+    /// <summary>战斗结束阶段：按被遗忘的局内卡幂等回写卡组，派发战斗结束事件，随后清空战斗态。
+    /// Next 恒为 null，是全流程唯一的终态——主循环据此停驻，不再推进也不重跑本阶段。</summary>
+    public sealed class BP_BattleFinish : BattlePhase
     {
         public BP_BattleFinish(BattleLoop owner_) : base(owner_)
         {
@@ -31,11 +32,5 @@ namespace _DreamKeep.GameBattle
         }
 
         #endregion
-
-        public UniTask HandleCommand(BattleCommand command_)
-        {
-            //TODO:等待玩家选择奖励发命令
-            return UniTask.CompletedTask;
-        }
     }
 }

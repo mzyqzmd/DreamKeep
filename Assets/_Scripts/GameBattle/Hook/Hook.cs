@@ -38,9 +38,8 @@ namespace _DreamKeep.GameBattle
 
         #region 收集宿主在指定结算时机产生的动作（只产出不执行）
 
-        /// <summary>按宿主的状态列表顺序（即施加顺序）逐条产出，变更一律交动作系统执行。</summary>
-        internal static void Settle(Creature host_, EPerkSettleTiming timing_, List<Creature> self_,
-            List<BattleAction> actions_)
+        /// <summary>按宿主的状态列表顺序（即施加顺序）逐条产出，变更一律交动作系统执行；动作打给谁由本处分派，调用方不必声明。</summary>
+        internal static void Settle(Creature host_, EPerkSettleTiming timing_, List<BattleAction> actions_)
         {
             IReadOnlyList<BattlePerk> powers = host_.Perks;
             for (int i = 0; i < powers.Count; i++)
@@ -50,7 +49,8 @@ namespace _DreamKeep.GameBattle
                 {
                     // 再生：无来源纯状态结算
                     case BP_Regen regen:
-                        if (regen.Layers > 0) actions_.Add(new BA_Heal(null, self_, regen.Layers));
+                        if (regen.Layers > 0)
+                            actions_.Add(new BA_Heal(null, new List<Creature> { host_ }, regen.Layers));
                         break;
                 }
             }

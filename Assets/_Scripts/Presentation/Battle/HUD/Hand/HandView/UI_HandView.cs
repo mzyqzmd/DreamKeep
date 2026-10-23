@@ -2,20 +2,19 @@ using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using VContainer;
-using VContainer.Unity;
+using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>手牌区本体：一块自洽的手牌区——卡池与牌的去向、以手牌区的点为准的排布、拖拽与出牌受理，
-    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，目标提示驱动读瞄准事实并下发瞄准结果。
-    /// 每帧只驱动两件与目标无关的事（悬停裁决、词条气泡）；瞄准态与整手数值预览长在同节点的 UI_HandAim，
-    /// 由目标提示驱动算完瞄准结果后经 ApplyAimResult 连同驱动，故这里没有瞄准相关的每帧入口。
+    /// 并对外只暴露宿主契约：卡牌问抓取资格与指针坐标并上报指针事件，瞄准相关的一律转交同节点的瞄准器。
+    /// 每帧驱动三件事：悬停裁决、词条气泡，以及瞄准器的兜底校正与整手数值预览对账（瞄准结果由战斗侧的瞄准
+    /// 中间件解析后直接回写瞄准器，不经过这里）。
     /// 三者同挂本节点、都经本类的内部服务面读写这里的状态：UI_HandHover 管悬停与避让、UI_HandAim 管瞄准、
     /// UI_HandShow 管十一条领域事件的演出。</summary>
     [RequireComponent(typeof(UI_HandHover))]
@@ -32,13 +31,13 @@ namespace _DreamKeep.Presentation
         private UI_PlayCardZone _dropZone;
 
         [Tooltip("抽牌堆视图：抽牌入场的起飞锚点")] [SerializeField]
-        private UI_DrawPile drawPile;
+        private UI_DrawPile _drawPile;
 
         [Tooltip("弃牌堆视图：弃牌归宿的飞行终点")] [SerializeField]
-        private UI_DiscardPile discardPile;
+        private UI_DiscardPile _discardPile;
 
         [Tooltip("消耗堆视图：消耗与遗忘卡归宿的飞行终点")] [SerializeField]
-        private UI_ExhaustPile exhaustPile;
+        private UI_ExhaustPile _exhaustPile;
 
         [Header("卡牌层")] [Tooltip("飞行层：离场与遗忘借道飞行的牌")] [SerializeField]
         private RectTransform _flyLayer;
@@ -106,11 +105,13 @@ namespace _DreamKeep.Presentation
             _aim = GetComponent<UI_HandAim>();
         }
 
-        // 每帧驱动：悬停裁决与词条气泡都与目标无关，放在这里自成一体；瞄准相关的每帧由目标提示驱动在下发结果时驱动
+        // 每帧驱动：悬停裁决与词条气泡都与目标无关；瞄准器在这里兜底校正瞄准身份并对账整手数值预览，
+        // 瞄准结果的解析与箭头由战斗侧的瞄准中间件负责，与本类的每帧次序无关
         private void Update()
         {
             _hover.TickHover();
             _hover.TickAffixTips();
+            _aim.Tick();
         }
 
         // 装配：解析画布相机、建卡池；上行门面只取供出牌命令的那一个（数值预览查询已随瞄准器走）。
@@ -174,15 +175,12 @@ namespace _DreamKeep.Presentation
             DropAimDrag(card_);
         }
 
-        // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色随瞄准结果的下发刷新
+        // 瞄准拖动：越过启动阈值后由包装逐帧上报，首次上报即展开箭头；此后位姿与颜色由瞄准中间件每帧刷新
         public void OnAimDragged(UI_CardBattle card_) => _aim.OnDragged(card_);
 
-        /// <summary>接收瞄准结果并连同消费（目标提示驱动每帧下发）：槽位 -1 = 未指向任何敌人（松手据此取消），
-        /// 目标集合未瞄准或解析不出目标时为 null；两个值同帧生效，且刷新在同一次调用里发生，不存在只更新一半的中间态。</summary>
-        public void ApplyAimResult(int slot_, IReadOnlyList<Creature> targets_) => _aim.ApplyResult(slot_, targets_);
-
-        /// <summary>正在瞄准的牌：拖拽中、本回合可打，且走瞄准模式（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
-        public UI_CardBattle AimedCard =>
+        /// <summary>正在瞄准的牌（瞄准器回答"要不要解析目标"的判据）：拖拽中、本回合可打，且走瞄准模式
+        ///（本卡目标类型为 AnyEnemy）或锚点（下沿中点）落在出牌区矩形内；没在瞄准时为 null。</summary>
+        internal UI_CardBattle AimedCard =>
             _draggedCard && _cardsPlayable &&
             (_draggedCard.Card.IsAnyEnemyTarget || _dropZone.Accepts(_draggedCard.WorldPosition))
                 ? _draggedCard
@@ -206,9 +204,9 @@ namespace _DreamKeep.Presentation
 
         // 出牌区与三堆：演出器的队位等待、出队、归宿飞行与数字兜底用
         internal UI_PlayCardZone DropZone => _dropZone;
-        internal UI_DrawPile DrawPile => drawPile;
-        internal UI_DiscardPile DiscardPile => discardPile;
-        internal UI_ExhaustPile ExhaustPile => exhaustPile;
+        internal UI_DrawPile DrawPile => _drawPile;
+        internal UI_DiscardPile DiscardPile => _discardPile;
+        internal UI_ExhaustPile ExhaustPile => _exhaustPile;
 
         // 入场中：悬停器避让要跳过正在入场的牌
         internal bool IsEntering(UI_CardBattle card_) => _entering.Contains(card_);

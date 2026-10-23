@@ -1,11 +1,12 @@
 using System;
 using System.Threading;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.Utility;
+using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace _DreamKeep.Presentation
 {
@@ -13,11 +14,15 @@ namespace _DreamKeep.Presentation
     /// 牌堆视图基类：收口抽牌堆 / 弃牌堆 / 消耗堆共用的计数文本与"有牌进堆"的反馈——
     /// 进堆 / 离堆都只是入队，写出显示数的节奏由本类自己逐张推进（每张间隔与整段时长上限都是本类的旋钮），
     /// 故"一帧内到一批"也会逐张跳而不是一步到终值；批量来路可用 StepArriveAsync / StepLeaveAsync 等整段跳完。
+    /// 点击本堆弹出查看面板（UI_PileCardsView）陈列本堆全部卡，要陈列哪堆由派生类的 Type 回答。
     ///</summary>
-    public abstract class UI_Pile : MonoBehaviour
+    public abstract class UI_Pile : MonoBehaviour, IPointerClickHandler
     {
         [Tooltip("计数文本：显示本堆张数")] [SerializeField]
         protected TextMeshProUGUI _countText;
+
+        [Tooltip("点击本堆弹出的查看面板：未接线则点击无响应，不影响计数显示")] [SerializeField]
+        private UI_PileCardsView _cardsView;
 
         [Header("进堆弹跳")] [Tooltip("弹跳幅度：0.15 即最多放大 15%")] [SerializeField]
         private float _popScale = 0.15f;
@@ -36,6 +41,8 @@ namespace _DreamKeep.Presentation
 
         protected abstract int LiveCount { get; } // 派生类给活值（表达式主体）
 
+        protected abstract EPileType Type { get; } // 点击查看面板要陈列的堆，派生类一行回答
+
         private int _shown;
         private int _pending; // 待跳队列：正数为待进堆、负数为待离堆，逐张写数由下面这段节奏推进
         private bool _draining;
@@ -49,6 +56,9 @@ namespace _DreamKeep.Presentation
         // 进堆一张：入队一张，起手当帧就写数并弹；已有一段节奏在跑时这张排在队尾跟着跳
         public void OnCardArrived() => Enqueue(1);
 
+        // 点击堆图标：弹出查看面板陈列本堆（射线命中由堆图标上的 Graphic 承接）
+        public void OnPointerClick(PointerEventData eventData_) => _cardsView?.Open(Type);
+
         // 离堆一张：入队一张，起手当帧就写数、不弹
         public void OnCardLeft() => Enqueue(-1);
 
@@ -58,6 +68,8 @@ namespace _DreamKeep.Presentation
             _shown = LiveCount;
             _countText.text = _shown.ToString();
         }
+
+        #region 弹跳进堆
 
         // 逐张进堆：入队 count_ 张，等整段跳完才返回——批量来路（洗回、弃牌波）据此把域流程压在节奏之后
         public async UniTask StepArriveAsync(int count_)
@@ -110,5 +122,7 @@ namespace _DreamKeep.Presentation
             _draining = false;
             _drained.TrySetResult();
         }
+
+        #endregion
     }
 }

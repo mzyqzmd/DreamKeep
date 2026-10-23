@@ -13,8 +13,8 @@ namespace _DreamKeep.RuntimeData
 
         public static CardModel Bake(SO_Card config_)
         {
-            CM_Static staticData = new(config_.name, config_.Icon, config_.Type,
-                config_.Rarity, config_.TargetType, config_.CanUpdate && config_.Upgrades.Count > 0);
+            CM_Static staticData = new(config_.Icon, config_.Type, config_.Rarity, config_.TargetType,
+                config_.CanUpdate && config_.Upgrades.Count > 0);
             CM_Runtime runtime = new(config_.Name, config_.Cost, true);
             CardModel card = new(staticData, runtime);
 

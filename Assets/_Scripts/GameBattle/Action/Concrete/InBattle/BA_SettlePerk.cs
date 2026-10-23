@@ -19,9 +19,8 @@ namespace _DreamKeep.GameBattle
             foreach (Creature target in Targets)
             {
                 // 触发读的是递减前的层数，必须先于 SettlePerks；嵌套动作只合事件，不进动作队列
-                List<Creature> self = new() { target };
                 List<BattleAction> triggered = new();
-                Hook.Settle(target, _timing, self, triggered);
+                Hook.Settle(target, _timing, triggered);
                 for (int i = 0; i < triggered.Count; i++)
                     events.AddRange(triggered[i].Execute(battleContext_));
 

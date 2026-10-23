@@ -38,26 +38,6 @@ namespace _DreamKeep.RuntimeData
         }
         #endregion
 
-        #region 查询指定状态类型的层数，未挂载时返回 0
-        public int GetPerkLayers<T>() where T : BattlePerk
-        {
-            for (int i = 0; i < _perks.Count; i++)
-                if (_perks[i] is T typed)
-                    return typed.Layers;
-            return 0;
-        }
-        #endregion
-
-        #region 查询指定状态类型的第一份实例，未挂载时返回 null
-        public T GetPerk<T>() where T : BattlePerk
-        {
-            for (int i = 0; i < _perks.Count; i++)
-                if (_perks[i] is T typed)
-                    return typed;
-            return null;
-        }
-        #endregion
-
         #region 回合边界：结算指定时机的状态层数（递减一层），归零项移除并逐个带回，供动作侧发移除事件
 
         public List<BattlePerk> SettlePerks(EPerkSettleTiming timing_)

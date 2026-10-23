@@ -3,7 +3,6 @@ using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
@@ -44,30 +43,28 @@ namespace _DreamKeep.Presentation
             _actorRoot = actorRoot_;
             _popFactory = popFactory_;
             _rng = rng_;
-            dispatcher_.Register<BE_DamageDealt>(OnDamageDealtAsync);
-            dispatcher_.Register<BE_HealthRestored>(OnHealthRestoredAsync);
-            dispatcher_.Register<BE_TurnStarted>(OnTurnStartedAsync);
+            dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
+            dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
+            dispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
         }
 
         #endregion
 
         // 受伤：实际掉血弹 Toss 数字；有格挡吸收时另弹「格挡！」的 Rise 文案
-        private UniTask OnDamageDealtAsync(BE_DamageDealt dealt_)
+        private void OnDamageDealt(BE_DamageDealt dealt_)
         {
             int hpLoss = dealt_.Amount - dealt_.Absorbed;
             if (hpLoss <= 0 && dealt_.Absorbed > 0)
                 ShowNumber("格挡！", _blockColor, ENumberPopTipType.Rise, dealt_.Target);
             else
                 ShowNumber(hpLoss.ToString(), _damageColor, ENumberPopTipType.Toss, dealt_.Target);
-            return UniTask.CompletedTask;
         }
 
         // 回血：Amount 已是实际回复量（域侧钳到上限），没有真正恢复就不弹数字；回血特效由 VFXRoot 照播，零回复也播
-        private UniTask OnHealthRestoredAsync(BE_HealthRestored restored_)
+        private void OnHealthRestored(BE_HealthRestored restored_)
         {
             if (restored_.Amount > 0)
                 ShowNumber(restored_.Amount.ToString(), _healColor, ENumberPopTipType.Rise, restored_.Target);
-            return UniTask.CompletedTask;
         }
 
         // 数字飘字：算好单位视图与头顶世界坐标后交给通用工厂，实例挂到单位视图下（随其移动与销毁）
@@ -88,12 +85,11 @@ namespace _DreamKeep.Presentation
         }
 
         // 回合横幅：它没有所属对象，挂到 Inspector 指定的父级；同一时刻只留一个实例，重复触发由横幅自己重播时间线
-        private UniTask OnTurnStartedAsync(BE_TurnStarted started_)
+        private void OnTurnStarted(BE_TurnStarted started_)
         {
             if (_turnCountPopTip == null) _turnCountPopTip = Instantiate(_turnCountPopTipPrefab, _turnBannerParent);
             _turnCountPopTip.transform.SetAsLastSibling();
             _turnCountPopTip.Show(started_.IsPlayerTurn, started_.TurnCount);
-            return UniTask.CompletedTask;
         }
     }
 }

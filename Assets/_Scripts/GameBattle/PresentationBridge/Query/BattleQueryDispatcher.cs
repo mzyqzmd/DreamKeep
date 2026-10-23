@@ -15,8 +15,17 @@ namespace _DreamKeep.GameBattle
         #region 查询：只读直算，不入队，无副作用
 
         /// <summary>查询指定牌堆当前的张数：走战斗态的牌堆分类映射，问句由调用方缓存复用。</summary>
-        public int PileCount(BQ_PileCount query_)
-            => _battleContext.Player.CombatState.Pile(query_.Kind).Count;
+        public int PileCount(EPileType type_)
+            => _battleContext.Player.CombatState.Pile(type_).Count;
+
+        /// <summary>查询指定牌堆的全部卡（列表由调用方缓存复用，先清后填）：按堆内连续槽位键序 0..Count-1 填充，
+        /// 索引即卡在堆中的顺序——弃牌/消耗堆即进入顺序，抽牌堆 index 0 为堆顶、抽一张少一张。</summary>
+        public void PileCards(EPileType type_, List<CardModel> results_)
+        {
+            results_.Clear();
+            IReadOnlyList<CardModel> cards = _battleContext.Player.CombatState.Pile(type_).Cards;
+            for (int i = 0; i < cards.Count; i++) results_.Add(cards[i]);
+        }
 
         /// <summary>存活敌人列表：按槽位排序，顺序即瞄准下标（aimSlot）的语义。</summary>
         public IReadOnlyList<Creature> GetAliveEnemies()

@@ -28,8 +28,8 @@ namespace _DreamKeep.Presentation
             TrackEntry entry = _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, false);
             UniTaskCompletionSource released = new(); // 放行源：播够比例 / 播完 / 被顶掉 / 宿主销毁，取最早的一个
             bool finished = false;
-            entry.Complete += _ => OnCompleted();
-            entry.End += _ => OnEnded();
+            entry.Complete += _ => OnFinished();
+            entry.End += _ => OnFinished();
 
             // 到点放行：事件链不等动画播完（剩下的由后台播完，或被后一次播放接棒顶掉）
             await UniTask.WhenAny(released.Task,
@@ -37,17 +37,9 @@ namespace _DreamKeep.Presentation
                     cancellationToken: destroyCancellationToken).SuppressCancellationThrow());
             return;
 
-            // 自然播完：放行等待，并按票号独占地编排收尾（回待机 / 死亡自毁）
-            void OnCompleted()
-            {
-                released.TrySetResult();
-                if (finished || ticket != _playTicket) return;
-                finished = true;
-                onFinished_?.Invoke();
-            }
-
-            // 结束或被新的播放请求顶掉：一律放行等待，免得等待挂死；只有仍是最新那条才编排收尾（被顶掉的票号已作废）
-            void OnEnded()
+            // 播完或被顶掉：先放行等待（免得挂到 delay 结束），再按票号独占编排收尾（回待机 / 死亡自毁）；
+            // Complete 与 End 的处理完全一致，故共用同一个回调——只改一处的守卫不会漏到另一条路径
+            void OnFinished()
             {
                 released.TrySetResult();
                 if (finished || ticket != _playTicket) return;

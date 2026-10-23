@@ -13,6 +13,9 @@ GameObject:
   - component: {fileID: 307441361647879174}
   - component: {fileID: 5931782861234890128}
   - component: {fileID: 8983310850963364521}
+  - component: {fileID: 5237988570584021999}
+  - component: {fileID: 6482398765404290809}
+  - component: {fileID: 1600219768545505429}
   m_Layer: 0
   m_Name: Card_Battle
   m_TagString: Untagged
@@ -93,13 +96,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e2c9b1a4f7d43e2a8c6d0b3f9e71c04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _attackFace: {fileID: 5871933169028475149}
-  _skillFace: {fileID: 1205379755748929341}
-  _abilityFace: {fileID: 2917342219746286562}
-  _curseFace: {fileID: 214837149997107500}
-  _hoverScale: 1.05
   _anchorLiftPx: 275
-  _hoverDuration: 0.12
   _aimThresholdPx: 12
   _dragFollowDamp: 0.06
 --- !u!114 &8983310850963364521
@@ -117,12 +114,61 @@ MonoBehaviour:
   _trigger: 1
   _startAnchor: 2
   _tipAnchor: 0
-  _tipOffsetPx: {x: 16, y: 0}
+  _tipOffsetPx: {x: 25, y: 0}
   _tipParent: {fileID: 5339906804015178326}
   _stackSpacingPx: 12
   _isStaticContents: 0
   _tipName: 
   _tipDescription: 
+--- !u!114 &5237988570584021999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927256767321244307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bdfdd06fa1881f43a3e75de98478ef3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _attackFace: {fileID: 5871933169028475149}
+  _skillFace: {fileID: 1205379755748929341}
+  _abilityFace: {fileID: 2917342219746286562}
+  _curseFace: {fileID: 214837149997107500}
+--- !u!114 &6482398765404290809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927256767321244307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3081c935ac5b5b44eae1d87b15eb241e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _selfDriven: 0
+  _offsetPx: {x: 0, y: 120}
+  _duration: 0.12
+--- !u!114 &1600219768545505429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927256767321244307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68dc29e8f236406d9831af1c6d19cf91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _selfDriven: 0
+  _scaleFactor: 1.2
+  _hoverScale: 1.05
+  _duration: 0.12
+  _ease: 6
+  _targetToScale: {fileID: 0}
 --- !u!1001 &2450246840005135258
 PrefabInstance:
   m_ObjectHideFlags: 0

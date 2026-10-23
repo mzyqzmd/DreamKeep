@@ -1,5 +1,4 @@
 using _DreamKeep.GameBattle;
-using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using VContainer;
@@ -25,12 +24,12 @@ namespace _DreamKeep.Presentation
         public void Construct(BattleEventDispatcher eventDispatcher_)
         {
             _originColor = _remainEnergyText.color;
-            eventDispatcher_.Register<BE_EnergyChanged>(OnEnergyChangedAsync);
+            eventDispatcher_.Register<BE_EnergyChanged>(OnEnergyChanged);
         }
 
         #endregion
 
-        private UniTask OnEnergyChangedAsync(BE_EnergyChanged changed_)
+        private void OnEnergyChanged(BE_EnergyChanged changed_)
         {
             int current = Mathf.Max(0, changed_.Current);
             if (current == 0)
@@ -45,7 +44,6 @@ namespace _DreamKeep.Presentation
             }
 
             _remainEnergyText.text = $"{current}/{changed_.Max}";
-            return UniTask.CompletedTask;
         }
     }
 }

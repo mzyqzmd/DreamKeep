@@ -37,7 +37,10 @@ namespace _DreamKeep.CommonPresentation
         [Tooltip("卡牌费用部分：费用为负的卡整块隐藏")] [SerializeField]
         private GameObject _cardCost;
 
-        [Tooltip("升级后卡牌名字字体颜色")] [SerializeField]
+        [Tooltip("涟漪动效边框节点：牌堆查看等纯展示场合经 SetRippleVisible 关掉")] [SerializeField]
+        private GameObject _ripple;
+
+        [Header("颜色")] [Tooltip("升级后卡牌名字字体颜色")] [SerializeField]
         private Color _upgradeNameColor = Color.green;
 
         [Tooltip("费用低于基础值时的字体颜色（减费提示，高于或等于保持本色）")] [SerializeField]
@@ -59,6 +62,7 @@ namespace _DreamKeep.CommonPresentation
         private bool _playable = true;
         private CardValueRenderer _faceValueRenderer;
         private CardValueRenderer _tipValueRenderer;
+        private readonly StringBuilder _descriptionBuilder = new(); // 描述文本的复用缓冲：每次重排只清空不重建
 
         #region 卡牌资源引用
 
@@ -112,17 +116,8 @@ namespace _DreamKeep.CommonPresentation
 
         public void Bind(CardModel card_)
         {
-            // 色缓存懒建：收齐卡面全部图形与它们的编辑期本色——图形集合与本色运行期不变，首次 Bind 建一次即可反复用。
-            // 守卫只包这一段：卡池复用的实例每次 Bind 都要重写内容，否则内容会停在上一次绑定的那张卡
-            if (_faceImages == null)
-            {
-                _faceImages = GetComponentsInChildren<Image>(true);
-                _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
-                _imageColors = new Color[_faceImages.Length];
-                _textColors = new Color[_faceTexts.Length];
-                for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
-                for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
-            }
+            // 色缓存与涟漪节点懒建：卡池复用的实例每次 Bind 都要重写内容，守卫只包建缓存这一段
+            EnsureCache();
 
             //设置卡面
             Card = card_;
@@ -161,6 +156,19 @@ namespace _DreamKeep.CommonPresentation
             SetPlayableLook(true);
         }
 
+        // 缓存懒建：收齐卡面全部图形/文本与它们的编辑期本色、按名找出涟漪动效节点——集合与本色运行期不变，
+        // 首次 Bind 建一次即可反复用；card_ripple 优先用编辑器接线，未接则按名在直接子节点找（四张脸都摆着，漏摆留 null、开关静默跳过）
+        private void EnsureCache()
+        {
+            if (_faceImages != null) return;
+            _faceImages = GetComponentsInChildren<Image>(true);
+            _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
+            _imageColors = new Color[_faceImages.Length];
+            _textColors = new Color[_faceTexts.Length];
+            for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
+            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+        }
+
         #endregion
 
 
@@ -189,6 +197,18 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
+        #region 涟漪边框开关：牌堆查看等纯展示场合关掉 card_ripple 动效（战斗路径不调，默认照旧）
+
+        /// <summary>开关 card_ripple 动效边框：动效节点失活即停、重开自动重播；节点缺失静默跳过，调用方无需判空。
+        /// 必须在 Bind 之后调用（涟漪节点随 EnsureCache 懒建）。</summary>
+        public void SetRippleVisible(bool visible_)
+        {
+            if (_ripple == null || _ripple.activeSelf == visible_) return;
+            _ripple.SetActive(visible_);
+        }
+
+        #endregion
+
         #region 数值预览：门面转发与描述重建（求值与着色的唯一落点是 CardValueRenderer）
 
         /// <summary>写入数值预览门面与目标集合（手牌区对账时推入；门面为空时数值按原值纯文本渲染，
@@ -199,8 +219,16 @@ namespace _DreamKeep.CommonPresentation
             _tipValueRenderer.SetContext(queryDispatcher_, targets_);
         }
 
-        /// <summary>气泡用渲染器：与卡面同一份修正与配色，但不随卡面压暗（浮层独立于整卡灰调）；气泡内容由战斗卡收集。</summary>
-        public IStatRenderer TipValueRenderer => _tipValueRenderer;
+        /// <summary>收集悬停气泡的词条列（复用列表，先清后填）：只认带出词条的行（其余行由卡面自己陈列），
+        /// 数值经气泡款渲染器求值与着色；战斗卡与牌堆卡共用，整列为空时气泡不弹。</summary>
+        public void CollectTipLines(List<(string Name, string Description)> results_)
+        {
+            results_.Clear();
+            IReadOnlyList<(string Text, CardAffix Affix)> lines = Card.GetDescriptionLines(_tipValueRenderer);
+            for (int i = 0; i < lines.Count; i++)
+                if (lines[i].Affix != null)
+                    results_.Add((lines[i].Text, lines[i].Affix.GetDescription(_tipValueRenderer)));
+        }
 
         /// <summary>重建描述文本：不展示描述的词条那一行只写词条名（黄 + 下划线，说明交给悬停/拖拽时弹出的气泡），
         /// 其余行的数值经渲染器着色（高绿低红、相等无色），不可打时颜色随整卡压暗。</summary>
@@ -208,15 +236,15 @@ namespace _DreamKeep.CommonPresentation
         {
             string keywordColor = ColorUtility.ToHtmlStringRGB(
                 _playable ? _affixNameColor : _affixNameColor * _unplayableTint);
-            StringBuilder description = new();
+            _descriptionBuilder.Clear();
             IReadOnlyList<(string Text, CardAffix Affix)> lines = Card.GetDescriptionLines(_faceValueRenderer);
             for (int i = 0; i < lines.Count; i++)
             {
                 (string text, CardAffix affix) = lines[i];
-                description.AppendLine(affix == null ? text : $"<color=#{keywordColor}><u>{text}</u></color>");
+                _descriptionBuilder.AppendLine(affix == null ? text : $"<color=#{keywordColor}><u>{text}</u></color>");
             }
 
-            _description.text = description.ToString();
+            _description.text = _descriptionBuilder.ToString();
         }
 
         #endregion

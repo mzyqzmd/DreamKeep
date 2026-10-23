@@ -3,10 +3,9 @@ using _DreamKeep.GameBattle;
 using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.Utility;
 using UnityEngine;
 using VContainer;
-using VContainer.Unity;
+using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 
 namespace _DreamKeep.Presentation
 {

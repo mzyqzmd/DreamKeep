@@ -43,7 +43,7 @@ namespace _DreamKeep.Presentation
 
         public void OnPointerExit(PointerEventData eventData) => SetHovered(false);
 
-        #region 目标提示与命中判定：由 TargetDirector 按"这张牌会命中的目标"调用
+        #region 目标提示与命中判定：由瞄准中间件 BattleTargetDirector 按"这一轮会命中的目标"调用
 
         /// <summary>显示或隐藏目标提示（状态没变就跳过，避免重复 SetActive）。</summary>
         public void ShowTargetTip(bool show_)

@@ -15,7 +15,6 @@ namespace _DreamKeep.RuntimeData
         private readonly CM_Static _static;
         private readonly CM_Runtime _runtime;
 
-        public string CardId => _static.CardId;
         public string Name => _runtime.Name;
         public Sprite Icon => _static.Icon;
         public ECardType Type => _static.Type;
@@ -33,7 +32,6 @@ namespace _DreamKeep.RuntimeData
 
         public ModifiableStat Cost => _runtime.Cost;
         public bool IsUpgraded => _runtime.IsUpgraded;
-        public IReadOnlyList<CardAffix> AdditionalAffixes => _runtime.AdditionalAffixes;
         public IReadOnlyList<CardAffix> ActiveAffixes => _runtime.ActiveAffixes;
         public bool IsRetain => _runtime.IsRetain;
         public bool IsUnableToPlay => _runtime.IsUnableToPlay;

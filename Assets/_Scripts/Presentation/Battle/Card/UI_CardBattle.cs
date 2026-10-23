@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
-using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.CommonPresentation;
-using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -13,7 +10,7 @@ using UnityEngine.EventSystems;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战斗卡本体：按卡模型的类型在四张内嵌牌面（攻击 / 技能 / 能力 / 诅咒）之间切换，并把绑定与不可打外观转发给当前那张。
+    /// <summary>战斗卡本体：牌面由同节点的选择器按卡类型切换，本类只把绑定与不可打外观转发给当前那张。
     /// 位置 / 朝向 / 所在层、按下拖动松手、悬停进出也全在这里；牌面只管长什么样，展示卡直接摆牌面、不包这一层，于是天然收不到指针事件。
     /// 位置与朝向一律是**世界姿态**：区域（卡层）只负责挂载与遮挡，槽位由区域按自己的点换算好后下发，本卡只管写到 transform 上；
     /// 换层走 MoveToLayer 唯一通道且一律保世界位置，故各层矩形怎么摆都不会错位。
@@ -22,35 +19,21 @@ namespace _DreamKeep.Presentation
     /// 按下后走哪种交互由本卡自己的目标类型回答：AnyEnemy 卡进瞄准模式——卡定住不动，拖动越过启动阈值后交给宿主去驱动目标箭头，
     /// 其余卡以阻尼插值跟随指针（鼠标停下也会自己滑到位）；
     /// 动画一概不参与判据，滑行合拢中的牌照样能按下即抓（抓起来先 Kill 掉自己的补间）。
-    /// 悬停进入的抬起位由区域按槽位真源给出——卡留在自己槽位上方只做垂直抬起 + 回正 + 放大、不跟随指针（拖拽才跟随指针），
-    /// 还原值同样由区域按槽位真源给出，本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
-    /// 位置与缩放两通道补间按通道独占：同目标不重开、换目标先杀旧重开——判据比"通道已声明的目标"而不是滞后的当前姿态，
+    /// 悬停的偏移与放大由同节点两个组件执行（均为被驱动模式，本类只在进出时交接）：位置取"卡自己的槽位沿区域给的方向偏移一段"
+    /// （原位偏移、不跟随指针）、朝向取区域给的基准朝向（回正），同时放大；还原值同样由区域按槽位真源给出，
+    /// 本卡不记进入前的瞬时值，补间途中进出也不会写回半截姿态。
+    /// 每类姿态同一时刻只有一个写者：悬停进出归两个组件（进入前先杀本卡的两条通道），重排/让位/回位仍走本卡的两条通道；
+    /// 本卡的两条通道按"已声明的目标"判要不要重开（同目标续用、换目标杀旧）——比的是目标而不是滞后的当前姿态，
     /// 故同一帧里被连续声明两次（例如先让位、随即被驳回退回）也以第二次为准，不会把命令静默吞掉。
     /// 词条说明交给同节点的气泡发起器（外部驱动）：内容随绑定写入，显隐由手牌区按自己的悬停裁决调它。</summary>
     [RequireComponent(typeof(UI_HoverTip))]
+    [RequireComponent(typeof(UI_CardFaceSelector))]
+    [RequireComponent(typeof(UI_HoverOffset))]
+    [RequireComponent(typeof(UI_HoverScaler))]
     public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
-        [Header("牌面")] [Tooltip("攻击牌面：绑定的卡为攻击类型时切到它")] [SerializeField]
-        private UI_CardFace _attackFace;
-
-        [Tooltip("技能牌面：绑定的卡为技能类型时切到它")] [SerializeField]
-        private UI_CardFace _skillFace;
-
-        [Tooltip("能力牌面：绑定的卡为能力类型时切到它")] [SerializeField]
-        private UI_CardFace _abilityFace;
-
-        [Tooltip("诅咒牌面：绑定的卡为诅咒类型时切到它")] [SerializeField]
-        private UI_CardFace _curseFace;
-
-
-        [Tooltip("悬停时的缩放目标值：手牌基准尺寸为 1，1.15 即比常态放大 15%")] [SerializeField]
-        private float _hoverScale = 1.15f;
-
         [Tooltip("拖拽跟手高度（画布像素）：拖拽时让卡锚点（下沿中点）上方该距离的点与指针重合，指针便停在卡内这个高度")] [SerializeField]
         private float _anchorLiftPx = 120f;
-
-        [Tooltip("悬停进出的补间时长（秒）：抬起、放大与回位共用，比手牌重排的 0.28s 短，进出要跟手")] [SerializeField]
-        private float _hoverDuration = 0.12f;
 
         [Tooltip("瞄准模式的启动阈值（屏幕像素）：按住 AnyEnemy 卡移动超过该距离才把它定住并显示目标箭头，纯点击不触发")] [SerializeField]
         private float _aimThresholdPx = 12f;
@@ -58,8 +41,10 @@ namespace _DreamKeep.Presentation
         [Tooltip("拖拽跟随的时间常数（秒）：越小越跟手、越大拖尾越明显；鼠标停下时卡会自己滑到指针锚点位")] [SerializeField]
         private float _dragFollowDamp = 0.15f;
 
-        private UI_CardFace _face; // 当前激活的牌面：Bind 时按卡类型切到对应那张
+        private UI_CardFaceSelector _faces; // 四张内嵌牌面的持有者：当前是哪张由它回答
         private UI_HoverTip _hoverTip;
+        private UI_HoverOffset _hoverOffset; // 悬停偏移与缩放的通道写者（被驱动模式）：本卡只在进出时交接
+        private UI_HoverScaler _hoverScaler;
         private RectTransform _rect;
         private Tween _moveTween;
         private Tween _scaleTween;
@@ -88,7 +73,7 @@ namespace _DreamKeep.Presentation
 
         public UI_HandView Host { get; private set; }
 
-        public CardModel Card => _face.Card;
+        public CardModel Card => _faces.Current.Card;
 
         /// <summary>当前世界位置（卡根 pivot＝卡下沿中点）：拖拽跟随与落点判定都以这个锚点起算。</summary>
         public Vector3 WorldPosition => _rect.position;
@@ -102,8 +87,11 @@ namespace _DreamKeep.Presentation
         /// <summary>拖拽跟手高度（画布像素）：拖拽时由所在区域换算成"指针锚点位"，让指针停在卡内该高度。</summary>
         public float AnchorLiftPx => _anchorLiftPx;
 
-        /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已抬邻牌才动"的错位感。</summary>
-        public float HoverDuration => _hoverDuration;
+        /// <summary>悬停进出补间时长（秒）：区域的悬停避让与它对齐，避开"牌已移邻牌才动"的错位感。</summary>
+        public float HoverDuration => _hoverOffset.Duration;
+
+        /// <summary>悬停偏移量（手牌区画布像素）：区域按它把槽位换算成悬停位姿，进入悬停前也要用它算偏移后的范围。</summary>
+        public Vector2 HoverOffsetPx => _hoverOffset.OffsetPx;
 
         /// <summary>词条说明的气泡发起器：显隐由手牌区在它裁决出"该显示"的时刻调用，内容已随 Bind 写入。</summary>
         public UI_HoverTip HoverTip => _hoverTip;
@@ -120,6 +108,9 @@ namespace _DreamKeep.Presentation
         {
             _rect = (RectTransform)transform;
             _hoverTip = GetComponent<UI_HoverTip>();
+            _faces = GetComponent<UI_CardFaceSelector>();
+            _hoverOffset = GetComponent<UI_HoverOffset>();
+            _hoverScaler = GetComponent<UI_HoverScaler>();
         }
 
         // 拖拽跟随：非瞄准卡每帧向"锚点上方该距离的点落在指针处"的目标指数插值趋近——鼠标停下卡也会自己滑到位；
@@ -131,6 +122,16 @@ namespace _DreamKeep.Presentation
                 Host.PointerAnchorPosition(this), 1f - Mathf.Exp(-Time.deltaTime / _dragFollowDamp));
         }
 
+        // 拖动中被禁用（回收 / 关闭）时直接落回槽位，不停在半途；悬停状态一并清掉，防实例复用后 EnterHover 被早退挡掉
+        // （悬着的词条气泡由同节点的气泡发起器自己的 OnDisable 收掉）
+        private void OnDisable()
+        {
+            ClearHover();
+            if (!_dragging) return;
+            _dragging = false;
+            Host.OnCardDragCancelled(this);
+        }
+
         public void SetHost(UI_HandView host_) => Host = host_;
 
         #region 选脸与绑定：按卡类型切到对应牌面，再把写入转发给当前那张
@@ -138,36 +139,18 @@ namespace _DreamKeep.Presentation
         // 切脸：目标脸与当前脸相同就一个字都不写（同类型重绑零 SetActive 抖动）；某个类型漏接引用时报错跳过，不静默半成品
         public void Bind(CardModel card_)
         {
-            UI_CardFace face = card_.Type switch
-            {
-                ECardType.Attack => _attackFace,
-                ECardType.Skill => _skillFace,
-                ECardType.Ability => _abilityFace,
-                ECardType.Curse => _curseFace,
-                _ => throw new Exception($"[UI_CardBattle] 卡「{card_.Name}」的类型 {card_.Type} 没有接上对应牌面，牌面未切换")
-            };
-
-            if (_face != face)
-            {
-                if (_face) _face.gameObject.SetActive(false);
-                face.gameObject.SetActive(true);
-                _face = face;
-            }
-
-            _face.Bind(card_);
+            UI_CardFace face = _faces.Select(card_);
+            face.Bind(card_);
             // 预览台账随卡重置：防池化实例把上一张卡的修正值串到新卡（手牌区下一帧的预览对账会重填）
             _previewShown.Clear();
             _previewDraft.Clear();
             // 词条说明随绑定写一次（纯文本——此时牌面门面刚清空，渲染器退化原值；下一帧预览对账换成带修正值的版本）：
             // 只认带出词条的行（其余行由牌面自己陈列），整列为空时气泡不弹
-            IStatRenderer tipRenderer = _face.TipValueRenderer;
-            _affixTips.Clear();
-            foreach ((string text, CardAffix affix) in card_.GetDescriptionLines(tipRenderer))
-                if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));
+            _faces.Current.CollectTipLines(_affixTips);
             _hoverTip.SetContents(_affixTips);
         }
 
-        public void SetPlayableLook(bool playable_) => _face.SetPlayableLook(playable_);
+        public void SetPlayableLook(bool playable_) => _faces.Current.SetPlayableLook(playable_);
 
         #endregion
 
@@ -178,7 +161,7 @@ namespace _DreamKeep.Presentation
         public void RefreshPreview(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
         {
             // 门面与目标集合每帧先推：卡面与气泡共用同一份，任何一次重建（如可打状态切换）都按当帧的目标算，不留旧值
-            _face.SetPreviewContext(queryDispatcher_, targets_);
+            _faces.Current.SetPreviewContext(queryDispatcher_, targets_);
 
             _previewDraft.Clear();
             IReadOnlyList<CardAffix> affixes = Card.ActiveAffixes;
@@ -214,13 +197,10 @@ namespace _DreamKeep.Presentation
             _previewShown.AddRange(_previewDraft);
 
             // 卡面：重建描述（数值着色写在牌面文本里；不可打时随整卡压暗由牌面自理）
-            _face.RebuildDescription();
+            _faces.Current.RebuildDescription();
 
             // 气泡：与卡面同源（同一修正口径与配色，不随卡面压暗），正显示中立即重刷
-            IStatRenderer tipRenderer = _face.TipValueRenderer;
-            _affixTips.Clear();
-            foreach ((string text, CardAffix affix) in Card.GetDescriptionLines(tipRenderer))
-                if (affix != null) _affixTips.Add((text, affix.GetDescription(tipRenderer)));
+            _faces.Current.CollectTipLines(_affixTips);
             _hoverTip.SetContents(_affixTips);
         }
 
@@ -262,41 +242,39 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 拖动中被禁用（回收 / 关闭）时直接落回槽位，不停在半途；悬停状态一并清掉，防实例复用后 EnterHover 被早退挡掉
-        // （悬着的词条气泡由同节点的气泡发起器自己的 OnDisable 收掉）
-        private void OnDisable()
-        {
-            ClearHover();
-            if (!_dragging) return;
-            _dragging = false;
-            Host.OnCardDragCancelled(this);
-        }
+        #region 悬停进出：区域裁定出唯一悬停牌后调用，进入按槽位偏移位对齐，退出按槽位真源一次还原
 
-        #region 悬停进出：区域裁定出唯一悬停牌后调用，进入按槽位抬起位对齐，退出按槽位真源一次还原
-
-        // 进入：按区域给的槽位抬起位对齐——位置取"卡自己的槽位沿区域上方向抬起一段"（原位抬起、不跟随指针）、
-        // 朝向取区域给的基准朝向（回正，浅弧的倾角不带进来），同时放大；换层已由区域先行完成，这里只管姿态
+        // 进入：先把两条通道从本卡手里交出去（杀自己的补间），再由两个组件补到区域给的偏移位与悬停缩放；
+        // 换层已由区域先行完成，这里只管姿态
         public void EnterHover(Vector3 worldPosition_, Quaternion worldRotation_)
         {
             if (_hovered) return;
             _hovered = true;
-            MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
-            ScaleToAsync(_hoverScale, _hoverDuration).Forget();
+            KillMotion();
+            _hoverOffset.Play(worldPosition_, worldRotation_);
+            _hoverScaler.PlayHoverScale();
         }
 
-        // 退出：按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，补间途中进出也不会写回半截姿态
+        // 退出：同样先交接再还原——按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，
+        // 补间途中进出也不会写回半截姿态
         public void ExitHover(Vector3 worldPosition_, Quaternion worldRotation_, float scale_)
         {
             if (!_hovered) return;
             _hovered = false;
-            MoveToAsync(worldPosition_, worldRotation_, _hoverDuration).Forget();
-            ScaleToAsync(scale_, _hoverDuration).Forget();
+            KillMotion();
+            _hoverOffset.Play(worldPosition_, worldRotation_);
+            _hoverScaler.PlayScale(scale_);
         }
 
         #endregion
 
-        // 离手 / 被拖走 / 入场中等不还原场景：只清状态，把姿态交给后续补间
-        public void ClearHover() => _hovered = false;
+        // 离手 / 被拖走 / 入场中等不还原场景：只清状态并收掉两个组件的补间，姿态交给后续补间（重排会重新声明目标）
+        public void ClearHover()
+        {
+            _hovered = false;
+            _hoverScaler.Kill();
+            _hoverOffset.Kill();
+        }
 
         #region 落位与层归属：世界姿态与所在层的唯一写入通道
 
@@ -348,20 +326,12 @@ namespace _DreamKeep.Presentation
             return IsAtScale(scale_) ? UniTask.CompletedTask : StartScale(scale_, duration_);
         }
 
-        // 起一条移动补间：先记住本次目标（重开判据以它为准），再把位置与朝向按补间推进
+        // 起一条移动补间：先记住本次目标（重开判据以它为准），再把位置与朝向按补间推进（位姿通道与悬停偏移共用同一实现）
         private UniTask StartMove(Vector3 worldPosition_, Quaternion worldRotation_, float duration_)
         {
-            _moveTween?.Kill();
             _moveTargetPosition = worldPosition_;
             _moveTargetRotation = worldRotation_;
-            Vector3 fromPosition = _rect.position;
-            Quaternion fromRotation = _rect.rotation;
-            float progress = 0f;
-            _moveTween = DOTween.To(() => progress, value_ => progress = value_, 1f, duration_)
-                .SetEase(Ease.OutQuad)
-                .OnUpdate(() => Place(Vector3.Lerp(fromPosition, worldPosition_, progress),
-                    Quaternion.Slerp(fromRotation, worldRotation_, progress)));
-            return _moveTween.WaitAsync();
+            return UiTween.PlayPose(ref _moveTween, _rect, worldPosition_, worldRotation_, duration_).WaitAsync();
         }
 
         // 起一条缩放补间：同样先记住目标；同通道独占由 UiTween 建前杀旧值保证
@@ -381,13 +351,15 @@ namespace _DreamKeep.Presentation
 
         #region 清干净播放的动画
 
-        // 回收前统一清干净补间，防止补间继续写已被复用的对象
+        // 回收前统一清干净补间（含悬停组件那两条），防止补间继续写已被复用的对象
         public void KillMotion()
         {
             _moveTween?.Kill();
             _moveTween = null;
             _scaleTween?.Kill();
             _scaleTween = null;
+            _hoverScaler.Kill();
+            _hoverOffset.Kill();
         }
 
         #endregion

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
-using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -54,10 +53,10 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_CardExhausted>(exhausted_ => ExitToPileAsync(exhausted_.Card, _handView.ExhaustPile));
             // 遗忘只借道飞往出牌区、不落堆，故不发进堆通知；永久移除与否由域侧决定，这里只播形式
             eventDispatcher_.Register<BE_CardErased>(erased_ => ExitToPileAsync(erased_.Card, null));
-            eventDispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejectedAsync);
-            eventDispatcher_.Register<BE_TurnStarted>(OnTurnStartedAsync);
-            eventDispatcher_.Register<BE_PlayerTurnEnded>(OnPlayerTurnEndedAsync);
-            eventDispatcher_.Register<BE_BattleEnded>(OnBattleEndedAsync);
+            eventDispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejected);
+            eventDispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
+            eventDispatcher_.Register<BE_PlayerTurnEnded>(OnPlayerTurnEnded);
+            eventDispatcher_.Register<BE_BattleEnded>(OnBattleEnded);
         }
 
         // 洗回通告：域侧一次搬完整摞，两堆都不演飞行（牌从弃牌堆飞进抽牌堆玩家看不到），
@@ -113,40 +112,30 @@ namespace _DreamKeep.Presentation
         }
 
         // 被拒退回：域侧已判明命令不生效，撤下出牌区并整手重排一次——行重新开缝，这张从队列位置飞回自己的槽位
-        private UniTask OnCardPlayRejectedAsync(BE_CardPlayRejected rejected_)
+        private void OnCardPlayRejected(BE_CardPlayRejected rejected_)
         {
-            if (!_handView.TryGetView(rejected_.Card, out UI_CardBattle view)) return UniTask.CompletedTask;
-            if (!_handView.DropZone.Remove(view)) return UniTask.CompletedTask;
+            if (!_handView.TryGetView(rejected_.Card, out UI_CardBattle view)) return;
+            if (!_handView.DropZone.Remove(view)) return;
             _handView.ApplyLayout();
-            return UniTask.CompletedTask;
         }
 
         // 玩家回合结束：进入弃牌演出即落闸——手牌下沉置灰、取消瞄准，不再接受拖拽与出牌；
         // 开闸的唯一时机仍是下个玩家回合开始的 BE_TurnStarted，中间整段敌方回合都保持落闸
-        private UniTask OnPlayerTurnEndedAsync(BE_PlayerTurnEnded ended_)
-        {
-            _handView.ApplyPlayable(false);
-            return UniTask.CompletedTask;
-        }
+        private void OnPlayerTurnEnded(BE_PlayerTurnEnded ended_) => _handView.ApplyPlayable(false);
 
         // 回合开始：先落可打状态（据此清悬停、重排、刷外观），再对账退回仍挂着等结算的牌，
         // 最后把三堆数字对齐域侧活值兜底——万有一条进堆 / 离堆通知没发到，最迟在这一刻纠正
-        private UniTask OnTurnStartedAsync(BE_TurnStarted started_)
+        private void OnTurnStarted(BE_TurnStarted started_)
         {
             _handView.ApplyPlayable(started_.IsPlayerTurn);
             _handView.ReconcilePending();
             _handView.DrawPile.SyncToLive();
             _handView.DiscardPile.SyncToLive();
             _handView.ExhaustPile.SyncToLive();
-            return UniTask.CompletedTask;
         }
 
         // 战斗结束：不再有回合交替，手牌一律收起为不可打
-        private UniTask OnBattleEndedAsync(BE_BattleEnded ended_)
-        {
-            _handView.ApplyPlayable(false);
-            return UniTask.CompletedTask;
-        }
+        private void OnBattleEnded(BE_BattleEnded ended_) => _handView.ApplyPlayable(false);
 
         // 批量弃牌波：整手未保留的牌同帧各自飞向弃牌堆并缩到 0，全部落地才算波次播完（其后域侧才推进到状态衰减与敌方回合）。
         // 弃牌堆只增不减，故数字不在起飞时预支，而是等牌全部落堆后逐张涨上来；起落位各带随机抖动打散重叠轨迹
@@ -158,10 +147,8 @@ namespace _DreamKeep.Presentation
             foreach (CardModel model in discarded_.Cards)
             {
                 if (!_handView.TryGetView(model, out UI_CardBattle view)) continue;
-                _handView.RemoveFromHand(view);
-                _handView.DropZone.Remove(view);
+                DetachToFly(view);
                 view.Place(view.WorldPosition + Jitter(target), view.WorldRotation);
-                _handView.MoveToFly(view); // 起飞即换到飞行层：飞行的牌一律画在手牌与队列之上
                 flights.Add(FlyToDiscardPileAsync(view, model, target));
             }
 
@@ -184,12 +171,10 @@ namespace _DreamKeep.Presentation
         private async UniTask ExitToPileAsync(CardModel model_, UI_Pile arrival_)
         {
             if (!_handView.TryGetView(model_, out UI_CardBattle view)) return;
-            _handView.RemoveFromHand(view);
-            _handView.DropZone.Remove(view);
+            DetachToFly(view);
             _handView.ApplyLayout();
 
             Transform target = arrival_ != null ? arrival_.transform : _handView.DropZone.transform;
-            _handView.MoveToFly(view); // 起飞即换到飞行层：飞行的牌一律画在手牌与队列之上
             await FlyOutAsync(view, target.position, target.rotation, _exitDuration);
 
             if (arrival_ != null) arrival_.OnCardArrived();
@@ -209,6 +194,15 @@ namespace _DreamKeep.Presentation
 
             _handView.DrawPile.OnCardLeft();
             _handView.DiscardPile.OnCardArrived();
+        }
+
+        // 交给飞行层：任何"飞出去的牌"都必须先离手、出队、换层，三件事不可拆——
+        // 漏了离手会继续占槽位与悬停射线，漏了出队会被回合对账抓回去，漏了换层会被后入场的牌盖住
+        private void DetachToFly(UI_CardBattle view_)
+        {
+            _handView.RemoveFromHand(view_);
+            _handView.DropZone.Remove(view_);
+            _handView.MoveToFly(view_);
         }
 
         // 起落点的随机抖动：±幅度内均匀分布的画布像素，经节点换算成世界向量，只打散重叠轨迹、不改朝向

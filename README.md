@@ -91,7 +91,8 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 8 个外�
 - **状态数值唯一入口是 `Hook`。** 任何「状态如何影响伤害/格挡/结算」都走 `Hook` 分派表，新增状态只需在 `BattlePerk` 子类实现 `GetModifier` 并在 `Hook` 登记分支。
 - **预览与结算共用规则。** 卡面/瞄准的数值预览经 `BattleQueryDispatcher` 现算，绝不另写一份判定。
 - **DI 组合根是唯一允许同时认识配置资产与运行时对象的地方。**
-- **手牌区三组件各司其职。** `UI_HandView`（编排）/ `UI_HandHover`（悬停裁决）/ `UI_HandShow`（事件演出）同节点协作。
+- **手牌区四组件各司其职。** `UI_HandView`（编排 + 每帧驱动）/ `UI_HandHover`（悬停裁决）/ `UI_HandAim`（瞄准客户端 + 数值预览）/ `UI_HandShow`（事件演出）同节点协作。
+- **瞄准是战斗通用件。** 箭头与瞄准流程住 `Presentation/Battle/Targeting/`：`BattleTargetDirector` 独占唯一箭头与单客户端槽位，任何"拖出去指向目标"的交互件实现 `IAimClient` 即可接入（手牌是第一个客户端，药水将来同一个接口）。
 
 ### 代码规模（2026-10-19 工作树）
 
@@ -104,7 +105,7 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 8 个外�
 | Presentation |      42 |     4051 |
 | **合计**       | **202** | **8728** |
 
-194 / 202 个文件在 150 行以内；超出的 8 个均为表现层内聚单体（`UI_HandView` 518 / `UI_CardBattle` 391 / `UI_HandHover` 231 / `UI_HandShow` 223 / `UI_Actor` 189 / `UI_CardFace` 230 / `PopRoot` 149 / `TargetDirector` 132）。
+194 / 202 个文件在 150 行以内；超出的 8 个均为表现层内聚单体（`UI_HandView` 416 / `UI_CardBattle` 391 / `UI_HandHover` 200 / `UI_HandShow` 198 / `UI_Actor` 189 / `UI_CardFace` 230 / `BattlePopRoot` 149 / `BattleTargetDirector` 159）。
 
 ---
 

@@ -10,10 +10,11 @@ namespace _DreamKeep.Presentation
     /// 不演飞行，本堆图标与位置全程不动，只有数字逐张下掉——那一路是往外出，不弹。</summary>
     public sealed class UI_DiscardPile : UI_Pile
     {
-        private readonly BQ_PileCount _query = new(EPileKind.Discard);
         private BattleQueryDispatcher _queryDispatcher;
 
-        protected override int LiveCount => _queryDispatcher.PileCount(_query);
+        protected override int LiveCount => _queryDispatcher.PileCount(EPileType.Discard);
+
+        protected override EPileType Type => EPileType.Discard;
 
         [Inject]
         public void Construct(BattleQueryDispatcher queryDispatcher_)

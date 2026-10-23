@@ -66,7 +66,12 @@ namespace _DreamKeep.GameBattle
         #endregion
 
         // 循环独占：同一时刻只允许一条在跑，重复调用同步命中守卫后立即返回；
-        // 守卫在首个 await 之前同步判定并置位、finally 清位，两者之间没有异步窗口
+        // 守卫在首个 await 之前同步判定并置位、finally 清位，两者之间没有异步窗口。
+        // 两类阶段两种推进方式：
+        //   等待型（接收器）——一次只处理一条命令，处理完仍留在本阶段等下一轮；它的推进由命令自己经宿主路由完成（如 EndPlayerTurn），
+        //     不能读 Next：玩家回合的 Next 是"回合结束"，若每次出牌后都读它，一轮出牌就会把回合结束掉；
+        //   驱动型——跑完 RunAsync 后用 Next 回答去处，null 即终态（结束阶段独占此表达）。
+        // 胜负在两条路径处理完之后统一判定，故"用卡打死最后一只敌人"当帧即进结束阶段，不必等玩家再点结束回合。
         private async UniTask RunLoop()
         {
             if (_loopRunning) return;
@@ -82,18 +87,14 @@ namespace _DreamKeep.GameBattle
                     {
                         if (_commandQueue.Count == 0) return;
                         await receiver.HandleCommand(_commandQueue.Dequeue());
+                        if (BattleContext.IsBattleOver) _fsm.ChangeState(PhaseBattleFinish);
                         continue;
                     }
 
                     await current.RunAsync();
-                    if (BattleContext.IsBattleOver)
-                    {
-                        _fsm.ChangeState(PhaseBattleFinish);
-                        await PhaseBattleFinish.RunAsync();
-                        return;
-                    }
-
-                    _fsm.ChangeState(current.Next);
+                    BaseState<BattleLoop> next = current.Next;
+                    if (next == null) return; // 终态：结束阶段不再推进，战后入队的命令也不会让它重跑一遍结算
+                    _fsm.ChangeState(BattleContext.IsBattleOver ? PhaseBattleFinish : next);
                 }
             }
             finally

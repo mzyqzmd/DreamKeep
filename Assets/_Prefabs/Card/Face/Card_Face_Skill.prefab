@@ -544,6 +544,7 @@ MonoBehaviour:
   _nameBanner: {fileID: 3975045732368543669}
   _typePlaque: {fileID: 8634151142083142991}
   _cardCost: {fileID: 7675541468832567915}
+  _ripple: {fileID: 5640614497437674838}
   _upgradeNameColor: {r: 0, g: 1, b: 0, a: 1}
   _costLowerColor: {r: 0, g: 1, b: 0, a: 1}
   _unplayableTint: {r: 0.45, g: 0.45, b: 0.5, a: 1}

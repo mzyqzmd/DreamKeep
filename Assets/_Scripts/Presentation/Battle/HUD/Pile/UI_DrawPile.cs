@@ -10,10 +10,11 @@ namespace _DreamKeep.Presentation
     /// 涨满（每张 0.04 秒、整段最多 0.6 秒）后才轮到抽牌入场。</summary>
     public sealed class UI_DrawPile : UI_Pile
     {
-        private readonly BQ_PileCount _query = new(EPileKind.Draw);
         private BattleQueryDispatcher _queryDispatcher;
 
-        protected override int LiveCount => _queryDispatcher.PileCount(_query);
+        protected override int LiveCount => _queryDispatcher.PileCount(EPileType.Draw);
+
+        protected override EPileType Type => EPileType.Draw;
 
         [Inject]
         public void Construct(BattleQueryDispatcher queryDispatcher_)

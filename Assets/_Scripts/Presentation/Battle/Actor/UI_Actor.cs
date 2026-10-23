@@ -36,7 +36,7 @@ namespace _DreamKeep.Presentation
         public Shader OutlineShader => _outlineShader;
         public Material SkeletonMaterial => _skeletonMaterial;
 
-        /// <summary>单位命中框：悬停演出、目标提示点亮与箭头命中判定都在它那里，由 TargetDirector 取用。</summary>
+        /// <summary>单位命中框：悬停演出、目标提示点亮与箭头命中判定都在它那里，由瞄准中间件 BattleTargetDirector 取用。</summary>
         public UI_ActorHoverBox HoverBox => _hoverBox;
 
         /// <summary>绑定的域侧生物：事件按它过滤，血量、格挡与状态真值都从它读。</summary>
@@ -73,12 +73,12 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_ActorDied>(OnActorDiedAsync);
             eventDispatcher_.Register<BE_DamageDealt>(OnDealtDamageAsync);
             eventDispatcher_.Register<BE_DamageDealt>(OnDamagedAsync);
-            eventDispatcher_.Register<BE_BlockGained>(OnBlockGainedAsync);
-            eventDispatcher_.Register<BE_BlockCleared>(OnBlockClearedAsync);
-            eventDispatcher_.Register<BE_HealthRestored>(OnHealthRestoredAsync);
-            eventDispatcher_.Register<BE_PerkApplied>(OnPerkAppliedAsync);
-            eventDispatcher_.Register<BE_PerkSettled>(OnPerkSettledAsync);
-            eventDispatcher_.Register<BE_PerkRemoved>(OnPerkRemovedAsync);
+            eventDispatcher_.Register<BE_BlockGained>(OnBlockGained);
+            eventDispatcher_.Register<BE_BlockCleared>(OnBlockCleared);
+            eventDispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
+            eventDispatcher_.Register<BE_PerkApplied>(OnPerkApplied);
+            eventDispatcher_.Register<BE_PerkSettled>(OnPerkSettled);
+            eventDispatcher_.Register<BE_PerkRemoved>(OnPerkRemoved);
             _boundCreature = creature_;
             // 把自己注册给_actorRoot
             _actorRoot = GetComponentInParent<UI_ActorRoot>();
@@ -98,11 +98,10 @@ namespace _DreamKeep.Presentation
 
         #region 绑定战斗相关事件用于演绎
 
-        protected virtual UniTask OnBattleStarted(BE_BattleStarted started_)
+        protected virtual void OnBattleStarted(BE_BattleStarted started_)
         {
-            if (_boundCreature.IsDead) return UniTask.CompletedTask;
+            if (_boundCreature.IsDead) return;
             _animTool.PlayLoop(IdleLoopAnim);
-            return UniTask.CompletedTask;
         }
 
         // 死亡：播 die（播到最短比例即放行事件链）→ 自然播完停留 1 秒后自毁视图
@@ -143,46 +142,40 @@ namespace _DreamKeep.Presentation
         }
 
         // 获得格挡：没有格挡动画，只对齐显示值
-        protected virtual UniTask OnBlockGainedAsync(BE_BlockGained gained_)
+        protected virtual void OnBlockGained(BE_BlockGained gained_)
         {
             if (gained_.Target == _boundCreature && _blockView != null) _blockView.SetBlock(gained_.Target.Block);
-            return UniTask.CompletedTask;
         }
 
         // 回合开始清格挡：同样只对齐显示值
-        protected virtual UniTask OnBlockClearedAsync(BE_BlockCleared cleared_)
+        protected virtual void OnBlockCleared(BE_BlockCleared cleared_)
         {
             if (cleared_.Target == _boundCreature && _blockView != null) _blockView.SetBlock(0);
-            return UniTask.CompletedTask;
         }
 
         // 回血：血条滚到真值
-        protected virtual UniTask OnHealthRestoredAsync(BE_HealthRestored restored_)
+        protected virtual void OnHealthRestored(BE_HealthRestored restored_)
         {
             if (restored_.Target == _boundCreature && _healthBar != null)
                 _healthBar.SetHealth(restored_.Target.CurrentHp);
-            return UniTask.CompletedTask;
         }
 
         // 施加状态：新建槽位或叠加层数
-        protected virtual UniTask OnPerkAppliedAsync(BE_PerkApplied applied_)
+        protected virtual void OnPerkApplied(BE_PerkApplied applied_)
         {
             if (applied_.Target == _boundCreature && _perkGroup != null) _perkGroup.AddPerk(applied_.Perk);
-            return UniTask.CompletedTask;
         }
 
         // 状态结算：刷新对应槽位的层数显示
-        protected virtual UniTask OnPerkSettledAsync(BE_PerkSettled settled_)
+        protected virtual void OnPerkSettled(BE_PerkSettled settled_)
         {
             if (settled_.Target == _boundCreature && _perkGroup != null) _perkGroup.RefreshPerkLayers(settled_.Perk);
-            return UniTask.CompletedTask;
         }
 
         // 状态移除：Perk 是被摘下的挂载实例，槽位按状态类型对号删除
-        protected virtual UniTask OnPerkRemovedAsync(BE_PerkRemoved removed_)
+        protected virtual void OnPerkRemoved(BE_PerkRemoved removed_)
         {
             if (removed_.Target == _boundCreature && _perkGroup != null) _perkGroup.RemovePerk(removed_.Perk);
-            return UniTask.CompletedTask;
         }
 
         #endregion

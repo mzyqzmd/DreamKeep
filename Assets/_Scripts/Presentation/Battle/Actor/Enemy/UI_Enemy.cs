@@ -47,7 +47,7 @@ namespace _DreamKeep.Presentation
         {
             _boundEnemy = enemy_;
             base.Bind(eventDispatcher_, enemy_.Creature);
-            eventDispatcher_.Register<BE_EnemyIntentChanged>(OnIntentChangedAsync);
+            eventDispatcher_.Register<BE_EnemyIntentChanged>(OnIntentChanged);
             eventDispatcher_.Register<BE_EnemyMoved>(OnEnemyMovedAsync);
             _intentGroup.Show(_boundEnemy.PreviewIntent);
             RefreshIntentPreviews(); // 新图标立即带修正值，不闪基础值
@@ -73,12 +73,11 @@ namespace _DreamKeep.Presentation
         #region 敌人独有演绎
 
         // 意图变动：刷新头顶图标组（新图标立即按当前修正值重写一遍）
-        private UniTask OnIntentChangedAsync(BE_EnemyIntentChanged changed_)
+        private void OnIntentChanged(BE_EnemyIntentChanged changed_)
         {
-            if (changed_.Enemy != _boundEnemy) return UniTask.CompletedTask;
+            if (changed_.Enemy != _boundEnemy) return;
             _intentGroup.Show(changed_.Intent);
             RefreshIntentPreviews();
-            return UniTask.CompletedTask;
         }
 
         // 移动：滑向目标槽位点，事件链阻塞到到位（逐格推进与打完回位都按序演出）

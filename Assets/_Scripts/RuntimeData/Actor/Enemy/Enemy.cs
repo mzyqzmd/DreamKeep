@@ -18,7 +18,7 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>对外展示的意图：站最前敌人槽位且配置了替换意图时显示它（打完即回位），否则显示序列当前意图。</summary>
         public EnemyIntent PreviewIntent =>
-            Slot == 1 && _frontSlotIntent != null ? _frontSlotIntent : CurrentIntent;
+            Slot == BattleSlots.FrontEnemy && _frontSlotIntent != null ? _frontSlotIntent : CurrentIntent;
 
         public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent frontSlotIntent_)
         {

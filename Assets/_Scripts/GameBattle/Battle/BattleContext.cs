@@ -55,22 +55,22 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
-        #region 槽位查询：纵深阵型的占位与归位判定（槽位编号见 BattleSlotLayout），供移动动作取用
+        #region 槽位查询：纵深阵型的占位与归位判定（槽位编号见 BattleSlots），供移动动作取用
 
-        /// <summary>指定槽位是否被占据：0 号槽位恒被玩家占据，其余判定是否被除排除者之外的存活敌人占据。</summary>
+        /// <summary>指定槽位是否被占据：玩家槽位恒被占据，其余判定是否被除排除者之外的存活敌人占据。</summary>
         public bool IsSlotOccupied(int slot_, Enemy except_)
         {
-            if (slot_ == 0) return true;
+            if (slot_ == BattleSlots.Player) return true;
             foreach (Enemy enemy in Enemies)
                 if (enemy != except_ && !enemy.Creature.IsDead && enemy.Slot == slot_)
                     return true;
             return false;
         }
 
-        /// <summary>从最靠后（3 号）向前扫第一个空槽，全满返回 -1（最多两只敌人时不会发生）。</summary>
+        /// <summary>从最靠后的敌人槽位向前扫第一个空槽，全满返回 -1（最多两只敌人时不会发生）。</summary>
         public int GetRearmostEmptySlot(Enemy except_)
         {
-            for (int slot = 3; slot >= 1; slot--)
+            for (int slot = BattleSlots.RearEnemy; slot >= BattleSlots.FrontEnemy; slot--)
                 if (!IsSlotOccupied(slot, except_))
                     return slot;
             return -1;

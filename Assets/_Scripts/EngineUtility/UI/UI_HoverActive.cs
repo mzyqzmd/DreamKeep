@@ -6,7 +6,7 @@ namespace _DreamKeep.EngineUtility
     /// <summary>
     /// 按钮悬停切换显隐：指针进入时把目标物体设为 <see cref="_activeOnHover"/>，离开时设为其反值。
     /// </summary>
-    public sealed class UI_ButtonActive : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public sealed class UI_HoverActive : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private GameObject _target;
         [SerializeField] private bool _activeOnHover = true; // 悬停时激活、离开时失活；关掉则反向

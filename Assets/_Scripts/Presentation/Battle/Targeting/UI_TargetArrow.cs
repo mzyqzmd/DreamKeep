@@ -10,7 +10,7 @@ namespace _DreamKeep.Presentation
     /// <summary>目标箭头：从卡牌中心指向指针的瞄准指示器——由粗到细的箭头段沿一条带轻微弧度的曲线排布，头部贴指针并转向目标。
     /// 弧度按指针方向相对"起点正上方"的偏角连续变化（角度越大弯得越多，正对正上方是一条直线，跨过基准线不翻边）；
     /// 指向合法目标时整支变红、头部弹一下。它纯表现，不认识卡牌与战斗单位，只回答"从哪画到哪、有没有指向合法目标"。</summary>
-    public sealed class UI_CardArrow : MonoBehaviour
+    public sealed class UI_TargetArrow : MonoBehaviour
     {
         [Tooltip("段容器：它的子节点即箭头段，场景里按兄弟顺序从尾部段（最小）排到头部段（最大），脚本内部统一成头部端到尾部端")] [SerializeField]
         private RectTransform _segmentRoot;

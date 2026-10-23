@@ -2,7 +2,6 @@ using _DreamKeep.CommonPresentation;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
 
@@ -28,27 +27,25 @@ namespace _DreamKeep.Presentation
         {
             _actorRoot = actorRoot_;
             _vfxFactory = vfxFactory_;
-            dispatcher_.Register<BE_DamageDealt>(OnDamageDealtAsync);
-            dispatcher_.Register<BE_HealthRestored>(OnHealthRestoredAsync);
+            dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
+            dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
         }
 
         #endregion
 
         // 受击：格挡全吸收不播；致死一击照样播（与伤害数字口径一致）
-        private UniTask OnDamageDealtAsync(BE_DamageDealt dealt_)
+        private void OnDamageDealt(BE_DamageDealt dealt_)
         {
-            if (dealt_.Amount <= dealt_.Absorbed) return UniTask.CompletedTask;
+            if (dealt_.Amount <= dealt_.Absorbed) return;
             if (TryGetMount(dealt_.Target, EUiAnchor.MiddleCenter, out Transform parent, out Vector3 position))
                 _vfxFactory.PlayHit(parent, position, _hitScale);
-            return UniTask.CompletedTask;
         }
 
         // 回血：收到事件就播，回复量为 0 也播
-        private UniTask OnHealthRestoredAsync(BE_HealthRestored restored_)
+        private void OnHealthRestored(BE_HealthRestored restored_)
         {
             if (TryGetMount(restored_.Target, EUiAnchor.BottomCenter, out Transform parent, out Vector3 position))
                 _vfxFactory.PlayHeal(parent, position, _healScale);
-            return UniTask.CompletedTask;
         }
 
         // 查单位视图并按骨架锚点算世界位姿；视图缺失时不播

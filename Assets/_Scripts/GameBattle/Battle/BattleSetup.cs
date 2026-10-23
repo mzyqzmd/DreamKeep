@@ -58,7 +58,7 @@ namespace _DreamKeep.GameBattle
                     $"敌人数量 {enemyConfigs_.Count} 超过纵深阵型上限 {BattleContext.MaxEnemyCount}");
 
             List<Enemy> enemies = new();
-            int rearOffset = 4 - enemyConfigs_.Count;
+            int rearOffset = BattleSlots.Count - enemyConfigs_.Count;
             for (int i = 0; i < enemyConfigs_.Count; i++)
             {
                 SO_Enemy config = enemyConfigs_[i];

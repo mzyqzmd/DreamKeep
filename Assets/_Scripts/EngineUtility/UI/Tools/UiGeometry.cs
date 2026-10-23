@@ -23,6 +23,24 @@ namespace _DreamKeep.EngineUtility
         public static bool Contains(RectTransform rect_, Vector3 world_) =>
             rect_.rect.Contains(rect_.InverseTransformPoint(world_));
 
+        /// <summary>给定世界点是否落在"原点 + 朝向 + 世界尺寸 + pivot"描述的矩形内：给的是位姿快照而不是活对象，
+        /// 供"进入悬停时的基座矩形"这类事后判定共用。size_ 须已含缩放（世界尺寸），不做第二次换算。</summary>
+        public static bool Contains(Vector3 worldPoint_, Vector3 worldOrigin_, Quaternion worldRotation_,
+            Vector2 size_, Vector2 pivot_)
+        {
+            Vector3 local = Quaternion.Inverse(worldRotation_) * (worldPoint_ - worldOrigin_);
+            Vector2 min = -Vector2.Scale(size_, pivot_);
+            return local.x >= min.x && local.x <= min.x + size_.x &&
+                   local.y >= min.y && local.y <= min.y + size_.y;
+        }
+
+        /// <summary>把屏幕点换算成该矩形所在画布平面上的世界坐标：同一画布平面上的任意矩形结果一致，
+        /// 供指针跟随与落点判定共用；ScreenSpaceCamera 画布必须传画布相机，换算失败时退回矩形自身位置。</summary>
+        public static Vector3 ScreenToPlaneWorld(RectTransform plane_, Vector2 screen_, Camera camera_) =>
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(plane_, screen_, camera_, out Vector3 world_)
+                ? world_
+                : plane_.position;
+
         /// <summary>矩形上九宫格对齐点的世界坐标：按 Pivot 出的归一化位置在矩形内插值，再由矩形自身的旋转缩放换算成世界坐标；只给点、不带偏移，抬升让位一律由调用方自己加。</summary>
         public static Vector3 AnchorPoint(RectTransform rect_, EUiAnchor anchor_) =>
             rect_.TransformPoint(rect_.rect.min + Vector2.Scale(rect_.rect.size, Pivot(anchor_)));
