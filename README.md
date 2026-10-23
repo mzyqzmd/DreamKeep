@@ -36,76 +36,103 @@
 
 ## 架构概览
 
-一句话总纲：**五个程序集、一张无环依赖 DAG、四通道解耦（命令上行 / 事件下行 / 只读查询 / 状态介入）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处，表现层只读不回写。**
+一句话总纲：**十一个程序集、一张无环依赖 DAG、四通道解耦（命令上行 / 事件下行 / 只读查询 / 状态介入）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处，表现层只读不回写。**
 
-> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **93 / 100**）。
+> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **92 / 100**）。
 
 ### 程序集与依赖（asmdef 强制，已用 GUID 反解核验无环）
 
 ```
-Utility ─────────────┐
-ConfigData ──────────┤   （两者均为叶层，仅依赖外部包，互不为依赖）
-        │            │
-RuntimeData ──→ {Utility, ConfigData}
+【叶层：仅依赖外部包】
+  Utility        （纯 C#，零 UnityEngine 依赖）
+  ConfigData     （纯资产，零执行逻辑）
+        │                    │
+        ▼                    ▼
+  RuntimeData  ──→ {Utility, ConfigData}
         │
-GameBattle ───→ {Utility, RuntimeData, ConfigData}
+        ▼
+  GameBattle   ──→ {Utility, RuntimeData, ConfigData}
         │
-Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 8 个外部包)
+        ├──→ GameEvent   {RT, CD, UT}   空骨架（占位标记）
+        ├──→ GameRest    {RT, CD, UT}   空骨架（占位标记）
+        ├──→ GameShop    {RT, CD, UT}   空骨架（占位标记）
+        │
+        └──→ GameRun     {GameBattle, GameEvent, GameRest, GameShop, …}   空骨架（占位标记）
+
+【引擎级通用件】
+  EngineUtility ──→ {Utility}
+        │
+        ▼
+  CommonPresentation ──→ {全部下层}     ← 跨场景可复用表现件
+        │
+        ▼
+  Presentation       ──→ {全部下层}     ← 战斗场景专属表现与装配
 ```
 
-`ConfigData` 是纯资产/数据层，**不依赖 `Utility`**——实际是**扇形汇入**而非单链。五个程序集构成有向无环图，编译期即生效，无任何反向引用或环。
+`ConfigData` 是纯资产/数据层，**不依赖 `Utility`**——实际是**扇形汇入**而非单链。全部程序集构成有向无环图，编译期即生效，无任何反向引用或环。
 
-### 五个域
+> **关于四个骨架程序集**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 目前各只有 1 个 7 行占位标记，**尚无实质代码**，作用是提前锁死未来的依赖方向（`GameRun → GameBattle`，战斗不认识跑图）。若你在此仓库上继续开发，请把它们视为"预留的空房间"而非已实现的系统。
 
-| 程序集              | 职责          | 关键内容                                                                                                                   |
-| ---------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Utility**      | 通用件（零业务知识）  | 状态机 `StateMachine<T>`、确定性随机 `Rng`、可修正数值引擎 `ModifiableStat`、UI 几何 `UiGeometry`、补间 `UiTween`、组件池 `MonoObjectPool<T>`、纯 C# 池 `ObjectPool<T>` |
-| **ConfigData**   | 配置资产（策划可编辑） | `SO_Player` / `SO_Enemy` / `SO_Card`、**状态资产 `SO_Perk` + 5 个具体 `SO_*`**、意图/词条/升级补丁数据 `UpgradeData`/`UD_*`——只有"做什么、做多少"，零执行逻辑          |
-| **RuntimeData**  | 运行时数据（纯 C#） | `Creature` / `Enemy` / `Player` / `PlayerCombatState` / `CardModel` / `CardPile` / `EnemyIntent` / `CardAffix`、状态运行时 `BattlePerk`/`BP_*` + `PerkBaker`、三个烘焙器 |
-| **GameBattle**   | 战斗域（规则与流程）  | 八阶段状态机、动作系统 `ActionSystem` + 27 个 `BattleAction`、**状态介入层 `Hook`**、两个 Resolver、命令/事件/**查询**三桥                                  |
-| **Presentation** | 表现层（只读域侧）   | 单位视图 / 卡牌视图 / HUD / 弹层 / 目标提示、演出编排、DI 组合根 `BattleLifetimeScope`、启动簇 `Bootstrap`、弹层中枢 `PopRoot`、查询门面消费方                       |
+### 七个有实质代码的域
+
+| 程序集                    | 职责                        | 关键内容                                                                                                  |
+| ---------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Utility**            | 纯 C# 通用件（零业务、零引擎依赖）       | 状态机 `StateMachine<T>`、确定性随机 `Rng`、可修正数值引擎 `ModifiableStat`、纯 C# 对象池 `ObjectPool<T>`                  |
+| **EngineUtility**      | 引擎级通用件（依赖 UnityEngine，不含业务） | 组件池 `MonoObjectPool<T>`、贝塞尔 `Curve`、UI 几何 `UiGeometry`、补间 `UiTween`、悬停执行器 `UI_HoverOffset/Scaler/Active` |
+| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产 `SO_Perk` + 5 个具体 `SO_*`、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据             |
+| **RuntimeData**        | 运行时对象（纯 C#，配置只读一次即烘焙）    | `Creature` / `Player` / `CardModel`(=`CM_Static`+`CM_Runtime`) / `CardPile`、`BattlePerk`+`BP_*`、`CardAffix`+`CA_*`、三个烘焙器、`EI_*` 意图 |
+| **GameBattle**         | 战斗域（流程、规则、桥）              | 八阶段状态机、18 个 `BattleAction` + `ActionSystem`、状态介入层 `Hook`、两个 Resolver、命令/事件/查询三桥                        |
+| **CommonPresentation** | 跨场景可复用表现件（不认识玩法）          | `UI_CardFace` + `UI_CardFaceSelector` + `CardValueRenderer`、`UI_HoverTip` + `PopFactory`、`UI_NumberPopTip`、`UI_OneShotVfx` + `VfxFactory` |
+| **Presentation**       | 战斗场景专属表现与装配               | 单位视图 / 卡牌视图 / HUD / 瞄准族、演出编排、DI 组合根 `BattleLifetimeScope`、`BattleEntry`、`BattlePopRoot` / `BattleVfxRoot`       |
 
 ### 四通道通信（表现层 ↔ 战斗逻辑）
 
 ```
-① 上行·命令（玩家意图）
-  视图 → BattleCommandDispatcher → BattleLoop.EnqueueCommand → 等待态阶段取出执行（只入队，不直接驱动）
+① 上行·命令（玩家意图，只入队不执行）
+   视图 → BattleCommandDispatcher → BattleLoop.EnqueueCommand → 等待态阶段取出执行
 
-② 下行·事件（域侧结果）
-  BattleAction.Execute → List<IBattleEvent> → BattleEventDispatcher.PlayAsync → 各视图处理器并行演出
+② 下行·事件（域侧结果，25 个 struct 只读载荷，零 GC）
+   BattleAction.Execute → List<IBattleEvent> → BattleEventDispatcher.PlayAsync → 各视图处理器并行演出
 
 ③ 上行·只读查询（预览，无副作用）
-  表现层 → BattleQueryDispatcher.(PreviewTargets/PreviewCardDamage/PreviewCardBlock/…) → 直算返回（与结算共用同一份规则）
+   表现层 → BattleQueryDispatcher.(PreviewTargets / PreviewCardDamage / PreviewCardBlock /
+                                   PreviewIntentDamage / PileCount / PileCards / GetAliveEnemies)
+          → 直算返回（与结算共用同一份规则）
 
 ④ 横向·状态介入（规则层内）
-  BA_Damage/BA_Block → Hook.Resolve(...) 求最终值；BA_SettlePerk → Hook.Settle(...) 收集状态结算动作
+   BA_Damage / BA_Block → Hook.Resolve(...) 求最终值；BA_SettlePerk → Hook.Settle(...) 收集状态结算动作
 ```
 
-**核心纪律**（新增代码请沿用）：
+**通道 ③ 与 ④ 共用同一份 `Hook.Resolve`**，因此"卡面预览的伤害"与"实际扣掉的血"在结构上不可能不一致。
+
+### 核心纪律（新增代码请沿用）
 
 - **状态变更只经动作系统。** `Creature` / `CardPile` / `PlayerCombatState` 的所有写操作都在 `BattleAction.Execute` 里。
 - **视图只读不回写。** 表现层不持有业务规则、不直接调阶段方法。
 - **配置只读一次。** 数值在烘焙期抽成运行时快照，运行时对象不持有配置引用。
-- **失败路径也走事件。** 能量不足 / 卡已离场 → `BE_CardPlayRejected`，不静默丢弃。
+- **失败路径也走事件。** 能量不足 / 卡已离场 / 带「不能打出」词条 → `BE_CardPlayRejected`，不静默丢弃。
 - **事件一律 `struct` + 只读载荷**，零 GC。
-- **状态数值唯一入口是 `Hook`。** 任何「状态如何影响伤害/格挡/结算」都走 `Hook` 分派表，新增状态只需在 `BattlePerk` 子类实现 `GetModifier` 并在 `Hook` 登记分支。
+- **状态数值唯一入口是 `Hook`。** 新增状态只需在 `BattlePerk` 子类实现 `GetModifier` 并在 `Hook` 登记分支。
 - **预览与结算共用规则。** 卡面/瞄准的数值预览经 `BattleQueryDispatcher` 现算，绝不另写一份判定。
 - **DI 组合根是唯一允许同时认识配置资产与运行时对象的地方。**
 - **手牌区四组件各司其职。** `UI_HandView`（编排 + 每帧驱动）/ `UI_HandHover`（悬停裁决）/ `UI_HandAim`（瞄准客户端 + 数值预览）/ `UI_HandShow`（事件演出）同节点协作。
-- **瞄准是战斗通用件。** 箭头与瞄准流程住 `Presentation/Battle/Targeting/`：`BattleTargetDirector` 独占唯一箭头与单客户端槽位，任何"拖出去指向目标"的交互件实现 `IAimClient` 即可接入（手牌是第一个客户端，药水将来同一个接口）。
+- **可复用件放对层。** 只依赖 UnityEngine 的通用工具 → `EngineUtility`；跨场景复用的表现件 → `CommonPresentation`；只有战斗才用的 → `Presentation`。
 
-### 代码规模（2026-10-19 工作树）
+### 代码规模（2026-10-23 工作树）
 
-| 域            |      文件 |       行数 |
-| ------------ | ------: | -------: |
-| Utility      |      14 |      544 |
-| ConfigData   |      38 |      597 |
-| RuntimeData  |      39 |     1509 |
-| GameBattle   |      69 |     2027 |
-| Presentation |      42 |     4051 |
-| **合计**       | **202** | **8728** |
+| 域                   |      文件 |       行数 |
+| ------------------- | ------: | -------: |
+| Utility             |       7 |      230 |
+| ConfigData          |      38 |      597 |
+| RuntimeData         |      40 |     1479 |
+| GameBattle          |      68 |     2026 |
+| GameEvent / GameRest / GameShop / GameRun | 4 | 28 |
+| EngineUtility       |       9 |      491 |
+| CommonPresentation  |      12 |     1036 |
+| Presentation        |      39 |     3797 |
+| **合计**              | **217** | **9684** |
 
-194 / 202 个文件在 150 行以内；超出的 8 个均为表现层内聚单体（`UI_HandView` 416 / `UI_CardBattle` 391 / `UI_HandHover` 200 / `UI_HandShow` 198 / `UI_Actor` 189 / `UI_CardFace` 230 / `BattlePopRoot` 149 / `BattleTargetDirector` 159）。
+207 / 217 个文件在 150 行以内（95.4%）。超出的 10 个均为内聚单体：`UI_HandView` 454 / `UI_CardBattle` 366 / `UI_CardFace` 258 / `UI_HandHover` 227 / `UI_HandShow` 218 / `UI_Actor` 182 / `BattleTargetDirector` 178 / `CM_Runtime` 167 / `UI_PileCardsView` 164 / `CardModelBaker` 160。
 
 ---
 
@@ -118,40 +145,50 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 8 个外�
 - 八阶段回合循环（战斗开始 → 玩家起 → 玩家操作 → 玩家结 → 敌方起 → 敌方行动 → 敌方结 → 战斗结束）
 - 卡牌完整生命周期：抽牌 → 手牌 → 拖拽/瞄准 → 打出堆 → 词条结算 → 弃牌/消耗/遗忘离场
 - 五个牌堆（抽牌堆 / 手牌 / 打出堆 / 弃牌堆 / 消耗堆）+ 局内卡组跨战斗保留
-- 敌人意图系统：意图配置 → 烘焙 → 运行时意图 → 头顶图标预告 → 执行 → 推进下一条
-- 纵深阵型：0 号玩家 + 1~3 号敌人槽位，敌人可前进/回绕，槽位占用判定
-- 状态（Perk）系统：**已数据驱动**（配置 `SO_Perk` + 5 个具体资产，运行时 `BattlePerk`/`BP_*` 经 `PerkBaker` 烘焙）；结算时机声明（回合开始 / 回合结束 / 常驻）、施加与叠加、结算时先触发效果再递减层数、归零移除
-- **状态数值已接入结算**：力量/敏捷经 `Hook` 修正伤害与格挡，虚弱/易伤参与伤害修正；再生在回合边界经 `Hook.Settle` → `BA_Heal` 结算（敌我共用）
-- 完整表现层：Spine 动画演出（攻击/受击/死亡/施法，非全阻塞并行）、血条滞后条、格挡显隐、状态槽位、意图气泡、目标高亮、手牌弧形排布与悬停避让、拖拽瞄准箭头、弃牌波与洗回波演出、**受击/回复数字飘字（`UI_NumberPopTip` + `PopRoot`）**
+- 敌人意图系统：意图配置 → 烘焙 → 运行时意图 → 头顶图标预告 → 执行 → 推进下一条；站最前槽位自动替换意图
+- 纵深阵型：0 号玩家 + 1~3 号敌人槽位，敌人可前进 / 回绕，槽位占用判定
+- 状态（Perk）系统：数据驱动（`SO_Perk` + 5 个具体资产，`PerkBaker` 烘焙）；结算时机声明（回合开始 / 回合结束 / 常驻）、施加与叠加、先触发效果再递减层数、归零移除
+- 状态数值接入结算：力量/敏捷经 `Hook` 修正伤害与格挡，虚弱/易伤参与乘性修正；再生在回合边界经 `Hook.Settle` → `BA_Heal` 结算（敌我共用）
+- 卡牌升级全链路：`UD_*` 配置 → `CardModelBaker` 解析为 `CM_ValuePatch` → `CM_Runtime.Upgrade()` 现改数值 / 追加词条 / 移除词条
 
-**近期落地（2026-10 中下旬）**
+**表现层（已成型）**
 
-- **状态数值系统闭环**：`ModifiableStat` 重写为「加值 + 乘率 + 上下限折叠」引擎并支持池化/克隆；`Hook` 成为状态→数值/动作的唯一入口；`BA_Damage`/`BA_Block` 接入状态修正——力量/虚弱/易伤从「无效」变「有效」。
-- **卡牌升级子系统全链路打通**：`UpgradeData`/`UD_*` 配置 → `CardModelBaker` 解析为 `CM_ValuePatch` → `CM_Runtime.Upgrade()` 现改数值/追加词条/移除词条 → `CardModel.Upgrade()` 已可从 `UI_CardFace` 调用。
-- **查询门面 `BattleQueryDispatcher`**：表现层只读提问出口，预览与结算同源，新增「状态介入 / 只读查询」两个干净架构原语。
-- **弹层中枢 `PopRoot` + 数字飘字 `UI_NumberPopTip`**：统一管理说明气泡列与伤害/回血/格挡/回合横幅飘字，全部池化复用。
-- 手牌区三组件（编排/悬停裁决/事件演出）各司其职；通用对象池 `MonoObjectPool<T>` 与纯 C# `ObjectPool<T>` 双池齐备。
+- Spine 动画演出：攻击 / 受击 / 死亡 / 施法，播到 50% 即放行事件链（非全阻塞并行）
+- 手牌区：弧形排布（以"手牌区的点"为基准，拖点即整手挪位）、悬停原位偏移 + 放大 + 两侧避让、拖拽阻尼跟随、瞄准定住
+- 拖拽瞄准：目标箭头沿带弧曲线排布、命中整支变红 + 头部弹一次；落点规则与结算同源
+- 牌堆：三堆计数逐张步进 + 进堆弹跳、点击弹出查看面板（抽牌堆按类型陈列，弃牌/消耗堆按进入顺序）
+- 弹层与特效：伤害/回血数字飘字（Rise / Toss 双形态）、受击与回复一次性特效、说明气泡（双触发模式 + 整列叠排）、回合横幅
+- 卡面：四张内嵌牌面按类型切换、稀有度换边框三图、不可打整卡压暗、数值修正着色（升绿降红）、关键词行 + 悬停说明气泡
 
 **已有内容资产**
 
-- 卡牌 6 张（Attack / Bash / Block / ForgottenRitual / PommelStrike / SwordBoomerang）
-- 敌人 1 种（树枝史莱姆 TwigSlime，含四条意图 + 最前槽位替换意图）、玩家 1 套
+- 卡牌 8 张（Attack / Bash / Block / ForgottenRitual / PommelStrike / SwordBoomerang / Uppercut / Vicious）
+- 敌人 1 种（树枝史莱姆 TwigSlime，四条意图 + 最前槽位替换意图）、玩家 1 套
 - 状态 5 种（再生 / 力量 / 敏捷 / 易伤 / 虚弱，均数据驱动）
-- 词条 10 种 + 升级补丁 4 种
-- 预制体若干（卡面 4 种、意图图标 5 种、单位 2 种、面板与弹层）
-- 编辑器工具集 ToolBoxHub（文件夹着色、层级图标等）
+- 词条 10 种 + 升级补丁 4 种 + 意图 6 种
+- 预制体 25 个（卡面 4 种、意图图标 5 种、单位 2 种、弹层 4 种、特效 2 种、面板若干）
+
+### 近期落地（2026-10 下旬）
+
+- **拆出 `EngineUtility` 与 `CommonPresentation`**：可复用边界首次从"战斗场景"下移到"引擎级 + 跨场景表现级"，新场景（跑图 / 商店）不必复制表现件。
+- **铺开跨段程序集骨架**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 占位程序集建立，依赖方向在编译期锁死。
+- **牌堆查看面板**：三堆共用一个变体，打开期间订阅事件做池化差分对账。
+- **悬停组件化**：`UI_HoverOffset` / `UI_HoverScaler` / `UI_HoverActive` 抽出为"一条补间、两种触发"的双模式执行器，按钮与手牌共用同一份实现。
+- **六原则重构（当帧结算 / 瞄准直连 / 悬停组件化）**：`BattleLoop` 胜负判定当帧生效；瞄准结果由中间件直接回写瞄准客户端，不再经手牌区中转。
+- **受击 / 回复特效与卡牌边缘涟漪**：`UI_OneShotVfx` 自识别粒子或帧动画，播完还池；移除 ShaderGraph 依赖。
 
 ### 已知未完成（功能完整性，非架构缺陷）
 
-| 项                            | 状态                                                                                                           |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **战斗结束奖励**                 | `BP_BattleFinish.HandleCommand` 仍是 `TODO`（等待玩家选择奖励发命令）                                                    |
-| 卡牌升级正式入口                  | 升级数据→烘焙→运行时应用全链路已通；但「升级获取途径 / 升级 UI 入口」（事件 / 遗物 / 商店）仍未规划，玩家当前无正式方式触发升级                          |
-| 商店 / 金币                     | `SO_Player._startGold` 已定义，零消费                                                                               |
-| `BattleEventDispatcher.Unregister` | 单位视图销毁后事件处理器仍留在字典（当前靠表现层 null 检查兜住，无实际 bug；建议 `UI_Actor` 销毁时一并反注册）                       |
-| 敌方意图图标数值展示                | 卡面伤害/格挡已显示状态修正后的最终值；敌方意图图标是否展示数值待确认                                                          |
-| 遗物 / 药水槽 / 法球槽               | `Player` 类注释里记名不落字段，共 7 项待落地                                                                                 |
-| 单局内的地图 / 楼层 / 敌人编排           | 战斗是唯一场景（`Scene_Battle.unity`），跑图系统未开写                                                                        |
+| 项 | 状态 |
+| --- | --- |
+| **战斗结束奖励** | 战斗已能正确收束（遗忘回写卡组 → 广播结束事件 → 清空战斗态），但**胜利/失败的奖励与流程分支尚未实现**（当前结束即停，`Next` 恒 `null`） |
+| 卡牌升级正式入口 | 升级数据 → 烘焙 → 运行时应用全链路已通；但"升级获取途径 / 升级 UI 入口"（事件 / 遗物 / 商店）仍未规划，玩家当前无正式方式触发升级 |
+| 商店 / 金币 | `SO_Player._startGold` 已定义，零消费 |
+| 遗物 / 药水槽 / 法球槽 | `Player` 类注释里记名不落字段，共 7 项待落地 |
+| 格挡 / 治疗意图数值 | 数据层有 `Amount`，意图图标均为"纯图标占位"，玩家无法预判敌人会挡多少 / 回多少 |
+| 音效 | 代码中已留触发点 TODO（发牌、进堆），音效层尚未开写 |
+| 单局内的地图 / 楼层 / 敌人编排 | 战斗是唯一场景（`Scene_Battle.unity`），跑图系统未开写 |
+| `BattleEventDispatcher.Unregister` | 单位视图销毁后事件处理器仍留在字典（单场战斗内有界滞留，靠表现层 null 检查兜住，无实际 bug） |
 
 ---
 
@@ -161,28 +198,32 @@ Presentation ─→ {Utility, RuntimeData, ConfigData, GameBattle}  (+ 8 个外�
 
 ### 阶段一：收口当前重构（已完成 ✅）
 
-1. ✅ 手牌区三组件各司其职，`UI_HandView` 降到 518 行、无重复逻辑。
-2. ✅ 通用对象池与可复用说明气泡抽取。
-3. ✅ 状态数值系统闭环（`Hook` + 重写 `ModifiableStat`），力量/虚弱/易伤/敏捷/再生全部接入。
+1. ✅ 手牌区四组件各司其职（编排 / 悬停裁决 / 瞄准 / 演出）。
+2. ✅ 通用对象池（`ObjectPool<T>` + `MonoObjectPool<T>`）与可复用表现件抽取。
+3. ✅ 状态数值系统闭环（`Hook` + 重写 `ModifiableStat`）。
 4. ✅ 卡牌升级子系统全链路打通。
+5. ✅ `EngineUtility` / `CommonPresentation` 拆出，跨场景复用边界建立。
 
 ### 阶段二：补齐战斗内的功能空洞（最高优先级）
 
-1. **战斗结束奖励流程**：填 `BP_BattleFinish.HandleCommand`（胜利/失败后的奖励与流程分支）。
+0. **（架构决议，先于功能开发）四个骨架程序集的去留**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 现均为 7 行空标记，且 `CommonPresentation` / `Presentation` 各声明了对它们的引用而全项目使用次数为 0。二选一——只留 `GameRun`（它锁住了"战斗不认识跑图"这条最重要的方向），或保留但在 asmdef 注释与本文件里显式标注"预声明、暂无消费者"。详见证报告 H-1。
+1. **战斗结束奖励流程**：胜利 / 失败分支、奖励展示与选择、结果落回局内状态。
 2. `BattleEventDispatcher` 增 `Unregister`，单位视图在 `OnDestroy` 反注册事件处理器。
-3. `BattleQueryDispatcher` / `CardValueRenderer` 接入"贡献者展开"（如「9（力量+2）」）的预留扩展点。
-4. 敌方意图图标补数值展示（与卡面 `CardValueRenderer` 同源）。
-5. 升级正式入口：升级 UI + 获取途径（事件 / 遗物 / 商店三选一）。
+3. 敌方意图图标补数值展示（与卡面 `CardValueRenderer` 同源）。
+4. 升级正式入口：升级 UI + 获取途径（事件 / 遗物 / 商店三选一）。
+5. 音效层 `Presentation/Feedback`：订阅 `BE_*` 播发声，不在视图里直调。
 
 ### 阶段三：可扩展性加固
 
-1. `CardAffixResolver` / `EnemyIntentResolver` / `Hook` / `PerkBaker` / `CardModelBaker` 的 `switch` 加显式 `default` 报错，把"忘加 case"从静默失效变成可见失败。
-2. 阵型上限等硬编码收进一处常量；`CardPile.Cards` 改为只读暴露。
-3. 数据驱动状态后，补充状态资产的设计文档与示例资产。
+1. `PerkBaker` / `CardModelBaker` / `IntentBaker` / `Hook.Settle` 的 `switch` 加 `default` 报错，把"忘加 case"从静默失效变成可见失败。
+2. `BattleTargetDirector` 抽 `IAimClient` 接口，让"瞄准是战斗通用件"从注释变成类型约束。
+3. 清理三处未使用依赖（`Utility → UniTask`、`Presentation → Unity.Mathematics`、组合根里无消费者的 `RegisterInstance(battleContext)`）。
+4. 阵型上限（`MaxEnemyCount`）收进 `BattleSlots`，与槽位定义同源。
+5. `UI_CardBattle` 再切一刀：姿态通道与补间通道合并为 `CardPose`。
 
 ### 阶段四：新系统（视毕设进度决定是否开写）
 
-1. **局内地图与楼层编排**：新开 `GameRun` 程序集，方向 `GameRun → GameBattle`（战斗不认识跑图）。
+1. **局内地图与楼层编排**：在 `GameRun` 程序集内实现，方向 `GameRun → GameBattle`（战斗不认识跑图）。
 2. **遗物系统**：与升级、商店一起做，作为局内成长的主承载。
 3. **商店与金币**：消费端已就位（金币字段、牌堆视图可复用）。
 
@@ -207,7 +248,7 @@ git lfs pull
 
 | 文档 | 内容 |
 | --- | --- |
-| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 93/100、分项维度评分、分模块分析、全量文件清单、反模式扫描、已知缺口 |
+| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 92/100、六维分项评分、逐模块分析、反模式扫描、不变量核验、问题清单 |
 | [Doc/世界观与背景设定.md](Doc/世界观与背景设定.md) | 游戏世界观与背景设定文档 |
 | [.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md](.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md) | 纯游戏设计稿（v3.5）：玩法 / 数值 / 题材定案，不含实现 |
 | [.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md](.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md) | 架构定案与 P0 待办清单：「代码放哪、依赖谁、先做什么」以此为准 |
