@@ -20,9 +20,8 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private List<SO_Card> _startDeck = new();
 
         [Header("初始状态")]
-        [SerializeField] private List<PerkEntry> _startPerks = new();
+        [SerializeField] private List<SO_Relic> _startRelics = new();
 
-        //TODO:还有玩家初始遗物没添加
         public string Name => _name;
         public int MaxHp => _maxHP;
         public GameObject ViewPrefab => _viewPrefab;
@@ -30,6 +29,6 @@ namespace _DreamKeep.ConfigData
         public int StartEnergy => _startEnergy;
         public int DrawPerTurn => _drawPerTurn;
         public List<SO_Card> StartDeck => _startDeck;
-        public List<PerkEntry> StartPerks => _startPerks;
+        public List<SO_Relic> StartRelics => _startRelics;
     }
 }

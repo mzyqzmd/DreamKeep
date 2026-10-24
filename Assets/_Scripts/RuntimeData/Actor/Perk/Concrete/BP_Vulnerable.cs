@@ -3,7 +3,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态「易伤」运行时实例：提高受到的伤害（供 Hook 分派表读取）。
+    /// <summary>状态「易伤」运行时实例：提高受到的伤害（供 StatHook 分派表读取）。
     /// 比率在烘焙时从定义资产拷进本实例，之后流程若要改值改的是实例，定义资产永不被写。</summary>
     public sealed class BP_Vulnerable : BattlePerk
     {

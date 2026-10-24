@@ -89,6 +89,7 @@ namespace _DreamKeep.Presentation
             //配置血条格挡信息栏
             _healthBar.Initialize(creature_);
             _blockView.Initialize(creature_);
+            _actorName.text = creature_.ActorName;
             // 初始状态随装配自带perk
             foreach (var p in creature_.Perks)
                 _perkGroup.AddPerk(p);

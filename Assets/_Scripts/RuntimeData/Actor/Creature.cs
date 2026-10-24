@@ -9,6 +9,7 @@ namespace _DreamKeep.RuntimeData
     {
         private readonly List<BattlePerk> _perks = new();
 
+        public string ActorName { get; }
         public int CurrentHp { get; set; }
         public int MaxHp { get; }
         public int Block { get; set; }
@@ -16,13 +17,15 @@ namespace _DreamKeep.RuntimeData
         public bool IsDead => CurrentHp <= 0;
         public IReadOnlyList<BattlePerk> Perks => _perks;
 
-        public Creature(int maxHp_)
+        public Creature(string actorName_, int maxHp_)
         {
+            ActorName = actorName_;
             MaxHp = maxHp_;
             CurrentHp = maxHp_;
         }
 
         #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回挂载实例供动作侧发事件
+
         public BattlePerk ApplyPerk(BattlePerk perk_)
         {
             for (int i = 0; i < _perks.Count; i++)
@@ -36,6 +39,7 @@ namespace _DreamKeep.RuntimeData
             _perks.Add(mounted);
             return mounted;
         }
+
         #endregion
 
         #region 回合边界：结算指定时机的状态层数（递减一层），归零项移除并逐个带回，供动作侧发移除事件
@@ -54,6 +58,7 @@ namespace _DreamKeep.RuntimeData
 
             return removed;
         }
+
         #endregion
     }
 }

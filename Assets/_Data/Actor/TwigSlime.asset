@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TwigSlime
   m_EditorClassIdentifier: 
   _name: "\u6811\u679D\u53F2\u83B1\u59C6"
-  _maxHP: 1
+  _maxHP: 30
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841560953389060
@@ -35,8 +35,8 @@ MonoBehaviour:
     - rid: 8162841560953389060
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 2
-        _times: 2
+        _damage: 20
+        _times: 3
     - rid: 8162841560953389061
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:

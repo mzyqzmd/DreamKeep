@@ -4,7 +4,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>上行查询门面：表现层唯一的只读提问出口，只读直算、不入队、无副作用。
-    /// 内部转调玩法层既有解析与 Hook，与结算共用同一份规则（预览的是谁就一定打到谁）；视图不直接触碰战斗循环、战斗态与 Hook。
+    /// 内部转调玩法层既有解析与 StatHook，与结算共用同一份规则（预览的是谁就一定打到谁）；视图不直接触碰战斗循环、战斗态与 StatHook。
     /// 两类形态：边界型查询（牌堆张数）由独立 BQ_ 类型表达，每帧预览走方法调用（避免逐帧分配）。</summary>
     public class BattleQueryDispatcher
     {
@@ -44,17 +44,17 @@ namespace _DreamKeep.GameBattle
         /// <summary>预览玩家打出的卡造成的伤害：来源内定玩家，未瞄准目标时传 null（只算来源侧修正）。</summary>
         // TODO 修正来源显示：卡面/气泡将来要写"9（力量+2）"时，由表现层传入 sourceOut_ 接住贡献者列表（现在无人传，零开销）
         public int PreviewCardDamage(Creature target_, int baseAmount_, List<BattlePerk> sourceOut_ = null)
-            => Hook.Resolve(_battleContext, EStatChannel.Damage, _battleContext.Player.Creature, target_, baseAmount_,
+            => StatHook.Resolve(_battleContext, EStatChannel.Damage, _battleContext.Player.Creature, target_, baseAmount_,
                 sourceOut_);
 
         /// <summary>预览玩家打出的卡获得的格挡：来源内定玩家，格挡只吃来源侧修正（目标可传 null）。</summary>
         public int PreviewCardBlock(Creature target_, int baseAmount_)
-            => Hook.Resolve(_battleContext, EStatChannel.Block, _battleContext.Player.Creature, target_, baseAmount_);
+            => StatHook.Resolve(_battleContext, EStatChannel.Block, _battleContext.Player.Creature, target_, baseAmount_);
 
         /// <summary>预览敌人意图造成的伤害：目标内定玩家。</summary>
         // TODO 修正来源显示：意图图标将来要标出"谁改了这个值"时，由表现层传入 sourceOut_（现在无人传，零开销）
         public int PreviewIntentDamage(Creature source_, int baseAmount_, List<BattlePerk> sourceOut_ = null)
-            => Hook.Resolve(_battleContext, EStatChannel.Damage, source_, _battleContext.Player.Creature, baseAmount_,
+            => StatHook.Resolve(_battleContext, EStatChannel.Damage, source_, _battleContext.Player.Creature, baseAmount_,
                 sourceOut_);
 
         #endregion

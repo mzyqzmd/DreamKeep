@@ -13,7 +13,7 @@ namespace _DreamKeep.GameBattle
         private bool _loopRunning; // 循环独占标志：RunLoop 进入即置位、退出即清位
 
         internal BattleContext BattleContext { get; }
-        internal ActionSystem ActionSystem { get; }
+        public ActionSystem ActionSystem { get; } // GameRun 的遗物效果装配时要向动作系统提交动作，公开给上游程序集
         internal BattleEventDispatcher EventDispatcher { get; }
 
         internal int DrawPerTurn { get; }

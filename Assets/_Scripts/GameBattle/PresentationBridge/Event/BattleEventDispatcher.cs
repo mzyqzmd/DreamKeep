@@ -4,12 +4,12 @@ using Cysharp.Threading.Tasks;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>事件分发器：表现层唯一的下行出口，持有类型→处理器列表字典，按事件类型查表分派；各视图初始化时自注册关心的处理器，
-    /// 同一类型可被多个视图订阅、同条事件内并行 await（一波演出同时开播、等到最长的那个），未注册的事件静默忽略。</summary>
+    /// <summary>战斗事实广播器：表现层与域内反应方（遗物等）共同订阅的下行出口，持有类型→处理器列表字典，按事件类型查表分派；
+    /// 各订阅者初始化时自注册关心的处理器，同一类型可被多处订阅、同条事件内并行 await（一波演出同时开播、等到最长的那个），
+    /// 未注册的事件静默忽略。订阅者只能读事件、不许改事件已表达的结算结果。</summary>
     public class BattleEventDispatcher
     {
         private readonly Dictionary<Type, List<Func<IBattleEvent, UniTask>>> _handlers = new();
-        private readonly List<UniTask> _waits = new(); // 并行等待的复用容器
 
         /// <summary>追加注册某类事件的处理器：同类型多视图各自订阅互不覆盖，同条事件内并行分派。</summary>
         public void Register<TEvent>(Func<TEvent, UniTask> handler_) where TEvent : IBattleEvent
@@ -49,12 +49,13 @@ namespace _DreamKeep.GameBattle
                 return;
             }
 
-            _waits.Clear();
+            // 并行等待用局部列表收集：处理器会在分派链内嵌套播放新事件（遗物效果在事件处理器里执行动作），
+            // 复用字段会被嵌套分派 Clear 掉外层尚未等待完的任务，故每次分派各自收集
+            List<UniTask> waits = new(handlers.Count);
             for (int i = 0; i < handlers.Count; i++)
-                _waits.Add(handlers[i](battleEvent_));
+                waits.Add(handlers[i](battleEvent_));
 
-            await UniTask.WhenAll(_waits);
-            _waits.Clear();
+            await UniTask.WhenAll(waits);
         }
     }
 }

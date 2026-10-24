@@ -4,6 +4,7 @@ using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
+using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
@@ -33,10 +34,17 @@ namespace _DreamKeep.Presentation
             BattleContext battleContext = BattleSetup.Create(_playerConfig, _enemyConfigs, rng);
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();
+            RelicTriggerNotifier relicNotifier = new RelicTriggerNotifier();
             BattleLoop loop = new BattleLoop(battleContext, _playerConfig.DrawPerTurn, dispatcher);
+
+            // 遗物系统（GameRun 程序集）：遍历玩家整局持有的遗物，逐件烘焙效果并挂上本场事件流；
+            // 战斗域零感知（装配反转），效果实例随本容器销毁。播报器是本段表现出口，遗物生效/用尽经它通知遗物栏
+            foreach (var relic in battleContext.Player.Relics)
+                RelicBaker.Bake(relic, battleContext, loop.ActionSystem, dispatcher, relicNotifier);
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
+            builder_.RegisterInstance(relicNotifier); // 供遗物栏 [Inject] 订阅遗物播报
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）
             builder_.RegisterInstance(new BattleQueryDispatcher(battleContext)); // 被视图的 [Inject] 要（预览查询与牌堆张数）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
@@ -58,6 +66,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_PileCardsView>();
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
+            // 遗物栏：按玩家持有遗物生成槽位，并订阅遗物触发事件点亮对应槽位
+            builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             // 弹层中枢与目标提示驱动与组合根同挂 GameRoot：它们不绘制 UI，只订阅事件驱动弹层与点亮目标单位
             builder_.RegisterComponentInHierarchy<PopFactory>(); // 通用弹层工厂：说明气泡与数字飘字的池
             builder_.RegisterComponentInHierarchy<VfxFactory>(); // 通用特效工厂：一次性特效的池

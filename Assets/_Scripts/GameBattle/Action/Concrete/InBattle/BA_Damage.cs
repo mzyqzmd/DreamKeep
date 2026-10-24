@@ -4,8 +4,8 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>伤害动作：先扣格挡再扣血；结算时逐目标经 Hook 求最终值，
-    /// 修正源由 Hook 分派表向状态取用；纯状态结算由触发侧显式关闭修正。</summary>
+    /// <summary>伤害动作：先扣格挡再扣血；结算时逐目标经 StatHook 求最终值，
+    /// 修正源由 StatHook 分派表向状态取用；纯状态结算由触发侧显式关闭修正。</summary>
     public sealed class BA_Damage : BattleAction
     {
         /// <summary>是否参与数值修正：由触发 resolver 对纯状态结算传 false。</summary>
@@ -29,11 +29,17 @@ namespace _DreamKeep.GameBattle
 
                 // 修正逐目标求值：同一张群伤卡对不同易伤状态的目标结算不同值
                 int amount = _applyModifiers
-                    ? Hook.Resolve(battleContext_, EStatChannel.Damage, Source, target, BaseAmount)
+                    ? StatHook.Resolve(battleContext_, EStatChannel.Damage, Source, target, BaseAmount)
                     : BaseAmount;
                 int absorbed = Math.Min(target.Block, amount);
                 target.Block -= absorbed;
-                target.CurrentHp -= amount - absorbed;
+                int hpLoss = amount - absorbed;
+                int remaining = target.CurrentHp - hpLoss;
+                // 致命伤先问拦截者：拦下则血量从不归零，后续自然不产生死亡事实（不播死亡、视图不自毁）
+                if (remaining <= 0 && DeathGuardHook.TryPreventDeath(battleContext_, target, hpLoss, out int hpAfter_))
+                    target.CurrentHp = hpAfter_;
+                else
+                    target.CurrentHp = remaining;
 
                 events.Add(new BE_DamageDealt(Source, target, amount, absorbed));
                 if (target.IsDead)

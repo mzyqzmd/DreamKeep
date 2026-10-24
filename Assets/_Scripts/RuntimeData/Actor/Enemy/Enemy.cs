@@ -11,7 +11,6 @@ namespace _DreamKeep.RuntimeData
 
         public Creature Creature { get; }
         public int Slot { get; private set; }
-        public string Name { get; }
 
         /// <summary>本次将要执行的意图；没有配置意图时为 null。</summary>
         public EnemyIntent CurrentIntent => _intents.Count == 0 ? null : _intents[_intentIndex];
@@ -22,8 +21,7 @@ namespace _DreamKeep.RuntimeData
 
         public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent frontSlotIntent_)
         {
-            Name = name_;
-            Creature = new Creature(maxHp_);
+            Creature = new Creature(name_, maxHp_);
             Slot = slot_;
             _intents = intents_ ?? new List<EnemyIntent>();
             _frontSlotIntent = frontSlotIntent_;

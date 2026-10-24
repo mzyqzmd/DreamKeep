@@ -83,14 +83,14 @@ namespace _DreamKeep.Presentation
                 GameObject prefab = i < _enemyViewPrefabs.Count ? _enemyViewPrefabs[i] : null;
                 if (!prefab)
                 {
-                    Debug.LogError($"[{nameof(BattleEntry)}] 敌人 {enemy.Name} 未配置视图预制体（SO_Enemy.ViewPrefab），本次跳过");
+                    Debug.LogError($"[BattleEntry] 敌人 {enemy.Creature.ActorName} 未配置视图预制体（SO_Enemy.ViewPrefab），本次跳过");
                     continue;
                 }
 
                 Transform slot = _actorRoot.GetSlotTransform(enemy.Slot);
                 if (!slot)
                 {
-                    Debug.LogError($"[{nameof(BattleEntry)}] 敌人 {enemy.Name} 所在槽位点未接线，本次跳过");
+                    Debug.LogError($"[BattleEntry] 敌人 {enemy.Creature.ActorName} 所在槽位点未接线，本次跳过");
                     continue;
                 }
 

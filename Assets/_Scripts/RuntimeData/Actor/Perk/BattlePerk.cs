@@ -4,8 +4,8 @@ using UnityEngine;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>战斗状态运行时实例：挂在生物身上、层数可变的独立副本，显示名与结算时机转发自状态定义资产（SO_Perk）；
-    /// 数值修正由 GameBattle 的 Hook 分派表向本类取用（要改值的状态暴露 GetModifier，通道与交手方判断、算术都留在这里）；
-    /// 触发行为（产动作）必须 new 动作类，故住在 GameBattle 的 Hook.Settle 里。</summary>
+    /// 数值修正由 GameBattle 的 StatHook 分派表向本类取用（要改值的状态暴露 GetModifier，通道与交手方判断、算术都留在这里）；
+    /// 触发行为（产动作）必须 new 动作类，故住在 GameBattle 的 SettleHook.Settle 里。</summary>
     public abstract class BattlePerk
     {
         protected readonly SO_Perk _data;

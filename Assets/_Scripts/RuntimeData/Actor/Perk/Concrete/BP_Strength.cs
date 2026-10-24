@@ -3,7 +3,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态「力量」运行时实例：每层提高 1 点攻击伤害（供 Hook 分派表读取），战斗内不自动衰减。</summary>
+    /// <summary>状态「力量」运行时实例：每层提高 1 点攻击伤害（供 StatHook 分派表读取），战斗内不自动衰减。</summary>
     public sealed class BP_Strength : BattlePerk
     {
         private SO_Strength Config => (SO_Strength)_data;

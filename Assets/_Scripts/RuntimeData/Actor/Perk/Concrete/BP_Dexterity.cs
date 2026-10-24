@@ -3,7 +3,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态「敏捷」运行时实例：每层提高 1 点从卡牌中获得的格挡（供 Hook 分派表读取），
+    /// <summary>状态「敏捷」运行时实例：每层提高 1 点从卡牌中获得的格挡（供 StatHook 分派表读取），
     /// 层数为负即减少；战斗内不自动衰减。</summary>
     public sealed class BP_Dexterity : BattlePerk
     {

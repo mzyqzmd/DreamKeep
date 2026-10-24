@@ -14,14 +14,13 @@ namespace _DreamKeep.GameBattle
 
         public static BattleContext Create(SO_Player playerConfig_, IReadOnlyList<SO_Enemy> enemyConfigs_, Rng rng_)
         {
-            Player player = new(playerConfig_.MaxHp);
+            Player player = new(playerConfig_.Name, playerConfig_.MaxHp, playerConfig_.StartRelics);
 
             // 配置 → 局内卡（canonical 原型克隆成可变副本，跨战斗保留）
             for (int i = 0; i < playerConfig_.StartDeck.Count; i++)
                 player.Deck.Add(CardModelBaker.Bake(playerConfig_.StartDeck[i]).ToMutable());
 
             player.StartCombat(playerConfig_.StartEnergy);
-            ApplyStartPerks(player.Creature, playerConfig_.StartPerks);
 
             Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player, rng_);
             List<Enemy> enemies = BuildEnemies(enemyConfigs_);
@@ -64,25 +63,21 @@ namespace _DreamKeep.GameBattle
                 SO_Enemy config = enemyConfigs_[i];
                 Enemy enemy = new(config.Name, config.MaxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
                     IntentBaker.Bake(config.FrontSlotIntent));
-                ApplyStartPerks(enemy.Creature, config.StartPerks);
+                //按配置施加初始状态：克隆模板配层数后走标准施加链
+                for (int j = 0; j < config.StartPerks.Count; j++)
+                {
+                    PerkEntry entry = config.StartPerks[j];
+                    if (entry?.Perk == null) continue;
+                    BattlePerk perk = PerkBaker.Bake(entry.Perk);
+                    if (perk == null) continue;
+                    perk.AddLayers(entry.Layers);
+                    enemy.Creature.ApplyPerk(perk);
+                }
+
                 enemies.Add(enemy);
             }
 
             return enemies;
-        }
-
-        /// <summary>按配置施加初始状态：克隆模板配层数后走标准施加链，模板不被污染；空条目静默跳过（Inspector 空元素陷阱）。</summary>
-        private static void ApplyStartPerks(Creature creature_, IReadOnlyList<PerkEntry> startPerks_)
-        {
-            for (int i = 0; i < startPerks_.Count; i++)
-            {
-                PerkEntry entry = startPerks_[i];
-                if (entry?.Perk == null) continue;
-                BattlePerk perk = PerkBaker.Bake(entry.Perk);
-                if (perk == null) continue;
-                perk.AddLayers(entry.Layers);
-                creature_.ApplyPerk(perk);
-            }
         }
     }
 }

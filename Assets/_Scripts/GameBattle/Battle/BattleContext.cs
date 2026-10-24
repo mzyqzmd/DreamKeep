@@ -32,6 +32,13 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
+        #region 致命伤拦截者：装配期登记，伤害结算在写血前按登记顺序询问
+
+        /// <summary>本场登记在案的致命伤拦截者（遗物等），命中第一个即停；空表即无人可拦。</summary>
+        public List<IDeathGuard> DeathGuards { get; } = new();
+
+        #endregion
+
         public BattleContext(Player player_, List<Enemy> enemies_, Dictionary<CardModel, CardModel> runCardOf_,
             Rng rng_)
         {
