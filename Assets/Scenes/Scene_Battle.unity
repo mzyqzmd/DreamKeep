@@ -6400,6 +6400,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
   _numberPopTipPrefab: {fileID: 6842653926454003922, guid: dcfe99971d3f05a4581d28e9a51ad25c, type: 3}
+  _relicInfoPanelPrefab: {fileID: 6581198045058832795, guid: 0aa6da6a3ba64784f8d6fc8a0e0ccec2, type: 3}
+  _relicInfoPanelParent: {fileID: 1789371642}
 --- !u!1 &2096025520
 GameObject:
   m_ObjectHideFlags: 0

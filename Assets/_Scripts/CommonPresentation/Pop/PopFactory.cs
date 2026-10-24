@@ -7,17 +7,25 @@ namespace _DreamKeep.CommonPresentation
 {
     /// <summary>通用弹层工厂：挂在场景 GameRoot 下，统一持有说明气泡与数字飘字的实例池——
     /// 说明气泡的"实例取还与唯一列守卫"归此处（同一时刻只许一列、谁的归还只收自己那列），叠列定位由消费方 UI_HoverTip 接管；
-    /// 数字飘字的父节点与世界坐标由调用方（如战斗弹层编排）算好传入，本类不认识 Creature / UI_ActorRoot / 任何玩法事件。
+    /// 数字飘字的父节点与世界坐标由调用方（如战斗弹层编排）算好传入，本类不认识 Creature / UI_ActorRoot / 任何玩法事件；
+    /// 遗物信息面板同理只由本类造与存放，写什么内容、什么时候收起都归面板自己。
     /// 弹层一律挂到"所属对象"之下，空闲实例归位到本组件名下。</summary>
     public sealed class PopFactory : MonoBehaviour
     {
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
         [SerializeField] private UI_NumberPopTip _numberPopTipPrefab;
 
+        [Tooltip("遗物信息面板预制体：点击遗物槽位时弹出")] [SerializeField]
+        private UI_RelicsInfoPanel _relicInfoPanelPrefab;
+
+        [Tooltip("遗物信息面板的画布父级：面板随该画布的排序层渲染（如 Canvas_Overlay）")] [SerializeField]
+        private RectTransform _relicInfoPanelParent;
+
         private MonoObjectPool<UI_DescriptionPopTip> _tipPool;
         private MonoObjectPool<UI_NumberPopTip> _numberPopTipPool;
         private readonly List<UI_DescriptionPopTip> _shownTips = new(); // 当前这一列的展示名单（按叠列顺序）：归还只认它
         private object _tipsRequester;
+        private UI_RelicsInfoPanel _relicInfoPanel; // 单实例：同一时刻只会有一张信息面板，开合由面板自己管
 
         private void Awake()
         {
@@ -70,6 +78,17 @@ namespace _DreamKeep.CommonPresentation
                 _numberPopTipPool.Release(tip);
                 onFinished_?.Invoke();
             });
+        }
+
+        #endregion
+
+        #region 遗物信息面板：单实例懒建，内容与开合归面板自己
+
+        /// <summary>取遗物信息面板：首次调用才按预制体造一张挂到画布父级下，之后一直复用这张。</summary>
+        public UI_RelicsInfoPanel AcquireRelicInfoPanel()
+        {
+            if (!_relicInfoPanel) _relicInfoPanel = Instantiate(_relicInfoPanelPrefab, _relicInfoPanelParent, false);
+            return _relicInfoPanel;
         }
 
         #endregion

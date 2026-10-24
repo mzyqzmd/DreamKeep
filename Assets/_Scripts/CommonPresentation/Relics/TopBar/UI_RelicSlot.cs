@@ -1,14 +1,16 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using VContainer;
 using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
 
 namespace _DreamKeep.CommonPresentation
 {
-    /// <summary>遗物槽位：显示一件遗物的图标与悬停说明，并在该遗物触发效果时播一次"图标变亮 + 轮廓涟漪"。
-    /// 常态即着色器参数归零、触发中即补间在跑——不设状态字段，重播就是先杀旧补间再从头开始。</summary>
-    public sealed class UI_RelicSlot : MonoBehaviour
+    /// <summary>遗物槽位：显示一件遗物的图标与悬停说明，并在该遗物触发效果时播一次"图标变亮 + 轮廓涟漪"；
+    /// 点击图标弹出该遗物的信息面板。常态即着色器参数归零、触发中即补间在跑，重播就是先杀旧补间再从头开始。</summary>
+    public sealed class UI_RelicSlot : MonoBehaviour, IPointerClickHandler
     {
         [Tooltip("图标层：显示遗物图标，触发时由材质的 _Boost 提亮")] [SerializeField]
         private Image _icon;
@@ -25,8 +27,9 @@ namespace _DreamKeep.CommonPresentation
         [Header("用尽表现")] [Tooltip("遗物用尽后图标定格的颜色")] [SerializeField]
         private Color _exhaustedColor = new(0.35f, 0.35f, 0.35f, 1f);
 
-        // 用尽后补在说明末尾的一行：Icon 变灰只能表示"看起来不对"，还得有一句话讲清它不再生效
-        private const string ExhaustedTip = "这个遗物的效果已经耗尽";
+        // 用尽后补在说明末尾的一行：Icon 变灰只能表示"看起来不对"，还得有一句话讲清它不再生效；
+        // 悬停气泡与信息面板共用这一句，故对外公开
+        public const string ExhaustedTip = "这个遗物的效果已经耗尽";
 
         [Header("触发表现")] [Tooltip("图标提亮的亮度倍率")] [SerializeField]
         private float _boostScale = 1.6f;
@@ -66,6 +69,8 @@ namespace _DreamKeep.CommonPresentation
         private Tween _boostTween;
         private Tween _progressTween;
         private SO_Relic _relic;
+        private bool _exhausted; // 本槽位这件遗物是否已用尽：点击弹面板时随遗物一起交出去
+        private PopFactory _popFactory;
 
         private void Awake()
         {
@@ -92,6 +97,10 @@ namespace _DreamKeep.CommonPresentation
             if (_iconMaterial) Destroy(_iconMaterial);
             if (_rippleMaterial) Destroy(_rippleMaterial);
         }
+
+        // 弹层工厂：本槽位由遗物栏池化生成，池的新建回调会补一次容器注入
+        [Inject]
+        public void Construct(PopFactory popFactory_) => _popFactory = popFactory_;
 
         #region 绑定遗物：图标、悬停说明与轮廓采样参数
 
@@ -122,6 +131,10 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
+
+        // 点击图标：把本槽位这件遗物与"是否已用尽"一起交给信息面板
+        public void OnPointerClick(PointerEventData eventData_) =>
+            _popFactory.AcquireRelicInfoPanel().Show(_relic, _exhausted);
 
         #region 触发表现：图标提亮一次、涟漪扩散一次，播完自动回常态
 
@@ -164,6 +177,7 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>用尽后把图标定格为灰、说明末尾补一行"已耗尽"；复位时恢复本色与原说明。</summary>
         public void SetExhausted(bool exhausted_)
         {
+            _exhausted = exhausted_;
             _icon.color = exhausted_ ? _exhaustedColor : Color.white;
             if (_relic == null) return; // Awake 的复位早于 Bind，此时没有说明可写
             _hoverTip.SetContents(_relic.RelicName,

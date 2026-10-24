@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 7641754558981644828}
   - component: {fileID: 5167363600973706731}
   - component: {fileID: 1859266695181344409}
+  - component: {fileID: 3651573096834080905}
   m_Layer: 5
   m_Name: RelicSlot
   m_TagString: Untagged
@@ -124,6 +125,24 @@ MonoBehaviour:
   _rippleColor: {r: 0.2396226, g: 0.9957604, b: 1, a: 0.78431374}
   _rippleThickness: 0.08
   _rippleExpand: 1.5
+--- !u!114 &3651573096834080905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4784669432291465487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68dc29e8f236406d9831af1c6d19cf91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _selfDriven: 1
+  _scaleFactor: 1.2
+  _hoverScale: 1.05
+  _duration: 0.12
+  _ease: 6
+  _targetToScale: {fileID: 0}
 --- !u!1 &5916017327266868021
 GameObject:
   m_ObjectHideFlags: 0
