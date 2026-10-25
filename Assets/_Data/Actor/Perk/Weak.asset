@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Weak
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: 6b15ffbf02a104844b93bc9e75f4f30a, type: 3}
+  _polarity: 1
   _ratio: 0.25

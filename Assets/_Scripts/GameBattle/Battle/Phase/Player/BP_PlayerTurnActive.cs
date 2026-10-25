@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
@@ -28,7 +29,33 @@ namespace _DreamKeep.GameBattle
                 case BC_PlayerEndTurn _:
                     _owner.EndPlayerTurn();
                     break;
+                case BC_UsePotion usePotion:
+                    await UsePotionAsync(usePotion.SlotIndex, usePotion.AimSlot);
+                    break;
             }
+        }
+
+        #endregion
+
+        #region 使用药水：校验槽位与落点后先清槽再结算，顺序与出牌一致（清槽先于效果）
+
+        private async UniTask UsePotionAsync(int slotIndex_, int aimSlot_)
+        {
+            BattleContext context = _owner.BattleContext;
+            Player player = context.Player;
+            if (slotIndex_ < 0 || slotIndex_ >= player.PotionSlots.Count) return;
+
+            SO_Potion potion = player.PotionSlots[slotIndex_];
+            if (potion == null) return;
+
+            // 效果先建队：落点非法（单体没有合法目标）时整瓶都不结算，不能先清槽再失败。
+            // 落点随动作一起带出去：离槽事件据此让表现层把药水扔向同一批目标，视图不重算规则
+            List<BattleAction> effects = PotionResolver.Build(context, potion, player, aimSlot_, out List<Creature> targets);
+            if (effects.Count == 0) return;
+
+            _owner.ActionSystem.Enqueue(new BA_ConsumePotion(player.Creature, targets, slotIndex_));
+            foreach (BattleAction action in effects) _owner.ActionSystem.Enqueue(action);
+            await _owner.ActionSystem.PerformAllAsync();
         }
 
         #endregion

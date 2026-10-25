@@ -8,7 +8,14 @@ namespace _DreamKeep.ConfigData
     {
         [SerializeField] private Sprite _icon;
 
+        [Tooltip("极性：只决定施加演出里名称用增益色还是减益色，不参与结算")]
+        [SerializeField]
+        private EPerkPolarity _polarity;
+
         public Sprite Icon => _icon;
+
+        /// <summary>极性：面向玩家的呈现分类（增益 / 减益）。</summary>
+        public EPerkPolarity Polarity => _polarity;
 
         /// <summary>显示名。</summary>
         public abstract string Name { get; }

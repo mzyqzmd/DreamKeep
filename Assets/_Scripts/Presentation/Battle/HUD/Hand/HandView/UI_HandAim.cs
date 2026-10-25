@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
     /// 箭头本体不住这里：抓起 / 松手 / 取消时向战斗侧唯一的瞄准中间件 BattleTargetDirector 登记与注销，
     /// 由它每帧解析结果并回写（回写即连同刷新）。本类每帧只由宿主手牌区驱动一次（兜底取消 + 预览对账），
     /// 不推导落点、不认识任何单位侧实现。</summary>
-    public sealed class UI_HandAim : MonoBehaviour
+    public sealed class UI_HandAim : MonoBehaviour, IAimClient
     {
         private const int NoAimSlot = -1; // 尚未指向任何敌人：松手时据此取消，不打出
 

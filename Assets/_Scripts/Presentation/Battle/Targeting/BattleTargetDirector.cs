@@ -9,10 +9,10 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>瞄准中间件与目标提示驱动：整场战斗只有一支目标箭头与一个瞄准槽位，由本类独占。
-    /// 手牌瞄准器在抓起 / 松手 / 取消时登记与注销，每帧由本类读取它的事实——
+    /// 瞄准客户端（手牌瞄准器 UI_HandAim、药水栏 UI_PotionGroup）在开始 / 结束瞄准时登记与注销，每帧由本类读取它的事实——
     /// 要不要解析目标、用不用指针指向、箭头起点在哪、箭头是否已展开——解析出"这一轮真正会命中的目标"，
     /// 把结果（目标槽位与目标集合）一次性回写，再点亮对应单位的提示框、按要求画出箭头。
-    /// 落点规则一律来自手牌转交的玩法层只读查询（表现层不重写规则），指针命中判定也只在玩法层给出的存活敌人里做。
+    /// 落点规则一律来自客户端转交的玩法层只读查询（表现层不重写规则），指针命中判定也只在玩法层给出的存活敌人里做。
     /// 它是瞄准结果的唯一计算者与持有者，也是瞄准相关每帧的唯一驱动者。
     /// 挂在战斗根节点 GameRoot（与组合根并列，不属于任何 Canvas），由场景注册 + [Inject] 装配。</summary>
     public sealed class BattleTargetDirector : MonoBehaviour
@@ -27,7 +27,7 @@ namespace _DreamKeep.Presentation
         private Camera _canvasCamera;
 
         // 当前瞄准客户端：单槽位——同一时刻只允许一件东西在瞄准，后登记的顶掉前一个
-        private UI_HandAim _client;
+        private IAimClient _client;
 
         // 已点亮的目标（差分用）与箭头是否正展开：只作"状态没变就不写"的守卫
         private readonly List<Creature> _shownTargets = new();
@@ -47,7 +47,7 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>登记当前瞄准客户端：顶掉上一个客户端，并先收起箭头与高亮（免得上一支箭头把命中色与脉冲留在展开态）。</summary>
-        public void BeginAim(UI_HandAim client_)
+        public void BeginAim(IAimClient client_)
         {
             if (ReferenceEquals(_client, client_)) return;
             ClearAim();
@@ -55,7 +55,7 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>结束瞄准：只认当前客户端（非当前客户端的调用是空操作），收起箭头并熄灭全部目标提示。</summary>
-        public void EndAim(UI_HandAim client_)
+        public void EndAim(IAimClient client_)
         {
             if (!ReferenceEquals(_client, client_)) return;
             _client = null;

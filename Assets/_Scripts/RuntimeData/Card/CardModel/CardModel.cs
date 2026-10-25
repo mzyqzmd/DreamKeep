@@ -22,6 +22,7 @@ namespace _DreamKeep.RuntimeData
 
         #region 目标类型
 
+        public bool IsNoneTarget => _static.IsNoneTarget;
         public bool IsSelfTarget => _static.IsSelfTarget;
         public bool IsFrontEnemyTarget => _static.IsFrontEnemyTarget;
         public bool IsAnyEnemyTarget => _static.IsAnyEnemyTarget;
@@ -59,11 +60,10 @@ namespace _DreamKeep.RuntimeData
             List<(string Text, CardAffix Affix)> lines = new();
             string targetLine = _static.TargetType switch
             {
-                ECardTargetType.Player or ECardTargetType.FrontEnemy => string.Empty,
                 ECardTargetType.AllEnemy => "对全体目标:",
                 ECardTargetType.RandomEnemy => "对随机目标:",
                 ECardTargetType.AnyEnemy => "指定目标:",
-                _ => throw new ArgumentOutOfRangeException()
+                _ => string.Empty
             };
 
             if (!string.IsNullOrEmpty(targetLine)) lines.Add((targetLine, null));

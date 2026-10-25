@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: Regen
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: 59093ecad1d282e4abef88420db6bd3a, type: 3}
+  _polarity: 0

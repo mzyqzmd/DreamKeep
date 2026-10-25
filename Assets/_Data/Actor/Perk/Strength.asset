@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: Strength
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: 742cccee996b7bf4e84903039b43e715, type: 3}
+  _polarity: 0

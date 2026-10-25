@@ -17,7 +17,7 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: cf4eebb1485ff2e42a8de55ea55d5a88, type: 3}
   _rarity: 1
   _type: 0
-  _targetType: 2
+  _targetType: 3
   _affixes:
   - rid: 8162841783749050368
   - rid: 8162841783749050369

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 
@@ -11,6 +12,7 @@ namespace _DreamKeep.GameBattle
         private readonly StateMachine<BaseState<BattleLoop>> _fsm = new();
         private readonly Queue<BattleCommand> _commandQueue = new();
         private bool _loopRunning; // 循环独占标志：RunLoop 进入即置位、退出即清位
+        private bool _finished; // 终态一次性标志：结束阶段跑完后置位，此后入队命令一律丢弃
 
         internal BattleContext BattleContext { get; }
         public ActionSystem ActionSystem { get; } // GameRun 的遗物效果装配时要向动作系统提交动作，公开给上游程序集
@@ -49,8 +51,20 @@ namespace _DreamKeep.GameBattle
 
         public void EnqueueCommand(BattleCommand command_)
         {
+            // 终态后丢弃命令：结束阶段已结算过，再入队会重跑它，二次广播战斗结束并重复清空战斗态
+            if (_finished) return;
             _commandQueue.Enqueue(command_);
             RunLoop().Forget();
+        }
+
+        #endregion
+
+        #region 丢弃药水：任意阶段立即生效（无战斗效果、无演出，不排队也不占动作串行）
+
+        internal void DiscardPotionNow(int slotIndex_)
+        {
+            if (!BattleContext.Player.TryTakePotion(slotIndex_, out SO_Potion potion)) return;
+            EventDispatcher.PlayAsync(new BE_PotionConsumed(slotIndex_, potion)).Forget();
         }
 
         #endregion
@@ -93,7 +107,11 @@ namespace _DreamKeep.GameBattle
 
                     await current.RunAsync();
                     BaseState<BattleLoop> next = current.Next;
-                    if (next == null) return; // 终态：结束阶段不再推进，战后入队的命令也不会让它重跑一遍结算
+                    if (next == null)
+                    {
+                        _finished = true; // 终态：置位后 EnqueueCommand 一律早退，结束阶段不会被后续入队重跑
+                        return;
+                    }
                     _fsm.ChangeState(BattleContext.IsBattleOver ? PhaseBattleFinish : next);
                 }
             }

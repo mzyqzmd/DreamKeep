@@ -48,6 +48,8 @@ namespace _DreamKeep.CommonPresentation
         private readonly List<(string Name, string Description)> _contents = new();
 
         private bool _shown;
+        private bool _pointerInside; // 指针是否在自身矩形内：解除抑制时据此决定要不要立刻补弹
+        private bool _suppressed; // 外部临时关闭响应（药水菜单打开期间）
 
         // 弹层工厂：全场景唯一（场景根 GameRoot），由容器注入
         private PopFactory _host;
@@ -61,12 +63,15 @@ namespace _DreamKeep.CommonPresentation
         // 静态内容在装配时一次性预填；动态内容由宿主在数据变化时注入（两串都空即当作无内容）
         private void Awake()
         {
-            if (!_isStaticContents) return;
-            _contents.Add((_tipName, _tipDescription));
+            if (_isStaticContents) _contents.Add((_tipName, _tipDescription));
         }
 
         // 宿主被禁用（槽位与图标还池、卡牌回收、面板关激活）时 Exit 不来，兜底收掉悬着的气泡；两种触发模式同样兜底
-        private void OnDisable() => Hide();
+        private void OnDisable()
+        {
+            _pointerInside = false;
+            Hide();
+        }
 
         #region 对外入口：显隐与内容注入（指针模式由本组件的指针事件调用，外部驱动模式由调用方调用）
 
@@ -108,6 +113,19 @@ namespace _DreamKeep.CommonPresentation
             if (_host) _host.ReleaseColumn(this);
         }
 
+        /// <summary>临时关闭 / 恢复指针响应：关闭时立即收起气泡并忽略之后的悬停（药水菜单打开期间用）；
+        /// 恢复时指针若仍停在自身矩形内就立刻补弹，不必等用户重新进出。</summary>
+        public void SetSuppressed(bool suppressed_)
+        {
+            _suppressed = suppressed_;
+            if (suppressed_)
+            {
+                Hide();
+                return;
+            }
+            if (_trigger == ETipTrigger.Pointer && _pointerInside) Show();
+        }
+
         #endregion
 
         #region 设置tip内容
@@ -134,12 +152,14 @@ namespace _DreamKeep.CommonPresentation
 
         public void OnPointerEnter(PointerEventData eventData_)
         {
-            if (_trigger != ETipTrigger.Pointer) return;
+            _pointerInside = true;
+            if (_trigger != ETipTrigger.Pointer || _suppressed) return;
             Show();
         }
 
         public void OnPointerExit(PointerEventData eventData_)
         {
+            _pointerInside = false;
             if (_trigger != ETipTrigger.Pointer) return;
             Hide();
         }

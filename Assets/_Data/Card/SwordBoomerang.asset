@@ -17,7 +17,7 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: 91001dbf036504c4b9c694f5e73b97c0, type: 3}
   _rarity: 0
   _type: 0
-  _targetType: 4
+  _targetType: 5
   _affixes:
   - rid: 8162841622129934340
   _canUpdate: 1
@@ -26,8 +26,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
     - rid: 8162841622129934340
       type: {class: AD_Damage, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -39,5 +37,3 @@ MonoBehaviour:
         _value: 2
         _additive: 1
         _multiplier: 1
-        _perk:
-          rid: -2

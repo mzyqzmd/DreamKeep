@@ -68,6 +68,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             // 遗物栏：按玩家持有遗物生成槽位，并订阅遗物触发事件点亮对应槽位
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
+            // 药水栏：场景固定三格，绑定玩家药水槽；单体药水待选时自己充当瞄准客户端
+            builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
             // 弹层中枢与目标提示驱动与组合根同挂 GameRoot：它们不绘制 UI，只订阅事件驱动弹层与点亮目标单位
             builder_.RegisterComponentInHierarchy<PopFactory>(); // 通用弹层工厂：说明气泡与数字飘字的池
             builder_.RegisterComponentInHierarchy<VfxFactory>(); // 通用特效工厂：一次性特效的池

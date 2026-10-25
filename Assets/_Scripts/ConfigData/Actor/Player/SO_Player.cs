@@ -21,6 +21,7 @@ namespace _DreamKeep.ConfigData
 
         [Header("初始状态")]
         [SerializeField] private List<SO_Relic> _startRelics = new();
+        [SerializeField] private List<SO_Potion> _startPotions = new();
 
         public string Name => _name;
         public int MaxHp => _maxHP;
@@ -30,5 +31,6 @@ namespace _DreamKeep.ConfigData
         public int DrawPerTurn => _drawPerTurn;
         public List<SO_Card> StartDeck => _startDeck;
         public List<SO_Relic> StartRelics => _startRelics;
+        public List<SO_Potion> StartPotions => _startPotions;
     }
 }

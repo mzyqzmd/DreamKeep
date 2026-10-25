@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using _DreamKeep.EngineUtility;
 using UnityEngine;
@@ -15,17 +14,10 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
         [SerializeField] private UI_NumberPopTip _numberPopTipPrefab;
 
-        [Tooltip("遗物信息面板预制体：点击遗物槽位时弹出")] [SerializeField]
-        private UI_RelicsInfoPanel _relicInfoPanelPrefab;
-
-        [Tooltip("遗物信息面板的画布父级：面板随该画布的排序层渲染（如 Canvas_Overlay）")] [SerializeField]
-        private RectTransform _relicInfoPanelParent;
-
         private MonoObjectPool<UI_DescriptionPopTip> _tipPool;
         private MonoObjectPool<UI_NumberPopTip> _numberPopTipPool;
         private readonly List<UI_DescriptionPopTip> _shownTips = new(); // 当前这一列的展示名单（按叠列顺序）：归还只认它
         private object _tipsRequester;
-        private UI_RelicsInfoPanel _relicInfoPanel; // 单实例：同一时刻只会有一张信息面板，开合由面板自己管
 
         private void Awake()
         {
@@ -66,32 +58,19 @@ namespace _DreamKeep.CommonPresentation
 
         #region 数字飘字：父节点与世界坐标由调用方算好传入，播完还池
 
-        /// <summary>在指定父节点下、以给定世界坐标播放一条飘字；播完还池并回调（可为空）。</summary>
+        /// <summary>在指定父节点下、以给定世界坐标播放一条飘字；播完还池。</summary>
         public void SpawnNumber(string text_, Color color_, ENumberPopTipType type_, Transform parent_,
-            Vector3 worldPosition_, Action onFinished_ = null)
+            Vector3 worldPosition_)
         {
             UI_NumberPopTip tip = _numberPopTipPool.Get(_numberPopTipPrefab);
             tip.transform.SetParent(parent_, false);
             tip.transform.SetAsLastSibling();
-            tip.Play(text_, color_, type_, worldPosition_, () =>
-            {
-                _numberPopTipPool.Release(tip);
-                onFinished_?.Invoke();
-            });
+            tip.Play(text_, color_, type_, worldPosition_, () => _numberPopTipPool.Release(tip));
         }
 
         #endregion
 
-        #region 遗物信息面板：单实例懒建，内容与开合归面板自己
-
-        /// <summary>取遗物信息面板：首次调用才按预制体造一张挂到画布父级下，之后一直复用这张。</summary>
-        public UI_RelicsInfoPanel AcquireRelicInfoPanel()
-        {
-            if (!_relicInfoPanel) _relicInfoPanel = Instantiate(_relicInfoPanelPrefab, _relicInfoPanelParent, false);
-            return _relicInfoPanel;
-        }
-
-        #endregion
+      
 
         // 还池前归位到本组件名下：空闲实例不长期挂在可能被销毁的单位或槽位下，下次取出再改挂
         private void ReturnToRoot(Component instance_) => instance_.transform.SetParent(transform, false);

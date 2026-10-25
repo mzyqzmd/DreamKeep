@@ -29,13 +29,19 @@ namespace _DreamKeep.GameBattle
         {
             if (_performing) return;
             _performing = true;
-            while (_queue.Count > 0)
+            try
             {
-                List<IBattleEvent> events = _queue.Dequeue().Execute(_battleContext);
-                await _eventDispatcher.PlayAsync(events);
+                while (_queue.Count > 0)
+                {
+                    List<IBattleEvent> events = _queue.Dequeue().Execute(_battleContext);
+                    await _eventDispatcher.PlayAsync(events);
+                }
             }
-
-            _performing = false;
+            finally
+            {
+                // 异常也必须复位：调用方是 Forget，异常不上抛，守卫漏复位会让此后所有排空同步空转、战斗静默卡死
+                _performing = false;
+            }
         }
 
         #endregion

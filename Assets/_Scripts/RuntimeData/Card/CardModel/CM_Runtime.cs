@@ -20,8 +20,8 @@ namespace _DreamKeep.RuntimeData
         /// <summary>当前生效的词条集：基础词条（升级后跳过被移除的）再并入追加词条。</summary>
         internal IReadOnlyList<CardAffix> ActiveAffixes => _activeAffixes;
 
-        /// <summary>保留词条权重恒为最小且插入稳定，只要存在必在首位。</summary>
-        internal bool IsRetain => _activeAffixes.Count > 0 && _activeAffixes[0] is CA_Retain;
+        /// <summary>是否带"保留"词条：全量扫描生效集，与词条位次无关。</summary>
+        internal bool IsRetain => _activeAffixes.Exists(affix_ => affix_ is CA_Retain);
 
         /// <summary>是否带"不能被打出"词条：全量扫描生效集，与词条位次无关。</summary>
         internal bool IsUnableToPlay => _activeAffixes.Exists(affix_ => affix_ is CA_UnableToPlay);

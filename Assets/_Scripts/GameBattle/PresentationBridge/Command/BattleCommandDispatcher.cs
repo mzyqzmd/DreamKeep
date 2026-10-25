@@ -18,6 +18,13 @@ namespace _DreamKeep.GameBattle
         public void EndTurn()
             => _battleLoop.EnqueueCommand(new BC_PlayerEndTurn());
 
+        public void UsePotion(int slotIndex_, int aimSlot_)
+            => _battleLoop.EnqueueCommand(new BC_UsePotion(slotIndex_, aimSlot_));
+
+        /// <summary>丢弃药水：任意时刻（含敌方回合）立即生效，不经命令队列。</summary>
+        public void DiscardPotion(int slotIndex_)
+            => _battleLoop.DiscardPotionNow(slotIndex_);
+
         #endregion
     }
 }

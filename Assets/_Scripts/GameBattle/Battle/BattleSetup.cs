@@ -14,7 +14,7 @@ namespace _DreamKeep.GameBattle
 
         public static BattleContext Create(SO_Player playerConfig_, IReadOnlyList<SO_Enemy> enemyConfigs_, Rng rng_)
         {
-            Player player = new(playerConfig_.Name, playerConfig_.MaxHp, playerConfig_.StartRelics);
+            Player player = new(playerConfig_.Name, playerConfig_.MaxHp, playerConfig_.StartRelics, playerConfig_.StartPotions);
 
             // 配置 → 局内卡（canonical 原型克隆成可变副本，跨战斗保留）
             for (int i = 0; i < playerConfig_.StartDeck.Count; i++)

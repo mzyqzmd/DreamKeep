@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: Dexterity
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: 4d754646ecfdf79409d63bb9469d00e3, type: 3}
+  _polarity: 0

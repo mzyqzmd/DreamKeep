@@ -17,10 +17,9 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: aba26d9903458aa44bfc216724e8cbf4, type: 3}
   _rarity: 0
   _type: 1
-  _targetType: 0
+  _targetType: 1
   _affixes:
   - rid: 5765983356684075010
-  - rid: 8162841837543882752
   _canUpdate: 1
   _upgrades:
   - rid: 8162841763913924615
@@ -37,8 +36,3 @@ MonoBehaviour:
         _value: 3
         _additive: 3
         _multiplier: 1
-    - rid: 8162841837543882752
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: af07ad84149d61b4caef0182aa0a53b9, type: 2}
-        _layers: 2

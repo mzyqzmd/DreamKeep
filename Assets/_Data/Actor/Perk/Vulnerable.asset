@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Vulnerable
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: f944b9f8717a8ad4e98fa33350f203bf, type: 3}
+  _polarity: 1
   _ratio: 0.5

@@ -18,6 +18,9 @@ namespace _DreamKeep.RuntimeData
         public Sprite Icon => _data.Icon;
         public string Name => _data.Name;
 
+        /// <summary>极性：施加演出据此选增益色还是减益色。</summary>
+        public EPerkPolarity Polarity => _data.Polarity;
+
         /// <summary>结算时机：宿主自己的回合边界结算一次。</summary>
         public EPerkSettleTiming SettleTiming => _data.SettleTiming;
 

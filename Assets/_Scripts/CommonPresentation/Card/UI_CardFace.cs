@@ -29,7 +29,6 @@ namespace _DreamKeep.CommonPresentation
         [Header("图形")] [Tooltip("卡面图标")] [SerializeField]
         private Image _icon;
 
-        [Tooltip("卡面背景")] [SerializeField] private Image _background;
         [Tooltip("卡面外框")] [SerializeField] private Image _border;
         [Tooltip("卡面名称横幅")] [SerializeField] private Image _nameBanner;
         [Tooltip("卡面类型横幅")] [SerializeField] private Image _typePlaque;

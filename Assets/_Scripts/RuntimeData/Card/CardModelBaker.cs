@@ -118,6 +118,9 @@ namespace _DreamKeep.RuntimeData
                     int removed = IndexOfAffix(removeAffix, baseSources_);
                     if (removed >= 0) removedIndexes_.Add(removed);
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(upgrade_),
+                        $"{upgrade_.GetType().Name} 未登记：漏登记会让该升级静默失效");
             }
         }
 

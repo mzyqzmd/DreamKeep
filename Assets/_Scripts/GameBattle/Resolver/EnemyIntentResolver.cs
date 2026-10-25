@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 
@@ -49,6 +50,9 @@ namespace _DreamKeep.GameBattle
                 case EI_Heal heal:
                     actions_.Add(new BA_Heal(enemy_.Creature, new List<Creature> { enemy_.Creature }, heal.Amount));
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(intent_),
+                        $"{intent_.GetType().Name} 未登记：漏登记会让该意图静默失效");
             }
         }
     }

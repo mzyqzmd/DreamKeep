@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.RuntimeData;
 
@@ -36,6 +37,7 @@ namespace _DreamKeep.GameBattle
         private static List<Creature> ResolveTarget(BattleContext battleContext_, CardModel card_, Player player_,
             int aimSlot_)
         {
+            if (card_.IsNoneTarget) return new List<Creature>();
             if (card_.IsSelfTarget) return new List<Creature> { player_.Creature };
 
             List<Enemy> alive = battleContext_.GetAliveEnemies();
@@ -44,7 +46,11 @@ namespace _DreamKeep.GameBattle
             if (card_.IsRandomEnemyTarget)
                 return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)].Creature };
             if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0].Creature };
-            if (card_.IsAnyEnemyTarget) return new List<Creature> { alive[aimSlot_].Creature };
+            // 瞄准下标来自表现层命令，可能为 -1（未瞄准）或目标刚死而越界：按空落点处理，与药水解析同口径
+            if (card_.IsAnyEnemyTarget)
+                return aimSlot_ >= 0 && aimSlot_ < alive.Count
+                    ? new List<Creature> { alive[aimSlot_].Creature }
+                    : new List<Creature>();
             return new List<Creature>();
         }
 
@@ -91,6 +97,13 @@ namespace _DreamKeep.GameBattle
                 case CA_Exhaust _:
                     actions_.Add(new BA_Exhaust(source_, targets_, card_));
                     break;
+                // 被动词条不产生动作：由出牌与回合流程自行读取它们
+                case CA_Retain _:
+                case CA_UnableToPlay _:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(affix_),
+                        $"{affix_.GetType().Name} 未登记：漏登记会让该词条静默失效");
             }
         }
     }

@@ -21,7 +21,7 @@ namespace _DreamKeep.GameBattle
             {
                 stat.Reset(baseAmount_);
                 Collect(context_.Player.Creature, channel_, source_, target_, sourceOut_, stat);
-                List<Enemy> enemies = context_.Enemies;
+                IReadOnlyList<Enemy> enemies = context_.Enemies;
                 for (int i = 0; i < enemies.Count; i++)
                     Collect(enemies[i].Creature, channel_, source_, target_, sourceOut_, stat);
                 return stat.Value;

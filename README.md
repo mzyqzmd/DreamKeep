@@ -57,7 +57,7 @@
         ├──→ GameRest    {RT, CD, UT}   空骨架（占位标记）
         ├──→ GameShop    {RT, CD, UT}   空骨架（占位标记）
         │
-        └──→ GameRun     {GameBattle, GameEvent, GameRest, GameShop, …}   空骨架（占位标记）
+        └──→ GameRun     {GameBattle, GameEvent, GameRest, GameShop, …}   ✅ 已实现（遗物系统）
 
 【引擎级通用件】
   EngineUtility ──→ {Utility}
@@ -71,18 +71,21 @@
 
 `ConfigData` 是纯资产/数据层，**不依赖 `Utility`**——实际是**扇形汇入**而非单链。全部程序集构成有向无环图，编译期即生效，无任何反向引用或环。
 
-> **关于四个骨架程序集**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 目前各只有 1 个 7 行占位标记，**尚无实质代码**，作用是提前锁死未来的依赖方向（`GameRun → GameBattle`，战斗不认识跑图）。若你在此仓库上继续开发，请把它们视为"预留的空房间"而非已实现的系统。
+> **关于骨架程序集**：`GameEvent` / `GameRest` / `GameShop` 目前各只有 1 个 7 行占位标记，**尚无实质代码**，作用是提前锁死未来的依赖方向（战斗不认识跑图/休息/商店）。`GameRun` 已落地为完整遗物系统（12 文件 / 396 行），是"Battle ← Run"边界的首个真实消费者，零反向依赖。若你在此仓库上继续开发，请把三个空骨架视为"预留的空房间"而非已实现的系统。
+>
+> **⚠ CommonPresentation 边界提示**：该库名义是"跨场景纯共享表现件"，但其遗物顶栏件 `UI_RelicsGroup` 真实绑定了 `GameBattle.BattleContext` 与 `GameRun.RelicTriggerNotifier`，故它已非纯下层库。新场景若复用 CommonPresentation 会连带引入战斗/跑图依赖（详见架构报告 H-2）。
 
-### 七个有实质代码的域
+### 八个有实质代码的域
 
 | 程序集                    | 职责                        | 关键内容                                                                                                  |
 | ---------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
 | **Utility**            | 纯 C# 通用件（零业务、零引擎依赖）       | 状态机 `StateMachine<T>`、确定性随机 `Rng`、可修正数值引擎 `ModifiableStat`、纯 C# 对象池 `ObjectPool<T>`                  |
 | **EngineUtility**      | 引擎级通用件（依赖 UnityEngine，不含业务） | 组件池 `MonoObjectPool<T>`、贝塞尔 `Curve`、UI 几何 `UiGeometry`、补间 `UiTween`、悬停执行器 `UI_HoverOffset/Scaler/Active` |
-| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产 `SO_Perk` + 5 个具体 `SO_*`、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据             |
+| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产 `SO_Perk` + 5 个具体 `SO_*`、**遗物资产 `SO_Relic` + 9 个具体 `SO_*`**、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据 |
 | **RuntimeData**        | 运行时对象（纯 C#，配置只读一次即烘焙）    | `Creature` / `Player` / `CardModel`(=`CM_Static`+`CM_Runtime`) / `CardPile`、`BattlePerk`+`BP_*`、`CardAffix`+`CA_*`、三个烘焙器、`EI_*` 意图 |
 | **GameBattle**         | 战斗域（流程、规则、桥）              | 八阶段状态机、18 个 `BattleAction` + `ActionSystem`、状态介入层 `Hook`、两个 Resolver、命令/事件/查询三桥                        |
-| **CommonPresentation** | 跨场景可复用表现件（不认识玩法）          | `UI_CardFace` + `UI_CardFaceSelector` + `CardValueRenderer`、`UI_HoverTip` + `PopFactory`、`UI_NumberPopTip`、`UI_OneShotVfx` + `VfxFactory` |
+| **GameRun**            | 跑图/局外域（**已落地**：遗物触发与编排）     | `RelicEffect`（订阅战斗事件+组合动作）、`RelicBaker`（按 `SO_Relic` 子类分派并登记 `IDeathGuard`）、`RelicTriggerNotifier`、9 个 `RE_*` 具体遗物 |
+| **CommonPresentation** | 跨场景可复用表现件（**含遗物顶栏，已非纯共享**） | `UI_CardFace` + `UI_CardFaceSelector` + `CardValueRenderer` + `CardSorter`、`UI_HoverTip` + `PopFactory`、`UI_NumberPopTip`、`UI_OneShotVfx` + `VfxFactory`、**遗物顶栏 `UI_RelicsGroup` / `UI_RelicSlot` / `UI_RelicsInfoPanel` / `UI_TopInfoBar`** |
 | **Presentation**       | 战斗场景专属表现与装配               | 单位视图 / 卡牌视图 / HUD / 瞄准族、演出编排、DI 组合根 `BattleLifetimeScope`、`BattleEntry`、`BattlePopRoot` / `BattleVfxRoot`       |
 
 ### 四通道通信（表现层 ↔ 战斗逻辑）
@@ -118,21 +121,22 @@
 - **手牌区四组件各司其职。** `UI_HandView`（编排 + 每帧驱动）/ `UI_HandHover`（悬停裁决）/ `UI_HandAim`（瞄准客户端 + 数值预览）/ `UI_HandShow`（事件演出）同节点协作。
 - **可复用件放对层。** 只依赖 UnityEngine 的通用工具 → `EngineUtility`；跨场景复用的表现件 → `CommonPresentation`；只有战斗才用的 → `Presentation`。
 
-### 代码规模（2026-10-23 工作树）
+### 代码规模（2026-10-25 工作树）
 
 | 域                   |      文件 |       行数 |
 | ------------------- | ------: | -------: |
 | Utility             |       7 |      230 |
-| ConfigData          |      38 |      597 |
-| RuntimeData         |      40 |     1479 |
-| GameBattle          |      68 |     2026 |
-| GameEvent / GameRest / GameShop / GameRun | 4 | 28 |
+| ConfigData          |      49 |      756 |
+| RuntimeData         |      40 |     1494 |
+| GameBattle          |      71 |     2071 |
+| GameEvent / GameRest / GameShop（骨架） | 3 | 21 |
+| GameRun             |      12 |      396 |
 | EngineUtility       |       9 |      491 |
-| CommonPresentation  |      12 |     1036 |
-| Presentation        |      39 |     3797 |
-| **合计**              | **217** | **9684** |
+| CommonPresentation  |      16 |     1370 |
+| Presentation        |      39 |     3807 |
+| **合计**              | **246** | **10636** |
 
-207 / 217 个文件在 150 行以内（95.4%）。超出的 10 个均为内聚单体：`UI_HandView` 454 / `UI_CardBattle` 366 / `UI_CardFace` 258 / `UI_HandHover` 227 / `UI_HandShow` 218 / `UI_Actor` 182 / `BattleTargetDirector` 178 / `CM_Runtime` 167 / `UI_PileCardsView` 164 / `CardModelBaker` 160。
+235 / 246 个文件在 150 行以内（95.5%）。超出的 11 个均为内聚单体：`UI_HandView` 454 / `UI_CardBattle` 366 / `UI_CardFace` 258 / `UI_HandHover` 227 / `UI_HandShow` 218 / `UI_RelicSlot` 186 / `UI_Actor` 183 / `BattleTargetDirector` 178 / `CM_Runtime` 167 / `UI_PileCardsView` 164 / `CardModelBaker` 160。
 
 ---
 
@@ -150,6 +154,7 @@
 - 状态（Perk）系统：数据驱动（`SO_Perk` + 5 个具体资产，`PerkBaker` 烘焙）；结算时机声明（回合开始 / 回合结束 / 常驻）、施加与叠加、先触发效果再递减层数、归零移除
 - 状态数值接入结算：力量/敏捷经 `Hook` 修正伤害与格挡，虚弱/易伤参与乘性修正；再生在回合边界经 `Hook.Settle` → `BA_Heal` 结算（敌我共用）
 - 卡牌升级全链路：`UD_*` 配置 → `CardModelBaker` 解析为 `CM_ValuePatch` → `CM_Runtime.Upgrade()` 现改数值 / 追加词条 / 移除词条
+- 遗物系统（跑图域 `GameRun`）：`SO_Relic` + 9 个具体遗物资产；`RE_*` 触发效果经**订阅战斗事件 + 组合 `BattleAction`** 接入（零反向依赖），`LizardTail` 经 `IDeathGuard` 接入致命伤拦截；`RelicBaker` 按资产类型分派并登记遗物。战斗内已可触发
 
 **表现层（已成型）**
 
@@ -166,12 +171,13 @@
 - 敌人 1 种（树枝史莱姆 TwigSlime，四条意图 + 最前槽位替换意图）、玩家 1 套
 - 状态 5 种（再生 / 力量 / 敏捷 / 易伤 / 虚弱，均数据驱动）
 - 词条 10 种 + 升级补丁 4 种 + 意图 6 种
+- 遗物 9 种（Anchor / BurningBlood / CentennialPuzzle / GremlinHorn / HappyFlower / LizardTail / Orichalcum / Pendulum / Shuriken，战斗内效果已通）
 - 预制体 25 个（卡面 4 种、意图图标 5 种、单位 2 种、弹层 4 种、特效 2 种、面板若干）
 
 ### 近期落地（2026-10 下旬）
 
 - **拆出 `EngineUtility` 与 `CommonPresentation`**：可复用边界首次从"战斗场景"下移到"引擎级 + 跨场景表现级"，新场景（跑图 / 商店）不必复制表现件。
-- **铺开跨段程序集骨架**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 占位程序集建立，依赖方向在编译期锁死。
+- **`GameRun` 遗物系统落地**：从 7 行占位标记落地为完整遗物域（12 文件 / 396 行）；`RE_*` 经战斗事件订阅 + 动作组合接入、`RelicBaker` 按 `SO_Relic` 子类分派、`LizardTail` 经 `IDeathGuard` 介入致命伤。`CommonPresentation` 同步新增遗物顶栏展示件（`UI_RelicsGroup` / `UI_RelicSlot` / `UI_RelicsInfoPanel` / `UI_TopInfoBar`）。
 - **牌堆查看面板**：三堆共用一个变体，打开期间订阅事件做池化差分对账。
 - **悬停组件化**：`UI_HoverOffset` / `UI_HoverScaler` / `UI_HoverActive` 抽出为"一条补间、两种触发"的双模式执行器，按钮与手牌共用同一份实现。
 - **六原则重构（当帧结算 / 瞄准直连 / 悬停组件化）**：`BattleLoop` 胜负判定当帧生效；瞄准结果由中间件直接回写瞄准客户端，不再经手牌区中转。
@@ -184,7 +190,7 @@
 | **战斗结束奖励** | 战斗已能正确收束（遗忘回写卡组 → 广播结束事件 → 清空战斗态），但**胜利/失败的奖励与流程分支尚未实现**（当前结束即停，`Next` 恒 `null`） |
 | 卡牌升级正式入口 | 升级数据 → 烘焙 → 运行时应用全链路已通；但"升级获取途径 / 升级 UI 入口"（事件 / 遗物 / 商店）仍未规划，玩家当前无正式方式触发升级 |
 | 商店 / 金币 | `SO_Player._startGold` 已定义，零消费 |
-| 遗物 / 药水槽 / 法球槽 | `Player` 类注释里记名不落字段，共 7 项待落地 |
+| 遗物（局外持有 / 掉落 / 跨战斗生效） | 战斗内效果已通过 `GameRun` 接通，但遗物的获取 / 持有 / 掉落与跑图进度循环未做；`Player` 仍记名 7 项待落地系统（金币 / 遗物 / 药水 / 法球 / 扩展字段 / 难度 / 抽取袋） |
 | 格挡 / 治疗意图数值 | 数据层有 `Amount`，意图图标均为"纯图标占位"，玩家无法预判敌人会挡多少 / 回多少 |
 | 音效 | 代码中已留触发点 TODO（发牌、进堆），音效层尚未开写 |
 | 单局内的地图 / 楼层 / 敌人编排 | 战斗是唯一场景（`Scene_Battle.unity`），跑图系统未开写 |
@@ -206,7 +212,7 @@
 
 ### 阶段二：补齐战斗内的功能空洞（最高优先级）
 
-0. **（架构决议，先于功能开发）四个骨架程序集的去留**：`GameEvent` / `GameRest` / `GameShop` / `GameRun` 现均为 7 行空标记，且 `CommonPresentation` / `Presentation` 各声明了对它们的引用而全项目使用次数为 0。二选一——只留 `GameRun`（它锁住了"战斗不认识跑图"这条最重要的方向），或保留但在 asmdef 注释与本文件里显式标注"预声明、暂无消费者"。详见证报告 H-1。
+0. **（架构决议，先于功能开发）三个骨架程序集的去留**：`GameEvent` / `GameRest` / `GameShop` 现仍为 7 行空标记，且 `CommonPresentation` / `Presentation` / `GameRun` 的 asmdef 各声明了对它们的引用而全项目使用次数为 0（`GameRun` 自身已落地，不再属于骨架）。二选一——删掉三个空骨架及对应前向引用，或保留但显式标注"预声明、暂无消费者"。详见证报告 H-1。另：`CommonPresentation` 经 `UI_RelicsGroup` 真实耦合 `GameBattle`+`GameRun`（H-2），建议将遗物 HUD 下沉到 `Presentation`。
 1. **战斗结束奖励流程**：胜利 / 失败分支、奖励展示与选择、结果落回局内状态。
 2. `BattleEventDispatcher` 增 `Unregister`，单位视图在 `OnDestroy` 反注册事件处理器。
 3. 敌方意图图标补数值展示（与卡面 `CardValueRenderer` 同源）。
@@ -224,7 +230,7 @@
 ### 阶段四：新系统（视毕设进度决定是否开写）
 
 1. **局内地图与楼层编排**：在 `GameRun` 程序集内实现，方向 `GameRun → GameBattle`（战斗不认识跑图）。
-2. **遗物系统**：与升级、商店一起做，作为局内成长的主承载。
+2. **遗物系统（局外闭环）**：战斗内效果已通（`GameRun`），下一步做遗物的获取 / 持有 / 掉落与跑图进度循环，作为局内成长的主承载。
 3. **商店与金币**：消费端已就位（金币字段、牌堆视图可复用）。
 
 ---

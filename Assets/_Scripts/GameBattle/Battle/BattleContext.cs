@@ -10,7 +10,7 @@ namespace _DreamKeep.GameBattle
     public class BattleContext
     {
         public Player Player { get; }
-        public List<Enemy> Enemies { get; }
+        public IReadOnlyList<Enemy> Enemies { get; }
         public Rng Rng { get; }
         /// <summary>当前回合序号：从 1 起，我方与敌方回合共享同一个 n，敌人回合结束阶段才 ++。</summary>
         public int TurnCount { get; set; } = 1;
@@ -27,7 +27,17 @@ namespace _DreamKeep.GameBattle
         #region 战斗结果
 
         public bool IsDefeat => Player.Creature.IsDead;
-        public bool IsVictory => Enemies.TrueForAll(enemy_ => enemy_.Creature.IsDead);
+
+        public bool IsVictory
+        {
+            get
+            {
+                for (int i = 0; i < Enemies.Count; i++)
+                    if (!Enemies[i].Creature.IsDead) return false;
+                return true;
+            }
+        }
+
         public bool IsBattleOver => IsDefeat || IsVictory;
 
         #endregion

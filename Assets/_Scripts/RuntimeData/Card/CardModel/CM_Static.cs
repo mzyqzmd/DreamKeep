@@ -35,6 +35,7 @@ namespace _DreamKeep.RuntimeData
                 _ => throw new ArgumentOutOfRangeException()
             };
 
+        internal bool IsNoneTarget => TargetType == ECardTargetType.None;
         internal bool IsSelfTarget => TargetType == ECardTargetType.Player;
         internal bool IsFrontEnemyTarget => TargetType == ECardTargetType.FrontEnemy;
         internal bool IsAnyEnemyTarget => TargetType == ECardTargetType.AnyEnemy;

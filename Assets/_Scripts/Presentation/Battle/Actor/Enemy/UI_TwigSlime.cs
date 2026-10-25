@@ -4,6 +4,5 @@ namespace _DreamKeep.Presentation
     /// 本类只作为预制体的组件身份（twig_slime 的 cast 尚未接入演出）。</summary>
     public sealed class UI_TwigSlime : UI_Enemy
     {
-        private const string CastAnim = "cast";
     }
 }

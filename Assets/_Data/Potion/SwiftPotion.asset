@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b615ed8d2c8aa4240bfd62697086a15c, type: 3}
+  m_Name: SwiftPotion
+  m_EditorClassIdentifier: 
+  _potionName: "\u8FC5\u6377\u836F\u6C34"
+  _icon: {fileID: 21300000, guid: b436fc559f8728b4e814e1b99abf0c39, type: 3}
+  _rarity: 0
+  _liquidColor: {r: 0.1677902, g: 0.7682702, b: 0.6616621, a: 1}
+  _description: "\u62BD <color=#7BD37B>3</color> \u5F20\u724C\u3002"
+  _count: 3
