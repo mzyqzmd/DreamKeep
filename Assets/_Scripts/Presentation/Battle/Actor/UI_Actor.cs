@@ -161,10 +161,11 @@ namespace _DreamKeep.Presentation
                 _healthBar.SetHealth(restored_.Target.CurrentHp);
         }
 
-        // 施加状态：新建槽位或叠加层数
-        protected virtual void OnPerkApplied(BE_PerkApplied applied_)
+        // 施加状态：新建槽位或叠加层数；子类覆写可追加自身演出，事件链会等它（槽位刷新始终在覆写方之前完成）
+        protected virtual UniTask OnPerkApplied(BE_PerkApplied applied_)
         {
             if (applied_.Target == _boundCreature && _perkGroup != null) _perkGroup.AddPerk(applied_.Perk);
+            return UniTask.CompletedTask;
         }
 
         // 状态结算：刷新对应槽位的层数显示

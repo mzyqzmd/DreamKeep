@@ -20,7 +20,7 @@ namespace _DreamKeep.GameBattle
             {
                 if (target.IsDead) continue;
                 BattlePerk mounted = target.ApplyPerk(Perk);
-                events.Add(new BE_PerkApplied(target, mounted));
+                events.Add(new BE_PerkApplied(Source, target, mounted));
             }
 
             return events;

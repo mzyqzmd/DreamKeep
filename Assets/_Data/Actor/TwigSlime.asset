@@ -17,11 +17,12 @@ MonoBehaviour:
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841580618121217
-  - rid: 8162841560953389060
   - rid: 8162841580618121216
   _frontSlotIntent:
     rid: 8162841560953389058
-  _startPerks: []
+  _startPerks:
+  - _perk: {fileID: 11400000, guid: af07ad84149d61b4caef0182aa0a53b9, type: 2}
+    _layers: 2
   references:
     version: 2
     RefIds:
@@ -29,19 +30,9 @@ MonoBehaviour:
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _intent1:
-          rid: 8162841560953389061
+          rid: 8162841984668532746
         _intent2:
           rid: 8162841560953389062
-    - rid: 8162841560953389060
-      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _damage: 10
-        _times: 3
-    - rid: 8162841560953389061
-      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _damage: 5
-        _times: 2
     - rid: 8162841560953389062
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
@@ -51,4 +42,22 @@ MonoBehaviour:
     - rid: 8162841580618121217
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 4
+        _amount: 7
+    - rid: 8162841984668532746
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 8162841984668532747
+        _intent2:
+          rid: 8162841984668532748
+    - rid: 8162841984668532747
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 4
+        _times: 3
+    - rid: 8162841984668532748
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 139c551b474963d449f421596cfc1e31, type: 2}
+        _layers: 2
+        _isSelf: 0
