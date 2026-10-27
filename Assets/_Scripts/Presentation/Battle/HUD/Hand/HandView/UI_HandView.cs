@@ -121,7 +121,7 @@ namespace _DreamKeep.Presentation
         public void Construct(BattleCommandDispatcher commandDispatcher_, IObjectResolver resolver_)
         {
             _commandDispatcher = commandDispatcher_;
-            _canvasCamera = GetComponentInParent<Canvas>().worldCamera;
+            _canvasCamera = UiGeometry.CanvasCamera(this);
             // 出生父节点是手牌层；池上限要容得下"手牌 + 一整摞飞行牌"；失活由池内化，复位回调只写卡自己与宿主这边要收的东西；
             // 新建实例只在这时补一次容器注入（卡上的气泡发起器等依赖），池内复用不重复注入
             _cardPool = new MonoObjectPool<UI_CardBattle>(_handLayer, 64,

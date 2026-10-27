@@ -18,6 +18,9 @@ namespace _DreamKeep.GameBattle
         public ActionSystem ActionSystem { get; } // GameRun 的遗物效果装配时要向动作系统提交动作，公开给上游程序集
         internal BattleEventDispatcher EventDispatcher { get; }
 
+        /// <summary>终态已跑完（含结束阶段演出）：整局层的段启动器据此收段重建，不另设回调。</summary>
+        public bool IsFinished => _finished;
+
         internal int DrawPerTurn { get; }
 
         internal BattlePhase PhaseBattleStart { get; }

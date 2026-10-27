@@ -13,7 +13,7 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private GameObject _viewPrefab;
 
         [Header("玩家配置")]
-        [SerializeField] private int _startGold; //TODO:还没做商店相关内容，先不急
+        [SerializeField] private int _startGold;
         [SerializeField] private int _startEnergy = 3;
         [SerializeField] private int _drawPerTurn = 5;
 

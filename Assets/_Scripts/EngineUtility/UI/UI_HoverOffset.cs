@@ -39,8 +39,7 @@ namespace _DreamKeep.EngineUtility
         private void Awake()
         {
             _rect = (RectTransform)transform;
-            Canvas canvas = GetComponentInParent<Canvas>();
-            _canvasCamera = canvas ? canvas.worldCamera : null;
+            _canvasCamera = UiGeometry.CanvasCamera(this);
         }
 
         // 自驱复位：失活即清补间并写回进入前的位姿，防池化实例带着偏移态被复用

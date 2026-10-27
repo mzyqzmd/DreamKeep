@@ -69,5 +69,5 @@ MonoBehaviour:
     - rid: 8162841984668532745
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 13
+        _damage: 8
         _times: 2

@@ -78,6 +78,7 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>弹出说明气泡：内容为空不弹；重复调用按当前内容重刷整列（起排点 + 朝向 + 间距 + 逐条累排都在此完成）。</summary>
         public void Show()
         {
+            if (_host == null) return; // 与 Hide 的 if (_host) 对称：段未构建等边缘态直接早退，不放 _shown 脏状态
             if (_contents.Count == 0) return;
             _shown = true;
             Vector3 anchor = UiGeometry.AnchorPoint((RectTransform)transform, _startAnchor) +

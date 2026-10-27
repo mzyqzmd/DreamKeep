@@ -4,7 +4,8 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>玩家：全场唯一的我方单位。持有生物数据、遗物、药水槽、局内卡组与战斗态（战斗态随战斗新建与清空，其余跨战斗保留）。
-    /// TODO（系统未落地，先记名不落字段）：金币 Gold（含 GoldChanged 事件）、法球槽位数 BaseOrbSlotCount、
+    /// 金币不属于战斗单位，住整局状态 RunState。
+    /// TODO（系统未落地，先记名不落字段）：法球槽位数 BaseOrbSlotCount、
     /// 扩展字段 ExtraFields、开局难度等级；遗物抽取袋 RelicGrabBag 随遗物获取流程一起做。</summary>
     public class Player
     {

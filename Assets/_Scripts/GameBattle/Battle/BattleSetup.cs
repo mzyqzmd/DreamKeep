@@ -6,26 +6,20 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>战斗装配器：把玩家与敌人的配置一次装配成一场战斗的初始状态，是"配置 → 战斗"的唯一入口。
-    /// 内部完成局内卡组的烘焙、战斗卡的逐张克隆与映射建立、洗牌、战斗态建立与敌人意图烘焙。</summary>
+    /// <summary>战斗装配器：把整局的玩家与一场遭遇装配成一场战斗的初始状态，是"配置 → 战斗"的唯一入口。
+    /// 内部完成战斗卡的逐张克隆与映射建立、洗牌、战斗态建立与敌人意图烘焙；局内卡组由整局对象维护，这里不再烘焙。</summary>
     public static class BattleSetup
     {
-        #region 装配一场战斗：产出玩家、敌人与战斗态
+        #region 装配一场战斗：产出战斗态
 
-        public static BattleContext Create(SO_Player playerConfig_, IReadOnlyList<SO_Enemy> enemyConfigs_, Rng rng_)
+        public static BattleContext Create(Player player_, SO_Encounter encounter_, int startEnergy_, Rng rng_)
         {
-            Player player = new(playerConfig_.Name, playerConfig_.MaxHp, playerConfig_.StartRelics, playerConfig_.StartPotions);
+            player_.StartCombat(startEnergy_);
 
-            // 配置 → 局内卡（canonical 原型克隆成可变副本，跨战斗保留）
-            for (int i = 0; i < playerConfig_.StartDeck.Count; i++)
-                player.Deck.Add(CardModelBaker.Bake(playerConfig_.StartDeck[i]).ToMutable());
+            Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player_, rng_);
+            List<Enemy> enemies = BuildEnemies(encounter_, rng_);
 
-            player.StartCombat(playerConfig_.StartEnergy);
-
-            Dictionary<CardModel, CardModel> runCardOf = BuildBattleCards(player, rng_);
-            List<Enemy> enemies = BuildEnemies(enemyConfigs_);
-
-            return new BattleContext(player, enemies, runCardOf, rng_);
+            return new BattleContext(player_, enemies, runCardOf, rng_);
         }
 
         #endregion
@@ -49,19 +43,21 @@ namespace _DreamKeep.GameBattle
             return runCardOf;
         }
 
-        /// <summary>敌人按配置顺序装配：从最靠后槽位向前排（1 只站 3 号、2 只站 2/3 号），并烘焙最前槽位替换意图。</summary>
-        private static List<Enemy> BuildEnemies(IReadOnlyList<SO_Enemy> enemyConfigs_)
+        /// <summary>敌人按遭遇列表顺序装配：从最靠后槽位向前排（1 只站 3 号、2 只站 2/3 号），并烘焙最前槽位替换意图。</summary>
+        private static List<Enemy> BuildEnemies(SO_Encounter encounter_, Rng rng_)
         {
-            if (enemyConfigs_.Count > BattleContext.MaxEnemyCount)
+            IReadOnlyList<SO_Enemy> configs = encounter_.Enemies;
+            if (configs.Count > BattleContext.MaxEnemyCount)
                 throw new InvalidOperationException(
-                    $"敌人数量 {enemyConfigs_.Count} 超过纵深阵型上限 {BattleContext.MaxEnemyCount}");
+                    $"遭遇 {encounter_.Name} 的敌人数量 {configs.Count} 超过纵深阵型上限 {BattleContext.MaxEnemyCount}");
 
-            List<Enemy> enemies = new();
-            int rearOffset = BattleSlots.Count - enemyConfigs_.Count;
-            for (int i = 0; i < enemyConfigs_.Count; i++)
+            List<Enemy> enemies = new(configs.Count);
+            int rearOffset = BattleSlots.Count - configs.Count;
+            for (int i = 0; i < configs.Count; i++)
             {
-                SO_Enemy config = enemyConfigs_[i];
-                Enemy enemy = new(config.Name, config.MaxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
+                SO_Enemy config = configs[i];
+                int maxHp = RollMaxHp(config.MaxHp, encounter_.HpVariance, rng_);
+                Enemy enemy = new(config.Name, maxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
                     IntentBaker.Bake(config.FrontSlotIntent));
                 //按配置施加初始状态：克隆模板配层数后走标准施加链
                 for (int j = 0; j < config.StartPerks.Count; j++)
@@ -78,6 +74,14 @@ namespace _DreamKeep.GameBattle
             }
 
             return enemies;
+        }
+
+        /// <summary>按浮动百分比抖动血量上限：0 完全固定，0.1 表示 ±10%；浮动不为 0 时每次装配消耗一次随机流。</summary>
+        private static int RollMaxHp(int baseMaxHp_, float variance_, Rng rng_)
+        {
+            if (variance_ <= 0f) return baseMaxHp_;
+            float factor = 1f + rng_.Next(-variance_, variance_);
+            return Math.Max(1, (int)Math.Round(baseMaxHp_ * factor));
         }
     }
 }

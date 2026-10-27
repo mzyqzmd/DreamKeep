@@ -41,6 +41,15 @@ namespace _DreamKeep.EngineUtility
                 ? world_
                 : plane_.position;
 
+        /// <summary>取该组件所在画布的渲染相机：画布自己没指定时退回主相机——段画面由运行时实例化，
+        /// 预制体存不下场景相机的引用，补相机又晚于容器注入，故换算方必须自己兜住空相机；
+        /// 本工程画布一律 Screen Space - Camera，真 Overlay 画布不能走这里（它换算就该传 null）。</summary>
+        public static Camera CanvasCamera(Component source_)
+        {
+            Canvas canvas = source_.GetComponentInParent<Canvas>(true);
+            return canvas && canvas.worldCamera ? canvas.worldCamera : Camera.main;
+        }
+
         /// <summary>矩形上九宫格对齐点的世界坐标：按 Pivot 出的归一化位置在矩形内插值，再由矩形自身的旋转缩放换算成世界坐标；只给点、不带偏移，抬升让位一律由调用方自己加。</summary>
         public static Vector3 AnchorPoint(RectTransform rect_, EUiAnchor anchor_) =>
             rect_.TransformPoint(rect_.rect.min + Vector2.Scale(rect_.rect.size, Pivot(anchor_)));

@@ -8,7 +8,7 @@ namespace _DreamKeep.CommonPresentation
     /// 说明气泡的"实例取还与唯一列守卫"归此处（同一时刻只许一列、谁的归还只收自己那列），叠列定位由消费方 UI_HoverTip 接管；
     /// 数字飘字的父节点与世界坐标由调用方（如战斗弹层编排）算好传入，本类不认识 Creature / UI_ActorRoot / 任何玩法事件；
     /// 遗物信息面板同理只由本类造与存放，写什么内容、什么时候收起都归面板自己。
-    /// 弹层一律挂到"所属对象"之下，空闲实例归位到本组件名下。</summary>
+    /// 弹层一律挂到"所属对象"之下；归还只失活、不归位父级——下次取出再改挂（归还常发生在宿主失活回调里，此时改层级是非法的）。</summary>
     public sealed class PopFactory : MonoBehaviour
     {
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
@@ -21,12 +21,10 @@ namespace _DreamKeep.CommonPresentation
 
         private void Awake()
         {
-            _tipPool = new MonoObjectPool<UI_DescriptionPopTip>(transform, onReturn_: ReturnToRoot);
-            _numberPopTipPool = new MonoObjectPool<UI_NumberPopTip>(transform, onReturn_: tip_ =>
-            {
-                ReturnToRoot(tip_);
-                tip_.ResetView();
-            });
+            // 归还只由池内失活完成：气泡与飘字常随宿主失活一起收回，那一刻改父级会被 Unity 拒绝并中断归还；
+            // 空闲实例留在原宿主名下无妨——下次取出即改挂到新位置，宿主被销毁留下的伪空由池自己跳过
+            _tipPool = new MonoObjectPool<UI_DescriptionPopTip>(transform);
+            _numberPopTipPool = new MonoObjectPool<UI_NumberPopTip>(transform, onReturn_: tip_ => tip_.ResetView());
         }
 
         #region 说明气泡：实例取还与唯一列守卫（叠列定位由 UI_HoverTip 接管）
@@ -69,10 +67,5 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
-
-      
-
-        // 还池前归位到本组件名下：空闲实例不长期挂在可能被销毁的单位或槽位下，下次取出再改挂
-        private void ReturnToRoot(Component instance_) => instance_.transform.SetParent(transform, false);
     }
 }

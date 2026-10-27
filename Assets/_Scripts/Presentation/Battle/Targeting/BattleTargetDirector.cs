@@ -43,7 +43,7 @@ namespace _DreamKeep.Presentation
             _targetArrow = targetArrow_;
             // 指针换算只要"同一画布平面上的任意矩形"：取箭头自身的矩形与它所在画布的相机，零 Inspector 接线
             _pointerPlane = (RectTransform)_targetArrow.transform;
-            _canvasCamera = _targetArrow.GetComponentInParent<Canvas>(true).worldCamera;
+            _canvasCamera = UiGeometry.CanvasCamera(_targetArrow);
         }
 
         /// <summary>登记当前瞄准客户端：顶掉上一个客户端，并先收起箭头与高亮（免得上一支箭头把命中色与脉冲留在展开态）。</summary>
