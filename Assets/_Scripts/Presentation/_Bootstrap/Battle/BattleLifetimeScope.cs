@@ -31,10 +31,6 @@ namespace _DreamKeep.Presentation
 
         protected override void Configure(IContainerBuilder builder_)
         {
-            if (Parent == null)
-                throw new InvalidOperationException(
-                    $"[{nameof(BattleLifetimeScope)}] 未指定父 scope，Inspector 的 Parent 下拉应选 {nameof(RunLifetimeScope)}");
-
             RunState run = Parent.Container.Resolve<RunState>();
             // 段会话句柄住整局容器：本段把自己的门面写进去，常驻 UI 据此响应或静默
             BattleSession session = Parent.Container.Resolve<BattleSession>();

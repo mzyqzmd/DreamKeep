@@ -10,12 +10,10 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战斗弹层编排：挂在场景 GameRoot 上，只决定"谁在什么时候弹什么、弹在哪"——
     /// 订阅伤害/回血/回合开始，按语义选文本、颜色与形态，算出挂点后交给通用弹层工厂 PopFactory；
-    /// 说明气泡的实例取还与列守卫、数字飘字的池都归 PopFactory，回合横幅属战斗语义仍由本组件持有。
-    /// 弹层一律挂到"所属对象"之下（数字→单位视图），只有回合横幅由 Inspector 配默认父级。</summary>
+    /// 说明气泡的实例取还与列守卫、数字飘字的池、通用横幅公告都归 PopFactory。
+    /// 弹层一律挂到"所属对象"之下（数字→单位视图），只有横幅由本组件指定挂载父级后交工厂触发。</summary>
     public sealed class UI_BattlePopRoot : MonoBehaviour
     {
-        [SerializeField] private UI_TurnCountPopTip _turnCountPopTipPrefab;
-
         [Header("数字飘字")] [SerializeField] private Color _damageColor = new(1f, 0.28f, 0.22f);
         [SerializeField] private Color _healColor = new(0.35f, 0.92f, 0.45f);
         [SerializeField] private Color _blockColor = new(0.55f, 0.82f, 1f);
@@ -29,7 +27,6 @@ namespace _DreamKeep.Presentation
         [Header("回合横幅")] [Tooltip("回合横幅的挂载父级：它没有所属对象，只能在这里指定")] [SerializeField]
         private Transform _turnBannerParent;
 
-        private UI_TurnCountPopTip _turnCountPopTip;
         private UI_ActorRoot _actorRoot;
         private PopFactory _popFactory;
         private Rng _rng;
@@ -84,12 +81,11 @@ namespace _DreamKeep.Presentation
                    body.right * (jitter * body.lossyScale.x);
         }
 
-        // 回合横幅：它没有所属对象，挂到 Inspector 指定的父级；同一时刻只留一个实例，重复触发由横幅自己重播时间线
+        // 回合横幅：它没有所属对象，挂到 Inspector 指定的父级；经通用弹层工厂 PopFactory 触发（单实例、重复触发由横幅自身重播时间线）
         private void OnTurnStarted(BE_TurnStarted started_)
         {
-            if (_turnCountPopTip == null) _turnCountPopTip = Instantiate(_turnCountPopTipPrefab, _turnBannerParent);
-            _turnCountPopTip.transform.SetAsLastSibling();
-            _turnCountPopTip.Show(started_.IsPlayerTurn, started_.TurnCount);
+            _popFactory.PopBanner(_turnBannerParent, started_.IsPlayerTurn ? "玩家回合" : "敌人回合",
+                started_.IsPlayerTurn ? $"第 {started_.TurnCount} 回合" : "");
         }
     }
 }

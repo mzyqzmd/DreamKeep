@@ -102,9 +102,8 @@ namespace _DreamKeep.CommonPresentation
         private void PlayRise()
         {
             Vector2 target = _rect.anchoredPosition + new Vector2(0f, _riseDistancePx);
-            _riseTween = DOTween.To(() => _rect.anchoredPosition, value_ => _rect.anchoredPosition = value_, target,
-                _riseDuration).SetEase(Ease.OutQuad);
-            _fadeTween = DOTween.To(() => _canvasGroup.alpha, value_ => _canvasGroup.alpha = value_, 0f, _riseDuration)
+            _riseTween = _rect.DOAnchorPos(target, _riseDuration).SetEase(Ease.OutQuad);
+            _fadeTween = _canvasGroup.DOFade(0f, _riseDuration)
                 .SetEase(Ease.InQuad).OnComplete(Finish);
         }
 
@@ -115,7 +114,7 @@ namespace _DreamKeep.CommonPresentation
             _velocity = new Vector2(_tossVelocityPx.x * direction, _tossVelocityPx.y);
             _elapsed = 0f;
             _spinSpeed = -direction * _tossSpinDeg;
-            _fadeTween = DOTween.To(() => _canvasGroup.alpha, value_ => _canvasGroup.alpha = value_, 0f, _tossDuration)
+            _fadeTween = _canvasGroup.DOFade(0f, _tossDuration)
                 .SetEase(Ease.InQuad);
         }
 

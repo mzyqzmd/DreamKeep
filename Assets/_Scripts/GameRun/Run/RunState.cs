@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
@@ -16,10 +17,39 @@ namespace _DreamKeep.GameRun
         /// <summary>整局唯一随机流：洗牌、随机目标、遭遇血量浮动都走它，保证同种子可复现。</summary>
         public Rng Rng { get; }
 
-        public int Gold { get; set; }
+        private int _gold;
 
-        /// <summary>当前层数，从 1 开始；由跑图流程推进。</summary>
-        public int Floor { get; set; } = 1;
+        /// <summary>金币：set 内抛 GoldChanged，供整局 HUD（顶栏）订阅刷新，避免每帧轮询。</summary>
+        public int Gold
+        {
+            get => _gold;
+            set
+            {
+                if (_gold == value) return;
+                _gold = value;
+                GoldChanged?.Invoke(_gold);
+            }
+        }
+
+        /// <summary>金币变更通知：整局层（顶栏）订阅。</summary>
+        public event Action<int> GoldChanged;
+
+        private int _floor = 1;
+
+        /// <summary>当前层数，从 1 开始；由跑图流程推进。set 内抛 FloorChanged。</summary>
+        public int Floor
+        {
+            get => _floor;
+            set
+            {
+                if (_floor == value) return;
+                _floor = value;
+                FloorChanged?.Invoke(_floor);
+            }
+        }
+
+        /// <summary>层数变更通知：整局层（顶栏 / 层栏）订阅。</summary>
+        public event Action<int> FloorChanged;
 
         public RunState(SO_Player config_, int seed_)
         {

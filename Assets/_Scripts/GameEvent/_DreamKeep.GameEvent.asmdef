@@ -4,7 +4,8 @@
     "references": [
         "_DreamKeep.RuntimeData",
         "_DreamKeep.ConfigData",
-        "_DreamKeep.Utility"
+        "_DreamKeep.Utility",
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

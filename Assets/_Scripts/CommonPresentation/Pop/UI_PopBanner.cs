@@ -1,0 +1,52 @@
+using DG.Tweening;
+using TMPro;
+using UnityEngine;
+
+namespace _DreamKeep.CommonPresentation
+{
+    /// <summary>通用横幅公告：纯视图、不订事件不认识容器——主标题加可选副标题两行文本，
+    /// 由调用方（如战斗弹层编排、地图）传入文案与挂载父级，经通用弹层工厂 PopFactory 触发；
+    /// 懒生成与事件订阅归调用方。时间线为 _turnText 从放大收拢到目标尺寸入场、停留、整层渐隐后自收（SetActive(false)），
+    /// 播放与抽牌等演出同屏并行（fire-and-forget，不由域侧 await）；重复触发即杀旧时间线重播。</summary>
+    public sealed class UI_PopBanner : MonoBehaviour
+    {
+        [Header("基础配置")] [Tooltip("渐隐通道（整层透明度）")] [SerializeField]
+        private CanvasGroup _canvasGroup;
+
+        [SerializeField] private TextMeshProUGUI _turnText;
+        [SerializeField] private TextMeshProUGUI _turnCountText;
+
+        [Header("动效")] [SerializeField] private float _showScaleFrom = 1.6f; // 入场缩放起点（相对目标尺寸的倍率）：从放大收拢
+        [SerializeField] private float _showScaleDuration = 0.2f;
+        [SerializeField] private float _holdDuration = 0.7f; // 入场收拢后的停留时长
+        [SerializeField] private float _fadeOutDuration = 0.3f;
+
+        private Sequence _timeline;
+        private Vector3 _turnTextTargetScale;
+
+        private void Awake() => _turnTextTargetScale = _turnText.transform.localScale;
+        private void OnDestroy() => _timeline?.Kill();
+
+        #region 对外展示：写文案并重播整条时间线
+
+        /// <summary>展示横幅：写主标题与副标题、副标题为空时隐藏副标题行、复位透明度后重播"收拢入场 → 停留 → 渐隐"；播放期间再触发则杀旧重播。</summary>
+        public void Show(string title_, string subtitle_ = null)
+        {
+            _turnText.text = title_;
+            _turnCountText.text = subtitle_ ?? "";
+            _turnCountText.gameObject.SetActive(!string.IsNullOrEmpty(subtitle_));
+            gameObject.SetActive(true);
+            // 时间线：收拢入场 → 停留 → 整层渐隐 → 自收；透明度复位放在每次重播开头，收起时不必还原
+            _timeline?.Kill();
+            _canvasGroup.alpha = 1f;
+            _timeline = DOTween.Sequence()
+                .Join(_turnText.transform.DOScale(_turnTextTargetScale, _showScaleDuration)
+                    .From(_turnTextTargetScale * _showScaleFrom).SetEase(Ease.OutCubic))
+                .AppendInterval(_holdDuration)
+                .Append(_canvasGroup.DOFade(0f, _fadeOutDuration))
+                .OnComplete(() => gameObject.SetActive(false));
+        }
+
+        #endregion
+    }
+}

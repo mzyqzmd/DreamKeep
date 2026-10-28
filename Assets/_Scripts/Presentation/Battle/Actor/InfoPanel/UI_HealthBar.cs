@@ -1,5 +1,4 @@
 using _DreamKeep.RuntimeData;
-using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
 using DG.Tweening;
 using TMPro;
@@ -46,12 +45,8 @@ namespace _DreamKeep.Presentation
             float normalized = (float)current / _creature.MaxHp;
             _healthSlider.value = normalized;
             _healthText.text = $"{current}/{_creature.MaxHp}";
-            UiTween.PlayScalar(ref _fillLagTween, () => _fillLag.rectTransform.anchorMax.x, WriteFillLag, normalized,
-                _fillLagDuration);
+            _fillLagTween = _fillLag.rectTransform.DOAnchorMax(new Vector2(normalized, 1f), _fillLagDuration);
         }
-
-        // 滞后条：与 Slider 驱动 Fill 同款的锚点伸缩，只写横向上限；数值相等时两根条的矩形逐像素重合
-        private void WriteFillLag(float normalized_) => _fillLag.rectTransform.anchorMax = new Vector2(normalized_, 1f);
 
         #endregion
     }

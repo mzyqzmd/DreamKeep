@@ -18,7 +18,8 @@
         "_DreamKeep.GameRun",
         "_DreamKeep.GameEvent",
         "_DreamKeep.GameRest",
-        "_DreamKeep.GameShop"
+        "_DreamKeep.GameShop",
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

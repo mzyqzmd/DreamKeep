@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 
@@ -10,7 +11,23 @@ namespace _DreamKeep.RuntimeData
         private readonly List<BattlePerk> _perks = new();
 
         public string ActorName { get; }
-        public int CurrentHp { get; set; }
+        private int _currentHp;
+
+        /// <summary>当前生命：set 内抛 HpChanged，供整局 HUD（顶栏）订阅刷新；
+        /// 敌我共用，敌人变更暂无订阅者亦不影响。</summary>
+        public int CurrentHp
+        {
+            get => _currentHp;
+            set
+            {
+                if (_currentHp == value) return;
+                _currentHp = value;
+                HpChanged?.Invoke(_currentHp);
+            }
+        }
+
+        /// <summary>生命变更通知。</summary>
+        public event Action<int> HpChanged;
         public int MaxHp { get; }
         public int Block { get; set; }
 

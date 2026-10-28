@@ -13,9 +13,11 @@ namespace _DreamKeep.CommonPresentation
     {
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
         [SerializeField] private UI_NumberPopTip _numberPopTipPrefab;
+        [SerializeField] private UI_PopBanner _bannerPrefab;
 
         private MonoObjectPool<UI_DescriptionPopTip> _tipPool;
         private MonoObjectPool<UI_NumberPopTip> _numberPopTipPool;
+        private UI_PopBanner _banner;
         private readonly List<UI_DescriptionPopTip> _shownTips = new(); // 当前这一列的展示名单（按叠列顺序）：归还只认它
         private object _tipsRequester;
 
@@ -64,6 +66,23 @@ namespace _DreamKeep.CommonPresentation
             tip.transform.SetParent(parent_, false);
             tip.transform.SetAsLastSibling();
             tip.Play(text_, color_, type_, worldPosition_, () => _numberPopTipPool.Release(tip));
+        }
+
+        #endregion
+
+        #region 横幅公告：父节点由调用方传入，懒实例化缓存单例、重复触发由横幅自身重播时间线
+
+        /// <summary>在指定父节点下播放一条横幅公告（主标题 + 可选副标题）；首触发实例化并缓存单例，之后随调用方改挂父级。</summary>
+        public void PopBanner(Transform parent_, string title_, string subtitle_ = null)
+        {
+            if (_banner == null) _banner = Instantiate(_bannerPrefab, parent_);
+            else
+            {
+                _banner.transform.SetParent(parent_, false);
+                _banner.transform.SetAsLastSibling();
+            }
+
+            _banner.Show(title_, subtitle_);
         }
 
         #endregion

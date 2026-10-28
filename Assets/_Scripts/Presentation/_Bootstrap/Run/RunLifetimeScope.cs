@@ -26,8 +26,9 @@ namespace _DreamKeep.Presentation
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
-            // 段场景加载器：地图落地前由它 additive 加载战斗段（及未来的商店/事件/休息段）并在打完后卸载，它也要拿到会话句柄
-            builder_.RegisterComponentInHierarchy<SegmentSceneLoader>();
+            builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
+            // 段场景加载管理器：地图落地前由它 additive 加载战斗段（及未来的商店/事件/休息段）并在打完后卸载，它也要拿到会话句柄
+            builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
             // 二者由加载器在 Start 里查找并 InjectGameObject 补注入
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
