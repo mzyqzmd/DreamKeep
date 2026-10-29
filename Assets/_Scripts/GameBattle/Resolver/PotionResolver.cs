@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
+using UnityEngine;
 
 namespace _DreamKeep.GameBattle
 {
@@ -54,6 +55,28 @@ namespace _DreamKeep.GameBattle
             }
 
             return actions;
+        }
+
+        #endregion
+
+        #region 战斗外饮用：没有战斗态与目标表，只结算不依赖战斗的自身效果
+
+        /// <summary>战斗外结算一瓶药水：效果直接写到玩家身上，不产生事件、不进动作串行。
+        /// 只处理自身落点且不依赖战斗态的药水；返回 false 表示这类药水没登记战斗外效果，调用方据此别先扣槽
+        /// （可用性与可结算性分处两处，先问再扣才不会出现"药没了、效果也没生效"）。</summary>
+        public static bool TryApplyOutsideBattle(SO_Potion potion_, Player player_)
+        {
+            Creature source = player_.Creature;
+            switch (potion_)
+            {
+                case SO_BloodPotion blood:
+                    int amount = (int)(source.MaxHp * blood.HealPercent);
+                    source.CurrentHp = Math.Min(source.CurrentHp + amount, source.MaxHp); // 钳制口径与 BA_Heal 一致
+                    return true;
+                default:
+                    Debug.LogError($"{potion_.GetType().Name} 不能在战斗外结算：只登记了自身类且不依赖战斗态的效果");
+                    return false;
+            }
         }
 
         #endregion

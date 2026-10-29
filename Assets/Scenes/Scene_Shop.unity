@@ -1205,40 +1205,6 @@ Canvas:
   m_SortingLayerID: 643022223
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!114 &236127891749705307
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1290516625942660941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21a7c6f1ae0d4c045a75726c1c0ebc7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _damageColor: {r: 1, g: 0.28, b: 0.22, a: 1}
-  _healColor: {r: 0.35, g: 0.92, b: 0.45, a: 1}
-  _blockColor: {r: 0.55, g: 0.82, b: 1, a: 1}
-  _liftPx: 40
-  _jitterPx: 18
-  _turnBannerParent: {fileID: 2057050349337935963}
---- !u!114 &725296240491449272
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1290516625942660941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d640cfcf415e7e64fa620b83f05f0b36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _hitScale: 1
-  _healScale: 1
-  _blockScale: 1
-  _perkScale: 1
 --- !u!114 &877900430182646063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1274,26 +1240,6 @@ Transform:
   - {fileID: 4413715504034341366}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &976055974772704096
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1290516625942660941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29747c7697aabd54cb86ed74d9157180, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  parentReference:
-    TypeName: _DreamKeep.Presentation.RunLifetimeScope
-  autoRun: 0
-  autoInjectGameObjects: []
-  _monsterPool: {fileID: 11400000, guid: 3d5a697be06cd1723f59d88e2b706cad, type: 2}
-  _backgroundPool: {fileID: 11400000, guid: 5f7c8b9da82ef3945b7bfa004d928ecf, type: 2}
-  _floor: 1
-  _encounterKind: 0
 --- !u!1 &1290516625942660941
 GameObject:
   m_ObjectHideFlags: 0
@@ -1303,10 +1249,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 883659731216807404}
-  - component: {fileID: 976055974772704096}
-  - component: {fileID: 7568826024509372477}
-  - component: {fileID: 725296240491449272}
-  - component: {fileID: 236127891749705307}
   m_Layer: 0
   m_Name: GameShopRoot
   m_TagString: Untagged
@@ -1518,18 +1460,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &7568826024509372477
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1290516625942660941}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dbe4fbbb521ea99419ffc662256d2c9a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &8382231776264483166
 GameObject:
   m_ObjectHideFlags: 0

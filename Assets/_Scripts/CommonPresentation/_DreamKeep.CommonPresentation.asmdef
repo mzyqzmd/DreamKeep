@@ -5,13 +5,14 @@
         "_DreamKeep.Utility",
         "_DreamKeep.ConfigData",
         "_DreamKeep.RuntimeData",
-        "_DreamKeep.GameBattle",
         "_DreamKeep.EngineUtility",
         "DOTween.Modules",
         "UniTask",
         "VContainer",
         "NaughtyAttributes.Core",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "_DreamKeep.GameBattle",
+        "_DreamKeep.GameRun"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

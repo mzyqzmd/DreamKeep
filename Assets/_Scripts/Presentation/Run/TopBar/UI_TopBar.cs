@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>整局顶部状态栏：run 装配完成后自动显示（主菜单兼作 run 基地）。
     /// 订阅整局数据变更（HP / 金币 / 层数）刷新对应文本，而非每帧轮询；已用时长用轻量计时器显示。
-    /// 三按钮接到 Map/Deck/Menu 占位面板（面板逻辑尚未开发，本轮仅接引用、切换显示）。</summary>
+    /// 地图按钮已接到占位地图面板的开合；卡组与菜单仍是占位（仅打印日志）。</summary>
     public sealed class UI_TopBar : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _hpText;
@@ -47,6 +47,7 @@ namespace _DreamKeep.Presentation
             _run.GoldChanged += OnGoldChanged;
             _run.FloorChanged += OnFloorChanged;
 
+            if (_mapPanel) _mapPanel.Hide(); // 地图由按钮或战后流程打开，装配时一律收起
             WireButtons();
 
             // 计时起点 = run 装配完成这一刻；停表钩子待存档系统落地后接入
@@ -92,12 +93,28 @@ namespace _DreamKeep.Presentation
 
         private void WireButtons()
         {
-            if (_mapButton) _mapButton.onClick.AddListener(TogglePanel);
+            if (_mapButton) _mapButton.onClick.AddListener(ToggleMap);
             if (_deckButton) _deckButton.onClick.AddListener(TogglePanel);
             if (_menuButton) _menuButton.onClick.AddListener(TogglePanel);
         }
 
-        // 占位面板尚未摆进场景时引用为空，点击仅作空监听；将来接真实面板时此钩子即生效
+        /// <summary>打开地图面板：战后流程与顶栏按钮共用这一个入口。</summary>
+        public void OpenMap()
+        {
+            if (_mapPanel) _mapPanel.Show();
+        }
+
+        /// <summary>把顶栏整体压到同 Canvas 的最上层：奖励面板是全屏模态，领奖期间药水栏/金币要能正常用
+        /// （否则"槽满先去喝一瓶再回来领"这条路走不通）。</summary>
+        public void BringToFront() => transform.SetAsLastSibling();
+
+        private void ToggleMap()
+        {
+            if (_mapPanel) _mapPanel.Toggle();
+            else Debug.Log("地图面板未接线");
+        }
+
+        // 卡组与菜单仍是占位：面板尚未摆进场景时引用为空，点击仅作空监听
         private void TogglePanel() => Debug.Log("占位按钮");
 
         #endregion

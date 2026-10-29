@@ -34,6 +34,16 @@ namespace _DreamKeep.GameRun
         /// <summary>金币变更通知：整局层（顶栏）订阅。</summary>
         public event Action<int> GoldChanged;
 
+        #region 加金币：奖励与事件统一走这里，取整避免误传 0 空刷一次事件
+
+        public void GainGold(int amount_)
+        {
+            if (amount_ <= 0) return;
+            Gold += amount_;
+        }
+
+        #endregion
+
         private int _floor = 1;
 
         /// <summary>当前层数，从 1 开始；由跑图流程推进。set 内抛 FloorChanged。</summary>

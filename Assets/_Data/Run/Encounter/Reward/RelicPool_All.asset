@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cb03510734b5994fbe96b4137029104, type: 3}
+  m_Name: RelicPool_All
+  m_EditorClassIdentifier: 
+  _relics:
+  - {fileID: 11400000, guid: ad6819c31d098c746a437f61e4a4ee8d, type: 2}
+  - {fileID: 11400000, guid: 929c0b0c991d5874f92574451d2dca5c, type: 2}
+  - {fileID: 11400000, guid: b0fa665b0523cdb4c897b8441cb69824, type: 2}
+  - {fileID: 11400000, guid: 20e3562f1b567a94f95c7c89fce81db5, type: 2}
+  - {fileID: 11400000, guid: da20d0c87ec1ed44d9542a85655e86fa, type: 2}
+  - {fileID: 11400000, guid: 6412fdff43248544fb38031d5ae69363, type: 2}
+  - {fileID: 11400000, guid: bf43c351008aa7b409b1d04cfd1c4720, type: 2}
+  - {fileID: 11400000, guid: c3bbebd79ba56bc4da42881d50ecdcfe, type: 2}
+  - {fileID: 11400000, guid: b8181b9b23b833743b03f7aaf981557b, type: 2}

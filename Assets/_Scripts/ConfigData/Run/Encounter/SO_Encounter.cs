@@ -17,8 +17,13 @@ namespace _DreamKeep.ConfigData
         [Tooltip("血量浮动百分比，0 为固定；0.1 表示 ±10%")]
         [SerializeField] private float _hpVariance;
 
+        [Header("奖励")]
+        [Tooltip("战斗结束后的奖励配置；Boss 等终局遭遇留空即不结算")]
+        [SerializeField] private SO_EncounterReward _reward;
+
         public string Name => _name;
         public IReadOnlyList<SO_Enemy> Enemies => _enemies;
         public float HpVariance => _hpVariance;
+        public SO_EncounterReward Reward => _reward;
     }
 }

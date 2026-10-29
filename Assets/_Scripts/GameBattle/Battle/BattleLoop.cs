@@ -21,6 +21,10 @@ namespace _DreamKeep.GameBattle
         /// <summary>终态已跑完（含结束阶段演出）：整局层的段启动器据此收段重建，不另设回调。</summary>
         public bool IsFinished => _finished;
 
+        /// <summary>本场是否打赢：整局层在 IsFinished 之后据此决定要不要结算奖励。
+        /// 胜负只看敌人是否全部阵亡，故战斗态被清空后照样回答得出。</summary>
+        public bool IsVictory => BattleContext.IsVictory;
+
         internal int DrawPerTurn { get; }
 
         internal BattlePhase PhaseBattleStart { get; }

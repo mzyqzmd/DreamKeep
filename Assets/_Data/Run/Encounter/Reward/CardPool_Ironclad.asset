@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a8101dacaf23e4cbabda7e1da9e081, type: 3}
+  m_Name: CardPool_Ironclad
+  m_EditorClassIdentifier: 
+  _cards:
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
+  - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
+  - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
+  - {fileID: 11400000, guid: 7367fd6e56e978c4697ef061ccc83b66, type: 2}
+  - {fileID: 11400000, guid: bece2c1cc257863478550d81cb053dae, type: 2}
+  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
+  - {fileID: 11400000, guid: 4bf845d60c73d6045a43bfa0817b0869, type: 2}

@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
+using _DreamKeep.CommonPresentation;
 using _DreamKeep.GameBattle;
+using _DreamKeep.GameRun;
 using Cysharp.Threading.Tasks;
-using NaughtyAttributes;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -13,7 +16,8 @@ namespace _DreamKeep.Presentation
     /// 任意段场景（战斗/商店/事件/休息）都通过 SceneManager 以 Additive 加载，加载到待激活态时先把段内自带的
     /// 相机 / EventSystem / AudioListener 禁用（仍保留在场景资产供查看），再激活叠加，复用常驻主相机，
     /// 加载后把常驻主相机补挂到段内每个 Canvas。
-    /// 奖励面板"前进"按钮回调临时重载首段（地图系统做好后改为进入地图）。</summary>
+    /// 战斗胜利且本场配了奖励时，段与会话仍活着就先弹奖励面板；点"继续"打开地图占位、关会话并卸段，
+    /// 奖励面板本身不随之关闭（未领的条目仍留在上面），只在进入下一个段前收起。战败或没配奖励则照旧立即收段。</summary>
     public sealed class SegmentSceneManager : MonoBehaviour
     {
         [Tooltip("常驻主相机：段内 Screen Space-Camera 画布共用它")] [SerializeField]
@@ -29,33 +33,90 @@ namespace _DreamKeep.Presentation
         private string _firstSegmentName = "Scene_Battle";
 
         private BattleSession _session;
+        private RunState _run;
+        private PopFactory _popFactory;
         private Scene _currentSegment;
+        private bool _awaitingReward;
         private bool _finishing;
         private bool _loading;
 
         private void Update()
         {
-            if (_finishing || _session == null || !_session.IsOpen || _session.Loop == null ||
-                !_session.Loop.IsFinished)
-                return;
-            // 先关句柄（常驻药水栏要在旧段的目标中间件还活着时注销瞄准）再卸载段（奖励面板尚未接入，本次不弹）
+            // 等玩家领奖期间不再重复触发；_finishing 只在真正收段时置位，避免掷骰出异常把流程锁死
+            if (_awaitingReward || _finishing) return;
+            if (_session == null || !_session.IsOpen || !_session.Loop.IsFinished) return;
+
+            // 胜利且本场配了奖励：段与会话都还活着时就地结算——药水/遗物栏在领取瞬间还能正常刷新；
+            // 点继续才收段开地图（见 OnRewardProceeded）
+            if (_session.Loop.IsVictory && _session.Reward != null)
+            {
+                List<RunReward> rewards = null;
+                try
+                {
+                    rewards = EncounterRewardRoller.Roll(_session.Reward, _run);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e); // 掷骰坏了也要能离开战斗，降级为直接收段
+                }
+
+                if (rewards != null && rewards.Count > 0)
+                {
+                    try
+                    {
+                        _awaitingReward = true;
+                        _popFactory.AcquireRewardPanel().Show("战斗奖励", rewards, OnRewardProceeded);
+                        // 面板是全屏模态：把顶栏提上来，玩家才能在看奖励时喝药水/看金币
+                        if (_topBar) _topBar.BringToFront();
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        _awaitingReward = false;
+                        Debug.LogException(e);
+                    }
+                }
+            }
+
+            FinishSegment(); // 战败、Boss、奖励清单为空或结算失败：立即收段
+        }
+
+        [Inject]
+        public void Construct(BattleSession session_, RunState run_, PopFactory popFactory_)
+        {
+            _session = session_;
+            _run = run_;
+            _popFactory = popFactory_;
+        }
+
+        // 继续＝玩家要往下走了：开地图占位、收段。奖励面板**不关**（未领的条目还留在上面，领完自然就是空的），
+        // 它只在进入下一个段时才收起，免得挡住下一场战斗
+        private void OnRewardProceeded()
+        {
+            if (_topBar) _topBar.OpenMap();
+            FinishSegment();
+        }
+
+        // 先关句柄（常驻药水栏要在旧段的目标中间件还活着时注销瞄准）再卸载段
+        private void FinishSegment()
+        {
+            if (_finishing) return;
             _finishing = true;
-            _session.Close();
+            _awaitingReward = false;
+            if (_session.IsOpen) _session.Close();
             if (_currentSegment.IsValid() && _currentSegment.isLoaded)
                 UnloadSegmentAsync(_currentSegment.name).Forget();
             else
                 _finishing = false;
         }
 
-        [Inject]
-        public void Construct(BattleSession session_) => _session = session_;
-
-        [Button("战斗开始测试入口", EButtonEnableMode.Playmode)]
-        // 测试入口（主菜单按钮直连）：激活顶栏后加载并开启第一段。纯按钮触发，进入主菜单不自动开战。
+        /// <summary>激活顶栏后加载并开启第一段（Play 模式测试入口，由 Tools/DreamKeep/开发面板 调用）。</summary>
         public void StartFirstSegment()
         {
             if (_loading || _currentSegment.IsValid() && _currentSegment.isLoaded) return;
             _loading = true;
+            // 进新段前收起上一场的奖励面板：它按设计不随「继续」关闭，留着会挡住下一场战斗
+            if (_popFactory) _popFactory.AcquireRewardPanel().Close();
             LoadSegmentAsync(_firstSegmentName).Forget();
         }
 

@@ -17,7 +17,9 @@ namespace _DreamKeep.Presentation
     /// 点敌人确认、右键或落空取消。可点窗口与手牌一致：玩家回合开始开、回合结束阶段关。
     /// 使用药水的投掷与落地演出也归本类编排：离槽事件自带落点，先清槽再让瓶子飞过去，瓶子落地后逐目标泼上水花，
     /// 落地特效不拖住链路——水花开播当帧就放行，效果动作立刻接上。
-    /// 战斗段每场重建，故命令 / 查询 / 瞄准中间件 / 战场 / 事件流五类引用随 BattleSession 开关重绑；段不在场时只显示、不响应点击。</summary>
+    /// 战斗段每场重建，故命令 / 查询 / 瞄准中间件 / 战场 / 事件流五类引用随 BattleSession 开关重绑。
+    /// 战斗外（段不在场，或战斗已打完只剩领奖）也能点开菜单：丢弃随时可用，
+    /// 「使用」只对 SO_Potion.UsableOutsideBattle 的药水开放并就地结算，其余使用板置灰。</summary>
     public sealed class UI_PotionGroup : MonoBehaviour, IAimClient
     {
         private const int NoAimSlot = -1;
@@ -94,6 +96,7 @@ namespace _DreamKeep.Presentation
         private void OnDestroy()
         {
             if (_session != null) _session.Changed -= OnSessionChanged;
+            if (_run != null) _run.Player.PotionSlotChanged -= RefreshSlot;
         }
 
         [Inject]
@@ -106,6 +109,9 @@ namespace _DreamKeep.Presentation
 
             CollectSlots();
             for (int i = 0; i < _slots.Count; i++) RefreshSlot(i);
+
+            // 战斗内由离槽事件刷新，战斗外（奖励里领到药水）由数据变更通知刷新，两条路都只重读那一格
+            run_.Player.PotionSlotChanged += RefreshSlot;
 
             session_.Changed += OnSessionChanged;
             OnSessionChanged();
@@ -195,9 +201,6 @@ namespace _DreamKeep.Presentation
 
         private void OnSlotClicked(int slotIndex_)
         {
-            // 段不在场（非战斗节点）时药水栏只显示：没有可下发的命令对象
-            if (!_session.IsOpen) return;
-
             if (IsAiming)
             {
                 CancelAim();
@@ -221,8 +224,19 @@ namespace _DreamKeep.Presentation
             HidePopup();
             _popupSlot = slotIndex_;
             _slots[slotIndex_].SuppressTip(true);
-            _popup.Show((RectTransform)_slots[slotIndex_].transform, _interactable,
+            _popup.Show((RectTransform)_slots[slotIndex_].transform, CanUse(slotIndex_),
                 () => UsePotion(slotIndex_), () => DiscardPotion(slotIndex_));
+        }
+
+        // 战斗中＝段在场且战斗还没打完：打完之后只等领奖，按战斗外规则处理
+        private bool InBattle => _session.IsOpen && _session.Loop != null && !_session.Loop.IsFinished;
+
+        // 使用板能不能点：战斗中看玩家回合窗口；战斗外只认"随时可用"的药水
+        private bool CanUse(int slotIndex_)
+        {
+            SO_Potion potion = PotionAt(slotIndex_);
+            if (potion == null) return false;
+            return InBattle ? _interactable : potion.UsableOutsideBattle;
         }
 
         private void HidePopup()
@@ -244,6 +258,17 @@ namespace _DreamKeep.Presentation
             HidePopup();
             SO_Potion potion = PotionAt(slotIndex_);
             if (potion == null) return;
+
+            // 战斗外：没有战斗态与目标表，只有自身类药水能就地结算（无事件、无演出）
+            if (!InBattle)
+            {
+                if (!potion.UsableOutsideBattle) return;
+                // 先问能不能结算再扣槽：结算失败时药水仍留在槽里，不会凭空消失
+                if (!PotionResolver.TryApplyOutsideBattle(potion, _run.Player)) return;
+                _run.Player.TryTakePotion(slotIndex_, out _);
+                return;
+            }
+
             if (potion.TargetType == EPotionTargetType.AnyEnemy)
             {
                 BeginAim(slotIndex_);
@@ -256,7 +281,14 @@ namespace _DreamKeep.Presentation
         private void DiscardPotion(int slotIndex_)
         {
             HidePopup();
-            _commandDispatcher.DiscardPotion(slotIndex_);
+            if (InBattle)
+            {
+                _commandDispatcher.DiscardPotion(slotIndex_);
+                return;
+            }
+
+            // 战斗外丢弃：不经战斗循环，取走即算丢掉；槽位刷新由 PotionSlotChanged 事件驱动
+            _run.Player.TryTakePotion(slotIndex_, out _);
         }
 
         #endregion

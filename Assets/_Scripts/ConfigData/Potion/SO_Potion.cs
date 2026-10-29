@@ -29,5 +29,9 @@ namespace _DreamKeep.ConfigData
 
         /// <summary>落点：决定使用流程要不要选目标，也决定效果作用于谁。</summary>
         public abstract EPotionTargetType TargetType { get; }
+
+        /// <summary>能否在战斗外饮用：只有效果作用于自身、且不依赖战斗态的药水（如治疗）才有意义，
+        /// 其余药水（伤害、状态层、抽牌、能量）一律只能在战斗内使用。丢弃不受此限，任何时刻都能丢。</summary>
+        public virtual bool UsableOutsideBattle => false;
     }
 }

@@ -163,6 +163,7 @@ GameObject:
   - component: {fileID: 529153096540028878}
   - component: {fileID: 730809817620731436}
   - component: {fileID: 5751948566494326371}
+  - component: {fileID: 334208589249751384}
   m_Layer: 5
   m_Name: RewardItem
   m_TagString: Untagged
@@ -263,6 +264,20 @@ MonoBehaviour:
   _duration: 0.12
   _ease: 6
   _targetToScale: {fileID: 0}
+--- !u!114 &334208589249751384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5229500781719170050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92da76c002224eaca45ae8e7cdbb0cc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 5741237247043788770}
+  _description: {fileID: 6859079870765374718}
 --- !u!1 &6533847558413364836
 GameObject:
   m_ObjectHideFlags: 0

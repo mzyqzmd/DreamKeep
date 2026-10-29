@@ -1,23 +1,32 @@
 using System.Collections.Generic;
 using _DreamKeep.EngineUtility;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 
 namespace _DreamKeep.CommonPresentation
 {
     /// <summary>通用弹层工厂：挂在场景 GameRoot 下，统一持有说明气泡与数字飘字的实例池——
     /// 说明气泡的"实例取还与唯一列守卫"归此处（同一时刻只许一列、谁的归还只收自己那列），叠列定位由消费方 UI_HoverTip 接管；
     /// 数字飘字的父节点与世界坐标由调用方（如战斗弹层编排）算好传入，本类不认识 Creature / UI_ActorRoot / 任何玩法事件；
-    /// 遗物信息面板同理只由本类造与存放，写什么内容、什么时候收起都归面板自己。
+    /// 奖励面板与卡牌三选一面板同理只由本类造与存放（懒建单例），写什么内容、什么时候收起都归面板与调用方。
     /// 弹层一律挂到"所属对象"之下；归还只失活、不归位父级——下次取出再改挂（归还常发生在宿主失活回调里，此时改层级是非法的）。</summary>
     public sealed class PopFactory : MonoBehaviour
     {
         [SerializeField] private UI_DescriptionPopTip _descriptionPopTipPrefab;
         [SerializeField] private UI_NumberPopTip _numberPopTipPrefab;
         [SerializeField] private UI_PopBanner _bannerPrefab;
+        [SerializeField] private UI_RewardPanel _rewardPanelPrefab;
+        [SerializeField] private UI_CardOneInThreePanel _cardChoicePanelPrefab;
+        [Tooltip("全屏面板的挂载父级：本工厂不在 Canvas 子树下，面板必须挂进画布才渲染")] [SerializeField]
+        private RectTransform _panelParent;
 
         private MonoObjectPool<UI_DescriptionPopTip> _tipPool;
         private MonoObjectPool<UI_NumberPopTip> _numberPopTipPool;
         private UI_PopBanner _banner;
+        private UI_RewardPanel _rewardPanel;
+        private UI_CardOneInThreePanel _cardChoicePanel;
+        private IObjectResolver _resolver;
         private readonly List<UI_DescriptionPopTip> _shownTips = new(); // 当前这一列的展示名单（按叠列顺序）：归还只认它
         private object _tipsRequester;
 
@@ -28,6 +37,9 @@ namespace _DreamKeep.CommonPresentation
             _tipPool = new MonoObjectPool<UI_DescriptionPopTip>(transform);
             _numberPopTipPool = new MonoObjectPool<UI_NumberPopTip>(transform, onReturn_: tip_ => tip_.ResetView());
         }
+
+        [Inject]
+        public void Construct(IObjectResolver resolver_) => _resolver = resolver_;
 
         #region 说明气泡：实例取还与唯一列守卫（叠列定位由 UI_HoverTip 接管）
 
@@ -86,5 +98,33 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
+
+        #region 全屏面板：懒建单例，内容与退场都归调用方
+
+        /// <summary>取奖励面板单例（首次访问才实例化）：奖励清单与"继续"回调由调用方 Show 时传入，
+        /// 条目长什么样、点了怎么兑现由面板自己负责。</summary>
+        public UI_RewardPanel AcquireRewardPanel()
+        {
+            if (!_rewardPanel) _rewardPanel = CreatePanel(_rewardPanelPrefab);
+            return _rewardPanel;
+        }
+
+        /// <summary>取卡牌三选一面板单例（首次访问才实例化）：给哪几张牌、选中后做什么也由调用方传入。</summary>
+        public UI_CardOneInThreePanel AcquireCardChoicePanel()
+        {
+            if (!_cardChoicePanel) _cardChoicePanel = CreatePanel(_cardChoicePanelPrefab);
+            return _cardChoicePanel;
+        }
+
+        #endregion
+
+        // 面板是容器外生成的场景组件：补一次注入（卡上的悬停气泡要靠它拿 PopFactory），并先关掉免得闪一帧
+        private T CreatePanel<T>(T prefab_) where T : Component
+        {
+            T panel = Instantiate(prefab_, _panelParent);
+            _resolver.InjectGameObject(panel.gameObject);
+            panel.gameObject.SetActive(false);
+            return panel;
+        }
     }
 }

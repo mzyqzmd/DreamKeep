@@ -4105,6 +4105,9 @@ MonoBehaviour:
   _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
   _numberPopTipPrefab: {fileID: 6842653926454003922, guid: dcfe99971d3f05a4581d28e9a51ad25c, type: 3}
   _bannerPrefab: {fileID: 1797641832291381066, guid: 1f39b7ad9a64618468cb19f474f34254, type: 3}
+  _rewardPanelPrefab: {fileID: 498558448144999550, guid: aa7e888383526654db054d04458db9db, type: 3}
+  _cardChoicePanelPrefab: {fileID: 2319560588612312606, guid: 7978aaef9ad144a41b195949c7b5481a, type: 3}
+  _panelParent: {fileID: 401056685}
 --- !u!114 &2091153477
 MonoBehaviour:
   m_ObjectHideFlags: 0

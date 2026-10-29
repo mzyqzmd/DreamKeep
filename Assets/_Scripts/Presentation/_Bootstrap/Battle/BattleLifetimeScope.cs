@@ -103,7 +103,7 @@ namespace _DreamKeep.Presentation
                 resolver_.Resolve<UI_BackgroundView>().Apply(background);
                 session.Open(resolver_.Resolve<BattleCommandDispatcher>(), resolver_.Resolve<BattleQueryDispatcher>(),
                     dispatcher, resolver_.Resolve<BattleTargetDirector>(), resolver_.Resolve<UI_ActorRoot>(),
-                    relicNotifier, loop);
+                    relicNotifier, loop, encounter.Reward);
             });
             builder_.RegisterEntryPoint<BattleEntry>();
         }

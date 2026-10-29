@@ -1,4 +1,5 @@
 using System;
+using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 
@@ -17,6 +18,9 @@ namespace _DreamKeep.Presentation
         public RelicTriggerNotifier Relics { get; private set; }
         public BattleLoop Loop { get; private set; }
 
+        /// <summary>本场遭遇的奖励配置（可能为空：Boss 等终局遭遇不配奖励）；整局层据此在胜利后掷奖励。</summary>
+        public SO_EncounterReward Reward { get; private set; }
+
         /// <summary>当前是否有段在场：常驻 UI 的每个对外入口都先问它。</summary>
         public bool IsOpen => Loop != null;
 
@@ -26,7 +30,8 @@ namespace _DreamKeep.Presentation
         #region 开关会话：段容器构建完成时写入，段销毁前清空
 
         public void Open(BattleCommandDispatcher command_, BattleQueryDispatcher query_, BattleEventDispatcher events_,
-            BattleTargetDirector targetDirector_, UI_ActorRoot actorRoot_, RelicTriggerNotifier relics_, BattleLoop loop_)
+            BattleTargetDirector targetDirector_, UI_ActorRoot actorRoot_, RelicTriggerNotifier relics_, BattleLoop loop_,
+            SO_EncounterReward reward_)
         {
             Command = command_;
             Query = query_;
@@ -35,6 +40,7 @@ namespace _DreamKeep.Presentation
             ActorRoot = actorRoot_;
             Relics = relics_;
             Loop = loop_;
+            Reward = reward_;
             Changed?.Invoke();
         }
 
@@ -48,6 +54,7 @@ namespace _DreamKeep.Presentation
             ActorRoot = null;
             Relics = null;
             Loop = null;
+            Reward = null;
             Changed?.Invoke();
         }
 

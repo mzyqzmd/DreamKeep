@@ -11,5 +11,8 @@ namespace _DreamKeep.ConfigData
 
         public float HealPercent => _healPercent;
         public override EPotionTargetType TargetType => EPotionTargetType.Self;
+
+        /// <summary>纯回血、不依赖战斗态，战斗外也能喝。</summary>
+        public override bool UsableOutsideBattle => true;
     }
 }
