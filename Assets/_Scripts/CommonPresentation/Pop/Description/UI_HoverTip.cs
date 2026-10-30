@@ -12,7 +12,7 @@ namespace _DreamKeep.CommonPresentation
 {
     /// <summary>说明气泡发起器：需要"指针悬停弹说明气泡"的对象挂上它即可用——内容可提前在 Inspector 配置（静态），
     /// 也可由宿主在数据变化时注入（动态，单条或整列）；气泡视图与弹层中枢只管"实例取还与唯一列守卫"（PopRoot），
-    /// 本组件接管"起排点 + 朝向 + 间距 + 逐条累排"的整列定位，只回答"谁被悬停、弹什么、弹在哪"。
+    /// 本组件接管"起排点 + 朝向 + 间距 + 逐条累排 + 超出可见区整列收回"的整列定位，只回答"谁被悬停、弹什么、弹在哪"。
     /// 触发分两种模式：默认自己接 UGUI 指针事件（挂上即用）；外部驱动模式不响应指针，由调用方在它判定出的时刻调 Show/Hide
     /// （手牌上的卡牌即这一种——卡的"悬停"由手牌区每帧射线裁决，瞄准中指针离开卡但气泡要留、打出瞬间要立刻收，与指针事件并不一致）。</summary>
     public sealed class UI_HoverTip : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
@@ -75,7 +75,7 @@ namespace _DreamKeep.CommonPresentation
 
         #region 对外入口：显隐与内容注入（指针模式由本组件的指针事件调用，外部驱动模式由调用方调用）
 
-        /// <summary>弹出说明气泡：内容为空不弹；重复调用按当前内容重刷整列（起排点 + 朝向 + 间距 + 逐条累排都在此完成）。</summary>
+        /// <summary>弹出说明气泡：内容为空不弹；重复调用按当前内容重刷整列（起排点 + 朝向 + 间距 + 逐条累排 + 收进可见区都在此完成）。</summary>
         public void Show()
         {
             if (_host == null) return; // 与 Hide 的 if (_host) 对称：段未构建等边缘态直接早退，不放 _shown 脏状态
@@ -89,6 +89,47 @@ namespace _DreamKeep.CommonPresentation
             float step = pivot.y > 0f ? -1f : 1f; // 底沿贴锚点（pivot.y 为 0）向上长，顶/居中则向下长
             for (int i = 0; i < bubbles.Count; i++)
                 anchor = PlaceBubble(bubbles[i], pivot, mount, anchor, step, _stackSpacingPx, _contents[i]);
+            ClampColumnInside(bubbles, mount, step > 0f);
+        }
+
+        // GetWorldCorners 的共享缓冲：Show 是悬停进入/内容刷新的低频路径，跨调用复用一份零分配
+        private static readonly Vector3[] _corners = new Vector3[4];
+
+        // 整列超出可见区时统一平移收回：逐张钳会让列高超屏的气泡互相重叠，也会破坏叠列链与间距；
+        // 水平贴左优先，垂直整列装得下就最小位移收进、装不下时锚侧贴界（向上长贴底、向下长贴顶）
+        private static void ClampColumnInside(IReadOnlyList<UI_DescriptionPopTip> bubbles_, Transform mount_, bool growsUpward_)
+        {
+            Canvas canvas = mount_.GetComponentInParent<Canvas>();
+            if (canvas == null) return; // 挂载点不在画布下属异常装配，无从取可见区，跳过不报错
+            RectTransform boundsRect = (RectTransform)canvas.rootCanvas.transform;
+            boundsRect.GetWorldCorners(_corners);
+            Vector3 boundsMin = _corners[0];
+            Vector3 boundsMax = _corners[2];
+
+            Vector3 min = Vector3.positiveInfinity;
+            Vector3 max = Vector3.negativeInfinity;
+            for (int i = 0; i < bubbles_.Count; i++)
+            {
+                ((RectTransform)bubbles_[i].transform).GetWorldCorners(_corners);
+                // 四角全收而非只取对角：手牌卡带扇形旋转，气泡继承旋转后对角不再是精确 min/max
+                for (int c = 0; c < _corners.Length; c++)
+                {
+                    min = Vector3.Min(min, _corners[c]);
+                    max = Vector3.Max(max, _corners[c]);
+                }
+            }
+
+            Vector3 delta = Vector3.zero;
+            if (min.x < boundsMin.x) delta.x = boundsMin.x - min.x;
+            else if (max.x > boundsMax.x) delta.x = boundsMax.x - max.x;
+            // 整列装得下就最小位移收进；装不下时锚侧贴界（向上长贴底、向下长贴顶），头部可见、远端接受溢出
+            float boundsHeight = boundsMax.y - boundsMin.y;
+            if (max.y - min.y > boundsHeight) delta.y = growsUpward_ ? boundsMin.y - min.y : boundsMax.y - max.y;
+            else if (min.y < boundsMin.y) delta.y = boundsMin.y - min.y;
+            else if (max.y > boundsMax.y) delta.y = boundsMax.y - max.y;
+            if (delta == Vector3.zero) return;
+            for (int i = 0; i < bubbles_.Count; i++)
+                bubbles_[i].transform.position += delta;
         }
 
         // 摆一张气泡：写内容→定 pivot→挂到挂载点并置顶→按世界锚点落位→强制重排拿当帧高度→把下一条锚点退到"当前高度 + 间距"处

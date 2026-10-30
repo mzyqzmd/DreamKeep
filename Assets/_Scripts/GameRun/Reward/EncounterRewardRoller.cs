@@ -49,7 +49,7 @@ namespace _DreamKeep.GameRun
         private static void RollCards(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.CardRewardCount <= 0) return;
-            List<SO_Card> cards = CollectCards(config_.CardPools);
+            List<SO_Card> cards = Collect(config_.CardPools, static pool_ => pool_.Cards);
             if (cards.Count == 0)
             {
                 Debug.LogWarning($"奖励配置 {config_.name} 配了 {config_.CardRewardCount} 组卡牌奖励，但卡池列表没有有效卡，已跳过。");
@@ -63,37 +63,35 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 合并卡池：同引用只收一次，避免同一张卡在两份池里时一组候选出现重复
-        private static List<SO_Card> CollectCards(IReadOnlyList<SO_CardPool> pools_)
+        // 合并多份池成一份候选集：断引用与 keep_ 拒绝的项跳过，同引用只收一次——同一项在两份池里不会重复出现
+        private static List<T> Collect<T, TPool>(IReadOnlyList<TPool> pools_, Func<TPool, IReadOnlyList<T>> items_,
+            Func<T, bool> keep_ = null)
         {
-            List<SO_Card> cards = new();
-            HashSet<SO_Card> seen = new();
+            List<T> collected = new();
+            HashSet<T> seen = new();
             for (int i = 0; i < pools_.Count; i++)
             {
-                SO_CardPool pool = pools_[i];
+                TPool pool = pools_[i];
                 if (pool == null) continue;
-                for (int j = 0; j < pool.Cards.Count; j++)
+                IReadOnlyList<T> items = items_(pool);
+                for (int j = 0; j < items.Count; j++)
                 {
-                    SO_Card card = pool.Cards[j];
-                    if (card != null && seen.Add(card)) cards.Add(card);
+                    T item = items[j];
+                    if (item == null) continue;
+                    if (keep_ != null && !keep_(item)) continue;
+                    if (seen.Add(item)) collected.Add(item);
                 }
             }
 
-            return cards;
+            return collected;
         }
 
-        // 不放回抽样：对候选集局部洗牌取前 N 个，保证同一组里不会出现重复的卡
+        // 不放回抽样：候选集洗牌取前几个再投影，保证同一组里不会出现重复项
         private static List<CardModel> DrawCards(List<SO_Card> cards_, Rng rng_)
         {
-            int take = Math.Min(CardOptionCount, cards_.Count);
-            List<CardModel> options = new(take);
-            for (int i = 0; i < take; i++)
-            {
-                int j = rng_.Next(i, cards_.Count);
-                (cards_[i], cards_[j]) = (cards_[j], cards_[i]);
-                options.Add(CardModelBaker.Bake(cards_[i]));
-            }
-
+            List<SO_Card> taken = rng_.TakeShuffled(cards_, CardOptionCount);
+            List<CardModel> options = new(taken.Count);
+            for (int i = 0; i < taken.Count; i++) options.Add(CardModelBaker.Bake(taken[i]));
             return options;
         }
 
@@ -101,7 +99,7 @@ namespace _DreamKeep.GameRun
         private static void RollPotion(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.PotionChance <= 0f) return;
-            List<SO_Potion> potions = CollectPotions(config_.PotionPools);
+            List<SO_Potion> potions = Collect(config_.PotionPools, static pool_ => pool_.Potions);
             if (potions.Count == 0)
             {
                 Debug.LogWarning($"奖励配置 {config_.name} 配了药水概率，但药水池列表没有有效药水，已跳过。");
@@ -112,65 +110,24 @@ namespace _DreamKeep.GameRun
             rewards_.Add(RunReward.PotionOf(potions[rng_.Next(potions.Count)]));
         }
 
-        private static List<SO_Potion> CollectPotions(IReadOnlyList<SO_PotionPool> pools_)
-        {
-            List<SO_Potion> potions = new();
-            HashSet<SO_Potion> seen = new();
-            for (int i = 0; i < pools_.Count; i++)
-            {
-                SO_PotionPool pool = pools_[i];
-                if (pool == null) continue;
-                for (int j = 0; j < pool.Potions.Count; j++)
-                {
-                    SO_Potion potion = pool.Potions[j];
-                    if (potion != null && seen.Add(potion)) potions.Add(potion);
-                }
-            }
-
-            return potions;
-        }
-
         // 遗物：合并池后跳过已持有与断引用的项，再不放回抽取；不够件数时按实际数量发，并留一条警告
         private static void RollRelics(SO_EncounterReward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.RelicCount <= 0) return;
-            List<SO_Relic> candidates = CollectRelics(config_.RelicPools, run_.Player);
+            List<SO_Relic> candidates = Collect(config_.RelicPools, static pool_ => pool_.Relics,
+                relic_ => !run_.Player.HasRelic(relic_));
             if (candidates.Count == 0)
             {
                 Debug.LogWarning($"奖励配置 {config_.name} 配了 {config_.RelicCount} 件遗物奖励，但遗物池列表没有可发的遗物，已跳过。");
                 return;
             }
 
-            int take = Math.Min(config_.RelicCount, candidates.Count);
-            if (take < config_.RelicCount)
+            if (candidates.Count < config_.RelicCount)
                 Debug.LogWarning($"奖励配置 {config_.name} 要 {config_.RelicCount} 件遗物，" +
                                  $"但池里只剩 {candidates.Count} 件未持有，按实际数量发。");
 
-            for (int i = 0; i < take; i++)
-            {
-                int j = rng_.Next(i, candidates.Count);
-                (candidates[i], candidates[j]) = (candidates[j], candidates[i]);
-                rewards_.Add(RunReward.RelicOf(candidates[i]));
-            }
-        }
-
-        private static List<SO_Relic> CollectRelics(IReadOnlyList<SO_RelicPool> pools_, Player player_)
-        {
-            List<SO_Relic> relics = new();
-            HashSet<SO_Relic> seen = new();
-            for (int i = 0; i < pools_.Count; i++)
-            {
-                SO_RelicPool pool = pools_[i];
-                if (pool == null) continue;
-                for (int j = 0; j < pool.Relics.Count; j++)
-                {
-                    SO_Relic relic = pool.Relics[j];
-                    if (relic == null || player_.HasRelic(relic) || !seen.Add(relic)) continue;
-                    relics.Add(relic);
-                }
-            }
-
-            return relics;
+            List<SO_Relic> taken = rng_.TakeShuffled(candidates, config_.RelicCount);
+            for (int i = 0; i < taken.Count; i++) rewards_.Add(RunReward.RelicOf(taken[i]));
         }
     }
 }

@@ -210,8 +210,9 @@ namespace _DreamKeep.CommonPresentation
 
         #region 数值预览：门面转发与描述重建（求值与着色的唯一落点是 CardValueRenderer）
 
-        /// <summary>写入数值预览门面与目标集合（手牌区对账时推入；门面为空时数值按原值纯文本渲染，
-        /// 目标集合为空或为 null 时目标侧修正不参与）。卡面与气泡两个渲染器推同一份，两者天然一致。</summary>
+        /// <summary>写入数值预览门面与目标集合（手牌区对账时推入；门面为空时伤害与格挡不做 perk 修正、
+        /// 直接与升级前基准静态比较着色，目标集合为空或为 null 时目标侧修正不参与）。
+        /// 卡面与气泡两个渲染器推同一份，两者天然一致。</summary>
         public void SetPreviewContext(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
         {
             _faceValueRenderer.SetContext(queryDispatcher_, targets_);

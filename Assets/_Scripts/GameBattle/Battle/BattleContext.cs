@@ -29,7 +29,7 @@ namespace _DreamKeep.GameBattle
 
         #region 战斗结果
 
-        public bool IsDefeat => Player.Creature.IsDead;
+        internal bool IsDefeat => Player.Creature.IsDead;
 
         public bool IsVictory
         {
@@ -71,6 +71,15 @@ namespace _DreamKeep.GameBattle
                     alive.Add(enemy);
             alive.Sort((left_, right_) => left_.Slot.CompareTo(right_.Slot));
             return alive;
+        }
+
+        /// <summary>存活敌人的 Creature 视图：卡牌与药水的落点解析、表现桥预览共用的单点。</summary>
+        public List<Creature> GetAliveCreatures()
+        {
+            List<Enemy> alive = GetAliveEnemies();
+            List<Creature> creatures = new(alive.Count);
+            for (int i = 0; i < alive.Count; i++) creatures.Add(alive[i].Creature);
+            return creatures;
         }
 
         #endregion

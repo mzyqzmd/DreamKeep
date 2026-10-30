@@ -54,7 +54,6 @@ namespace _DreamKeep.RuntimeData
                 AD_Erase erase => new CA_Erase(erase),
                 AD_Exhaust exhaust => new CA_Exhaust(exhaust),
                 AD_GainEnergy gainEnergy => new CA_GainEnergy(gainEnergy),
-                AD_Grant grant => ToGrant(grant),
                 AD_LostHealth lostHealth => new CA_LostHealth(lostHealth),
                 AD_MoveEnemy moveEnemy => new CA_MoveEnemy(moveEnemy),
                 AD_Retain retain => new CA_Retain(retain),
@@ -72,12 +71,6 @@ namespace _DreamKeep.RuntimeData
             runtimePerk.AddLayers(applyPerk_.Layers);
             return new CA_ApplyPerk(applyPerk_, runtimePerk);
         }
-
-        private static CardAffix ToGrant(AD_Grant grant_)
-        {
-            CardAffix granted = ToRuntime(grant_.GrantedAffix);
-            return granted == null ? null : new CA_Grant(grant_, granted);
-        }
         #endregion
 
         #region 解析单条升级补丁：改数值与改状态层数落成"词条下标 + 修正"，追加词条烘成运行时词条，移除词条记下标
@@ -92,13 +85,15 @@ namespace _DreamKeep.RuntimeData
                 case UD_ModifyValue modifyValue:
                     if (modifyValue.Value == EUpgradeChannel.Cost)
                     {
-                        valuePatches_.Add(new CM_ValuePatch(EUpgradeChannel.Cost, -1, ToModifier(modifyValue)));
+                        valuePatches_.Add(new CM_ValuePatch(EUpgradeChannel.Cost, -1,
+                            new(modifyValue.Additive, modifyValue.Multiplier)));
                         break;
                     }
 
                     int index = IndexOfValueChannel(modifyValue.Value, baseAffixes_);
                     if (index < 0) break; // 这张牌没有承载该通道的词条，补丁不生效
-                    valuePatches_.Add(new CM_ValuePatch(modifyValue.Value, index, ToModifier(modifyValue)));
+                    valuePatches_.Add(new CM_ValuePatch(modifyValue.Value, index,
+                        new(modifyValue.Additive, modifyValue.Multiplier)));
                     break;
 
                 // 改状态层数：按状态种类找出承载它的那条施加效果词条，补丁的通道留空
@@ -125,9 +120,6 @@ namespace _DreamKeep.RuntimeData
                         $"{upgrade_.GetType().Name} 未登记：漏登记会让该升级静默失效");
             }
         }
-
-        private static StatModifier ToModifier(UD_ModifyValue modifyValue_) =>
-            new(modifyValue_.Additive, modifyValue_.Multiplier);
 
         // 找承载指定通道的基础词条下标：复用运行时同一张"通道 → 数值容器"映射表
         private static int IndexOfValueChannel(EUpgradeChannel kind_, List<CardAffix> baseAffixes_)

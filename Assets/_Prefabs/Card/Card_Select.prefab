@@ -9,12 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7690547572025340135}
-  - component: {fileID: 6314212304351659471}
   - component: {fileID: 4041642570012189204}
   - component: {fileID: 5092513433224772294}
   - component: {fileID: 8590840189781916563}
   - component: {fileID: 8485251665675984336}
   - component: {fileID: 5751769365618339560}
+  - component: {fileID: 6314212304351659471}
   m_Layer: 0
   m_Name: Card_Select
   m_TagString: Untagged
@@ -45,18 +45,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 301.945}
   m_SizeDelta: {x: 427.87, y: 603.89}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &6314212304351659471
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4762709467321261523}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 233761a5ef22446cb3373330a2f12aed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &4041642570012189204
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -150,6 +138,18 @@ MonoBehaviour:
   _skillFace: {fileID: 7005869679937087081}
   _abilityFace: {fileID: 3885701606733526522}
   _curseFace: {fileID: 6461876108427729087}
+--- !u!114 &6314212304351659471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4762709467321261523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 233761a5ef22446cb3373330a2f12aed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1928264406441782027
 PrefabInstance:
   m_ObjectHideFlags: 0

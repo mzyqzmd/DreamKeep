@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 4041642570012189204}
   - component: {fileID: 5092513433224772294}
   - component: {fileID: 8590840189781916563}
-  - component: {fileID: 5619710518155930050}
   - component: {fileID: 8485251665675984336}
   - component: {fileID: 5751769365618339560}
+  - component: {fileID: 5619710518155930050}
   m_Layer: 0
   m_Name: Card_InPile
   m_TagString: Untagged
@@ -104,19 +104,6 @@ MonoBehaviour:
   _isStaticContents: 0
   _tipName: 
   _tipDescription: 
---- !u!114 &5619710518155930050
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4762709467321261523}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 06cbced5030241a88fb617083b5abb73, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _hoverTip: {fileID: 8590840189781916563}
 --- !u!114 &8485251665675984336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,6 +138,19 @@ MonoBehaviour:
   _skillFace: {fileID: 7005869679937087081}
   _abilityFace: {fileID: 3885701606733526522}
   _curseFace: {fileID: 6461876108427729087}
+--- !u!114 &5619710518155930050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4762709467321261523}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06cbced5030241a88fb617083b5abb73, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hoverTip: {fileID: 8590840189781916563}
 --- !u!1001 &1928264406441782027
 PrefabInstance:
   m_ObjectHideFlags: 0

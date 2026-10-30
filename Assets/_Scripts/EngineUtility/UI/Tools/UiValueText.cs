@@ -20,5 +20,13 @@ namespace _DreamKeep.EngineUtility
         /// <summary>只标降色：低于基准才着色，相等或更高都保持原样（费用这类越低越好、升高不罚的数值用）。</summary>
         public static string Lower(int shown_, int base_, Color reduceColor_) =>
             shown_ < base_ ? $"<color=#{ColorUtility.ToHtmlStringRGB(reduceColor_)}>{shown_}</color>" : shown_.ToString();
+
+        /// <summary>反向双向着色：低于基准标升色、高于标降色、相等保持原色（失去生命这类越低越好的数值用）。</summary>
+        public static string Inverse(int shown_, int base_, Color boostColor_, Color reduceColor_)
+        {
+            if (shown_ < base_) return $"<color=#{ColorUtility.ToHtmlStringRGB(boostColor_)}>{shown_}</color>";
+            if (shown_ > base_) return $"<color=#{ColorUtility.ToHtmlStringRGB(reduceColor_)}>{shown_}</color>";
+            return shown_.ToString();
+        }
     }
 }

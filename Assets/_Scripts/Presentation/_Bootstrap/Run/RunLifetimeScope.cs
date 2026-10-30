@@ -27,6 +27,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
             builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
+            builder_.RegisterComponentInHierarchy<UI_DeckPanel>(); // 卡组查看：整副局内卡组的陈列，跑图/战斗段都随顶栏开关
             // 段场景加载管理器：地图落地前由它 additive 加载战斗段（及未来的商店/事件/休息段）并在打完后卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；

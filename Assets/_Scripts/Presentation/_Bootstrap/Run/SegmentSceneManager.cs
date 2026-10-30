@@ -32,6 +32,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("首段场景名（临时：主菜单点开始后加载；未来由地图决定）")] [SerializeField]
         private string _firstSegmentName = "Scene_Battle";
 
+        /// <summary>先古之民段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
+        public const string AncientSegmentName = "Scene_Ancient";
+
         private BattleSession _session;
         private RunState _run;
         private PopFactory _popFactory;
@@ -111,14 +114,30 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>激活顶栏后加载并开启第一段（Play 模式测试入口，由 Tools/DreamKeep/开发面板 调用）。</summary>
-        public void StartFirstSegment()
+        public void StartFirstSegment() => StartSegment(_firstSegmentName);
+
+        /// <summary>按段名加载并开启一段（Play 模式测试入口：战斗 / 先古之民等段共用，由开发面板调用）。</summary>
+        public void StartSegment(string name_)
         {
             if (_loading || _currentSegment.IsValid() && _currentSegment.isLoaded) return;
             _loading = true;
             // 进新段前收起上一场的奖励面板：它按设计不随「继续」关闭，留着会挡住下一场战斗
             if (_popFactory) _popFactory.AcquireRewardPanel().Close();
-            LoadSegmentAsync(_firstSegmentName).Forget();
+            LoadSegmentAsync(name_).Forget();
         }
+
+        #region 非战斗段收尾：先古之民等段领完产出后由段入口调用，战斗会话不经过这里
+
+        /// <summary>收掉当前段：开地图占位并卸段。战斗段的收尾（含会话关闭与奖励结算）仍走 Update 轮询路径。</summary>
+        public void CompleteSegment()
+        {
+            if (_finishing || _loading) return;
+            if (_topBar) _topBar.OpenMap();
+            if (_currentSegment.IsValid() && _currentSegment.isLoaded)
+                UnloadSegmentAsync(_currentSegment.name).Forget();
+        }
+
+        #endregion
 
         #region 段场景加载与卸载
 

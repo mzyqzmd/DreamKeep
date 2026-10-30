@@ -53,7 +53,6 @@ namespace _DreamKeep.Presentation
         private int _aimSlot = NoAimSlot; // 中间件回写的目标下标
         private int _aimStartedFrame = -1; // 本次待选的启动帧：启动它的那次左键还在同一帧里，不能再当确认用
         private int _popupSlot = NoPopupSlot; // 菜单正在为哪个槽位展开
-        private bool _registered;
         private bool _arrowShown;
         private bool _interactable;
         private float _outsideSince = -1f; // 指针开始不在"菜单 ∪ 槽位"内的时刻，用于宽限
@@ -61,7 +60,7 @@ namespace _DreamKeep.Presentation
 
         #region 瞄准客户端事实：由中间件每帧读取
 
-        public bool IsAiming => _registered && _aimingSlot != NoAimSlot;
+        public bool IsAiming => _aimingSlot != NoAimSlot;
 
         /// <summary>药水待选一律走指针指向：只有单体落点药水会进入待选。</summary>
         public bool UsesPointerTargeting => true;
@@ -75,7 +74,6 @@ namespace _DreamKeep.Presentation
         public IReadOnlyList<Creature> PreviewTargets(int slot_)
         {
             _preview.Clear();
-            if (_queryDispatcher == null) return null;
             IReadOnlyList<Creature> alive = _queryDispatcher.GetAliveEnemies();
             if (slot_ < 0 || slot_ >= alive.Count) return null;
             _preview.Add(alive[slot_]);
@@ -117,8 +115,6 @@ namespace _DreamKeep.Presentation
             OnSessionChanged();
         }
 
-        #region 段会话重绑：每场战斗换一套门面与事件流
-
         // 段关闭时旧段尚未销毁（Close 先于 Destroy），先借旧中间件注销瞄准，再换引用
         private void OnSessionChanged()
         {
@@ -137,8 +133,6 @@ namespace _DreamKeep.Presentation
             _session.Events.Register<BE_TurnStarted>(OnTurnStarted);
             _session.Events.Register<BE_PlayerTurnEnded>(OnTurnEnded);
         }
-
-        #endregion
 
         #endregion
 
@@ -188,14 +182,11 @@ namespace _DreamKeep.Presentation
         }
 
         // 范围 = 菜单矩形 ∪ 发起它的槽位矩形：弹出那一刻指针还在槽位上，不该算离开
-        private bool InsidePopup(Vector2 pointer_)
-        {
-            if (RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_popup.transform, pointer_,
-                    _canvasCamera))
-                return true;
-            return RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_slots[_popupSlot].transform,
+        private bool InsidePopup(Vector2 pointer_) =>
+            RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_popup.transform, pointer_,
+                _canvasCamera)
+            || RectTransformUtility.RectangleContainsScreenPoint((RectTransform)_slots[_popupSlot].transform,
                 pointer_, _canvasCamera);
-        }
 
         #region 槽位点击路由：待选中一律取消，其余情况弹出菜单（空槽只收起已有菜单）
 
@@ -301,17 +292,15 @@ namespace _DreamKeep.Presentation
             _aimSlot = NoAimSlot;
             _aimStartedFrame = Time.frameCount;
             _arrowShown = true;
-            _registered = true;
             _targetDirector.BeginAim(this);
         }
 
         private void CancelAim()
         {
+            if (_aimingSlot == NoAimSlot) return;
             _aimingSlot = NoAimSlot;
             _aimSlot = NoAimSlot;
             _arrowShown = false;
-            if (!_registered) return;
-            _registered = false;
             _targetDirector.EndAim(this);
         }
 

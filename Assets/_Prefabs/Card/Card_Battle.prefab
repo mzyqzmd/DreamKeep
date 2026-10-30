@@ -11,11 +11,11 @@ GameObject:
   - component: {fileID: 5339906804015178326}
   - component: {fileID: 1074204879851599601}
   - component: {fileID: 307441361647879174}
-  - component: {fileID: 5931782861234890128}
   - component: {fileID: 8983310850963364521}
   - component: {fileID: 5237988570584021999}
   - component: {fileID: 6482398765404290809}
   - component: {fileID: 1600219768545505429}
+  - component: {fileID: 5931782861234890128}
   m_Layer: 0
   m_Name: Card_Battle
   m_TagString: Untagged
@@ -84,21 +84,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5931782861234890128
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3927256767321244307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e2c9b1a4f7d43e2a8c6d0b3f9e71c04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _anchorLiftPx: 275
-  _aimThresholdPx: 12
-  _dragFollowDamp: 0.06
 --- !u!114 &8983310850963364521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,6 +154,21 @@ MonoBehaviour:
   _duration: 0.12
   _ease: 6
   _targetToScale: {fileID: 0}
+--- !u!114 &5931782861234890128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3927256767321244307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e2c9b1a4f7d43e2a8c6d0b3f9e71c04, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _anchorLiftPx: 275
+  _aimThresholdPx: 12
+  _dragFollowDamp: 0.06
 --- !u!1001 &2450246840005135258
 PrefabInstance:
   m_ObjectHideFlags: 0

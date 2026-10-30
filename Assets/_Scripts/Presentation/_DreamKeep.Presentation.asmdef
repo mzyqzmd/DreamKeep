@@ -16,9 +16,6 @@
         "_DreamKeep.EngineUtility",
         "_DreamKeep.CommonPresentation",
         "_DreamKeep.GameRun",
-        "_DreamKeep.GameEvent",
-        "_DreamKeep.GameRest",
-        "_DreamKeep.GameShop",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

@@ -43,6 +43,7 @@ internal sealed class DevPanelWindow : EditorWindow
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("流程", EditorStyles.miniBoldLabel);
             if (GUILayout.Button("开始首个战斗段")) _lastResult = DevPanelCommands.StartFirstSegment();
+            if (GUILayout.Button("进入先古之民")) _lastResult = DevPanelCommands.StartAncientSegment();
 
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("整局", EditorStyles.miniBoldLabel);

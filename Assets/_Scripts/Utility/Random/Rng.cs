@@ -21,5 +21,19 @@ namespace _DreamKeep.Utility
 
         /// <summary>从序列中随机取一个元素，序列为空时返回默认值。</summary>
         public T Pick<T>(IReadOnlyList<T> items_) => items_.Count == 0 ? default : items_[_random.Next(items_.Count)];
+
+        /// <summary>原位局部洗牌并取前 take_ 个：换牌循环与奖励掷骰处既有的"逐位换牌"逐次一致，随机流推进序列不变；
+        /// take_ 超过表长按表长截断。</summary>
+        public List<T> TakeShuffled<T>(List<T> list_, int take_)
+        {
+            int count = Math.Min(take_, list_.Count);
+            for (int i = 0; i < count; i++)
+            {
+                int j = Next(i, list_.Count);
+                (list_[i], list_[j]) = (list_[j], list_[i]);
+            }
+
+            return list_.GetRange(0, count);
+        }
     }
 }

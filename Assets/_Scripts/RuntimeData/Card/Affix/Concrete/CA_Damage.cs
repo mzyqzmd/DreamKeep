@@ -25,11 +25,12 @@ namespace _DreamKeep.RuntimeData
         public ModifiableStat Times { get; }
         internal override int PipelineOrder => 0;
 
-        /// <summary>伤害值经渲染器着色（修正求值与颜色归表现层），次数不参与。</summary>
+        /// <summary>伤害值与攻击次数经渲染器着色（修正求值与颜色归表现层）。</summary>
         public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
-            string amount = valueRenderer_?.Render(Amount.Value, Amount.Value, EStatChannel.Damage) ?? Amount.Value.ToString();
-            return Times.Value > 1 ? $"造成 {amount} 点伤害 {Times.Value} 次" : $"造成 {amount} 点伤害";
+            string amount = valueRenderer_?.Render(Amount.BaseValue, Amount.Value, EStatChannel.Damage) ?? Amount.Value.ToString();
+            string times = valueRenderer_?.Render(Times.BaseValue, Times.Value, EStatChannel.DamageTimes) ?? Times.Value.ToString();
+            return Times.Value > 1 ? $"造成 {amount} 点伤害 {times} 次" : $"造成 {amount} 点伤害";
         }
 
         #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走

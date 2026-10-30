@@ -33,6 +33,9 @@ namespace _DreamKeep.RuntimeData
 
         public ModifiableStat Cost => _runtime.Cost;
         public bool IsUpgraded => _runtime.IsUpgraded;
+
+        /// <summary>还可否升级：配置带升级条目且尚未升级过——卡组预览开关的显隐判据。</summary>
+        public bool CanUpgrade => _static.CanUpgrade && !IsUpgraded;
         public IReadOnlyList<CardAffix> ActiveAffixes => _runtime.ActiveAffixes;
         public bool IsRetain => _runtime.IsRetain;
         public bool IsUnableToPlay => _runtime.IsUnableToPlay;
@@ -85,12 +88,6 @@ namespace _DreamKeep.RuntimeData
             if (!_static.CanUpgrade) return;
             _runtime.Upgrade();
         }
-
-        #endregion
-
-        #region 追加一条词条：转发至运行时，原型上调用抛异常
-
-        public void AddAffix(CardAffix affix_) => _runtime.AddAffix(affix_);
 
         #endregion
     }

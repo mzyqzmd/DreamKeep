@@ -23,6 +23,7 @@ MonoBehaviour:
   - rid: 8162842063485534231
   - rid: 8162842063485534233
   - rid: 8162842063485534234
+  - rid: 8162842084836638720
   _canUpdate: 0
   _upgrades: []
   references:
@@ -43,3 +44,6 @@ MonoBehaviour:
       type: {class: AD_GainEnergy, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _amount: 1
+    - rid: 8162842084836638720
+      type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
-using UnityEngine;
 
 namespace _DreamKeep.GameBattle
 {
@@ -101,8 +100,8 @@ namespace _DreamKeep.GameBattle
                     source.CurrentHp = Math.Min(source.CurrentHp + amount, source.MaxHp); // 钳制口径与 BA_Heal 一致
                     return true;
                 default:
-                    Debug.LogError($"{potion_.GetType().Name} 不能在战斗外结算：只登记了自身类且不依赖战斗态的效果");
-                    return false;
+                    throw new InvalidOperationException(
+                        $"{potion_.GetType().Name} 不能在战斗外结算：只登记了自身类且不依赖战斗态的效果");
             }
         }
 
@@ -114,16 +113,11 @@ namespace _DreamKeep.GameBattle
         {
             if (potion_.TargetType == EPotionTargetType.Self) return new List<Creature> { player_.Creature };
 
-            List<Enemy> alive = battleContext_.GetAliveEnemies();
-            if (potion_.TargetType == EPotionTargetType.AllEnemy)
-            {
-                List<Creature> all = new(alive.Count);
-                for (int i = 0; i < alive.Count; i++) all.Add(alive[i].Creature);
-                return all;
-            }
+            List<Creature> alive = battleContext_.GetAliveCreatures();
+            if (potion_.TargetType == EPotionTargetType.AllEnemy) return alive;
 
             if (aimSlot_ < 0 || aimSlot_ >= alive.Count) return new List<Creature>();
-            return new List<Creature> { alive[aimSlot_].Creature };
+            return new List<Creature> { alive[aimSlot_] };
         }
 
         // 施加状态：定义资产先烘成运行时实例，层数写在实例上；未登记类型烘不出实例即跳过

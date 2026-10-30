@@ -4,7 +4,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>获得能量词条（效果型）：为自身获得指定数值的能量。</summary>
+    /// <summary>获得能量词条（效果型）：为出牌者（玩家）获得指定数值的能量，与卡牌以谁为目标无关。</summary>
     public sealed class CA_GainEnergy : CardAffix
     {
         internal CA_GainEnergy(AD_GainEnergy gainEnergy_) : this(gainEnergy_.Name, gainEnergy_.ShowDescriptionCardView,
@@ -28,7 +28,7 @@ namespace _DreamKeep.RuntimeData
         public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {
             StringBuilder sb = new();
-            sb.Append("获得 ");
+            sb.Append("玩家获得 ");
             for (int i = 0; i < Amount.Value; i++)
                 sb.Append("<sprite name=\"energyIcon\">");
 

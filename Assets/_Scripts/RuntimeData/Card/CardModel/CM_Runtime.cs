@@ -108,17 +108,6 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        #region 追加一条词条：按管线权重有序插入追加集并重建生效集，原型上调用抛异常
-
-        internal void AddAffix(CardAffix affix_)
-        {
-            if (_isCanonical) throw new InvalidOperationException("卡原型不可在运行时被改动，请先经 CardModel.ToMutable() 克隆出可变副本。");
-            InsertOrdered(AdditionalAffixes, affix_);
-            RebuildActive();
-        }
-
-        #endregion
-
         // 应用一条升级补丁：层数补丁加在状态原型上，卡级费用直接加在容器上，其余按通道找到数值容器
         private void ApplyPatch(CM_ValuePatch patch_)
         {

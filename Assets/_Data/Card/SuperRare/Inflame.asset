@@ -20,6 +20,7 @@ MonoBehaviour:
   _targetType: 1
   _affixes:
   - rid: 8162842063485534210
+  - rid: 8162842080793329664
   _canUpdate: 1
   _upgrades:
   - rid: 8162842075076493312
@@ -36,3 +37,6 @@ MonoBehaviour:
       data:
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
         _additive: 2
+    - rid: 8162842080793329664
+      type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

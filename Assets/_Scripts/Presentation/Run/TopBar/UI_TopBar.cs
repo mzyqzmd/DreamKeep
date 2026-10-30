@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>整局顶部状态栏：run 装配完成后自动显示（主菜单兼作 run 基地）。
     /// 订阅整局数据变更（HP / 金币 / 层数）刷新对应文本，而非每帧轮询；已用时长用轻量计时器显示。
-    /// 地图按钮已接到占位地图面板的开合；卡组与菜单仍是占位（仅打印日志）。</summary>
+    /// 地图与卡组按钮已接到各自面板的开合；菜单仍是占位（仅打印日志）。</summary>
     public sealed class UI_TopBar : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _hpText;
@@ -94,7 +94,7 @@ namespace _DreamKeep.Presentation
         private void WireButtons()
         {
             if (_mapButton) _mapButton.onClick.AddListener(ToggleMap);
-            if (_deckButton) _deckButton.onClick.AddListener(TogglePanel);
+            if (_deckButton) _deckButton.onClick.AddListener(ToggleDeck);
             if (_menuButton) _menuButton.onClick.AddListener(TogglePanel);
         }
 
@@ -114,7 +114,14 @@ namespace _DreamKeep.Presentation
             else Debug.Log("地图面板未接线");
         }
 
-        // 卡组与菜单仍是占位：面板尚未摆进场景时引用为空，点击仅作空监听
+        // 卡组面板开关：与地图同款 Toggle；面板尚未摆进场景时引用为空，点击仅作空监听
+        private void ToggleDeck()
+        {
+            if (_deckPanel) _deckPanel.Toggle();
+            else Debug.Log("卡组面板未接线");
+        }
+
+        // 菜单仍是占位：面板尚未摆进场景时引用为空，点击仅作空监听
         private void TogglePanel() => Debug.Log("占位按钮");
 
         #endregion

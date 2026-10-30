@@ -30,7 +30,7 @@ MonoBehaviour:
     - rid: 8162841624679546880
       type: {class: AD_GainEnergy, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 2
+        _amount: 3
     - rid: 8162841624679546881
       type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 

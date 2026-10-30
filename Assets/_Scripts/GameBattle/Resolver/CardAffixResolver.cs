@@ -28,7 +28,7 @@ namespace _DreamKeep.GameBattle
         public static List<Creature> PreviewTargets(BattleContext battleContext_, CardModel card_, Player player_,
             int aimSlot_) =>
             card_.IsRandomEnemyTarget
-                ? ToCreatures(battleContext_.GetAliveEnemies())
+                ? battleContext_.GetAliveCreatures()
                 : ResolveTarget(battleContext_, card_, player_, aimSlot_);
 
         #endregion
@@ -40,29 +40,24 @@ namespace _DreamKeep.GameBattle
             if (card_.IsNoneTarget) return new List<Creature>();
             if (card_.IsSelfTarget) return new List<Creature> { player_.Creature };
 
-            List<Enemy> alive = battleContext_.GetAliveEnemies();
+            List<Creature> alive = battleContext_.GetAliveCreatures();
             if (alive.Count == 0) return new List<Creature>();
-            if (card_.IsAllEnemyTarget) return ToCreatures(alive);
+            if (card_.IsAllEnemyTarget) return alive;
             if (card_.IsRandomEnemyTarget)
-                return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)].Creature };
-            if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0].Creature };
+                return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)] };
+            if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0] };
             // 瞄准下标来自表现层命令，可能为 -1（未瞄准）或目标刚死而越界：按空落点处理，与药水解析同口径
             if (card_.IsAnyEnemyTarget)
                 return aimSlot_ >= 0 && aimSlot_ < alive.Count
-                    ? new List<Creature> { alive[aimSlot_].Creature }
+                    ? new List<Creature> { alive[aimSlot_] }
                     : new List<Creature>();
             return new List<Creature>();
         }
 
-        private static List<Creature> ToCreatures(List<Enemy> enemies_)
-        {
-            List<Creature> creatures = new List<Creature>();
-            for (int i = 0; i < enemies_.Count; i++)
-                creatures.Add(enemies_[i].Creature);
-            return creatures;
-        }
+        // 自身落点：资源型词条（格挡/失血/抽牌/能量）恒定作用于出牌者，与卡牌是否以敌人为目标无关
+        private static List<Creature> SelfTargets(Creature source_) => new List<Creature> { source_ };
 
-        // 按词条类型转动作：伤害与状态作用于敌方，其余作用于自身；重复次数由词条自身决定
+        // 按词条类型转动作：伤害/状态/位移用卡牌落点，资源型词条恒为出牌者；重复次数由词条自身决定
         private static void ResolveAffix(BattleContext battleContext_, CardAffix affix_, Creature source_,
             List<Creature> targets_, CardModel card_, List<BattleAction> actions_)
         {
@@ -75,29 +70,25 @@ namespace _DreamKeep.GameBattle
                             : new BA_Damage(source_, targets_, damage.Amount.Value));
                     break;
                 case CA_Block block:
-                    actions_.Add(new BA_Block(source_, targets_, block.Amount.Value));
+                    actions_.Add(new BA_Block(source_, SelfTargets(source_), block.Amount.Value));
                     break;
                 case CA_ApplyPerk applyPerk:
                     actions_.Add(new BA_ApplyPerk(source_, targets_, applyPerk.Perk));
                     break;
                 case CA_DrawCard drawCard:
                     for (int i = 0; i < drawCard.Count.Value; i++)
-                        actions_.Add(new BA_DrawCard(source_, targets_));
+                        actions_.Add(new BA_DrawCard(source_, SelfTargets(source_)));
                     break;
                 case CA_GainEnergy gainEnergy:
-                    actions_.Add(new BA_GainEnergy(source_, targets_, gainEnergy.Amount.Value));
+                    actions_.Add(new BA_GainEnergy(source_, SelfTargets(source_), gainEnergy.Amount.Value));
                     break;
                 case CA_LostHealth lostHealth:
-                    actions_.Add(new BA_LoseHealth(source_, targets_, lostHealth.Amount.Value));
+                    actions_.Add(new BA_LoseHealth(source_, SelfTargets(source_), lostHealth.Amount.Value));
                     break;
                 case CA_MoveEnemy moveEnemy:
                     foreach (Enemy enemy in battleContext_.Enemies)
                         if (!enemy.Creature.IsDead && targets_.Contains(enemy.Creature))
                             actions_.Add(new BA_MoveEnemy(enemy, moveEnemy.Offset.Value));
-                    break;
-                case CA_Grant grant:
-                    // 每张被授予的卡各自持有一份克隆，避免多张卡共享同一词条实例
-                    actions_.Add(new BA_Grant(source_, targets_, grant.Count.Value, grant.GrantedAffix));
                     break;
                 case CA_Erase _:
                     actions_.Add(new BA_Erase(source_, targets_, card_));

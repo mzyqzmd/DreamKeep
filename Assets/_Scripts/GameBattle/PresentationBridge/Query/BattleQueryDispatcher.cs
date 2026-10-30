@@ -31,14 +31,7 @@ namespace _DreamKeep.GameBattle
         }
 
         /// <summary>存活敌人列表：按槽位排序，顺序即瞄准下标（aimSlot）的语义。</summary>
-        public IReadOnlyList<Creature> GetAliveEnemies()
-        {
-            List<Enemy> alive = _battleContext.GetAliveEnemies();
-            List<Creature> creatures = new(alive.Count);
-            for (int i = 0; i < alive.Count; i++)
-                creatures.Add(alive[i].Creature);
-            return creatures;
-        }
+        public IReadOnlyList<Creature> GetAliveEnemies() => _battleContext.GetAliveCreatures();
 
         /// <summary>预览这张牌在指定瞄准下标下会命中的目标：与结算共用同一份落点解析。</summary>
         public IReadOnlyList<Creature> PreviewTargets(CardModel card_, int aimSlot_)
