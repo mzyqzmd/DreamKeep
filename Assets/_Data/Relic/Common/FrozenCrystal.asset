@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11ef40fc07d35374aae786ee4b80a49f, type: 3}
+  m_Name: FrozenCrystal
+  m_EditorClassIdentifier: 
+  _relicName: "\u6C38\u51BB\u51B0\u6676"
+  _icon: {fileID: 21300000, guid: e464f2a79f47af045aa1bc6cf261215b, type: 3}
+  _rarity: 1
+  _description: "\u6BCF\u573A\u6218\u6597\u4E2D\u7B2C\u4E00\u6B21\u6253\u51FA\u80FD\u529B\u724C\u65F6\uFF0C\u83B7\u5F97
+    <color=green>7</color> \u70B9\u683C\u6321\u3002"
+  _block: 7

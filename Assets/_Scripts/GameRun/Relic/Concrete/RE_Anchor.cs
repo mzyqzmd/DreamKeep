@@ -7,8 +7,9 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>锚：每场战斗开始时获得格挡。
-    /// 挂首回合「回合开始」事件——清格挡在其之前已执行完，此处获得的格挡不会被清；
-    /// 挂战斗开始事件反而会先加挡再被清（回合开始无条件 BA_ClearBlock）。</summary>
+    /// 挂玩家回合开窗事件（清格挡与初始抽牌之后）——此刻加的格挡不会被本回合开始清掉；
+    /// 挂 BE_TurnStarted 或战斗开始事件都会先加挡、再被回合开始的 BA_ClearBlock 清空。
+    /// 格挡来源传 null：遗物格挡不吃敏捷。</summary>
     public sealed class RE_Anchor : RelicEffect
     {
         private readonly SO_Anchor _data;
@@ -27,7 +28,7 @@ namespace _DreamKeep.GameRun
             if (_granted) return;
             _granted = true;
             Creature self = Context.Player.Creature;
-            await PerformAsync(new BA_Block(self, new List<Creature> { self }, _data.Block));
+            await PerformAsync(new BA_Block(null, new List<Creature> { self }, _data.Block));
         }
     }
 }

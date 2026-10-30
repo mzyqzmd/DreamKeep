@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
-using _DreamKeep.Presentation.Intent;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
 using UnityEngine;
@@ -19,6 +18,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_HealIntent _healIntentPrefab;
         [SerializeField] private UI_MoveIntent _moveIntentPrefab;
         [SerializeField] private UI_ApplyPerkIntent _applyPerkIntentPrefab;
+        [SerializeField] private UI_StunIntent _stunIntentPrefab;
 
         // 当前展示的图标（按排列顺序）：归还只认自己这份名单，不扫子物体——池的空闲实例也挂在本组名下
         private readonly List<UI_Intent> _icons = new();
@@ -75,6 +75,9 @@ namespace _DreamKeep.Presentation
                     break;
                 case EI_ApplyPerk applyPerk:
                     Spawn(_applyPerkIntentPrefab)?.Bind(applyPerk);
+                    break;
+                case EI_Stun stun:
+                    Spawn(_stunIntentPrefab)?.Bind(stun);
                     break;
             }
         }

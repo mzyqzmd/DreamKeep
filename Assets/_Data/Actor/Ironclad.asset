@@ -27,7 +27,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
   - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
   - {fileID: 11400000, guid: 4bf845d60c73d6045a43bfa0817b0869, type: 2}
-  - {fileID: 11400000, guid: 305cdfec2482e304e9851e2309768c0b, type: 2}
+  - {fileID: 11400000, guid: 0f79b89f8c445554b88eec5d001fc58c, type: 2}
+  - {fileID: 11400000, guid: 5e6edcec72357c94897fcf7ddd101888, type: 2}
+  - {fileID: 11400000, guid: b3ff74ef97844b34488a7e0ea5d26203, type: 2}
+  - {fileID: 11400000, guid: d252f075127e1e44495f28e52a858e03, type: 2}
+  - {fileID: 11400000, guid: 1a1f710852b524547b6698332804f572, type: 2}
+  - {fileID: 11400000, guid: 33b92042b2187084c942016e7e004f56, type: 2}
+  - {fileID: 11400000, guid: c9a9bf459c17ed7429cfd25e8c1d9834, type: 2}
+  - {fileID: 11400000, guid: 143026d21e2f00d4bb2e7d81274c8033, type: 2}
+  - {fileID: 11400000, guid: 4c1379d594670bc4e9c7d1346fd8e8da, type: 2}
   _startRelics:
   - {fileID: 11400000, guid: 929c0b0c991d5874f92574451d2dca5c, type: 2}
   - {fileID: 11400000, guid: ad6819c31d098c746a437f61e4a4ee8d, type: 2}
@@ -38,6 +46,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 20e3562f1b567a94f95c7c89fce81db5, type: 2}
   - {fileID: 11400000, guid: bf43c351008aa7b409b1d04cfd1c4720, type: 2}
   - {fileID: 11400000, guid: 6412fdff43248544fb38031d5ae69363, type: 2}
+  - {fileID: 11400000, guid: b1964523575da634cbbbb338d3bea076, type: 2}
+  - {fileID: 11400000, guid: 324ea21403f53bc4d9eb0c7af5516eb0, type: 2}
   _startPotions:
   - {fileID: 11400000, guid: d44b172a3483fde469ca7859f2270547, type: 2}
   - {fileID: 11400000, guid: f1944affcb10874429eaf085f7877eee, type: 2}

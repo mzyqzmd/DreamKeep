@@ -247,12 +247,5 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
-
-        /// <summary>升级本卡面的卡并重刷显示（Play 模式测试入口，由 Tools/DreamKeep/开发面板 调用）。</summary>
-        public void Upgrade()
-        {
-            Card.Upgrade();
-            Bind(Card);
-        }
     }
 }

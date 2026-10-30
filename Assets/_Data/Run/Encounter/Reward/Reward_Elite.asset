@@ -15,8 +15,15 @@ MonoBehaviour:
   _goldMin: 30
   _goldMax: 40
   _cardRewardCount: 1
-  _cardPool: {fileID: 11400000, guid: 098b3fff6896be84d99881881cb446e0, type: 2}
+  _cardPools:
+  - {fileID: 11400000, guid: 243ad49d51066e443978561f50725df9, type: 2}
+  - {fileID: 11400000, guid: 05d6b0974a12f784c8ca2d5a20769bc8, type: 2}
+  - {fileID: 11400000, guid: 0936f29f954d70449a3727f80ee80544, type: 2}
   _potionChance: 0.6
-  _potionPool: {fileID: 11400000, guid: eb940daa83f74aa41aa5cb848e543e73, type: 2}
+  _potionPools:
+  - {fileID: 11400000, guid: b10f622058f379141bae684b6a23083b, type: 2}
+  - {fileID: 11400000, guid: 78fbfa36c8cb4554d920a40ec7d0173e, type: 2}
   _relicCount: 1
-  _relicPool: {fileID: 11400000, guid: ce9485a46da052246af57e55e957ecd3, type: 2}
+  _relicPools:
+  - {fileID: 11400000, guid: 38638f9c8f3550243b4d5c6432ee892a, type: 2}
+  - {fileID: 11400000, guid: 8f36bccb1308b5c449f08eed0fefa7d7, type: 2}

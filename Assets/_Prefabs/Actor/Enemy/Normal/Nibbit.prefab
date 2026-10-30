@@ -394,7 +394,7 @@ MonoBehaviour:
   _blockView: {fileID: 8681322646528551516}
   _perkGroup: {fileID: 3168020003765678499}
   _skeleton: {fileID: 5303775420819641571}
-  _targetTip: {fileID: 8209362450807832573}
+  _hoverReticle: {fileID: 8209362450807832573}
   _actorName: {fileID: 8474587368811794539}
   _outlineShader: {fileID: 4800000, guid: 28b5cf4804845fe4b868531fd0bb81d5, type: 3}
   _skeletonMaterial: {fileID: 2100000, guid: fe03a929ad002e74d83053c16f14bc3e, type: 2}
@@ -475,7 +475,7 @@ GameObject:
   - component: {fileID: 8578397009708471471}
   - component: {fileID: 6061588420893434020}
   m_Layer: 5
-  m_Name: TargetTip
+  m_Name: HoverReticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -854,6 +854,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5643800788605801034, guid: 3e1dfa257926c2a4f8cb8f7796d8e1dd, type: 3}
+      propertyPath: _stunIntentPrefab
+      value: 
+      objectReference: {fileID: 5140948110339536469, guid: 5f9ec9ea50492be4398929ba3fdaa22a, type: 3}
     - target: {fileID: 7169763124600492154, guid: 3e1dfa257926c2a4f8cb8f7796d8e1dd, type: 3}
       propertyPath: m_Name
       value: IntentGroupPanel

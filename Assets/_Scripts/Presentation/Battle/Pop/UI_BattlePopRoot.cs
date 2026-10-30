@@ -15,11 +15,15 @@ namespace _DreamKeep.Presentation
     public sealed class UI_BattlePopRoot : MonoBehaviour
     {
         [Header("数字飘字")] [SerializeField] private Color _damageColor = new(1f, 0.28f, 0.22f);
+
+        [Tooltip("失去生命的飘字色：比伤害更深，二者靠颜色与文案区分")] [SerializeField]
+        private Color _lostHealthColor = new(0.62f, 0.05f, 0.05f);
+
         [SerializeField] private Color _healColor = new(0.35f, 0.92f, 0.45f);
         [SerializeField] private Color _blockColor = new(0.55f, 0.82f, 1f);
 
         [Tooltip("相对骨架顶沿的抬升（画布像素）")] [SerializeField]
-        private float _liftPx = 40f;
+        private float _liftPx = 20f;
 
         [Tooltip("数字起点的横向随机抖动（画布像素）：多段伤害同时出现时错开")] [SerializeField]
         private float _jitterPx = 18f;
@@ -41,6 +45,7 @@ namespace _DreamKeep.Presentation
             _popFactory = popFactory_;
             _rng = rng_;
             dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
+            dispatcher_.Register<BE_HealthLost>(OnHealthLost);
             dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
             dispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
         }
@@ -56,6 +61,10 @@ namespace _DreamKeep.Presentation
             else
                 ShowNumber(hpLoss.ToString(), _damageColor, ENumberPopTipType.Toss, dealt_.Target);
         }
+
+        // 失去生命：无视格挡直接掉血，文案带「失去」与深色，避免与伤害数字混淆
+        private void OnHealthLost(BE_HealthLost lost_) =>
+            ShowNumber($"失去 {lost_.Amount}", _lostHealthColor, ENumberPopTipType.Toss, lost_.Target);
 
         // 回血：Amount 已是实际回复量（域侧钳到上限），没有真正恢复就不弹数字；回血特效由 VFXRoot 照播，零回复也播
         private void OnHealthRestored(BE_HealthRestored restored_)

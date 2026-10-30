@@ -2,7 +2,7 @@ using _DreamKeep.RuntimeData;
 using _DreamKeep.CommonPresentation;
 using UnityEngine;
 
-namespace _DreamKeep.Presentation.Intent
+namespace _DreamKeep.Presentation
 {
     /// <summary>意图图标基类：悬停说明交给同节点的气泡发起器（内容在这里喂给它，触发方式与定位都在那份组件上配）；
     /// 具体图标在 Bind 里登记自己对应的意图，说明文案取它的名称与描述。</summary>

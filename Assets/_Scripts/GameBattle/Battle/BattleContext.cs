@@ -15,6 +15,9 @@ namespace _DreamKeep.GameBattle
         /// <summary>当前回合序号：从 1 起，我方与敌方回合共享同一个 n，敌人回合结束阶段才 ++。</summary>
         public int TurnCount { get; set; } = 1;
 
+        /// <summary>玩家每回合抽牌数：由 BattleLoop 装配时写入，供遗物读取"初始手牌张数"。</summary>
+        public int DrawPerTurn { get; internal set; }
+
         /// <summary>一场战斗最多同时参与的敌人数。</summary>
         public const int MaxEnemyCount = 2;
 

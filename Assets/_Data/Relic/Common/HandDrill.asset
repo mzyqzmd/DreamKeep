@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32bd959c0b38f3b47a7b134c49ac2537, type: 3}
+  m_Name: HandDrill
+  m_EditorClassIdentifier: 
+  _relicName: "\u624B\u94BB"
+  _icon: {fileID: 21300000, guid: 69e89fe5f33b5a14da192078dcc24ea7, type: 3}
+  _rarity: 1
+  _description: "\u6253\u7834\u654C\u4EBA\u683C\u6321\u65F6\uFF0C\u7ED9\u4E88\u5176
+    <color=green>2</color> \u5C42\u6613\u4F24\u3002"
+  _vulnerable: {fileID: 11400000, guid: 635652384785c3e40afdbaba0e9f7795, type: 2}
+  _layers: 2

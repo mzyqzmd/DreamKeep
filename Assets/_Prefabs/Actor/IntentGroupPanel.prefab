@@ -55,6 +55,7 @@ MonoBehaviour:
   _healIntentPrefab: {fileID: 3244748537314421812, guid: 5b7254a5cbc332442a7f9d8648fdaa0f, type: 3}
   _moveIntentPrefab: {fileID: 6856655943348080542, guid: 8688b25b635645f4ca7e6709e20fa2f1, type: 3}
   _applyPerkIntentPrefab: {fileID: 4808077870620195035, guid: a62bccc376bdaba40b9d02a91ccb9969, type: 3}
+  _stunIntentPrefab: {fileID: 5140948110339536469, guid: 5f9ec9ea50492be4398929ba3fdaa22a, type: 3}
 --- !u!114 &5845634506702807711
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>怪物池：按遭遇种类与当前层数给出候选遭遇列表，抽取由调用方用整局随机流完成——
     /// 配置资产不认识随机源。弱强分界是池自己的知识（弱怪只在前 3 层出现），调用方只说"什么遭遇、第几层"。</summary>
-    [CreateAssetMenu(fileName = "MonsterPool", menuName = "DreamKeep/Data/Run/Encounter/Monster Pool")]
+    [CreateAssetMenu(fileName = "MonsterPool", menuName = "DreamKeep/Data/Pool/Monster Pool")]
     public sealed class SO_MonsterPool : ScriptableObject
     {
         /// <summary>弱怪池的最后层数：该层及以前取弱怪池，之后取强怪池。</summary>

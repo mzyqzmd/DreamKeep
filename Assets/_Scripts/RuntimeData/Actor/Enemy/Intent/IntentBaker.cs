@@ -38,6 +38,7 @@ namespace _DreamKeep.RuntimeData
                 ApplyPerkIntentData applyPerk => ToApplyPerk(applyPerk),
                 MixedIntentData mixed => new EI_Mixed(ToRuntime(mixed.Intent1), ToRuntime(mixed.Intent2)),
                 MoveIntentData => new EI_Move(),
+                StunIntentData => new EI_Stun(),
                 HealIntentData heal => new EI_Heal(heal.Amount),
                 _ => null,
             };

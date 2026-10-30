@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: BloodWall
+  m_EditorClassIdentifier: 
+  _name: "\u8840\u5899"
+  _cost: 2
+  _icon: {fileID: 21300000, guid: 47e0e849066a18a4b993b89da7a7ec40, type: 3}
+  _rarity: 0
+  _type: 1
+  _targetType: 1
+  _affixes:
+  - rid: 8162842063485534217
+  - rid: 8162842063485534218
+  _canUpdate: 1
+  _upgrades:
+  - rid: 8162842063485534219
+  references:
+    version: 2
+    RefIds:
+    - rid: 8162842063485534217
+      type: {class: AD_LostHealth, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 2
+    - rid: 8162842063485534218
+      type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 16
+    - rid: 8162842063485534219
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 3
+        _additive: 4
+        _multiplier: 1

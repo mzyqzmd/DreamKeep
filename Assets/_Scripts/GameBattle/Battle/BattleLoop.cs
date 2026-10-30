@@ -40,6 +40,7 @@ namespace _DreamKeep.GameBattle
         {
             BattleContext = battleContext_;
             DrawPerTurn = drawPerTurn_;
+            battleContext_.DrawPerTurn = drawPerTurn_; // 遗物要读初始手牌张数，装配时一次写入
             EventDispatcher = eventDispatcher_;
 
             ActionSystem = new ActionSystem(battleContext_, eventDispatcher_);

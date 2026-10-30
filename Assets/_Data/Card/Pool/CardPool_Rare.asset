@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32a8101dacaf23e4cbabda7e1da9e081, type: 3}
+  m_Name: CardPool_Rare
+  m_EditorClassIdentifier: 
+  _cards:
+  - {fileID: 11400000, guid: d2dc3f72c95be0742b118c7e544d40a8, type: 2}
+  - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
+  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
+  - {fileID: 11400000, guid: 71408ca01cda3474db50d4b4536e0cb3, type: 2}

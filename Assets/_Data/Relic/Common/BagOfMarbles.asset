@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: faf98977b8c628d43bd7669eac80b1e5, type: 3}
+  m_Name: BagOfMarbles
+  m_EditorClassIdentifier: 
+  _relicName: "\u5F39\u73E0\u888B"
+  _icon: {fileID: 21300000, guid: 2f68b124ad91f6c44a78f4ede61c331d, type: 3}
+  _rarity: 1
+  _description: "\u6218\u6597\u5F00\u59CB\u65F6\uFF0C\u7ED9\u4E88\u6240\u6709\u654C\u4EBA
+    <color=green>1</color> \u5C42\u6613\u4F24\u3002"
+  _vulnerable: {fileID: 11400000, guid: 635652384785c3e40afdbaba0e9f7795, type: 2}
+  _layers: 1

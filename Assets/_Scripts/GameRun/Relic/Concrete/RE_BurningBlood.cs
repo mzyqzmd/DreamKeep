@@ -20,7 +20,10 @@ namespace _DreamKeep.GameRun
             Dispatcher.Register<BE_BattleEnded>(OnBattleEnded);
         }
 
-        private async UniTask OnBattleEnded(BE_BattleEnded ev_) =>
+        private async UniTask OnBattleEnded(BE_BattleEnded ev_)
+        {
+            if (!ev_.IsVictory) return; // 战败不触发：只播报胜利后的回血
             await PerformAsync(new BA_Heal(null, new List<Creature> { Context.Player.Creature }, _data.Heal));
+        }
     }
 }

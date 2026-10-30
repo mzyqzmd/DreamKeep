@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef5b18fa202f3c49812ef7c7bd8fc3e, type: 3}
+  m_Name: ParryShield
+  m_EditorClassIdentifier: 
+  _relicName: "\u62DB\u67B6\u76FE"
+  _icon: {fileID: 21300000, guid: d8f4c5ca52a6f3b49b88c0028adfeb1d, type: 3}
+  _rarity: 1
+  _description: "\u56DE\u5408\u7ED3\u675F\u65F6\u82E5\u683C\u6321\u4E0D\u5C11\u4E8E
+    <color=yellow>10</color> \u70B9\uFF0C\u5BF9\u968F\u673A\u654C\u4EBA\u9020\u6210
+    <color=yellow>7</color> \u70B9\u4F24\u5BB3\u3002"
+  _blockThreshold: 10
+  _damage: 7

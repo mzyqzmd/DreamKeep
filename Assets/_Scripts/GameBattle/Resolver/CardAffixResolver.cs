@@ -15,7 +15,7 @@ namespace _DreamKeep.GameBattle
             List<Creature> targets = ResolveTarget(battleContext_, card_, player_, aimSlot_);
             List<BattleAction> actions = new List<BattleAction>();
             foreach (CardAffix affix in card_.ActiveAffixes)
-                ResolveAffix(affix, player_.Creature, targets, card_, actions);
+                ResolveAffix(battleContext_, affix, player_.Creature, targets, card_, actions);
             return actions;
         }
 
@@ -63,8 +63,8 @@ namespace _DreamKeep.GameBattle
         }
 
         // 按词条类型转动作：伤害与状态作用于敌方，其余作用于自身；重复次数由词条自身决定
-        private static void ResolveAffix(CardAffix affix_, Creature source_, List<Creature> targets_,
-            CardModel card_, List<BattleAction> actions_)
+        private static void ResolveAffix(BattleContext battleContext_, CardAffix affix_, Creature source_,
+            List<Creature> targets_, CardModel card_, List<BattleAction> actions_)
         {
             switch (affix_)
             {
@@ -86,6 +86,14 @@ namespace _DreamKeep.GameBattle
                     break;
                 case CA_GainEnergy gainEnergy:
                     actions_.Add(new BA_GainEnergy(source_, targets_, gainEnergy.Amount.Value));
+                    break;
+                case CA_LostHealth lostHealth:
+                    actions_.Add(new BA_LoseHealth(source_, targets_, lostHealth.Amount.Value));
+                    break;
+                case CA_MoveEnemy moveEnemy:
+                    foreach (Enemy enemy in battleContext_.Enemies)
+                        if (!enemy.Creature.IsDead && targets_.Contains(enemy.Creature))
+                            actions_.Add(new BA_MoveEnemy(enemy, moveEnemy.Offset.Value));
                     break;
                 case CA_Grant grant:
                     // 每张被授予的卡各自持有一份克隆，避免多张卡共享同一词条实例

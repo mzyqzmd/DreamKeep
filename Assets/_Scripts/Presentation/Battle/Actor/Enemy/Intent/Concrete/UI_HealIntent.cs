@@ -1,6 +1,6 @@
 using _DreamKeep.RuntimeData;
 
-namespace _DreamKeep.Presentation.Intent
+namespace _DreamKeep.Presentation
 {
     /// <summary>治疗意图图标：纯图标展示，数值不对外展示（占位视图，将来有专属表现再补）。</summary>
     public sealed class UI_HealIntent : UI_Intent

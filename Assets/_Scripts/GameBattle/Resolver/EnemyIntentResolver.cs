@@ -47,6 +47,9 @@ namespace _DreamKeep.GameBattle
                 case EI_Move:
                     actions_.Add(new BA_Move(enemy_));
                     break;
+                // 击晕不产生任何动作：敌人回合执行到它即跳过行动，由阶段侧清除击晕标记
+                case EI_Stun:
+                    break;
                 case EI_Heal heal:
                     actions_.Add(new BA_Heal(enemy_.Creature, new List<Creature> { enemy_.Creature }, heal.Amount));
                     break;

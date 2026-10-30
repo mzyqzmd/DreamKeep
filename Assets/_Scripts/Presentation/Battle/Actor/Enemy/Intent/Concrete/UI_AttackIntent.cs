@@ -4,7 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace _DreamKeep.Presentation.Intent
+namespace _DreamKeep.Presentation
 {
     /// <summary>攻击意图图标：按伤害数值选档位图，单次只写伤害、多次写"伤害 × 次数"；
     /// 数值随修正实时刷新（敌人的力量/虚弱、玩家的易伤），不套颜色语义——数字变大对玩家是不利信号，与卡面"绿=变强"方向相反；

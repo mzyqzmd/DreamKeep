@@ -55,6 +55,8 @@ namespace _DreamKeep.RuntimeData
                 AD_Exhaust exhaust => new CA_Exhaust(exhaust),
                 AD_GainEnergy gainEnergy => new CA_GainEnergy(gainEnergy),
                 AD_Grant grant => ToGrant(grant),
+                AD_LostHealth lostHealth => new CA_LostHealth(lostHealth),
+                AD_MoveEnemy moveEnemy => new CA_MoveEnemy(moveEnemy),
                 AD_Retain retain => new CA_Retain(retain),
                 AD_UnableToPlay unableToPlay => new CA_UnableToPlay(unableToPlay),
                 _ => null,

@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e398fd1b72eedf4385f95b854bb2b41, type: 3}
   m_Name: SO_AssetRenamerConfig
   m_EditorClassIdentifier: 
-  _prefix: a
+  _prefix: 
   _suffix: 
-  _find: Background_OverGrowth
-  _replace: Bg_Normal
+  _find: 
+  _replace: 
   _useNumbering: 0
   _startNumber: 1
   _caseMode: 0

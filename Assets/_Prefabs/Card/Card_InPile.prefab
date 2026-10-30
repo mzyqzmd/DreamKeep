@@ -129,7 +129,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68dc29e8f236406d9831af1c6d19cf91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _scaleOnHover: 1.05
+  _selfDriven: 1
+  _scaleFactor: 1.05
+  _hoverScale: 1.05
   _duration: 0.2
   _ease: 27
   _targetToScale: {fileID: 0}

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24c3781967be5604ebc1bc17a8cbee69, type: 3}
+  m_Name: FyshOil
+  m_EditorClassIdentifier: 
+  _potionName: "\u5F02\u9C7C\u4E4B\u6CB9"
+  _icon: {fileID: 21300000, guid: e575c9a6b4d097b4e988990a7cf2693d, type: 3}
+  _rarity: 1
+  _liquidColor: {r: 0.3, g: 0.75, b: 0.85, a: 1}
+  _description: "\u83B7\u5F97 <color=#7BD37B>1</color> \u5C42\u529B\u91CF\u4E0E <color=#7BD37B>1</color>
+    \u5C42\u654F\u6377\u3002"
+  _strength: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+  _strengthLayers: 1
+  _dexterity: {fileID: 11400000, guid: 8749e2db03cae0044b1dec8f8fba7e62, type: 2}
+  _dexterityLayers: 1

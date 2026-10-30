@@ -345,8 +345,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "26 \u91D1\u5E01"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 72cad7d7a9469bf48a5a6ba27d4e30ad, type: 2}
-  m_sharedMaterial: {fileID: 6532101772772996754, guid: 72cad7d7a9469bf48a5a6ba27d4e30ad, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 922bf5ad07fd4b64593510f9a3dad62c, type: 2}
+  m_sharedMaterial: {fileID: -7912357381246324275, guid: 922bf5ad07fd4b64593510f9a3dad62c, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -571,6 +571,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 848573550301902760}
+  - component: {fileID: 2527411451512919542}
   m_Layer: 5
   m_Name: HoverReticle
   m_TagString: Untagged
@@ -601,6 +602,27 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 27.94, y: 33.02}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!95 &2527411451512919542
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7817294231690078961}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 747eb63d33a409a4ab94a659c1a3aef3, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &8013863120287821890
 GameObject:
   m_ObjectHideFlags: 0

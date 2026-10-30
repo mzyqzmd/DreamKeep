@@ -58,7 +58,7 @@ MonoBehaviour:
   _blockView: {fileID: 2617685378078802007}
   _perkGroup: {fileID: 8637538362073586600}
   _skeleton: {fileID: 1918114150593664658}
-  _targetTip: {fileID: 5087547631459548789}
+  _hoverReticle: {fileID: 5087547631459548789}
   _actorName: {fileID: 3004580755406223968}
   _outlineShader: {fileID: 4800000, guid: 28b5cf4804845fe4b868531fd0bb81d5, type: 3}
   _skeletonMaterial: {fileID: 2100000, guid: fec3262e4394dcb4ea252eda1b9c7349, type: 2}
@@ -471,7 +471,7 @@ GameObject:
   - component: {fileID: 5288321073045967303}
   - component: {fileID: 6582643112323962624}
   m_Layer: 5
-  m_Name: TargetTip
+  m_Name: HoverReticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

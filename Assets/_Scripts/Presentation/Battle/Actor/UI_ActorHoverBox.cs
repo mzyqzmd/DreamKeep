@@ -48,9 +48,9 @@ namespace _DreamKeep.Presentation
         /// <summary>显示或隐藏目标提示（状态没变就跳过，避免重复 SetActive）。</summary>
         public void ShowTargetTip(bool show_)
         {
-            if (!_actor.TargetTip || _targetTipShown == show_) return;
+            if (!_actor.HoverReticle || _targetTipShown == show_) return;
             _targetTipShown = show_;
-            _actor.TargetTip.gameObject.SetActive(show_);
+            _actor.HoverReticle.gameObject.SetActive(show_);
         }
 
         /// <summary>世界点是否落在本单位命中区内：就是本节点的矩形，与指针悬停范围同源。</summary>

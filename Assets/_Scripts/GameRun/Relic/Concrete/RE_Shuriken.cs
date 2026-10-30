@@ -20,7 +20,7 @@ namespace _DreamKeep.GameRun
         {
             _data = data_;
             _perk = PerkBaker.Bake(data_.Strength);
-            _perk.AddLayers(data_.Layers);
+            if (_perk != null) _perk.AddLayers(data_.Layers);
             Dispatcher.Register<BE_CardPlayed>(OnCardPlayed);
             Dispatcher.Register<BE_TurnStarted>(OnTurnStarted);
         }

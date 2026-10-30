@@ -24,8 +24,7 @@ namespace _DreamKeep.GameRun
         private async UniTask OnPlayerTurnEnded(BE_PlayerTurnEnded ev_)
         {
             if (Context.Player.Creature.Block != 0) return;
-            Creature self = Context.Player.Creature;
-            await PerformAsync(new BA_Block(self, new List<Creature> { self }, _data.Block));
+            await PerformAsync(new BA_Block(null, new List<Creature> { Context.Player.Creature }, _data.Block));
         }
     }
 }

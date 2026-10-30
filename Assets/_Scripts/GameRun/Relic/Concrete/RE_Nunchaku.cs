@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using _DreamKeep.ConfigData;
+using _DreamKeep.GameBattle;
+using _DreamKeep.RuntimeData;
+
+namespace _DreamKeep.GameRun
+{
+    /// <summary>双截棍：每回合每打出 N 张攻击牌，获得能量；回合开始时重置计数。</summary>
+    public sealed class RE_Nunchaku : RelicEffect
+    {
+        private readonly SO_Nunchaku _data;
+        private int _count;
+
+        public RE_Nunchaku(SO_Nunchaku data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
+            RelicTriggerNotifier notifier_)
+            : base(data_, context_, actions_, dispatcher_, notifier_)
+        {
+            _data = data_;
+            Dispatcher.Register<BE_TurnStarted>(OnTurnStarted);
+            Dispatcher.Register<BE_CardPlayed>(OnCardPlayed);
+        }
+
+        private void OnTurnStarted(BE_TurnStarted ev_)
+        {
+            if (ev_.IsPlayerTurn) _count = 0;
+        }
+
+        private async UniTask OnCardPlayed(BE_CardPlayed ev_)
+        {
+            if (ev_.Card.Type != ECardType.Attack) return;
+            if (++_count < _data.Count) return;
+            _count = 0;
+            Creature self = Context.Player.Creature;
+            await PerformAsync(new BA_GainEnergy(self, new List<Creature> { self }, _data.Energy));
+        }
+    }
+}

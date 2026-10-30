@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dcb16709205f5947962c5835d96ccff, type: 3}
+  m_Name: Kunai
+  m_EditorClassIdentifier: 
+  _relicName: "\u82E6\u65E0"
+  _icon: {fileID: 21300000, guid: 6c4698af79e90644aa864b1c4fbbc153, type: 3}
+  _rarity: 1
+  _description: "\u6BCF\u56DE\u5408\u6BCF\u6253\u51FA <color=yellow>3</color> \u5F20\u653B\u51FB\u724C\uFF0C\u83B7\u5F97
+    <color=green>1</color> \u70B9\u654F\u6377\u3002"
+  _count: 3
+  _dexterity: {fileID: 11400000, guid: 8749e2db03cae0044b1dec8f8fba7e62, type: 2}
+  _layers: 1

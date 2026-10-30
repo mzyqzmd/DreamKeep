@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TwigSlime
   m_EditorClassIdentifier: 
   _name: "\u6811\u679D\u53F2\u83B1\u59C6"
-  _maxHP: 30
+  _maxHP: 24
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841580618121217
@@ -22,7 +22,7 @@ MonoBehaviour:
     rid: 8162841560953389058
   _startPerks:
   - _perk: {fileID: 11400000, guid: af07ad84149d61b4caef0182aa0a53b9, type: 2}
-    _layers: 2
+    _layers: 1
   references:
     version: 2
     RefIds:
@@ -42,7 +42,7 @@ MonoBehaviour:
     - rid: 8162841580618121217
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 7
+        _amount: 5
     - rid: 8162841984668532746
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -59,5 +59,5 @@ MonoBehaviour:
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk: {fileID: 11400000, guid: 139c551b474963d449f421596cfc1e31, type: 2}
-        _layers: 2
+        _layers: 1
         _isSelf: 0

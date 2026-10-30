@@ -37,8 +37,9 @@ namespace _DreamKeep.GameBattle
                 case SO_StrengthPotion strength:
                     AddPerk(actions, source, targets_, strength.Perk, strength.Layers);
                     break;
+                // 药水格挡不参与敏捷修正（敏捷只加"从卡牌中获得"的格挡），故来源传 null
                 case SO_BlockPotion block:
-                    actions.Add(new BA_Block(source, targets_, block.Amount));
+                    actions.Add(new BA_Block(null, targets_, block.Amount));
                     break;
                 case SO_EnergyPotion energy:
                     actions.Add(new BA_GainEnergy(source, targets_, energy.Amount));
@@ -48,6 +49,32 @@ namespace _DreamKeep.GameBattle
                     break;
                 case SO_BloodPotion blood:
                     actions.Add(new BA_Heal(source, targets_, (int)(source.MaxHp * blood.HealPercent)));
+                    break;
+                case SO_ExplosiveAmpoule explosive:
+                    actions.Add(new BA_Damage(null, targets_, explosive.Damage, false));
+                    break;
+                case SO_VulnerablePotion vulnerable:
+                    AddPerk(actions, source, targets_, vulnerable.Vulnerable, vulnerable.Layers);
+                    break;
+                case SO_DexterityPotion dexterity:
+                    AddPerk(actions, source, targets_, dexterity.Dexterity, dexterity.Layers);
+                    break;
+                case SO_FyshOil oil:
+                    AddPerk(actions, source, targets_, oil.Strength, oil.StrengthLayers);
+                    AddPerk(actions, source, targets_, oil.Dexterity, oil.DexterityLayers);
+                    break;
+                case SO_RegenPotion regen:
+                    AddPerk(actions, source, targets_, regen.Regen, regen.Layers);
+                    break;
+                // 当前格挡的三倍：再获得两倍当前值；读态发生在建队时，先于任何结算动作。
+                // 没有格挡时不产生动作，由调用方按"无法结算"拒绝，避免空喝一瓶
+                case SO_Fortifier _:
+                    if (source.Block <= 0) return actions;
+                    actions.Add(new BA_Block(null, targets_, source.Block * 2));
+                    break;
+                case SO_CureAll cure:
+                    actions.Add(new BA_GainEnergy(source, targets_, cure.Energy));
+                    for (int i = 0; i < cure.Cards; i++) actions.Add(new BA_DrawCard(source, targets_));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(potion_),

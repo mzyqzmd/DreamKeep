@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Nibbit
   m_EditorClassIdentifier: 
   _name: "\u5C0F\u5543\u517D"
-  _maxHP: 46
+  _maxHP: 28
   _viewPrefab: {fileID: 6187196625302473479, guid: 6ded8dbbb5a145e4d968f92409bd2f44, type: 3}
   _enemyIntents:
   - rid: 8162841984668532736
@@ -29,7 +29,7 @@ MonoBehaviour:
     - rid: 8162841984668532736
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 13
+        _damage: 8
         _times: 1
     - rid: 8162841984668532737
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
@@ -41,17 +41,17 @@ MonoBehaviour:
     - rid: 8162841984668532738
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 7
+        _damage: 5
         _times: 1
     - rid: 8162841984668532739
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 7
+        _amount: 5
     - rid: 8162841984668532740
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _layers: 3
+        _layers: 2
         _isSelf: 1
     - rid: 8162841984668532742
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
@@ -69,5 +69,5 @@ MonoBehaviour:
     - rid: 8162841984668532745
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 8
+        _damage: 5
         _times: 2

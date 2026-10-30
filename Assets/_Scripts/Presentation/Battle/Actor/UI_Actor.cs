@@ -18,7 +18,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] protected UI_BlockView _blockView;
         [SerializeField] protected UI_PerkGroup _perkGroup;
         [Header("骨骼资源配置")] [SerializeField] protected SkeletonGraphic _skeleton; // 演出用骨架
-        [Header("成为目标时提示")] [SerializeField] private GameObject _targetTip; // 箭头指向本单位时亮起的提示
+        [Header("成为目标时提示")] [SerializeField] private GameObject _hoverReticle; // 箭头指向本单位时亮起的提示
         [Header("悬停信息显示")] [SerializeField] private TextMeshProUGUI _actorName;
         [SerializeField] private Shader _outlineShader; // 描边 shader 引用，留空则运行时按名查找
         [SerializeField] private Material _skeletonMaterial;
@@ -31,7 +31,7 @@ namespace _DreamKeep.Presentation
 
         // 悬停名牌与描边的配置出口：唯一消费者是 UI_ActorHoverBox（它按指针事件演出），放这里是因为配置本来就归单位
         public SkeletonGraphic Skeleton => _skeleton;
-        public GameObject TargetTip => _targetTip;
+        public GameObject HoverReticle => _hoverReticle;
         public TextMeshProUGUI ActorName => _actorName;
         public Shader OutlineShader => _outlineShader;
         public Material SkeletonMaterial => _skeletonMaterial;
@@ -73,6 +73,7 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_ActorDied>(OnActorDiedAsync);
             eventDispatcher_.Register<BE_DamageDealt>(OnDealtDamageAsync);
             eventDispatcher_.Register<BE_DamageDealt>(OnDamagedAsync);
+            eventDispatcher_.Register<BE_HealthLost>(OnHealthLostAsync);
             eventDispatcher_.Register<BE_BlockGained>(OnBlockGained);
             eventDispatcher_.Register<BE_BlockCleared>(OnBlockCleared);
             eventDispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
@@ -139,6 +140,19 @@ namespace _DreamKeep.Presentation
             if (_blockView == null || _healthBar == null) return; // 视图可能已随死亡销毁，而托管处理器仍活着
             _blockView.SetBlock(dealt_.Target.Block);
             _healthBar.SetHealth(dealt_.Target.CurrentHp);
+            await wait;
+        }
+
+        // 失去生命：无视格挡，故只刷血条不碰格挡；受击动画与非致死口径与伤害一致
+        protected virtual async UniTask OnHealthLostAsync(BE_HealthLost lost_)
+        {
+            if (lost_.Target != _boundCreature) return;
+            UniTask wait = UniTask.CompletedTask;
+            if (!_boundCreature.IsDead)
+                wait = _animTool.PlayOnceAsync(HitAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
+
+            if (_healthBar == null) return; // 视图可能已随死亡销毁，而托管处理器仍活着
+            _healthBar.SetHealth(lost_.Target.CurrentHp);
             await wait;
         }
 

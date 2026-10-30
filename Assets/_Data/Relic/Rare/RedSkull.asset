@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f27c59b3fcaac049a6457d12b459adb, type: 3}
+  m_Name: RedSkull
+  m_EditorClassIdentifier: 
+  _relicName: "\u7EA2\u5934\u9AA8"
+  _icon: {fileID: 21300000, guid: 320fc0e412bdc1d47a72eba1b30c278a, type: 3}
+  _rarity: 2
+  _description: "\u751F\u547D\u4E0D\u9AD8\u4E8E <color=yellow>30</color>% \u65F6\u83B7\u5F97
+    <color=green>3</color> \u70B9\u529B\u91CF\uFF08\u6BCF\u573A\u4E00\u6B21\uFF09\u3002"
+  _hpThreshold: 0.3
+  _strength: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+  _layers: 3
