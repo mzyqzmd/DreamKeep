@@ -11,10 +11,10 @@ using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 namespace _DreamKeep.Presentation
 {
     /// <summary>整局卡组查看面板：网格陈列 RunState.Player.Deck 全部卡，费用/类型/默认序三种排序——点按钮切模式、
-    /// 再点当前模式翻转方向（默认序不翻转），当前模式的箭头图标染高亮色；点卡进全屏特写，特写里可用升级预览开关
-    /// 查看升级后形态（临时可变副本展示、永不写回域）。卡组变更只发生在面板关闭的跑图段，故打开时全量重建、
-    /// 不订阅任何事件；战斗段同样可开（顶栏常驻），与战斗内三堆查看（UI_PileCardsView）互不干扰。
-    /// 开合能力继承自 UI_Panel，刷新逻辑落在 OnShown。</summary>
+    /// 再点当前模式翻转方向（默认序不翻转），当前模式的箭头图标染高亮色；左/右键点卡打开统一卡牌详情特写
+    /// （UI_ConcreteCardView，实例化在本面板名下，展示口径归特写自己的开关行、永不写回域）。卡组变更只发生在
+    /// 面板关闭的跑图段，故打开时全量重建、不订阅任何事件；战斗段同样可开（顶栏常驻），
+    /// 与战斗内三堆查看（UI_PileCardsView）互不干扰。开合能力继承自 UI_Panel，刷新逻辑落在 OnShown。</summary>
     public sealed class UI_DeckPanel : UI_Panel
     {
         [Header("陈列")] [Tooltip("卡实例预制体：网格与特写共用（网格态由本面板缩到格尺寸）")] [SerializeField]
@@ -23,41 +23,32 @@ namespace _DreamKeep.Presentation
         [Tooltip("网格挂载点：GridLayoutGroup 所在节点，卡实例的出生与陈列父级")] [SerializeField]
         private RectTransform _gridContent;
 
-        [Tooltip("网格所在滚动视图：打开时把滚动位置拉回顶部")] [SerializeField] private ScrollRect _scroll;
+        [Tooltip("网格所在滚动视图：打开时把滚动位置拉回顶部")] [SerializeField]
+        private ScrollRect _scroll;
 
         [Header("排序")] [Tooltip("排序按钮：下标对齐 EDeckSortMode（费用/类型/默认）")] [SerializeField]
         private Button[] _sortButtons;
 
-        [Tooltip("各排序按钮的箭头图标，与 _sortButtons 同序")] [SerializeField] private Image[] _sortIcons;
+        [Tooltip("各排序按钮的箭头图标，与 _sortButtons 同序")] [SerializeField]
+        private Image[] _sortIcons;
 
-        [Tooltip("当前模式的箭头高亮色")] [SerializeField] private Color _activeIconColor = new(1f, 0.69f, 0.4f);
+        [Tooltip("当前模式的箭头高亮色")] [SerializeField]
+        private Color _activeIconColor = new(1f, 0.69f, 0.4f);
 
-        [Header("特写")] [Tooltip("特写层：点网格卡打开、点背板关闭")] [SerializeField]
-        private GameObject _concreteCardView;
 
-        [Tooltip("特写背板的关闭按钮：挂在特写层根 Image 上")] [SerializeField] private Button _concreteCloseButton;
+        [Header("特写")] [Tooltip("统一卡牌详情特写预制体：左/右键点网格卡打开，实例化在本面板名下")] [SerializeField]
+        private UI_ConcreteCardView _concrete; // 懒实例化的特写层：面板关时一并收起
 
-        [Tooltip("特写卡：全尺寸展示当前查看的卡")] [SerializeField] private UI_CardInDeck _closeupCard;
-
-        [Tooltip("升级预览开关：不可升级的卡整体隐藏")] [SerializeField] private Button _upgradeToggle;
-
-        [Tooltip("开关的勾选图标：随预览态换图")] [SerializeField] private Image _toggleIcon;
-
-        [Tooltip("预览开的勾选图")] [SerializeField] private Sprite _tickSprite;
-
-        [Tooltip("预览关的空心框图")] [SerializeField] private Sprite _untickSprite;
-
-        [Header("开合")] [Tooltip("关闭按钮")] [SerializeField] private Button _closeButton;
+        [Header("开合")] [Tooltip("关闭按钮")] [SerializeField]
+        private Button _closeButton;
 
         private RunState _run;
         private MonoObjectPool<UI_CardInDeck> _pool;
         private readonly List<CardModel> _display = new(); // 当前排序下的陈列序缓冲
         private readonly List<UI_CardInDeck> _shown = new(); // 当前在网格里的实例
         private Color[] _idleIconColors; // 各箭头图标的本色缓存：高亮只写当前模式，其余恢复这里
-        private EDeckSortMode _mode = EDeckSortMode.Cost; // 当前排序模式：初始费用低→高
+        private EDeckSortMode _mode = EDeckSortMode.Default; // 当前排序模式：获得牌的顺序
         private bool _descending; // 当前模式内是否翻转方向；默认序无方向恒 false
-        private CardModel _shownCard; // 特写正在看的卡（域内真卡的引用）
-        private bool _previewing; // 特写是否处于升级预览态
 
         [Inject]
         public void Construct(RunState run_, IObjectResolver resolver_)
@@ -74,8 +65,6 @@ namespace _DreamKeep.Presentation
             }
 
             _closeButton.onClick.AddListener(Hide);
-            _concreteCloseButton.onClick.AddListener(CloseConcrete);
-            _upgradeToggle.onClick.AddListener(TogglePreview);
 
             // 箭头图标本色缓存：高亮只写当前模式的图标，其余时刻恢复这里的初始色
             _idleIconColors = new Color[_sortIcons.Length];
@@ -87,7 +76,7 @@ namespace _DreamKeep.Presentation
         // 外部失活兜底：特写收起、网格还池，实例不滞留池外
         private void OnDisable()
         {
-            CloseConcrete();
+            if (_concrete) _concrete.Close();
             ReturnAll();
         }
 
@@ -158,49 +147,10 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 特写与升级预览
+        #region 特写：左/右键开统一详情特写
 
-        // 点网格卡：记下真卡、预览复位，按可升级性摆出预览开关后开特写层
-        private void OpenConcrete(CardModel card_)
-        {
-            _shownCard = card_;
-            _previewing = false;
-            // 先开层再写内容：特写卡与开关的 Awake 随首次激活补跑，Bind 依赖它们
-            _concreteCardView.SetActive(true);
-            _upgradeToggle.gameObject.SetActive(card_.CanUpgrade);
-            RefreshConcrete();
-        }
-
-        // 特写刷新：预览开 = 临时可变副本套升级补丁后展示（不写回域），预览关 = 原卡；勾选图随态换
-        private void RefreshConcrete()
-        {
-            if (_previewing)
-            {
-                CardModel preview = _shownCard.ToMutable();
-                preview.Upgrade();
-                _closeupCard.Bind(preview, null);
-                _toggleIcon.sprite = _tickSprite;
-            }
-            else
-            {
-                _closeupCard.Bind(_shownCard, null);
-                _toggleIcon.sprite = _untickSprite;
-            }
-        }
-
-        // 预览开关入口：翻转预览态并重刷特写（开关只在可升级卡上可见）
-        private void TogglePreview()
-        {
-            _previewing = !_previewing;
-            RefreshConcrete();
-        }
-
-        // 关特写：收层并复位预览态，下次打开另一张卡从头来
-        private void CloseConcrete()
-        {
-            if (!_concreteCardView.activeSelf) return;
-            _concreteCardView.SetActive(false);
-        }
+        // 点网格卡：把真卡交给统一特写（展示口径归它的开关行）
+        private void OpenConcrete(CardModel card_) => _concrete.Open(card_);
 
         #endregion
 

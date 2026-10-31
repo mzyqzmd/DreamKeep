@@ -11,8 +11,8 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.Presentation
 {
     /// <summary>锻造弹板：先只列卡组中可升级的卡；左键选卡才打开原卡/升级预览（返回键回列表），
-    /// 右键选卡打开卡牌详情并可切「查看升级」；列表面板的关闭键才是取消锻造。确认即升级并交还。
-    /// 开合能力继承自 UI_Panel，列表构建落在 OnShown。</summary>
+    /// 右键选卡打开统一卡牌详情特写（UI_ConcreteCardView，可切查看升级/基础版，展示口径归特写自己的开关行）；
+    /// 列表面板的关闭键才是取消锻造。确认即升级并交还。开合能力继承自 UI_Panel，列表构建落在 OnShown。</summary>
     public sealed class UI_SmithPanel : UI_Panel
     {
         [Header("列表")] [SerializeField] private Transform _scrollContent;
@@ -23,12 +23,8 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Button _previewBackButton;
         [SerializeField] private Button _confirmButton;
 
-        [Header("右键详情")] [SerializeField] private GameObject _concreteCardView;
-        [SerializeField] private UI_CardInDeck _detailCard;
-        [SerializeField] private Button _detailUpgradeToggle;
-        [SerializeField] private Image _detailToggleIcon;
-        [SerializeField] private Sprite _tickSprite;
-        [SerializeField] private Sprite _untickSprite;
+        [Header("右键详情")] [Tooltip("统一卡牌详情特写预制体：右键选卡打开，实例化在本面板名下")] [SerializeField]
+        private UI_ConcreteCardView _concrete; // 懒实例化的特写层：面板关时一并收起
 
         [Header("开合")] [SerializeField] private Button _closeButton;
 
@@ -39,9 +35,6 @@ namespace _DreamKeep.Presentation
         private CardModel _selected;
         private GameObject _previewRoot;
 
-        private CardModel _detailShownCard;
-        private bool _detailPreviewing;
-
         private Player _player;
         private UniTaskCompletionSource<CardModel> _result;
 
@@ -51,10 +44,6 @@ namespace _DreamKeep.Presentation
             _confirmButton.onClick.AddListener(OnConfirm);
             _closeButton.onClick.AddListener(OnPanelClose);
             if (_previewBackButton) _previewBackButton.onClick.AddListener(OnPreviewBack);
-            if (_detailUpgradeToggle) _detailUpgradeToggle.onClick.AddListener(OnDetailToggle);
-            // 详情背板自带 Button：点卡外区域关闭详情（卡与开关自己会吃掉点击）
-            if (_concreteCardView && _concreteCardView.TryGetComponent(out Button detailClose))
-                detailClose.onClick.AddListener(CloseDetail);
         }
 
         private void OnDestroy()
@@ -62,16 +51,13 @@ namespace _DreamKeep.Presentation
             _confirmButton.onClick.RemoveListener(OnConfirm);
             _closeButton.onClick.RemoveListener(OnPanelClose);
             if (_previewBackButton) _previewBackButton.onClick.RemoveListener(OnPreviewBack);
-            if (_detailUpgradeToggle) _detailUpgradeToggle.onClick.RemoveListener(OnDetailToggle);
-            if (_concreteCardView && _concreteCardView.TryGetComponent(out Button detailClose))
-                detailClose.onClick.RemoveListener(CloseDetail);
         }
 
         // 外部失活兜底：两层覆盖与列表实例一并收掉，池实例不滞留
         private void OnDisable()
         {
             if (_previewRoot) _previewRoot.SetActive(false);
-            if (_concreteCardView) _concreteCardView.SetActive(false);
+            if (_concrete) _concrete.Close();
             ReleaseItems();
         }
 
@@ -101,22 +87,21 @@ namespace _DreamKeep.Presentation
         protected override void OnShown()
         {
             _selected = null;
-            _detailShownCard = null;
-            _detailPreviewing = false;
             if (_previewRoot) _previewRoot.SetActive(false);
-            if (_concreteCardView) _concreteCardView.SetActive(false);
+            if (_concrete) _concrete.Close();
             ReleaseItems();
 
             _upgradable.Clear();
             foreach (CardModel card in _player.Deck.Cards)
-                if (card.CanUpgrade) _upgradable.Add(card);
+                if (card.CanUpgrade)
+                    _upgradable.Add(card);
 
             for (int i = 0; i < _upgradable.Count; i++)
             {
                 CardModel card = _upgradable[i];
                 UI_CardInDeck item = _pool.Get(_cardPrefab);
                 item.transform.SetSiblingIndex(i);
-                item.Bind(card, _ => SelectCard(card), _ => OpenDetail(card));
+                item.Bind(card, _ => SelectCard(card), _ => _concrete.Open(card));
                 _activeItems.Add(item);
             }
         }
@@ -154,50 +139,12 @@ namespace _DreamKeep.Presentation
             _result?.TrySetResult(card);
         }
 
-        // 右键选卡：打开卡牌详情；可升级的卡显示「查看升级」开关
-        private void OpenDetail(CardModel card_)
-        {
-            _detailShownCard = card_;
-            _detailPreviewing = false;
-            if (_concreteCardView) _concreteCardView.SetActive(true);
-            if (_detailUpgradeToggle) _detailUpgradeToggle.gameObject.SetActive(card_.CanUpgrade);
-            RefreshDetail();
-        }
-
-        private void OnDetailToggle()
-        {
-            _detailPreviewing = !_detailPreviewing;
-            RefreshDetail();
-        }
-
-        // 详情刷新：预览开 = 临时可变副本套升级补丁后展示（不写回域），预览关 = 原卡；勾选图随态换
-        private void RefreshDetail()
-        {
-            if (!_detailCard || _detailShownCard == null) return;
-            if (_detailPreviewing)
-            {
-                CardModel preview = _detailShownCard.ToMutable();
-                preview.Upgrade();
-                _detailCard.Bind(preview, null);
-                if (_detailToggleIcon) _detailToggleIcon.sprite = _tickSprite;
-            }
-            else
-            {
-                _detailCard.Bind(_detailShownCard, null);
-                if (_detailToggleIcon) _detailToggleIcon.sprite = _untickSprite;
-            }
-        }
-
-        private void CloseDetail()
-        {
-            if (_concreteCardView) _concreteCardView.SetActive(false);
-        }
-
         private void ReleaseItems()
         {
             if (_pool == null) return;
             for (int i = _activeItems.Count - 1; i >= 0; i--)
-                if (_activeItems[i]) _pool.Release(_activeItems[i]);
+                if (_activeItems[i])
+                    _pool.Release(_activeItems[i]);
             _activeItems.Clear();
         }
     }

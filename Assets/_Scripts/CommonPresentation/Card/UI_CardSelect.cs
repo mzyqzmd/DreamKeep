@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 namespace _DreamKeep.CommonPresentation
 {
     /// <summary>选牌卡：三选一陈列里的纯展示卡，牌面由同节点的选择器按卡类型切换，悬停放大与词条气泡交给同节点的组件。
-    /// 本类只做绑定与"我被点了"的播报——选中后牌怎么进牌库、面板关不关，全归面板与调用方。</summary>
+    /// 本类只做绑定与按键播报——左键=我被选中、右键=我要看详情；选中后牌怎么进牌库、面板关不关，全归面板与调用方。</summary>
     [RequireComponent(typeof(UI_HoverTip))]
     [RequireComponent(typeof(UI_CardFaceSelector))]
     public sealed class UI_CardSelect : MonoBehaviour, IPointerClickHandler
@@ -20,8 +20,11 @@ namespace _DreamKeep.CommonPresentation
 
         public CardModel Card => _faces.Current.Card;
 
-        /// <summary>点击播报：只交出自己的视图，选中什么由面板对外回报。</summary>
+        /// <summary>左键播报：只交出自己的视图，选中后去哪由面板对外回报。</summary>
         public event Action<UI_CardSelect> Clicked;
+
+        /// <summary>右键播报：玩家想看这张卡的详情，开不开特写由面板决定。</summary>
+        public event Action<UI_CardSelect> RightClicked;
 
         private void Awake()
         {
@@ -40,6 +43,11 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
-        public void OnPointerClick(PointerEventData _) => Clicked?.Invoke(this);
+        // 按键分流：右键=看详情，其余（左键）=选中——旧版任意键都算选中，右键查看会误选
+        public void OnPointerClick(PointerEventData eventData_)
+        {
+            if (eventData_.button == PointerEventData.InputButton.Right) RightClicked?.Invoke(this);
+            else Clicked?.Invoke(this);
+        }
     }
 }

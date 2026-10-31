@@ -66,9 +66,9 @@ MonoBehaviour:
   _numberText: {fileID: 2655869901480946325}
   _popScaleFrom: 0.6
   _popDuration: 0.12
-  _riseDistancePx: 130
+  _riseDistancePx: 75
   _riseDuration: 1
-  _tossVelocityPx: {x: 220, y: 620}
+  _tossVelocityPx: {x: 220, y: 220}
   _tossGravityPx: 1800
   _tossDuration: 1.1
   _tossSpinDeg: 25

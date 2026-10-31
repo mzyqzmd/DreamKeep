@@ -9,34 +9,34 @@ namespace _DreamKeep.ConfigData
     [CreateAssetMenu(fileName = "Reward", menuName = "DreamKeep/Data/Run/Encounter/Reward")]
     public sealed class SO_EncounterReward : ScriptableObject
     {
-        [Header("金币")]
-        [SerializeField] private int _goldMin = 15;
+        [Header("金币")] [SerializeField] private int _goldMin = 15;
         [SerializeField] private int _goldMax = 25;
 
-        [Header("卡牌奖励")]
-        [Tooltip("给几组卡牌奖励：每组固定三选一")]
-        [SerializeField] private int _cardRewardCount = 1;
+        [Header("卡牌奖励")] [Tooltip("给几组卡牌奖励：每组固定三选一")] [SerializeField]
+        private int _cardRewardCount = 1;
 
-        [Tooltip("候选卡池列表：所有池合并后等权抽取")]
-        [SerializeField] private List<SO_CardPool> _cardPools = new();
+        [Tooltip("候选卡池列表：所有池合并后等权抽取")] [SerializeField]
+        private List<SO_CardPool> _cardPools = new();
 
-        [Header("药水奖励")]
-        [Range(0f, 1f)]
-        [SerializeField] private float _potionChance = 0.3f;
+        [Tooltip("抽到的这张卡是被升级的概率")] [Range(0f, 1f)] [SerializeField]
+        private float _cardUpgradeChance = 0.1f;
 
-        [Tooltip("候选药水池列表：所有池合并后等权抽取")]
-        [SerializeField] private List<SO_PotionPool> _potionPools = new();
+        [Header("药水奖励")] [Range(0f, 1f)] [SerializeField]
+        private float _potionChance = 0.3f;
 
-        [Header("遗物奖励")]
-        [Tooltip("给几件遗物：普通遭遇填 0，精英遭遇填 1")]
-        [SerializeField] private int _relicCount;
+        [Tooltip("候选药水池列表：所有池合并后等权抽取")] [SerializeField]
+        private List<SO_PotionPool> _potionPools = new();
 
-        [Tooltip("候选遗物池列表：所有池合并后等权抽取，已持有的会被跳过")]
-        [SerializeField] private List<SO_RelicPool> _relicPools = new();
+        [Header("遗物奖励")] [Tooltip("给几件遗物：普通遭遇填 0，精英遭遇填 1")] [SerializeField]
+        private int _relicCount;
+
+        [Tooltip("候选遗物池列表：所有池合并后等权抽取，已持有的会被跳过")] [SerializeField]
+        private List<SO_RelicPool> _relicPools = new();
 
         public int GoldMin => _goldMin;
         public int GoldMax => _goldMax;
         public int CardRewardCount => _cardRewardCount;
+        public float CardUpgradeChance => _cardUpgradeChance;
         public IReadOnlyList<SO_CardPool> CardPools => _cardPools;
         public float PotionChance => _potionChance;
         public IReadOnlyList<SO_PotionPool> PotionPools => _potionPools;

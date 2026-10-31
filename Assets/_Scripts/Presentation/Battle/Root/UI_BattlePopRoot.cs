@@ -80,12 +80,12 @@ namespace _DreamKeep.Presentation
             _popFactory.SpawnNumber(text_, color_, type_, view.transform, AnchorOf(view));
         }
 
-        // 头顶锚点：骨架矩形顶沿中点再抬高一段，横向抖动沿骨架自身轴向换算
+        // 头顶锚点：骨架矩形正中心再抬高一段，横向抖动沿骨架自身轴向换算
         private Vector3 AnchorOf(UI_Actor view_)
         {
             RectTransform body = (RectTransform)view_.Skeleton.transform;
             float jitter = _rng.Next(-_jitterPx, _jitterPx);
-            return UiGeometry.AnchorPoint(body, EUiAnchor.TopCenter) +
+            return UiGeometry.AnchorPoint(body, EUiAnchor.MiddleCenter) +
                    body.up * (_liftPx * body.lossyScale.y) +
                    body.right * (jitter * body.lossyScale.x);
         }

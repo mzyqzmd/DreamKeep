@@ -34,6 +34,9 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>还可否升级：配置带升级条目且尚未升级过——卡组预览开关的显隐判据。</summary>
         public bool CanUpgrade => _static.CanUpgrade && !IsUpgraded;
+
+        /// <summary>未升级的基础形态（与静态配置共享的烘焙原型）：升级预览取消勾选时展示它——只读展示，禁止改动。</summary>
+        public CardModel BaseVersion => _static.Base;
         public IReadOnlyList<CardAffix> ActiveAffixes => _runtime.ActiveAffixes;
         public bool IsRetain => _runtime.IsRetain;
         public bool IsUnableToPlay => _runtime.IsUnableToPlay;

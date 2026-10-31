@@ -23,6 +23,9 @@ namespace _DreamKeep.Presentation
         [SerializeField] private SO_MonsterPool _monsterPool;
         [SerializeField] private SO_BackgroundPool _backgroundPool;
 
+        [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")]
+        [SerializeField] private RectTransform _rewardPanelParent;
+
         [Header("临时：地图落地后删除")]
         [Tooltip("0 表示跟随整局层数，大于 0 时覆盖（用于本地验证强怪池）")]
         [SerializeField] private int _floor;
@@ -106,6 +109,13 @@ namespace _DreamKeep.Presentation
                     relicNotifier, loop, encounter.Reward);
             });
             builder_.RegisterEntryPoint<BattleEntry>();
+
+            // 奖励面板停泊：整局单例面板由本段装配期领进自己的 HUD 画布（不按节点名反查，停泊位 Inspector 拖入）；
+            // 段卸载会带走面板，下一个战斗段装配时工厂按新停泊位重建/换挂。漏接线按装配期报错契约抛出
+            if (!_rewardPanelParent)
+                throw new InvalidOperationException(
+                    $"{nameof(BattleLifetimeScope)} 未接线奖励面板停泊位（_rewardPanelParent，拖本段 Canvas_HUD 根）");
+            Parent.Container.Resolve<PopFactory>().AcquireRewardPanel(_rewardPanelParent);
         }
 
         // 敌人视图预制体列表与遭遇同源派生：下标即敌人下标，未接线的配置留 null 交生成侧报错跳过该敌人

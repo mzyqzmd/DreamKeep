@@ -15,6 +15,9 @@ namespace _DreamKeep.RuntimeData
         internal ECardTargetType TargetType { get; } //对外不需要知道目标类型枚举
         internal bool CanUpgrade { get; }
 
+        /// <summary>基础形态（烘焙原型）：未升级形态的唯一真源，升级预览回看基础版用；展示专用，禁止改动。</summary>
+        internal CardModel Base { get; set; }
+
         internal CM_Static(Sprite icon_, ECardType type_, ECardRarity rarity_, ECardTargetType targetType_,
             bool canUpgrade_)
         {

@@ -48,6 +48,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6412fdff43248544fb38031d5ae69363, type: 2}
   - {fileID: 11400000, guid: b1964523575da634cbbbb338d3bea076, type: 2}
   - {fileID: 11400000, guid: 324ea21403f53bc4d9eb0c7af5516eb0, type: 2}
+  - {fileID: 11400000, guid: 523f7e4ecc97c2a4ca3953d678c5c776, type: 2}
   _startPotions:
   - {fileID: 11400000, guid: d44b172a3483fde469ca7859f2270547, type: 2}
   - {fileID: 11400000, guid: f1944affcb10874429eaf085f7877eee, type: 2}

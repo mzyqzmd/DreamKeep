@@ -9,7 +9,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>遭遇奖励掷骰：把奖励配置 + 整局状态掷成一份奖励清单，是"配置 → 面板条目"的唯一入口。
     /// 掷骰顺序固定（金币 → 卡牌各组 → 药水 → 遗物）且全部走同一条约会随机流，同种子可复现；
-    /// 三类奖励都支持配置多份池，掷骰前先把池列表合并成一份候选集（同引用去重）再无放回抽取；
+    /// 三类奖励都支持配置多份池，掷骰前先把池列表合并成一份候选集（同引用去重）再无放回抽取，卡牌候选按配置概率直接以升级形态抽出；
     /// 配置为空（Boss）或候选集为空时静默跳过该条，池里断引用的项也直接跳过——绝不让结算抛异常卡住流程。</summary>
     public static class EncounterRewardRoller
     {
@@ -58,7 +58,7 @@ namespace _DreamKeep.GameRun
 
             for (int i = 0; i < config_.CardRewardCount; i++)
             {
-                List<CardModel> options = DrawCards(cards, rng_);
+                List<CardModel> options = DrawCards(config_, cards, rng_);
                 if (options.Count > 0) rewards_.Add(RunReward.CardsOf(options));
             }
         }
@@ -86,12 +86,25 @@ namespace _DreamKeep.GameRun
             return collected;
         }
 
-        // 不放回抽样：候选集洗牌取前几个再投影，保证同一组里不会出现重复项
-        private static List<CardModel> DrawCards(List<SO_Card> cards_, Rng rng_)
+        // 不放回抽样：候选集洗牌取前几个再投影，保证同一组里不会出现重复项；
+        // 每张按升级概率掷骰（概率为 0 或卡不可升级时不掷、不消耗随机流），命中即以升级形态产出——
+        // canonical 原型禁止原地升级，须先克隆成可变副本再应用补丁
+        private static List<CardModel> DrawCards(SO_EncounterReward config_, List<SO_Card> cards_, Rng rng_)
         {
             List<SO_Card> taken = rng_.TakeShuffled(cards_, CardOptionCount);
             List<CardModel> options = new(taken.Count);
-            for (int i = 0; i < taken.Count; i++) options.Add(CardModelBaker.Bake(taken[i]));
+            for (int i = 0; i < taken.Count; i++)
+            {
+                CardModel card = CardModelBaker.Bake(taken[i]);
+                if (card.CanUpgrade && config_.CardUpgradeChance > 0f && rng_.Next(0f, 1f) < config_.CardUpgradeChance)
+                {
+                    card = card.ToMutable();
+                    card.Upgrade();
+                }
+
+                options.Add(card);
+            }
+
             return options;
         }
 

@@ -4,11 +4,13 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using VContainer;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.ConfigData;
+using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.Presentation;
 using _DreamKeep.RuntimeData;
 
-/// <summary>开发面板的命令执行体：Play 模式下的四项测试操作与启动场景设置集中成静态入口，正式脚本不再挂 [Button]。
+/// <summary>开发面板的命令执行体：Play 模式下的测试操作（改血量金币、加遗物药水、战斗往手牌加卡等）与启动场景设置集中成静态入口，正式脚本不再挂 [Button]。
 /// 每次点击现查运行时对象、不缓存引用——退出 Play 后场景引用会变成伪空。
 /// 所有查找失败只告警并返回原因文案，不抛异常（调用方是 EditorWindow.OnGUI，异常会中断整窗绘制）。</summary>
 internal static class DevPanelCommands
@@ -74,27 +76,113 @@ internal static class DevPanelCommands
 
     #endregion
 
-    #region 整局：加金币与回满血
+    #region 整局：血量与金币
 
-    /// <summary>按给定增量加金币：Gold 的 setter 内自带变更通知，顶栏自动刷新。</summary>
-    internal static string AddGold(int amount_)
+    /// <summary>把玩家血量设为指定值：钳到 [0, MaxHp]；设 0 不触发死亡流程（死亡只在战斗动作链里裁决）。</summary>
+    internal static string SetPlayerHp(int value_)
     {
-        IObjectResolver container = ResolveContainer();
-        if (container == null) return Fail("未找到 RunState（整局层是否已构建）");
-        RunState run = container.Resolve<RunState>();
-        run.Gold += amount_;
-        return $"金币 {run.Gold}（本次 {(amount_ >= 0 ? "+" : string.Empty)}{amount_}）";
+        Creature creature = ResolvePlayerCreature();
+        if (creature == null) return Fail("未找到 RunState（整局层是否已构建）");
+        return WritePlayerHp(creature, value_);
+    }
+
+    /// <summary>按增量增减玩家血量：增减后钳到 [0, MaxHp]。</summary>
+    internal static string ChangePlayerHp(int delta_)
+    {
+        Creature creature = ResolvePlayerCreature();
+        if (creature == null) return Fail("未找到 RunState（整局层是否已构建）");
+        return WritePlayerHp(creature, creature.CurrentHp + delta_);
     }
 
     /// <summary>把玩家血量回满：顶栏随 HpChanged 自动刷新，战斗内血条不订阅该事件，故补一次直写。</summary>
     internal static string RestoreFullHp()
     {
+        Creature creature = ResolvePlayerCreature();
+        if (creature == null) return Fail("未找到 RunState（整局层是否已构建）");
+        return WritePlayerHp(creature, creature.MaxHp);
+    }
+
+    /// <summary>把金币设为指定值：结果钳到 >= 0。</summary>
+    internal static string SetGold(int value_)
+    {
+        RunState run = ResolveRunState();
+        if (run == null) return Fail("未找到 RunState（整局层是否已构建）");
+        return WriteGold(run, value_);
+    }
+
+    /// <summary>按增量增减金币：结果钳到 >= 0，负增量减到 0 为止。</summary>
+    internal static string ChangeGold(int delta_)
+    {
+        RunState run = ResolveRunState();
+        if (run == null) return Fail("未找到 RunState（整局层是否已构建）");
+        return WriteGold(run, run.Gold + delta_);
+    }
+
+    #endregion
+
+    #region 物品：添加遗物与药水
+
+    /// <summary>添加遗物：已持有被 AddRelic 去重忽略；顶栏遗物栏随 RelicAdded 自动补格。
+    /// 战斗中已烘焙的遗物效果不随本操作增删，对下一场战斗才生效。</summary>
+    internal static string AddRelic(SO_Relic relic_)
+    {
+        if (relic_ == null) return Fail("先在字段里拖入要添加的遗物");
+        RunState run = ResolveRunState();
+        if (run == null) return Fail("未找到 RunState（整局层是否已构建）");
+        if (!run.Player.AddRelic(relic_)) return Fail("已持有该遗物，忽略添加");
+        return $"已添加遗物「{relic_.name}」，当前 {run.Player.Relics.Count} 件";
+    }
+
+    /// <summary>添加药水：放进最靠前的空槽，三格已满被拒绝；顶栏药水栏随 PotionSlotChanged 自动刷新。</summary>
+    internal static string AddPotion(SO_Potion potion_)
+    {
+        if (potion_ == null) return Fail("先在字段里拖入要添加的药水");
+        RunState run = ResolveRunState();
+        if (run == null) return Fail("未找到 RunState（整局层是否已构建）");
+        if (!run.Player.TryAddPotion(potion_)) return Fail("药水槽已满（3/3），先腾出空格");
+        return $"已添加药水「{potion_.name}」（第 {PotionSlotOf(run.Player, potion_) + 1} 格）";
+    }
+
+    #endregion
+
+    #region 战斗：往手牌加卡
+
+    /// <summary>是否处于战斗中：窗口据此把战斗小节置灰；战斗态由 StartCombat / EndCombat 开合。</summary>
+    internal static bool IsInBattle()
+    {
+        RunState run = ResolveRunState();
+        return run != null && run.Player.CombatState != null;
+    }
+
+    /// <summary>把指定配置卡现烤成战斗临时卡加入手牌：勾升级形态则先升级（无升级数据按基础形态加入）；
+    /// 手牌满 10 张拒绝；该卡无局内卡映射，战斗结束自动消失、不污染局内卡组。</summary>
+    internal static string AddCardToHand(SO_Card card_, bool upgraded_)
+    {
+        if (card_ == null) return Fail("先在字段里拖入要加入手牌的卡牌");
         IObjectResolver container = ResolveContainer();
         if (container == null) return Fail("未找到 RunState（整局层是否已构建）");
-        Creature creature = container.Resolve<RunState>().Player.Creature;
-        creature.CurrentHp = creature.MaxHp;
-        RefreshPlayerHealthBar(creature);
-        return $"玩家血量 {creature.CurrentHp}/{creature.MaxHp}";
+
+        BattleSession session = container.Resolve<BattleSession>();
+        RunState run = container.Resolve<RunState>();
+        if (session == null || !session.IsOpen || run.Player.CombatState == null)
+            return Fail("不在战斗中，先进入战斗段");
+
+        PlayerCombatState combat = run.Player.CombatState;
+        if (combat.Hand.Count >= PlayerCombatState.MaxHandSize)
+            return Fail($"手牌已满 {PlayerCombatState.MaxHandSize} 张，拒绝加入");
+
+        // canonical 原型不可在运行时改动，先转可变副本再按需升级
+        CardModel card = CardModelBaker.Bake(card_).ToMutable();
+        bool upgraded = upgraded_ && card.CanUpgrade;
+        if (upgraded) card.Upgrade();
+
+        combat.Hand.Add(card);
+        // 火后不理：手牌入场演出、可打态由既有 BE_CardDrawn 订阅链自动跟上；
+        // 该卡并非来自抽牌堆，手牌旁抽牌堆计数会短暂 -1，回合开始的 SyncToLive 兜底对账自纠
+        session.Events.PlayAsync(new BE_CardDrawn(card));
+
+        string note = upgraded_ && !upgraded ? "（该卡无升级数据，按基础形态加入）" : string.Empty;
+        return $"已把「{card.Name}」加入手牌（{combat.Hand.Count}/{PlayerCombatState.MaxHandSize}）{note}";
     }
 
     #endregion
@@ -110,6 +198,32 @@ internal static class DevPanelCommands
     }
 
     #endregion
+
+    // 血量公共段：钳到 [0, MaxHp] 后直写（顶栏随 HpChanged 自动刷），补刷战斗内血条；越界输入附钳制说明
+    private static string WritePlayerHp(Creature creature_, int target_)
+    {
+        int clamped = Mathf.Clamp(target_, 0, creature_.MaxHp);
+        creature_.CurrentHp = clamped;
+        RefreshPlayerHealthBar(creature_);
+        return clamped == target_
+            ? $"玩家血量 {clamped}/{creature_.MaxHp}"
+            : $"玩家血量 {clamped}/{creature_.MaxHp}（输入 {target_} 已钳到边界）";
+    }
+
+    // 金币公共段：钳到 >= 0 后直写（顶栏随 GoldChanged 自动刷）；越界输入附钳制说明
+    private static string WriteGold(RunState run_, int target_)
+    {
+        run_.Gold = Mathf.Max(0, target_);
+        return run_.Gold == target_ ? $"金币 {run_.Gold}" : $"金币 {run_.Gold}（输入 {target_} 已钳到 0）";
+    }
+
+    // 药水落格下标：TryAddPotion 成功后调用，理论上必命中，-1 仅防御异常路径
+    private static int PotionSlotOf(Player player_, SO_Potion potion_)
+    {
+        for (int i = 0; i < player_.PotionSlots.Count; i++)
+            if (player_.PotionSlots[i] == potion_) return i;
+        return -1;
+    }
 
     // 战斗内血条只由伤害 / 回血事件驱动，不订阅 HpChanged：直写血量后要自己补一次视图刷新
     private static void RefreshPlayerHealthBar(Creature creature_)
@@ -128,6 +242,20 @@ internal static class DevPanelCommands
     {
         RunLifetimeScope scope = Object.FindObjectOfType<RunLifetimeScope>();
         return scope ? scope.Container : null;
+    }
+
+    // 整局状态：容器存在即必已注册
+    private static RunState ResolveRunState()
+    {
+        IObjectResolver container = ResolveContainer();
+        return container == null ? null : container.Resolve<RunState>();
+    }
+
+    // 玩家生物：血量三命令的公共守卫段
+    private static Creature ResolvePlayerCreature()
+    {
+        RunState run = ResolveRunState();
+        return run?.Player.Creature;
     }
 
     private static string Fail(string reason_)

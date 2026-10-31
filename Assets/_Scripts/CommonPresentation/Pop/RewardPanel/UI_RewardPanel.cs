@@ -135,7 +135,8 @@ namespace _DreamKeep.CommonPresentation
         private void ClaimCards(RunReward reward_, UI_RewardItem item_)
         {
             int token = _showToken;
-            UI_CardOneInThreePanel panel = _popFactory.AcquireCardChoicePanel();
+            // 三选一跟随奖励面板所在画布：本面板被停泊到哪（如战斗段 Canvas_HUD），特写层就压在同一处
+            UI_CardOneInThreePanel panel = _popFactory.AcquireCardChoicePanel((RectTransform)transform.parent);
             panel.Show(reward_.Cards, selected_ =>
             {
                 if (token != _showToken) return;

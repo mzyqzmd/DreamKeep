@@ -562,7 +562,7 @@ MonoBehaviour:
   _lostHealthColor: {r: 0.62, g: 0.05, b: 0.05, a: 1}
   _healColor: {r: 0.35, g: 0.92, b: 0.45, a: 1}
   _blockColor: {r: 0.55, g: 0.82, b: 1, a: 1}
-  _liftPx: 20
+  _liftPx: 130
   _jitterPx: 18
   _turnBannerParent: {fileID: 2057050349337935963}
 --- !u!1 &252599708169006155
@@ -939,6 +939,7 @@ MonoBehaviour:
   autoInjectGameObjects: []
   _monsterPool: {fileID: 11400000, guid: 3d5a697be06cd1723f59d88e2b706cad, type: 2}
   _backgroundPool: {fileID: 11400000, guid: 5f7c8b9da82ef3945b7bfa004d928ecf, type: 2}
+  _rewardPanelParent: {fileID: 2057050349337935963}
   _floor: 1
   _encounterKind: 0
 --- !u!1 &977987626911269203
@@ -3747,7 +3748,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 46.7
+  m_fontSize: 46.75
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

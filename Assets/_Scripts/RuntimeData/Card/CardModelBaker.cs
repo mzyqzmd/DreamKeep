@@ -17,6 +17,9 @@ namespace _DreamKeep.RuntimeData
                 config_.CanUpdate && config_.Upgrades.Count > 0);
             CM_Runtime runtime = new(config_.Name, config_.Cost, true);
             CardModel card = new(staticData, runtime);
+            // 原型回填进共享静态配置：任何副本（含已升级卡）都能经 BaseVersion 回看未升级基础形态
+            // （原型受"不可运行时改动"保护，纯展示安全）
+            staticData.Base = card;
 
             // 基础词条与它们的源数据平行收集：源数据只用于给"移除词条"补丁对号，不进运行时
             List<CardAffix> baseAffixes = new();
