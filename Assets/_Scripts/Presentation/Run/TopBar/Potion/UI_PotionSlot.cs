@@ -23,9 +23,6 @@ namespace _DreamKeep.Presentation
         private Sprite _emptySprite; // 占位图：第一次改写图标前从预制体上取一次
         private int _slotIndex;
 
-        /// <summary>当前显示的这瓶药水；空槽为 null。</summary>
-        public SO_Potion Potion { get; private set; }
-
         /// <summary>点击播报：只交出自己的下标，点空槽与否由药水栏按当前数据判断。</summary>
         public event Action<int> Clicked;
 
@@ -38,7 +35,6 @@ namespace _DreamKeep.Presentation
         {
             EnsureRefs();
             if (!_emptySprite) _emptySprite = _icon.sprite;
-            Potion = potion_;
             _icon.sprite = potion_.Icon;
             _hoverTip.SetContents(potion_.PotionName, potion_.Description);
         }
@@ -47,7 +43,6 @@ namespace _DreamKeep.Presentation
         {
             EnsureRefs();
             if (!_emptySprite) _emptySprite = _icon.sprite;
-            Potion = null;
             _icon.sprite = _emptySprite;
             _hoverTip.SetContents(_emptyTipName, _emptyTipDescription);
         }

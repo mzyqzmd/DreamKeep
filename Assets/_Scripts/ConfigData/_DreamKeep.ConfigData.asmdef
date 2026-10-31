@@ -3,8 +3,7 @@
     "rootNamespace": "_DreamKeep.ConfigData",
     "references": [
         "GUID:776d03a35f1b52c4a9aed9f56d7b4229",
-        "GUID:49b49c76ee64f6b41bf28ef951cb0e50",
-        "DOTween.Modules"
+        "GUID:49b49c76ee64f6b41bf28ef951cb0e50"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

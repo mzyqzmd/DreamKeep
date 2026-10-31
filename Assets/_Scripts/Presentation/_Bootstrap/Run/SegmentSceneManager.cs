@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.CommonPresentation;
-using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -16,8 +15,8 @@ namespace _DreamKeep.Presentation
     /// 任意段场景（战斗/商店/事件/休息）都通过 SceneManager 以 Additive 加载，加载到待激活态时先把段内自带的
     /// 相机 / EventSystem / AudioListener 禁用（仍保留在场景资产供查看），再激活叠加，复用常驻主相机，
     /// 加载后把常驻主相机补挂到段内每个 Canvas。
-    /// 战斗胜利且本场配了奖励时，段与会话仍活着就先弹奖励面板；点"继续"打开地图占位、关会话并卸段，
-    /// 奖励面板本身不随之关闭（未领的条目仍留在上面），只在进入下一个段前收起。战败或没配奖励则照旧立即收段。</summary>
+    /// 段收尾与卸载分离：休息、先古与战斗（有奖励）点「继续」只关会话并打开地图，段场景原样留在屏幕上，
+    /// 到加载下一个段（选定节点）时才先卸旧段再装新段；战败与无奖励胜利仍立即收段。</summary>
     public sealed class SegmentSceneManager : MonoBehaviour
     {
         [Tooltip("常驻主相机：段内 Screen Space-Camera 画布共用它")] [SerializeField]
@@ -35,22 +34,24 @@ namespace _DreamKeep.Presentation
         /// <summary>先古之民段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
         public const string AncientSegmentName = "Scene_Ancient";
 
+        /// <summary>休息段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
+        public const string RestSegmentName = "Scene_Rest";
+
         private BattleSession _session;
         private RunState _run;
         private PopFactory _popFactory;
         private Scene _currentSegment;
-        private bool _awaitingReward;
-        private bool _finishing;
-        private bool _loading;
+        private bool _awaitingReward; // 奖励面板已弹，等玩家点继续
+        private bool _switching; // 段装卸中：卸旧段 + 装新段
 
         private void Update()
         {
-            // 等玩家领奖期间不再重复触发；_finishing 只在真正收段时置位，避免掷骰出异常把流程锁死
-            if (_awaitingReward || _finishing) return;
+            // 等玩家领奖、或正在换段时不再重复触发；点继续后会话已关，这里也自然早退
+            if (_awaitingReward || _switching) return;
             if (_session == null || !_session.IsOpen || !_session.Loop.IsFinished) return;
 
             // 胜利且本场配了奖励：段与会话都还活着时就地结算——药水/遗物栏在领取瞬间还能正常刷新；
-            // 点继续才收段开地图（见 OnRewardProceeded）
+            // 点继续只关会话、开地图（见 CompleteSegment），段留在场上等下一个节点
             if (_session.Loop.IsVictory && _session.Reward != null)
             {
                 List<RunReward> rewards = null;
@@ -68,9 +69,7 @@ namespace _DreamKeep.Presentation
                     try
                     {
                         _awaitingReward = true;
-                        _popFactory.AcquireRewardPanel().Show("战斗奖励", rewards, OnRewardProceeded);
-                        // 面板是全屏模态：把顶栏提上来，玩家才能在看奖励时喝药水/看金币
-                        if (_topBar) _topBar.BringToFront();
+                        _popFactory.AcquireRewardPanel().Show("战斗奖励", rewards, CompleteSegment);
                         return;
                     }
                     catch (Exception e)
@@ -81,7 +80,7 @@ namespace _DreamKeep.Presentation
                 }
             }
 
-            FinishSegment(); // 战败、Boss、奖励清单为空或结算失败：立即收段
+            FinishSegment(); // 战败、Boss 等无奖励遭遇或结算失败：立即收段
         }
 
         [Inject]
@@ -92,64 +91,79 @@ namespace _DreamKeep.Presentation
             _popFactory = popFactory_;
         }
 
-        // 继续＝玩家要往下走了：开地图占位、收段。奖励面板**不关**（未领的条目还留在上面，领完自然就是空的），
-        // 它只在进入下一个段时才收起，免得挡住下一场战斗
-        private void OnRewardProceeded()
-        {
-            if (_topBar) _topBar.OpenMap();
-            FinishSegment();
-        }
-
-        // 先关句柄（常驻药水栏要在旧段的目标中间件还活着时注销瞄准）再卸载段
-        private void FinishSegment()
-        {
-            if (_finishing) return;
-            _finishing = true;
-            _awaitingReward = false;
-            if (_session.IsOpen) _session.Close();
-            if (_currentSegment.IsValid() && _currentSegment.isLoaded)
-                UnloadSegmentAsync(_currentSegment.name).Forget();
-            else
-                _finishing = false;
-        }
-
         /// <summary>激活顶栏后加载并开启第一段（Play 模式测试入口，由 Tools/DreamKeep/开发面板 调用）。</summary>
         public void StartFirstSegment() => StartSegment(_firstSegmentName);
 
-        /// <summary>按段名加载并开启一段（Play 模式测试入口：战斗 / 先古之民等段共用，由开发面板调用）。</summary>
+        /// <summary>按段名加载并开启一段（"选定下一个节点"）：收起地图与奖励面板、关旧会话、卸掉旧段后再加载新段。</summary>
         public void StartSegment(string name_)
         {
-            if (_loading || _currentSegment.IsValid() && _currentSegment.isLoaded) return;
-            _loading = true;
-            // 进新段前收起上一场的奖励面板：它按设计不随「继续」关闭，留着会挡住下一场战斗
-            if (_popFactory) _popFactory.AcquireRewardPanel().Close();
-            LoadSegmentAsync(name_).Forget();
+            if (_switching) return;
+            _switching = true;
+            _awaitingReward = false;
+            SwitchSegmentAsync(name_).Forget();
         }
 
-        #region 非战斗段收尾：先古之民等段领完产出后由段入口调用，战斗会话不经过这里
+        #region 段收尾：继续只关会话与开地图，卸载推迟到加载下一个段
 
-        /// <summary>收掉当前段：开地图占位并卸段。战斗段的收尾（含会话关闭与奖励结算）仍走 Update 轮询路径。</summary>
+        /// <summary>段完成（休息/先古入口与战斗奖励面板的「继续」共用）：关掉战斗会话（若开着）、打开地图，
+        /// 段场景留在场上，直到 <see cref="StartSegment"/> 装载下一个段时才卸载。</summary>
         public void CompleteSegment()
         {
-            if (_finishing || _loading) return;
+            if (_switching) return;
+            _awaitingReward = false;
+            if (_session.IsOpen) _session.Close(); // 先关句柄：常驻药水栏要在旧段中间件还活着时注销瞄准
             if (_topBar) _topBar.OpenMap();
-            if (_currentSegment.IsValid() && _currentSegment.isLoaded)
-                UnloadSegmentAsync(_currentSegment.name).Forget();
         }
 
         #endregion
 
+        // 战败或无奖励胜利（Boss）：不开地图，关会话后立即卸载段；战败/胜利面板落地前保持这一收尾
+        private void FinishSegment()
+        {
+            if (_switching) return;
+            _switching = true;
+            _awaitingReward = false;
+            if (_session.IsOpen) _session.Close();
+            EndSegmentAsync().Forget();
+        }
+
+        private async UniTask EndSegmentAsync()
+        {
+            try
+            {
+                await UnloadCurrentSegmentAsync();
+            }
+            finally
+            {
+                _switching = false;
+            }
+        }
+
         #region 段场景加载与卸载
+
+        private async UniTask SwitchSegmentAsync(string name_)
+        {
+            try
+            {
+                // 进新段前收起上一场的奖励面板与地图：面板不随「继续」关闭，留着会挡住下一场
+                if (_popFactory) _popFactory.AcquireRewardPanel().Close();
+                if (_topBar) _topBar.CloseMap();
+                if (_session.IsOpen) _session.Close();
+                // 必须先卸旧段：新段构建时会按类型扫场景注册，两段同类组件共存会互相污染
+                await UnloadCurrentSegmentAsync();
+                await LoadSegmentAsync(name_);
+            }
+            finally
+            {
+                _switching = false;
+            }
+        }
 
         private async UniTask LoadSegmentAsync(string name_)
         {
             // 加载到待激活态，先不激活段场景，避免相机闪帧。
             AsyncOperation load = SceneManager.LoadSceneAsync(name_, LoadSceneMode.Additive);
-            if (load == null)
-            {
-                _loading = false;
-                return;
-            }
+            if (load == null) return;
 
             load.allowSceneActivation = false;
             await UniTask.WaitUntil(() => load.progress >= 0.9f);
@@ -165,9 +179,12 @@ namespace _DreamKeep.Presentation
                 load.allowSceneActivation = true;
                 await load.ToUniTask();
 
-                // 段已激活、根可访问：关掉段内自带相机 / EventSystem / AudioListener（组件级，资产仍保留供编辑查看）
+                // 段已激活、根可访问：先记账，后面任何早退都要留得下可回收的段
                 Scene newScene = SceneManager.GetSceneByName(name_);
                 if (!newScene.IsValid()) return;
+                _currentSegment = newScene;
+
+                // 关掉段内自带相机 / EventSystem / AudioListener（组件级，资产仍保留供编辑查看）
                 foreach (GameObject root in newScene.GetRootGameObjects())
                 {
                     foreach (Camera cam in root.GetComponentsInChildren<Camera>(true)) cam.enabled = false;
@@ -200,33 +217,26 @@ namespace _DreamKeep.Presentation
 
                 // 进入段场景后，整局顶栏才显示
                 if (_topBar) _topBar.gameObject.SetActive(true);
-
-                // 新段已起，再卸载旧段，避免两段时间同帧共存导致全局注入互相污染
-                if (_currentSegment.IsValid() && _currentSegment.isLoaded && _currentSegment.name != name_)
-                    await SceneManager.UnloadSceneAsync(_currentSegment).ToUniTask();
-                _currentSegment = newScene;
             }
             finally
             {
                 // 常驻 EventSystem 只在这里恢复：早退与异常都不许让整局 UI 失去输入
                 if (resident) resident.enabled = true;
-                _loading = false; // 段已就绪或加载失败：加载守卫到此为止
             }
         }
 
-        private async UniTask UnloadSegmentAsync(string name_)
+        // 调用方负责 _switching：换段流程要等新段装载完才落闸
+        private async UniTask UnloadCurrentSegmentAsync()
         {
             try
             {
                 // 场景可能已被别处卸载：此时 UnloadSceneAsync 返回 null，直接跳过
-                if (SceneManager.GetSceneByName(name_).isLoaded)
-                    await SceneManager.UnloadSceneAsync(name_).ToUniTask();
+                if (_currentSegment.IsValid() && _currentSegment.isLoaded)
+                    await SceneManager.UnloadSceneAsync(_currentSegment.name).ToUniTask();
             }
             finally
             {
                 _currentSegment = default;
-                _finishing = false;
-                _loading = false;
             }
         }
 

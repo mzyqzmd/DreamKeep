@@ -59,21 +59,26 @@ namespace _DreamKeep.GameBattle
                 int maxHp = RollMaxHp(config.MaxHp, encounter_.HpVariance, rng_);
                 Enemy enemy = new(config.Name, maxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
                     IntentBaker.Bake(config.FrontSlotIntent));
-                //按配置施加初始状态：克隆模板配层数后走标准施加链
-                for (int j = 0; j < config.StartPerks.Count; j++)
-                {
-                    PerkEntry entry = config.StartPerks[j];
-                    if (entry?.Perk == null) continue;
-                    BattlePerk perk = PerkBaker.Bake(entry.Perk);
-                    if (perk == null) continue;
-                    perk.AddLayers(entry.Layers);
-                    enemy.Creature.ApplyPerk(perk);
-                }
+                ApplyStartPerks(enemy, config);
 
                 enemies.Add(enemy);
             }
 
             return enemies;
+        }
+
+        /// <summary>按配置施加初始状态：克隆模板配层数后走标准施加链。</summary>
+        private static void ApplyStartPerks(Enemy enemy_, SO_Enemy config_)
+        {
+            for (int i = 0; i < config_.StartPerks.Count; i++)
+            {
+                PerkEntry entry = config_.StartPerks[i];
+                if (entry?.Perk == null) continue;
+                BattlePerk perk = PerkBaker.Bake(entry.Perk);
+                if (perk == null) continue;
+                perk.AddLayers(entry.Layers);
+                enemy_.Creature.ApplyPerk(perk);
+            }
         }
 
         /// <summary>按浮动百分比抖动血量上限：0 完全固定，0.1 表示 ±10%；浮动不为 0 时每次装配消耗一次随机流。</summary>

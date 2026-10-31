@@ -8,9 +8,9 @@ namespace ToolBoxHub.HierarchyIcons
     /// <summary>
     /// 层级图标规则配置（ScriptableObject）：存储组件类型 -> 图标映射及全局开关，持久化走 .asset。
     /// </summary>
-    public class SO_HierarchyIconsConfig : ScriptableObject
+    public class SO_HierarchyIconsConfig : ScriptableObjectSingleton<SO_HierarchyIconsConfig>
     {
-        private const string _assetPath = "Assets/Editor/ToolBoxHub/HierarchyIcons/SO_HierarchyIconsConfig.asset";
+        protected override string AssetPath => "Assets/Editor/ToolBoxHub/HierarchyIcons/SO_HierarchyIconsConfig.asset";
 
         [SerializeField] private bool _enabled = true;
         [SerializeField] private List<IconRule> _rules = new();
@@ -37,21 +37,10 @@ namespace ToolBoxHub.HierarchyIcons
             public bool enabled;      // 规则独立开关，不删除
         }
 
-        private static SO_HierarchyIconsConfig _instance;
-        public static SO_HierarchyIconsConfig Instance
+        // 首次加载且规则为空时预填内置预设
+        protected override void OnLoaded()
         {
-            get
-            {
-                if (_instance) return _instance;
-                _instance = AssetDatabase.LoadAssetAtPath<SO_HierarchyIconsConfig>(_assetPath);
-                if (_instance == null)
-                {
-                    _instance = CreateInstance<SO_HierarchyIconsConfig>();
-                    AssetDatabase.CreateAsset(_instance, _assetPath);
-                }
-                if (_instance.GetRules().Count == 0) _instance.ApplyPresets();
-                return _instance;
-            }
+            if (GetRules().Count == 0) ApplyPresets();
         }
 
         #region 规则增删与持久化

@@ -12,18 +12,18 @@ namespace _DreamKeep.GameBattle
         // 求值用的临时数值容器：Resolve 同步且不重入，池里通常只有一个实例在轮转
         private static readonly ObjectPool<ModifiableStat> _statPool = new(() => new ModifiableStat(0), 8);
 
-        /// <summary>求最终值；来源收集传 null 即全程零分配（只有卡面/飘字要显示"谁改了这个值"时才需要）。</summary>
+        /// <summary>求最终值：预览与结算共用，全程零分配。</summary>
         internal static int Resolve(BattleContext context_, EStatChannel channel_, Creature source_, Creature target_,
-            int baseAmount_, List<BattlePerk> sourceOut_ = null)
+            int baseAmount_)
         {
             ModifiableStat stat = _statPool.Get();
             try
             {
                 stat.Reset(baseAmount_);
-                Collect(context_.Player.Creature, channel_, source_, target_, sourceOut_, stat);
+                Collect(context_.Player.Creature, channel_, source_, target_, stat);
                 IReadOnlyList<Enemy> enemies = context_.Enemies;
                 for (int i = 0; i < enemies.Count; i++)
-                    Collect(enemies[i].Creature, channel_, source_, target_, sourceOut_, stat);
+                    Collect(enemies[i].Creature, channel_, source_, target_, stat);
                 return stat.Value;
             }
             finally
@@ -34,7 +34,7 @@ namespace _DreamKeep.GameBattle
 
         // 单个生物的状态贡献：只有贡献非中性的状态才算进了这次修正，逐条交给数值容器自行折叠
         private static void Collect(Creature host_, EStatChannel channel_, Creature source_, Creature target_,
-            List<BattlePerk> sourceOut_, ModifiableStat stat_)
+            ModifiableStat stat_)
         {
             if (host_.IsDead) return;
 
@@ -44,7 +44,6 @@ namespace _DreamKeep.GameBattle
                 StatModifier modifier = GetModifier(powers[i], channel_, host_, source_, target_);
                 if (modifier.IsNeutral) continue;
 
-                if (sourceOut_ != null) sourceOut_.Add(powers[i]);
                 stat_.Add(modifier);
             }
         }

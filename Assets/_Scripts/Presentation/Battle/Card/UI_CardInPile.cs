@@ -27,11 +27,8 @@ namespace _DreamKeep.Presentation
 
         public void Bind(CardModel card_)
         {
-            UI_CardFace face = _faces.Select(card_);
-            face.Bind(card_);
-            face.SetRippleVisible(false);
-            // 词条说明随绑定写一次（纯文本——牌面门面刚清空，渲染器退化原值；牌堆陈列没有预览对账，恒为此口径）
-            face.CollectTipLines(_affixTips);
+            // 词条说明随绑定写一次（纯文本——渲染器退化原值；牌堆陈列没有预览对账，恒为此口径）
+            _faces.BindStatic(card_, _affixTips);
             _hoverTip.SetContents(_affixTips);
         }
 

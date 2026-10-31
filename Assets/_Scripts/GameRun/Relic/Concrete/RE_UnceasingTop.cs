@@ -8,16 +8,14 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>不休陀螺：玩家回合内手牌打空时抽牌。
     /// 用"回合活跃"标记把回合末弃牌造成的空手挡在外面，只有出牌或效果弃牌才触发。</summary>
-    public sealed class RE_UnceasingTop : RelicEffect
+    public sealed class RE_UnceasingTop : RelicEffect<SO_UnceasingTop>
     {
-        private readonly SO_UnceasingTop _data;
         private bool _active;
 
         public RE_UnceasingTop(SO_UnceasingTop data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)
             : base(data_, context_, actions_, dispatcher_, notifier_)
         {
-            _data = data_;
             Dispatcher.Register<BE_PlayerTurnActiveStarted>(OnPlayerTurnActiveStarted);
             Dispatcher.Register<BE_PlayerTurnEnded>(OnPlayerTurnEnded);
             Dispatcher.Register<BE_CardPlayed>(OnCardPlayed);
@@ -36,8 +34,8 @@ namespace _DreamKeep.GameRun
         {
             if (!_active || Context.Player.CombatState.Hand.Count != 0) return;
             Creature self = Context.Player.Creature;
-            List<Creature> target = new() { self };
-            BattleAction[] draws = new BattleAction[_data.Cards];
+            List<Creature> target = PlayerTarget;
+            BattleAction[] draws = new BattleAction[Data.Cards];
             for (int i = 0; i < draws.Length; i++) draws[i] = new BA_DrawCard(self, target);
             await PerformAsync(draws);
         }

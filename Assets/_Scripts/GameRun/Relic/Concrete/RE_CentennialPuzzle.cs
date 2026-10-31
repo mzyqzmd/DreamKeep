@@ -9,16 +9,14 @@ namespace _DreamKeep.GameRun
     /// <summary>百年积木：每场战斗中第一次损失生命值时，抽 N 张牌。
     /// 伤害事件的 Amount 是修正后总伤害、Absorbed 是格挡吸收，两者之差大于零才是真的失血；
     /// 放血这类无视格挡的"失去生命"走 BE_HealthLost，同样计为失血。</summary>
-    public sealed class RE_CentennialPuzzle : RelicEffect
+    public sealed class RE_CentennialPuzzle : RelicEffect<SO_CentennialPuzzle>
     {
-        private readonly SO_CentennialPuzzle _data;
         private bool _lostHp; // 每场一次
 
         public RE_CentennialPuzzle(SO_CentennialPuzzle data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)
             : base(data_, context_, actions_, dispatcher_, notifier_)
         {
-            _data = data_;
             Dispatcher.Register<BE_DamageDealt>(OnDamageDealt);
             Dispatcher.Register<BE_HealthLost>(OnHealthLost);
         }
@@ -39,8 +37,8 @@ namespace _DreamKeep.GameRun
         private async UniTask DrawAsync()
         {
             _lostHp = true;
-            List<Creature> self = new() { Context.Player.Creature };
-            BattleAction[] draws = new BattleAction[_data.DrawCounts];
+            List<Creature> self = PlayerTarget;
+            BattleAction[] draws = new BattleAction[Data.DrawCounts];
             for (int i = 0; i < draws.Length; i++)
                 draws[i] = new BA_DrawCard(null, self);
             await PerformAsync(draws);

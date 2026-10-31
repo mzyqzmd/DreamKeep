@@ -7,9 +7,8 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>闪亮口红：指定回合的玩家回合开始时获得力量与敏捷。</summary>
-    public sealed class RE_Lipstick : RelicEffect
+    public sealed class RE_Lipstick : RelicEffect<SO_Lipstick>
     {
-        private readonly SO_Lipstick _data;
         private readonly BattlePerk _strength;
         private readonly BattlePerk _dexterity;
 
@@ -17,7 +16,6 @@ namespace _DreamKeep.GameRun
             RelicTriggerNotifier notifier_)
             : base(data_, context_, actions_, dispatcher_, notifier_)
         {
-            _data = data_;
             _strength = PerkBaker.Bake(data_.Strength);
             if (_strength != null) _strength.AddLayers(data_.StrengthLayers);
             _dexterity = PerkBaker.Bake(data_.Dexterity);
@@ -27,11 +25,11 @@ namespace _DreamKeep.GameRun
 
         private async UniTask OnPlayerTurnActiveStarted(BE_PlayerTurnActiveStarted ev_)
         {
-            if (Context.TurnCount != _data.Turn) return;
+            if (Context.TurnCount != Data.Turn) return;
             Creature self = Context.Player.Creature;
             List<BattleAction> actions = new();
-            if (_strength != null) actions.Add(new BA_ApplyPerk(self, new List<Creature> { self }, _strength.Clone()));
-            if (_dexterity != null) actions.Add(new BA_ApplyPerk(self, new List<Creature> { self }, _dexterity.Clone()));
+            if (_strength != null) actions.Add(new BA_ApplyPerk(self, PlayerTarget, _strength.Clone()));
+            if (_dexterity != null) actions.Add(new BA_ApplyPerk(self, PlayerTarget, _dexterity.Clone()));
             if (actions.Count == 0) return;
             await PerformAsync(actions.ToArray());
         }

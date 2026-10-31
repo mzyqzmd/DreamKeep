@@ -29,8 +29,7 @@ namespace _DreamKeep.CommonPresentation
         private void Awake()
         {
             // 预制体上没有 CanvasGroup：自愈补一个，待处理只需一个 alpha/射线开关，不必逐个组件写色
-            _canvasGroup = GetComponent<CanvasGroup>();
-            if (!_canvasGroup) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            _canvasGroup = UiCanvas.EnsureCanvasGroup(this);
             // 悬停表现由两个自驱组件负责：待处理期间关掉它们即可"既不再弹选框也不再放大"（两者 OnDisable 自带复位）
             _hoverActive = GetComponent<UI_HoverActive>();
             _hoverScaler = GetComponent<UI_HoverScaler>();

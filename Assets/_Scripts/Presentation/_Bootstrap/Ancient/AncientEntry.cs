@@ -6,7 +6,7 @@ using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>先古之民段入口：本段"从哪里开始"的唯一落点——名号横幅 → 对话演绎 → 三选一领取 → 收段开地图。
+    /// <summary>先古之民段入口：本段"从哪里开始"的唯一落点——名号横幅 → 对话演绎 → 三选一领取 → 开地图并保留本段。
     /// 领取失败（候选已失效等装配外异常）只报错并重开三选一，不吞不崩。</summary>
     public sealed class AncientEntry : IStartable
     {

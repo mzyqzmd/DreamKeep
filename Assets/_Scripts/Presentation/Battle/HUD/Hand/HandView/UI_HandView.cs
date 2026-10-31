@@ -154,7 +154,7 @@ namespace _DreamKeep.Presentation
         {
             bool aiming = _aim.Release(card_, out int aimSlot); // 松手即收箭头与瞄准身份，并取回当帧槽位
 
-            ClearDragged();
+            _draggedCard = null;
             bool accepted = _cardsPlayable && IsInHand(card_) &&
                             (aiming ? aimSlot >= 0 : _dropZone.Accepts(card_.WorldPosition));
             if (!accepted)
@@ -214,7 +214,7 @@ namespace _DreamKeep.Presentation
         // 打断瞄准中的拖拽：清拖拽身份并把这张牌瞬移回槽位（不播补间）——瞄准器的兜底取消与包装的中断上报共用
         internal void DropAimDrag(UI_CardBattle card_)
         {
-            ClearDragged();
+            _draggedCard = null;
             PlaceToSlot(card_);
         }
 
@@ -267,9 +267,6 @@ namespace _DreamKeep.Presentation
 
         /// <summary>这张牌此刻能不能抓：悬停资格之上再要求本回合可打。</summary>
         public bool CanGrab(UI_CardBattle card_) => _cardsPlayable && CanHover(card_);
-
-        // 拖拽身份：松手与中断时清空（抓起时由 OnCardGrabbed 写入）
-        private void ClearDragged() => _draggedCard = null;
 
         #endregion
 

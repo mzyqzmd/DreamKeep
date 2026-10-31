@@ -12,7 +12,6 @@ namespace _DreamKeep.EngineUtility
         private readonly Transform _parent;
         private readonly int _maxSize;
         private readonly Action<T> _onCreate;
-        private readonly Action<T> _onGet;
         private readonly Action<T> _onReturn;
 
         private readonly Dictionary<T, T> _originOf = new(); // 在用实例 → 出生预制体：取出即登记、归还即移除，寻桶与合法性校验共用这张表
@@ -20,14 +19,13 @@ namespace _DreamKeep.EngineUtility
 
         /// <summary>建池：parent_ 为新建实例的出生父节点；maxSize_ 为每桶缓存上限，超出的归还直接销毁；
         /// onCreate_ 只在真正实例化时触发一次（容器注入等一次性装配），池内复用不重复调用；
-        /// onGet_/onReturn_ 为消费者特有的取出刷新与归还复位。</summary>
-        public MonoObjectPool(Transform parent_, int maxSize_ = 32, Action<T> onCreate_ = null, Action<T> onGet_ = null,
+        /// onReturn_ 为消费者特有的归还复位。</summary>
+        public MonoObjectPool(Transform parent_, int maxSize_ = 32, Action<T> onCreate_ = null,
             Action<T> onReturn_ = null)
         {
             _parent = parent_;
             _maxSize = maxSize_;
             _onCreate = onCreate_;
-            _onGet = onGet_;
             _onReturn = onReturn_;
         }
 
@@ -54,7 +52,6 @@ namespace _DreamKeep.EngineUtility
             _originOf[instance] = prefab_; // 新实例与复用实例同一行登记，语义即"当前在用"
 
             instance.gameObject.SetActive(true);
-            _onGet?.Invoke(instance);
             return instance;
         }
 

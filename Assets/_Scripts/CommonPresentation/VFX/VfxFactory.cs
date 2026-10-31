@@ -1,3 +1,4 @@
+using System;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
@@ -14,6 +15,8 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private UI_OneShotVfx _blockVfxPrefab;
         [SerializeField] private UI_PerkAppliedVfx _perkVfxPrefab;
         [SerializeField] private UI_PotionSplashVfx _potionSplashVfxPrefab;
+        [SerializeField] private UI_OneShotVfx _restSmokeVfxPrefab;
+        [SerializeField] private UI_OneShotVfx _smithForgeVfxPrefab;
 
         private MonoObjectPool<UI_OneShotVfx> _vfxPool;
 
@@ -51,6 +54,14 @@ namespace _DreamKeep.CommonPresentation
             vfx.Play(() => _vfxPool.Release(vfx));
         }
 
+        /// <summary>休息烟雾：播放时长由预制体上的 UI_RestSmokeVfx 决定；槽位空则立刻回调（等待方不会挂死）。</summary>
+        public void PlayRestSmoke(Transform parent_, Vector3 worldPosition_, float scale_, Action onFinished_) =>
+            PlayWithCallback(_restSmokeVfxPrefab, parent_, worldPosition_, scale_, onFinished_);
+
+        /// <summary>锻造锤击：三段循环由预制体上的 UI_SmithForgeVfx 驱动；槽位空则立刻回调。</summary>
+        public void PlaySmithForge(Transform parent_, Vector3 worldPosition_, float scale_, Action onFinished_) =>
+            PlayWithCallback(_smithForgeVfxPrefab, parent_, worldPosition_, scale_, onFinished_);
+
         #endregion
 
         // 无参数特效的成品段落：取池摆位后直接开播；没接预制体就什么都不做
@@ -59,6 +70,24 @@ namespace _DreamKeep.CommonPresentation
             if (!prefab_) return;
             UI_OneShotVfx vfx = Rent(prefab_, parent_, worldPosition_, scale_);
             vfx.Play(() => _vfxPool.Release(vfx));
+        }
+
+        // 带完成回调的成品段落：还池之后回调，供段内按"播完再做下一步"编排
+        private void PlayWithCallback(UI_OneShotVfx prefab_, Transform parent_, Vector3 worldPosition_, float scale_,
+            Action onFinished_)
+        {
+            if (!prefab_)
+            {
+                onFinished_?.Invoke();
+                return;
+            }
+
+            UI_OneShotVfx vfx = Rent(prefab_, parent_, worldPosition_, scale_);
+            vfx.Play(() =>
+            {
+                _vfxPool.Release(vfx);
+                onFinished_?.Invoke();
+            });
         }
 
         // 取池与摆位：挂到调用方给的父节点并置顶 → 写缩放与世界坐标。内容绑定由各通道自己补

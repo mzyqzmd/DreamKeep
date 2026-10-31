@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="700" viewBox="0 0 1240 700" font-family="Consolas, Menlo, monospace" font-size="12">
+  <defs>
+    <marker id="dep" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#4a6b8a"/>
+    </marker>
+  </defs>
+  <rect width="1240" height="700" fill="#fbfbfc"/>
+
+  <text x="20" y="26" font-size="14" font-weight="bold" fill="#333">自建程序集依赖图（自下而上分层，箭头从引用方指向被依赖方）</text>
+
+  <!-- 分层背景带 -->
+  <rect x="40" y="40" width="620" height="182" rx="10" fill="#fdf3f3"/>
+  <text x="52" y="60" font-size="11" fill="#b06a6a">表现层</text>
+  <rect x="40" y="235" width="620" height="315" rx="10" fill="#f3f8fd"/>
+  <text x="52" y="255" font-size="11" fill="#5a82a8">域层</text>
+  <rect x="40" y="562" width="620" height="100" rx="10" fill="#fdf9ec"/>
+  <text x="52" y="582" font-size="11" fill="#b09a4a">底层（零互依，仅引外部包）</text>
+
+  <!-- 主干边（传递约简后 7 条） -->
+  <g stroke="#4a6b8a" stroke-width="1.8" fill="none" marker-end="url(#dep)">
+    <path d="M350,92 L350,151"/>            <!-- Presentation -> CommonPresentation -->
+    <path d="M350,197 L350,261"/>           <!-- CommonPresentation -> GameRun -->
+    <path d="M350,307 L350,371"/>           <!-- GameRun -> GameBattle -->
+    <path d="M350,417 L350,481"/>           <!-- GameBattle -> RuntimeData -->
+    <path d="M295,527 L329,591"/>           <!-- RuntimeData -> Utility -->
+    <path d="M405,527 L578,591"/>           <!-- RuntimeData -> ConfigData -->
+    <path d="M260,175 L120,175 L120,591"/>  <!-- CommonPresentation -> EngineUtility -->
+  </g>
+
+  <!-- 节点 -->
+  <g text-anchor="middle">
+    <rect x="270" y="48" width="160" height="44" rx="8" fill="#ffe6e6" stroke="#c0504d" stroke-width="1.5"/>
+    <text x="350" y="75" fill="#8a2825">Presentation</text>
+
+    <rect x="260" y="153" width="180" height="44" rx="8" fill="#e6ffe6" stroke="#3a9f5a" stroke-width="1.5"/>
+    <text x="350" y="180" font-size="11.5" fill="#1f6a36">CommonPresentation</text>
+
+    <rect x="270" y="263" width="160" height="44" rx="8" fill="#dff0ff" stroke="#3a7fb0" stroke-width="1.5"/>
+    <text x="350" y="290" fill="#1f5a82">GameRun</text>
+
+    <rect x="270" y="373" width="160" height="44" rx="8" fill="#dff0ff" stroke="#3a7fb0" stroke-width="1.5"/>
+    <text x="350" y="400" fill="#1f5a82">GameBattle</text>
+
+    <rect x="270" y="483" width="160" height="44" rx="8" fill="#dff0ff" stroke="#3a7fb0" stroke-width="1.5"/>
+    <text x="350" y="510" fill="#1f5a82">RuntimeData</text>
+
+    <rect x="45" y="593" width="150" height="44" rx="8" fill="#fff3d6" stroke="#c9a24a" stroke-width="1.5"/>
+    <text x="120" y="620" fill="#7a5a10">EngineUtility</text>
+    <rect x="255" y="593" width="150" height="44" rx="8" fill="#fff3d6" stroke="#c9a24a" stroke-width="1.5"/>
+    <text x="330" y="620" fill="#7a5a10">Utility</text>
+    <rect x="505" y="593" width="150" height="44" rx="8" fill="#fff3d6" stroke="#c9a24a" stroke-width="1.5"/>
+    <text x="580" y="620" fill="#7a5a10">ConfigData</text>
+  </g>
+
+  <!-- 右侧完整直接引用表 -->
+  <g>
+    <text x="700" y="60" font-size="12" font-weight="bold" fill="#333">完整直接引用（含被约简省略的边）</text>
+    <g font-size="11.5" fill="#333">
+      <text x="700" y="90">Utility</text>
+      <text x="700" y="106" font-size="10" fill="#888">（无自建引用，仅外部包）</text>
+      <text x="700" y="142">EngineUtility</text>
+      <text x="700" y="158" font-size="10" fill="#888">（无自建引用，仅外部包）</text>
+      <text x="700" y="194">ConfigData</text>
+      <text x="700" y="210" font-size="10" fill="#888">（无自建引用，仅外部包）</text>
+      <text x="700" y="246">RuntimeData</text>
+      <text x="700" y="262" font-size="10" fill="#666">Utility、ConfigData</text>
+      <text x="700" y="298">GameBattle</text>
+      <text x="700" y="314" font-size="10" fill="#666">Utility、RuntimeData、ConfigData</text>
+      <text x="700" y="350">GameRun</text>
+      <text x="700" y="366" font-size="10" fill="#666">Utility、ConfigData、RuntimeData、GameBattle</text>
+      <text x="700" y="402">CommonPresentation</text>
+      <text x="700" y="418" font-size="10" fill="#666">Utility、ConfigData、RuntimeData、EngineUtility、GameBattle、GameRun</text>
+      <text x="700" y="454">Presentation</text>
+      <text x="700" y="470" font-size="10" fill="#666">Utility、ConfigData、RuntimeData、EngineUtility、</text>
+      <text x="700" y="484" font-size="10" fill="#666">GameBattle、GameRun、CommonPresentation</text>
+    </g>
+  </g>
+
+  <text x="20" y="690" font-size="10.5" fill="#999">箭头 = 引用方 → 被依赖方（已做传递约简，只画主干 7 条边，完整直接引用见右表）。整体无循环依赖。</text>
+</svg>

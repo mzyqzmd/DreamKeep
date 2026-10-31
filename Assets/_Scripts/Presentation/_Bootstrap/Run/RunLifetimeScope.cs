@@ -17,6 +17,8 @@ namespace _DreamKeep.Presentation
         protected override void Configure(IContainerBuilder builder_)
         {
             builder_.RegisterInstance(new RunState(_playerConfig, _seed));
+            // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
+            builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
             builder_.RegisterInstance(new BattleSession());
             // 弹层与特效工厂注册在整局层：池要跨段复用，段内编排者（BattlePopRoot / BattleVfxRoot）从父容器解析即可，
@@ -28,7 +30,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
             builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
             builder_.RegisterComponentInHierarchy<UI_DeckPanel>(); // 卡组查看：整副局内卡组的陈列，跑图/战斗段都随顶栏开关
-            // 段场景加载管理器：地图落地前由它 additive 加载战斗段（及未来的商店/事件/休息段）并在打完后卸载，它也要拿到会话句柄
+            // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
             // 二者由加载器在 Start 里查找并 InjectGameObject 补注入

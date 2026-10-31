@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
@@ -47,6 +48,21 @@ namespace _DreamKeep.CommonPresentation
             face.gameObject.SetActive(true);
             Current = face;
             return Current;
+        }
+
+        #endregion
+
+        #region 陈列绑定：切脸→刷面→关涟漪→收集词条，一条龙供无预览对账的陈列卡复用
+
+        /// <summary>静态陈列绑定：词条写进 tips_ 后由调用方推给气泡；返回当前牌面。
+        /// 战斗卡带预览台账与涟漪，不收敛进这里。</summary>
+        public UI_CardFace BindStatic(CardModel card_, List<(string Name, string Description)> tips_)
+        {
+            UI_CardFace face = Select(card_);
+            face.Bind(card_);
+            face.SetRippleVisible(false); // 陈列态不播 card_ripple，保持静态牌面
+            face.CollectTipLines(tips_);
+            return face;
         }
 
         #endregion

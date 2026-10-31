@@ -7,7 +7,6 @@ using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
-using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
 
 namespace _DreamKeep.Presentation
@@ -46,7 +45,8 @@ namespace _DreamKeep.Presentation
             BattleContext battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();
-            RelicTriggerNotifier relicNotifier = new RelicTriggerNotifier();
+            // 遗物播报器住整局容器（Run 级单例）：战斗效果与休息处挖掘共用同一涟漪通道，本段只取用
+            RelicTriggerNotifier relicNotifier = Parent.Container.Resolve<RelicTriggerNotifier>();
             BattleLoop loop = new BattleLoop(battleContext, run.Config.DrawPerTurn, dispatcher);
 
             // 遗物系统（GameRun 程序集）：遍历玩家整局持有的遗物，逐件烘焙效果并挂上本场事件流；

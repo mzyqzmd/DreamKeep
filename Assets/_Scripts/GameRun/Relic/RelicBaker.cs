@@ -4,7 +4,8 @@ using _DreamKeep.GameBattle;
 
 namespace _DreamKeep.GameRun
 {
-    /// <summary>遗物效果装配器：按遗物配置资产类型分派到对应效果类，未登记的类型直接抛错——装配期暴露、防静默失效。
+    /// <summary>遗物效果装配器：按遗物配置资产类型分派到对应效果类。未登记类型抛错——装配期暴露、防静默失效；
+    /// 显式登记为 null 表示该遗物无战斗内效果（纯局外工具），与 PerkBaker 的 null 先例同口径。
     /// 需要"结算前介入"的效果（如致命伤拦截）在这里登记进战斗态，战斗域只按接口询问。</summary>
     public static class RelicBaker
     {
@@ -76,6 +77,9 @@ namespace _DreamKeep.GameRun
                 SO_Abacus data => new RE_Abacus(data, context_, actions_, dispatcher_, notifier_),
                 SO_UnceasingTop data => new RE_UnceasingTop(data, context_, actions_, dispatcher_, notifier_),
                 SO_MeatOnTheBone data => new RE_MeatOnTheBone(data, context_, actions_, dispatcher_, notifier_),
+
+                // 纯局外效果：无战斗内行为（挖掘资格由 RestEntry 判定），显式登记 null 豁免
+                SO_Shovel => null,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(config_), $"{config_.name} 的效果类型未登记"),
             };

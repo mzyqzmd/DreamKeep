@@ -24,7 +24,7 @@ namespace _DreamKeep.GameRun
         {
             if (_perk == null) return;
             Creature self = Context.Player.Creature;
-            await PerformAsync(new BA_ApplyPerk(self, new List<Creature> { self }, _perk.Clone()));
+            await PerformAsync(new BA_ApplyPerk(self, PlayerTarget, _perk.Clone()));
         }
     }
 }

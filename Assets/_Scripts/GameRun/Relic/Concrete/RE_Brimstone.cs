@@ -28,7 +28,7 @@ namespace _DreamKeep.GameRun
             if (_selfPerk == null && _enemyPerk == null) return;
             Creature self = Context.Player.Creature;
             List<BattleAction> actions = new();
-            if (_selfPerk != null) actions.Add(new BA_ApplyPerk(self, new List<Creature> { self }, _selfPerk.Clone()));
+            if (_selfPerk != null) actions.Add(new BA_ApplyPerk(self, PlayerTarget, _selfPerk.Clone()));
 
             List<Creature> enemies = new();
             foreach (Enemy enemy in Context.GetAliveEnemies()) enemies.Add(enemy.Creature);

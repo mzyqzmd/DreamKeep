@@ -6,7 +6,8 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>战斗循环：以外驱状态机（当前阶段指针 + 切换去重守卫）驱动整场战斗生命周期，也是表现层唯一的命令入口。状态机本身仅持有当前阶段，阶段推进由本循环外层驱动、切状态经宿主路由（如 EndPlayerTurn）。
-    /// 循环独占由 RunLoop 自身的守卫保证：启动与入队命令都只可能拉起一条循环，命令一律在等待态串行取出，能量校验与扣减不会被打断。</summary>
+    /// 循环独占由 RunLoop 自身的守卫保证：启动与入队命令都只可能拉起一条循环，命令一律在等待态串行取出，能量校验与扣减不会被打断。
+    /// 全项目为单线程执行（UniTask 走主线程帧驱动，无线程池任务），StatHook 的临时数值池等无锁设计依赖这一前提。</summary>
     public class BattleLoop
     {
         private readonly StateMachine<BaseState<BattleLoop>> _fsm = new();
@@ -18,7 +19,7 @@ namespace _DreamKeep.GameBattle
         public ActionSystem ActionSystem { get; } // GameRun 的遗物效果装配时要向动作系统提交动作，公开给上游程序集
         internal BattleEventDispatcher EventDispatcher { get; }
 
-        /// <summary>终态已跑完（含结束阶段演出）：整局层的段启动器据此收段重建，不另设回调。</summary>
+        /// <summary>终态已跑完（含结束阶段演出）：整局层的段启动器据此收尾结算，不另设回调。</summary>
         public bool IsFinished => _finished;
 
         /// <summary>本场是否打赢：整局层在 IsFinished 之后据此决定要不要结算奖励。

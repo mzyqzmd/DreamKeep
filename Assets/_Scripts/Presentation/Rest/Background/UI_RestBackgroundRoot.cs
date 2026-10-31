@@ -30,6 +30,9 @@ namespace _DreamKeep.Presentation
             foreach (Tween breath in _breaths) breath?.Kill();
         }
 
+        /// <summary>营火高亮节点：休息烟雾以它的矩形中心作为升腾起点，取不到返回 null 由调用方回退。</summary>
+        public Transform FireAnchor => _fireHighLight ? _fireHighLight.transform : null;
+
         // 每个高亮从 _minAlpha 起、yoyo 往返到 _maxAlpha 形成呼吸；
         private void RegisterBreath(CanvasGroup highLight_)
         {

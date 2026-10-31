@@ -7,16 +7,14 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>音叉：每回合每打出 N 张技能牌，获得格挡；回合开始时重置计数。</summary>
-    public sealed class RE_TuningFork : RelicEffect
+    public sealed class RE_TuningFork : RelicEffect<SO_TuningFork>
     {
-        private readonly SO_TuningFork _data;
         private int _count;
 
         public RE_TuningFork(SO_TuningFork data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)
             : base(data_, context_, actions_, dispatcher_, notifier_)
         {
-            _data = data_;
             Dispatcher.Register<BE_TurnStarted>(OnTurnStarted);
             Dispatcher.Register<BE_CardPlayed>(OnCardPlayed);
         }
@@ -29,9 +27,9 @@ namespace _DreamKeep.GameRun
         private async UniTask OnCardPlayed(BE_CardPlayed ev_)
         {
             if (ev_.Card.Type != ECardType.Skill) return;
-            if (++_count < _data.Count) return;
+            if (++_count < Data.Count) return;
             _count = 0;
-            await PerformAsync(new BA_Block(null, new List<Creature> { Context.Player.Creature }, _data.Block));
+            await PerformAsync(new BA_Block(null, PlayerTarget, Data.Block));
         }
     }
 }

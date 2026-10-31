@@ -11,7 +11,7 @@ namespace _DreamKeep.CommonPresentation
     public class UI_OneShotVfx : MonoBehaviour
     {
         [Tooltip("帧动画通道的片段：粒子通道留空")] [SerializeField]
-        private AnimationClip _clip;
+        protected AnimationClip _clip;
 
         private ParticleSystem[] _particles;
         private Animator _animator;

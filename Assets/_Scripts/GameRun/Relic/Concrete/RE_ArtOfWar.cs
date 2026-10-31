@@ -8,9 +8,8 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>孙子兵法：本回合未打出攻击牌，则下个玩家回合开始时获得能量。
     /// 回合末落标记、下回合开窗时兑现；未打攻击的判定与兑现跨一个回合，故用两个字段。</summary>
-    public sealed class RE_ArtOfWar : RelicEffect
+    public sealed class RE_ArtOfWar : RelicEffect<SO_ArtOfWar>
     {
-        private readonly SO_ArtOfWar _data;
         private bool _attacked;
         private bool _bonusPending;
 
@@ -18,7 +17,6 @@ namespace _DreamKeep.GameRun
             RelicTriggerNotifier notifier_)
             : base(data_, context_, actions_, dispatcher_, notifier_)
         {
-            _data = data_;
             Dispatcher.Register<BE_CardPlayed>(OnCardPlayed);
             Dispatcher.Register<BE_PlayerTurnEnded>(OnPlayerTurnEnded);
             Dispatcher.Register<BE_PlayerTurnActiveStarted>(OnPlayerTurnActiveStarted);
@@ -40,7 +38,7 @@ namespace _DreamKeep.GameRun
             if (!_bonusPending) return;
             _bonusPending = false;
             Creature self = Context.Player.Creature;
-            await PerformAsync(new BA_GainEnergy(self, new List<Creature> { self }, _data.Energy));
+            await PerformAsync(new BA_GainEnergy(self, PlayerTarget, Data.Energy));
         }
     }
 }

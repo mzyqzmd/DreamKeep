@@ -14,7 +14,7 @@ namespace _DreamKeep.RuntimeData
         internal ModifiableStat Cost { get; }
         internal bool IsUpgraded { get; private set; }
 
-        /// <summary>运行时追加的词条：升级追加与「给予」效果的追加都落在这里。</summary>
+        /// <summary>运行时追加的词条：升级补丁追加的新词条落在这里。</summary>
         internal List<CardAffix> AdditionalAffixes { get; } = new();
 
         /// <summary>当前生效的词条集：基础词条（升级后跳过被移除的）再并入追加词条。</summary>

@@ -9,7 +9,6 @@ namespace _DreamKeep.Presentation
         public void Show()
         {
             gameObject.SetActive(true);
-            transform.SetAsLastSibling(); // 与奖励/三选一面板同住一个 Canvas，取出时压到最上层
         }
 
         public void Hide() => gameObject.SetActive(false);

@@ -4,13 +4,9 @@
     "references": [
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
         "GUID:5f28dd248d458df4bb494094036d476b",
-        "GUID:c7f82644d4304c84282d142247881187",
-        "GUID:67eea44f66da75d46a8066b13b2d83b3",
-        "GUID:ad3aa77114929d2479fcb434cad3f16a",
         "GUID:f6b2d8a34c1e4f7d9a0b5c6e8d2f3147",
         "GUID:f0eed43b2f881644db6e48bd15c2f7c0",
-        "GUID:743064110a38ee743a411dd0c576ab58",
-        "DOTween.Modules"
+        "GUID:743064110a38ee743a411dd0c576ab58"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

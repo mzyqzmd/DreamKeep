@@ -14,7 +14,6 @@ namespace _DreamKeep.Presentation
     {
         [SerializeField] private TextMeshProUGUI _hpText;
         [SerializeField] private TextMeshProUGUI _goldText;
-        [SerializeField] private UI_PotionGroup _potionGroup;
         [SerializeField] private UI_LayerBar _layerBar;
         [SerializeField] private TextMeshProUGUI _timeText;
         [SerializeField] private Button _mapButton;
@@ -98,15 +97,17 @@ namespace _DreamKeep.Presentation
             if (_menuButton) _menuButton.onClick.AddListener(TogglePanel);
         }
 
-        /// <summary>打开地图面板：战后流程与顶栏按钮共用这一个入口。</summary>
+        /// <summary>打开地图面板：段收尾（休息/先古/战斗奖励的「继续」）与顶栏按钮共用这一个入口。</summary>
         public void OpenMap()
         {
             if (_mapPanel) _mapPanel.Show();
         }
 
-        /// <summary>把顶栏整体压到同 Canvas 的最上层：奖励面板是全屏模态，领奖期间药水栏/金币要能正常用
-        /// （否则"槽满先去喝一瓶再回来领"这条路走不通）。</summary>
-        public void BringToFront() => transform.SetAsLastSibling();
+        /// <summary>收起地图面板：段加载器在选定下一个节点、装载新段前调用，避免遮罩盖住新段。</summary>
+        public void CloseMap()
+        {
+            if (_mapPanel) _mapPanel.Hide();
+        }
 
         private void ToggleMap()
         {

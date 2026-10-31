@@ -16,7 +16,8 @@ namespace _DreamKeep.CommonPresentation
         [Tooltip("悬停信息气泡")] [SerializeField] private UI_HoverTip _hoverTip;
 
         private UI_CardFaceSelector _faces; // 四张内嵌牌面的持有者：当前是哪张由它回答
-        private Action<CardModel> _onClick; // 绑定方注入的点击回调：网格卡开特写用，null 即纯展示
+        private Action<CardModel> _onClick; // 绑定方注入的左键回调：网格卡开特写/预览用，null 即纯展示
+        private Action<CardModel> _onRightClick; // 绑定方注入的右键回调：看卡牌详情用，null 即右键无动作
 
         // 词条说明的内容（复用列表）：Bind 时经牌面的收集方法重填一次，再递给气泡发起器
         private readonly List<(string Name, string Description)> _affixTips = new();
@@ -26,18 +27,20 @@ namespace _DreamKeep.CommonPresentation
 
         private void Awake() => _faces = GetComponent<UI_CardFaceSelector>();
 
-        public void OnPointerClick(PointerEventData eventData_) => _onClick?.Invoke(Card);
+        public void OnPointerClick(PointerEventData eventData_)
+        {
+            if (eventData_.button == PointerEventData.InputButton.Right) _onRightClick?.Invoke(Card);
+            else _onClick?.Invoke(Card);
+        }
 
         #region 绑定：登记点击回调→切脸→刷牌面→关涟漪→收集词条推气泡
 
-        public void Bind(CardModel card_, Action<CardModel> onClick_)
+        public void Bind(CardModel card_, Action<CardModel> onClick_, Action<CardModel> onRightClick_ = null)
         {
             _onClick = onClick_;
-            UI_CardFace face = _faces.Select(card_);
-            face.Bind(card_);
-            face.SetRippleVisible(false);
-            // 词条说明随绑定写一次（牌面门面刚清空，数值按"与升级前基准静态比较"着色；卡组陈列没有预览对账，恒为此口径）
-            face.CollectTipLines(_affixTips);
+            _onRightClick = onRightClick_;
+            // 词条说明随绑定写一次（数值按"与升级前基准静态比较"着色；卡组陈列没有预览对账，恒为此口径）
+            _faces.BindStatic(card_, _affixTips);
             _hoverTip.SetContents(_affixTips);
         }
 

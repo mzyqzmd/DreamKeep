@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameRun
 {
@@ -39,5 +41,8 @@ namespace _DreamKeep.GameRun
         }
 
         #endregion
+
+        /// <summary>以玩家为目标的单体目标表：每次访问新建实例，与调用点内联 new 逐字等价。</summary>
+        protected List<Creature> PlayerTarget => new() { Context.Player.Creature };
     }
 }

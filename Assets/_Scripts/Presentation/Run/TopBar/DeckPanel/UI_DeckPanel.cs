@@ -13,8 +13,9 @@ namespace _DreamKeep.Presentation
     /// <summary>整局卡组查看面板：网格陈列 RunState.Player.Deck 全部卡，费用/类型/默认序三种排序——点按钮切模式、
     /// 再点当前模式翻转方向（默认序不翻转），当前模式的箭头图标染高亮色；点卡进全屏特写，特写里可用升级预览开关
     /// 查看升级后形态（临时可变副本展示、永不写回域）。卡组变更只发生在面板关闭的跑图段，故打开时全量重建、
-    /// 不订阅任何事件；战斗段同样可开（顶栏常驻），与战斗内三堆查看（UI_PileCardsView）互不干扰。</summary>
-    public sealed class UI_DeckPanel : MonoBehaviour
+    /// 不订阅任何事件；战斗段同样可开（顶栏常驻），与战斗内三堆查看（UI_PileCardsView）互不干扰。
+    /// 开合能力继承自 UI_Panel，刷新逻辑落在 OnShown。</summary>
+    public sealed class UI_DeckPanel : UI_Panel
     {
         [Header("陈列")] [Tooltip("卡实例预制体：网格与特写共用（网格态由本面板缩到格尺寸）")] [SerializeField]
         private UI_CardInDeck _cardPrefab;
@@ -92,22 +93,12 @@ namespace _DreamKeep.Presentation
 
         #region 对外入口：开合面板
 
-        public void Show()
+        protected override void OnShown()
         {
-            gameObject.SetActive(true);
-            transform.SetAsLastSibling(); // 与地图/奖励面板同住一个 Canvas，取出时压到最上层
             RefreshGrid();
             // 滚动范围按当帧的网格高度算：先强制重排，再把滚动位置拉回顶部
             LayoutRebuilder.ForceRebuildLayoutImmediate(_gridContent);
             _scroll.verticalNormalizedPosition = 1f;
-        }
-
-        public void Hide() => gameObject.SetActive(false); // 清理（特写收起、网格还池）由 OnDisable 兜底，避免双跑
-
-        public void Toggle()
-        {
-            if (gameObject.activeSelf) Hide();
-            else Show();
         }
 
         #endregion
@@ -124,7 +115,7 @@ namespace _DreamKeep.Presentation
                 UI_CardInDeck instance = _pool.Get(_cardPrefab);
                 // 网格按兄弟序摆格子而池复用不改兄弟位：取出即按陈列序钉位，否则排序只换逻辑序不换显示
                 instance.transform.SetSiblingIndex(i);
-                instance.Bind(_display[i], OpenConcrete);
+                instance.Bind(_display[i], OpenConcrete, OpenConcrete);
                 _shown.Add(instance);
             }
 

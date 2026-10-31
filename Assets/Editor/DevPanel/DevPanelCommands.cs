@@ -63,6 +63,15 @@ internal static class DevPanelCommands
         return "已请求加载先古之民段";
     }
 
+    /// <summary>加载休息段（段名与守卫都在 SegmentSceneManager 里）。</summary>
+    internal static string StartRestSegment()
+    {
+        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
+        manager.StartSegment(SegmentSceneManager.RestSegmentName);
+        return "已请求加载休息段";
+    }
+
     #endregion
 
     #region 整局：加金币与回满血

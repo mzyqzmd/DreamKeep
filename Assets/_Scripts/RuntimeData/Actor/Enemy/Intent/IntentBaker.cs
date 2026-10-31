@@ -15,7 +15,7 @@ namespace _DreamKeep.RuntimeData
 
             for (int i = 0; i < configs_.Count; i++)
             {
-                EnemyIntent intent = ToRuntime(configs_[i]);
+                EnemyIntent intent = Bake(configs_[i]);
                 if (intent != null) intents.Add(intent);
             }
 
@@ -23,26 +23,24 @@ namespace _DreamKeep.RuntimeData
         }
         #endregion
 
-        #region 烘焙单条配置意图：供敌人最前槽位替换意图等单条场景取用
+        #region 烘焙单条配置意图：复合意图递归展开为独立运行时实例
 
-        public static EnemyIntent Bake(IntentData config_) => ToRuntime(config_);
-
-        #endregion
-
-        private static EnemyIntent ToRuntime(IntentData data_)
+        public static EnemyIntent Bake(IntentData data_)
         {
             return data_ switch
             {
                 DamageIntentData damage => new EI_Damage(damage.Damage, damage.Times),
                 BlockIntentData block => new EI_Block(block.Amount),
                 ApplyPerkIntentData applyPerk => ToApplyPerk(applyPerk),
-                MixedIntentData mixed => new EI_Mixed(ToRuntime(mixed.Intent1), ToRuntime(mixed.Intent2)),
+                MixedIntentData mixed => new EI_Mixed(Bake(mixed.Intent1), Bake(mixed.Intent2)),
                 MoveIntentData => new EI_Move(),
                 StunIntentData => new EI_Stun(),
                 HealIntentData heal => new EI_Heal(heal.Amount),
                 _ => null,
             };
         }
+
+        #endregion
 
         /// <summary>状态从配置模板烘出独立运行时实例，再叠加意图给出的层数。</summary>
         private static EnemyIntent ToApplyPerk(ApplyPerkIntentData data_)

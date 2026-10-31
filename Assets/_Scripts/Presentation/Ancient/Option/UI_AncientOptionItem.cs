@@ -1,15 +1,14 @@
-using System;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using _DreamKeep.ConfigData;
 using UnityEngine.UI;
+using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>单件遗物选项：图标/名称/描述来自 SO_Relic，点击只上报不自行动；淡入演出供组错峰调度。</summary>
-    public sealed class UI_AncientOptionItem : MonoBehaviour, IPointerClickHandler
+    /// <summary>单件遗物选项：图标/名称/描述来自 SO_Relic，点击只上报不自行动（继承自 UI_Button）；淡入演出供组错峰调度。</summary>
+    public sealed class UI_AncientOptionItem : UI_Button
     {
         [SerializeField] private Image _icon;
         [SerializeField] private TMP_Text _title;
@@ -17,19 +16,16 @@ namespace _DreamKeep.Presentation
 
         [SerializeField] private float _fadeDuration = 0.2f;
 
-        /// <summary>点选上报：由组按槽位下标接管，本件不认识下标与领取规则。</summary>
-        public event Action Clicked;
-
         private CanvasGroup _canvasGroup;
         private Tween _fadeTween;
 
         private void Awake()
         {
             // CanvasGroup 自愈：预制体没挂也能淡入（照回合横幅先例）
-            if (!TryGetComponent(out _canvasGroup)) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            _canvasGroup = UiCanvas.EnsureCanvasGroup(this);
         }
 
-        private void OnDestroy() => _fadeTween?.Kill();
+        protected override void OnDestroy() => _fadeTween?.Kill();
 
         public void Bind(SO_Relic relic_)
         {
@@ -43,9 +39,8 @@ namespace _DreamKeep.Presentation
         /// <summary>错峰淡入：delay_ 秒后从透明淡到全显，重复调用杀旧重播。</summary>
         public void PlayFadeIn(float delay_)
         {
-            _fadeTween?.Kill();
-            _canvasGroup.alpha = 0f;
-            _fadeTween = _canvasGroup.DOFade(1f, _fadeDuration).SetDelay(delay_);
+            _canvasGroup.alpha = 0f; // 从零起播
+            UiTween.PlayAlpha(ref _fadeTween, _canvasGroup, 1f, _fadeDuration, delay_);
         }
 
         public void Hide()
@@ -53,7 +48,5 @@ namespace _DreamKeep.Presentation
             _fadeTween?.Kill();
             gameObject.SetActive(false);
         }
-
-        public void OnPointerClick(PointerEventData eventData_) => Clicked?.Invoke();
     }
 }

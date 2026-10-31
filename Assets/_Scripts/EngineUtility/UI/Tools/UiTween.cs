@@ -35,6 +35,17 @@ namespace _DreamKeep.EngineUtility
             return slot_;
         }
 
+        /// <summary>透明度补间通道：CanvasGroup.alpha 从当前值补到 to_，可带延迟（错峰淡入用），缓动默认 OutQuad。
+        /// 再次调用先杀旧补间，于是从当前值续走而不是跳变；从零起播的调用方先自行置零再调。</summary>
+        public static Tween PlayAlpha(ref Tween slot_, CanvasGroup group_, float to_, float duration_,
+            float delay_ = 0f)
+        {
+            slot_?.Kill();
+            slot_ = group_.DOFade(to_, duration_).SetEase(Ease.OutQuad);
+            if (delay_ > 0f) slot_.SetDelay(delay_);
+            return slot_;
+        }
+
         /// <summary>位姿补间通道：位置与朝向一起从当前值补到给定位姿（world 口径），缓动恒 OutQuad。
         /// 再次调用先杀旧补间，于是从当前姿态续走——拖拽落位、悬停偏移共用同一条实现。</summary>
         public static Tween PlayPose(ref Tween slot_, Transform target_, Vector3 toPosition_, Quaternion toRotation_,

@@ -5,6 +5,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility;
 using UnityEngine.UI;
 
 namespace _DreamKeep.Presentation
@@ -27,7 +28,7 @@ namespace _DreamKeep.Presentation
         private void Awake()
         {
             // CanvasGroup 自愈：预制体没挂也能淡入（照回合横幅先例）
-            if (!TryGetComponent(out _canvasGroup)) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+            _canvasGroup = UiCanvas.EnsureCanvasGroup(this);
         }
 
         private void OnDestroy() => _fadeTween?.Kill();
@@ -49,9 +50,8 @@ namespace _DreamKeep.Presentation
         /// <summary>淡入并逐字揭示：等待在"全部揭示 / 被补完 / 宿主销毁"中最早者返回。</summary>
         public async UniTask PlayRevealAsync(float charsPerSecond_, CancellationToken ct_)
         {
-            _fadeTween?.Kill();
-            _canvasGroup.alpha = 0f;
-            _fadeTween = _canvasGroup.DOFade(1f, _fadeDuration);
+            _canvasGroup.alpha = 0f; // 从零起播
+            UiTween.PlayAlpha(ref _fadeTween, _canvasGroup, 1f, _fadeDuration);
 
             _text.maxVisibleCharacters = 0;
             _text.ForceMeshUpdate();

@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
     /// <summary>遗物栏：整局常驻——按玩家整局持有的遗物逐件生成槽位（由格栅布局自动排布），
     /// 并把遗物播报按遗物引用分派给对应槽位：生效播一次触发表现、用尽则把槽位置灰。
     /// 遗物在整局内只增不减：装配时铺一遍，之后领到新遗物经 Player.RelicAdded 当场补一格；
-    /// 播报器每场战斗换一个，故随段会话重绑订阅。</summary>
+    /// 播报器是整局单例（战斗效果与休息处挖掘共用），故一次订阅终身有效，不再随段重绑。</summary>
     public sealed class UI_RelicsGroup : MonoBehaviour
     {
         [SerializeField] private UI_RelicSlot _relicSlotPrefab;
@@ -25,22 +25,23 @@ namespace _DreamKeep.Presentation
         private MonoObjectPool<UI_RelicSlot> _relicSlotPool;
         private UI_RelicsInfoPanel _relicInfoPanel; // 单实例：同一时刻只会有一张信息面板，开合由面板自己管
         private RunState _run;
-        private BattleSession _session;
         private RelicTriggerNotifier _notifier;
 
         private void OnDestroy()
         {
-            if (_session != null) _session.Changed -= RebindNotifier;
             if (_run != null) _run.Player.RelicAdded -= OnRelicAdded;
-            UnbindNotifier();
+            if (_notifier != null)
+            {
+                _notifier.Triggered -= OnRelicTriggered;
+                _notifier.Exhausted -= OnRelicExhausted;
+            }
         }
 
         // 建池与生成放在同一次注入里：本组件的 Awake 不保证早于容器构建，池就绪与否由自己保证；
         // onCreate_ 只在新实例上补一次容器注入（槽位的悬停气泡要 PopFactory），复用实例不重复注入
         [Inject]
-        public void Construct(IObjectResolver resolver_, RunState run_, BattleSession session_)
+        public void Construct(IObjectResolver resolver_, RunState run_, RelicTriggerNotifier notifier_)
         {
-            _session = session_;
             _run = run_;
             _relicSlotPool = new MonoObjectPool<UI_RelicSlot>(transform,
                 onCreate_: slot_ => resolver_.InjectGameObject(slot_.gameObject));
@@ -50,8 +51,13 @@ namespace _DreamKeep.Presentation
             // 遗物只增不减：新遗物进来就补一格，无需等下一场战斗重建
             run_.Player.RelicAdded += OnRelicAdded;
 
-            session_.Changed += RebindNotifier;
-            RebindNotifier();
+            // 播报器住整局容器，本栏也随整局常驻：一次订阅即可覆盖战斗与跑图段（休息处挖掘也在其中）
+            _notifier = notifier_;
+            if (_notifier != null)
+            {
+                _notifier.Triggered += OnRelicTriggered;
+                _notifier.Exhausted += OnRelicExhausted;
+            }
         }
 
         #region 遗物新增：领到新遗物当场补一格
@@ -69,27 +75,6 @@ namespace _DreamKeep.Presentation
             slot.Bind(relic_);
             slot.Clicked += OnSlotClicked;
             _slots[relic_] = slot;
-        }
-
-        #endregion
-
-        #region 播报订阅：跟着段会话换，旧播报器用 -= 解绑
-
-        private void RebindNotifier()
-        {
-            UnbindNotifier();
-            _notifier = _session.Relics;
-            if (_notifier == null) return;
-            _notifier.Triggered += OnRelicTriggered;
-            _notifier.Exhausted += OnRelicExhausted;
-        }
-
-        private void UnbindNotifier()
-        {
-            if (_notifier == null) return;
-            _notifier.Triggered -= OnRelicTriggered;
-            _notifier.Exhausted -= OnRelicExhausted;
-            _notifier = null;
         }
 
         #endregion
