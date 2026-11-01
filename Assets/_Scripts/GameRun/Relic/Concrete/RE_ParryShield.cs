@@ -6,7 +6,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>招架盾：回合结束时格挡达到阈值，就对随机敌人造成伤害（遗物伤害不吃力量与易伤）。</summary>
-    public sealed class RE_ParryShield : RelicEffect<SO_ParryShield>
+    public sealed class RE_ParryShield : RelicEffect_T<SO_ParryShield>
     {
         public RE_ParryShield(SO_ParryShield data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

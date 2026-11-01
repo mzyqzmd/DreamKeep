@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>准备背包：首回合初始抽牌之后额外抽牌，每场只触发一次。</summary>
-    public sealed class RE_BagOfPreparation : RelicEffect<SO_BagOfPreparation>
+    public sealed class RE_BagOfPreparation : RelicEffect_T<SO_BagOfPreparation>
     {
         private bool _granted;
 

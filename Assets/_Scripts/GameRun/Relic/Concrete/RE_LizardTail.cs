@@ -7,7 +7,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>蜥蜴尾巴：每场战斗第一次受到致命伤害时，把生命改为最大生命的指定比例，充当"免死"。
     /// 拦截发生在写血之前，血量从不归零，故不会产生死亡事实；_used 随效果实例每战新建，天然逐场重置。</summary>
-    public sealed class RE_LizardTail : RelicEffect<SO_LizardTail>, IDeathGuard
+    public sealed class RE_LizardTail : RelicEffect_T<SO_LizardTail>, IDeathGuard
     {
         private bool _used; // 每场一次
 

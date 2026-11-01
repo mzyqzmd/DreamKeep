@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>不休陀螺：玩家回合内手牌打空时抽牌。
     /// 用"回合活跃"标记把回合末弃牌造成的空手挡在外面，只有出牌或效果弃牌才触发。</summary>
-    public sealed class RE_UnceasingTop : RelicEffect<SO_UnceasingTop>
+    public sealed class RE_UnceasingTop : RelicEffect_T<SO_UnceasingTop>
     {
         private bool _active;
 

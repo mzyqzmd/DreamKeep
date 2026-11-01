@@ -52,6 +52,7 @@ internal sealed class DevPanelWindow : EditorWindow
             if (GUILayout.Button("开始首个战斗段")) _lastResult = DevPanelCommands.StartFirstSegment();
             if (GUILayout.Button("进入先古之民")) _lastResult = DevPanelCommands.StartAncientSegment();
             if (GUILayout.Button("进入休息段")) _lastResult = DevPanelCommands.StartRestSegment();
+            if (GUILayout.Button("进入宝箱段")) _lastResult = DevPanelCommands.StartChestSegment();
 
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("整局", EditorStyles.miniBoldLabel);

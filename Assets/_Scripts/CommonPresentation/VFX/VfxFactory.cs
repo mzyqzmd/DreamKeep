@@ -58,9 +58,16 @@ namespace _DreamKeep.CommonPresentation
         public void PlayRestSmoke(Transform parent_, Vector3 worldPosition_, float scale_, Action onFinished_) =>
             PlayWithCallback(_restSmokeVfxPrefab, parent_, worldPosition_, scale_, onFinished_);
 
-        /// <summary>锻造锤击：三段循环由预制体上的 UI_SmithForgeVfx 驱动；槽位空则立刻回调。</summary>
-        public void PlaySmithForge(Transform parent_, Vector3 worldPosition_, float scale_, Action onFinished_) =>
-            PlayWithCallback(_smithForgeVfxPrefab, parent_, worldPosition_, scale_, onFinished_);
+        /// <summary>锻造锤击：三段循环由预制体上的 UI_SmithForgeVfx 驱动，根下的展示卡写本次升级后的牌；
+        /// 槽位空则立刻回调（等待方不会挂死）。</summary>
+        public void PlaySmithForge(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
+            Action onFinished_)
+        {
+            PlayWithCallback(_smithForgeVfxPrefab, parent_, worldPosition_, scale_, onFinished_, vfx_ =>
+            {
+                if (vfx_ is UI_SmithForgeVfx smithVfx) smithVfx.Bind(card_);
+            });
+        }
 
         #endregion
 
@@ -72,9 +79,9 @@ namespace _DreamKeep.CommonPresentation
             vfx.Play(() => _vfxPool.Release(vfx));
         }
 
-        // 带完成回调的成品段落：还池之后回调，供段内按"播完再做下一步"编排
+        // 带完成回调的成品段落：取池摆位、按需绑定内容后开播，还池之后回调，供段内按"播完再做下一步"编排
         private void PlayWithCallback(UI_OneShotVfx prefab_, Transform parent_, Vector3 worldPosition_, float scale_,
-            Action onFinished_)
+            Action onFinished_, Action<UI_OneShotVfx> onBind_ = null)
         {
             if (!prefab_)
             {
@@ -83,6 +90,7 @@ namespace _DreamKeep.CommonPresentation
             }
 
             UI_OneShotVfx vfx = Rent(prefab_, parent_, worldPosition_, scale_);
+            onBind_?.Invoke(vfx);
             vfx.Play(() =>
             {
                 _vfxPool.Release(vfx);

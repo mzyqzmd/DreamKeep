@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>闪亮口红：指定回合的玩家回合开始时获得力量与敏捷。</summary>
-    public sealed class RE_Lipstick : RelicEffect<SO_Lipstick>
+    public sealed class RE_Lipstick : RelicEffect_T<SO_Lipstick>
     {
         private readonly BattlePerk _strength;
         private readonly BattlePerk _dexterity;

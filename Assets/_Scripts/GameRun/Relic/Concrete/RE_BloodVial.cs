@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>小血瓶：战斗开始时回复生命。</summary>
-    public sealed class RE_BloodVial : RelicEffect<SO_BloodVial>
+    public sealed class RE_BloodVial : RelicEffect_T<SO_BloodVial>
     {
         public RE_BloodVial(SO_BloodVial data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

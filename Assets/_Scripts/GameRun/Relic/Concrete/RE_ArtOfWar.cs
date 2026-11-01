@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>孙子兵法：本回合未打出攻击牌，则下个玩家回合开始时获得能量。
     /// 回合末落标记、下回合开窗时兑现；未打攻击的判定与兑现跨一个回合，故用两个字段。</summary>
-    public sealed class RE_ArtOfWar : RelicEffect<SO_ArtOfWar>
+    public sealed class RE_ArtOfWar : RelicEffect_T<SO_ArtOfWar>
     {
         private bool _attacked;
         private bool _bonusPending;

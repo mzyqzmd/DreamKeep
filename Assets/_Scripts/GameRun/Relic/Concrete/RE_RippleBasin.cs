@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>波纹水盆：本回合未打出攻击牌时，回合结束获得格挡。</summary>
-    public sealed class RE_RippleBasin : RelicEffect<SO_RippleBasin>
+    public sealed class RE_RippleBasin : RelicEffect_T<SO_RippleBasin>
     {
         private bool _attacked;
 

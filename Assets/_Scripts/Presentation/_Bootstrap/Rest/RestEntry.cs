@@ -37,8 +37,8 @@ namespace _DreamKeep.Presentation
         private readonly RunState _run;
         private readonly UI_RestOptionGroup _options;
         private readonly UI_RestVFXRoot _vfxRoot;
-        private readonly UI_SmithPanel _panel;
-        private readonly UI_RestProceed _proceed;
+        private readonly UI_CardUpgradePanel _panel;
+        private readonly UI_RestProceedButton _proceedButton;
         private readonly SegmentSceneManager _segmentManager;
         private readonly IObjectResolver _resolver;
         private readonly VfxFactory _vfxFactory;
@@ -49,8 +49,8 @@ namespace _DreamKeep.Presentation
 
         private const float HealMaxHpRatio = 0.25f;
 
-        public RestEntry(RunState run_, UI_RestOptionGroup options_, UI_RestVFXRoot vfxRoot_, UI_SmithPanel panel_,
-            UI_RestProceed proceed_, SegmentSceneManager segmentManager_, IObjectResolver resolver_,
+        public RestEntry(RunState run_, UI_RestOptionGroup options_, UI_RestVFXRoot vfxRoot_, UI_CardUpgradePanel panel_,
+            UI_RestProceedButton proceedButton_, SegmentSceneManager segmentManager_, IObjectResolver resolver_,
             VfxFactory vfxFactory_, RelicTriggerNotifier notifier_,
             [Key("Common")] SO_RelicPool commonPool_, [Key("Rare")] SO_RelicPool rarePool_, OptionIcons icons_)
         {
@@ -58,7 +58,7 @@ namespace _DreamKeep.Presentation
             _options = options_;
             _vfxRoot = vfxRoot_;
             _panel = panel_;
-            _proceed = proceed_;
+            _proceedButton = proceedButton_;
             _segmentManager = segmentManager_;
             _resolver = resolver_;
             _vfxFactory = vfxFactory_;
@@ -113,12 +113,12 @@ namespace _DreamKeep.Presentation
 
             // 「继续」不是一次性按钮：每点一次都开地图并保留本段（卸载推迟到选定下一个节点）；
             // 玩家把地图关掉后再点继续，还能再次打开。订阅随段销毁一起消失，无需反注册
-            _proceed.gameObject.SetActive(true);
-            _proceed.Clicked += OnProceedClicked;
+            _proceedButton.gameObject.SetActive(true);
+            _proceedButton.Clicked += OnProceedButtonClicked;
         }
 
         // 点「继续」：开地图并保留本段；不是一次性，关掉地图后再点可再开
-        private void OnProceedClicked() => _segmentManager.CompleteSegment();
+        private void OnProceedButtonClicked() => _segmentManager.CompleteSegment();
 
         /// <summary>按玩家状态组装选项列表；同时算好挖掘候选（Common+Rare 合并过滤已持有，照 AncientSession.RollChoices 口径）。
         /// 持有铲子才追加挖掘选项；候选为空则挖掘选项仍出现但置灰（悬停提示「暂无可挖掘的遗物」）。</summary>
@@ -176,9 +176,7 @@ namespace _DreamKeep.Presentation
                 return null;
             }
 
-            await _vfxRoot.PlaySmithForgeAsync(); // 确认时面板已自行收起（见 UI_SmithPanel.OnConfirm），这里只补一次幂等隐藏
-            _panel.Hide();
-            return card;
+            return card; // 锤击与整板关闭已由面板在 OnConfirm 内自管
         }
     }
 }

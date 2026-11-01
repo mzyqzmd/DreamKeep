@@ -1,4 +1,5 @@
 using System;
+using _DreamKeep.CommonPresentation;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -33,8 +34,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(run);
             builder_.RegisterInstance(Require<UI_RestOptionGroup>());
             builder_.RegisterInstance(Require<UI_RestVFXRoot>());
-            builder_.RegisterInstance(Require<UI_SmithPanel>());
-            builder_.RegisterInstance(Require<UI_RestProceed>());
+            builder_.RegisterInstance(Require<UI_CardUpgradePanel>());
+            builder_.RegisterInstance(Require<UI_RestProceedButton>());
             builder_.RegisterInstance(_commonPool).Keyed("Common");
             builder_.RegisterInstance(_rarePool).Keyed("Rare");
             builder_.RegisterInstance(new RestEntry.OptionIcons(_healIcon, _smithIcon, _digIcon));

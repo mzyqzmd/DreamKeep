@@ -560,7 +560,7 @@ GameObject:
   - component: {fileID: 156191012}
   - component: {fileID: 156191011}
   m_Layer: 5
-  m_Name: DeckScrollView
+  m_Name: ScrollView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2206,7 +2206,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -45.109646
+      value: -45.114845
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -3618,7 +3618,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -45.109646
+      value: -45.114845
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -6114,6 +6114,7 @@ GameObject:
   - component: {fileID: 2091153468}
   - component: {fileID: 2091153477}
   - component: {fileID: 2091153475}
+  - component: {fileID: 2091153480}
   - component: {fileID: 2091153474}
   - component: {fileID: 2091153478}
   - component: {fileID: 2091153479}
@@ -6177,9 +6178,6 @@ MonoBehaviour:
   _descriptionPopTipPrefab: {fileID: 2552076003067718171, guid: d199464a7d457f94e91c8461cf43e06c, type: 3}
   _numberPopTipPrefab: {fileID: 6842653926454003922, guid: dcfe99971d3f05a4581d28e9a51ad25c, type: 3}
   _bannerPrefab: {fileID: 1797641832291381066, guid: 1f39b7ad9a64618468cb19f474f34254, type: 3}
-  _rewardPanelPrefab: {fileID: 498558448144999550, guid: aa7e888383526654db054d04458db9db, type: 3}
-  _cardChoicePanelPrefab: {fileID: 2319560588612312606, guid: 7978aaef9ad144a41b195949c7b5481a, type: 3}
-  _panelParent: {fileID: 401056685}
 --- !u!114 &2091153477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6225,7 +6223,21 @@ MonoBehaviour:
   _camera: {fileID: 519420031}
   _runScope: {fileID: 2091153478}
   _topBar: {fileID: 561918068}
-  _firstSegmentName: Scene_Battle
+--- !u!114 &2091153480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091153467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9fbee41f54749629716ee22a1b588ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rewardPanelPrefab: {fileID: 498558448144999550, guid: aa7e888383526654db054d04458db9db, type: 3}
+  _cardChoicePanelPrefab: {fileID: 2319560588612312606, guid: 7978aaef9ad144a41b195949c7b5481a, type: 3}
+  _panelParent: {fileID: 401056685}
 --- !u!1 &2096025520
 GameObject:
   m_ObjectHideFlags: 0
@@ -6744,7 +6756,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -45.109646
+      value: -45.114845
       objectReference: {fileID: 0}
     - target: {fileID: 6260602927433773084, guid: 001ef1d428fa7e34e8e98279308eb946, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

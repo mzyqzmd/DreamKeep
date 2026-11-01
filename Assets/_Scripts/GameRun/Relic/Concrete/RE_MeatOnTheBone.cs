@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>带骨肉：战斗结束时生命比例不高于阈值则回复生命。
     /// 结束事件播完才清空战斗态，处理器内排空来得及。</summary>
-    public sealed class RE_MeatOnTheBone : RelicEffect<SO_MeatOnTheBone>
+    public sealed class RE_MeatOnTheBone : RelicEffect_T<SO_MeatOnTheBone>
     {
         public RE_MeatOnTheBone(SO_MeatOnTheBone data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

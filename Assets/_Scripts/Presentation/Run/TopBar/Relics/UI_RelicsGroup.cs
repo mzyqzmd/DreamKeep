@@ -34,6 +34,7 @@ namespace _DreamKeep.Presentation
             {
                 _notifier.Triggered -= OnRelicTriggered;
                 _notifier.Exhausted -= OnRelicExhausted;
+                _notifier.CountChanged -= OnRelicCountChanged;
             }
         }
 
@@ -57,6 +58,7 @@ namespace _DreamKeep.Presentation
             {
                 _notifier.Triggered += OnRelicTriggered;
                 _notifier.Exhausted += OnRelicExhausted;
+                _notifier.CountChanged += OnRelicCountChanged;
             }
         }
 
@@ -66,6 +68,7 @@ namespace _DreamKeep.Presentation
         {
             if (_slots.ContainsKey(relic_)) return;
             CreateSlot(relic_);
+            _slots[relic_].PlayTrigger(); // 获得遗物：顶栏新槽位播一次涟漪
         }
 
         // 槽位由本栏生成且从不归还，订阅与槽位同生共死
@@ -100,6 +103,12 @@ namespace _DreamKeep.Presentation
         private void OnRelicExhausted(SO_Relic relic_)
         {
             if (_slots.TryGetValue(relic_, out UI_RelicSlot slot)) slot.SetExhausted(true);
+        }
+
+        // 节奏计数：顶栏槽位右下角刷新当前计数；非节奏型不会触发，故其数字恒隐藏
+        private void OnRelicCountChanged(SO_Relic relic_, int count_)
+        {
+            if (_slots.TryGetValue(relic_, out UI_RelicSlot slot)) slot.SetCount(count_);
         }
     }
 }

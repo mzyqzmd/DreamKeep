@@ -9,7 +9,7 @@ namespace _DreamKeep.GameRun
     /// <summary>红头骨：生命比例跌破阈值时获得力量。
     /// 原作是"生命不高于阈值期间"的开关型状态，而现有状态没有单条移除通道，
     /// 故刻意做成每场首次跌破时一次性给层——这是本批唯一的语义近似。</summary>
-    public sealed class RE_RedSkull : RelicEffect<SO_RedSkull>
+    public sealed class RE_RedSkull : RelicEffect_T<SO_RedSkull>
     {
         private readonly BattlePerk _perk;
         private bool _granted;

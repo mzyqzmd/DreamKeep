@@ -52,7 +52,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartFirstSegment();
+        manager.StartSegment(SegmentSceneManager.BattleSegmentName);
         return "已请求加载首个战斗段";
     }
 
@@ -72,6 +72,15 @@ internal static class DevPanelCommands
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegment(SegmentSceneManager.RestSegmentName);
         return "已请求加载休息段";
+    }
+
+    /// <summary>加载宝箱段（随机双池并出 1 件遗物，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    internal static string StartChestSegment()
+    {
+        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
+        manager.StartSegment(SegmentSceneManager.ChestSegmentName);
+        return "已请求加载宝箱段";
     }
 
     #endregion

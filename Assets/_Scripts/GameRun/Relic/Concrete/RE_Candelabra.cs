@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>烛台：指定回合的玩家回合开始时获得能量（回能之后结算）。</summary>
-    public sealed class RE_Candelabra : RelicEffect<SO_Candelabra>
+    public sealed class RE_Candelabra : RelicEffect_T<SO_Candelabra>
     {
         public RE_Candelabra(SO_Candelabra data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

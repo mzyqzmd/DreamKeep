@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>节日拉炮：战斗开始时对全体敌人造成伤害，遗物伤害不吃力量与易伤。</summary>
-    public sealed class RE_FestivePopper : RelicEffect<SO_FestivePopper>
+    public sealed class RE_FestivePopper : RelicEffect_T<SO_FestivePopper>
     {
         public RE_FestivePopper(SO_FestivePopper data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

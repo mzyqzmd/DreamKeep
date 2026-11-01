@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>棋子：每打出一张能力牌就抽牌。</summary>
-    public sealed class RE_ChessPiece : RelicEffect<SO_ChessPiece>
+    public sealed class RE_ChessPiece : RelicEffect_T<SO_ChessPiece>
     {
         public RE_ChessPiece(SO_ChessPiece data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>地精之角：每当有一名敌人死亡时，获得能量并抽牌。
     /// 玩家与敌人没有类型标记，按生物引用比较判定阵营。</summary>
-    public sealed class RE_GremlinHorn : RelicEffect<SO_GremlinHorn>
+    public sealed class RE_GremlinHorn : RelicEffect_T<SO_GremlinHorn>
     {
         public RE_GremlinHorn(SO_GremlinHorn data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

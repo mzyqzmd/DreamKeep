@@ -9,11 +9,15 @@ namespace _DreamKeep.GameRun
     {
         public event Action<SO_Relic> Triggered;
         public event Action<SO_Relic> Exhausted;
+        public event Action<SO_Relic, int> CountChanged;
 
         /// <summary>本件遗物刚生效：涟漪与动作演出同帧开始。</summary>
         public void NotifyTriggered(SO_Relic relic_) => Triggered?.Invoke(relic_);
 
         /// <summary>本件遗物已用尽：表现层把槽位置灰。</summary>
         public void NotifyExhausted(SO_Relic relic_) => Exhausted?.Invoke(relic_);
+
+        /// <summary>本件遗物的节奏计数变化（如苦无每回合打牌数）：顶栏槽位据此刷新右下角数字；非节奏型永不触发，故数字恒隐藏。</summary>
+        public void NotifyCount(SO_Relic relic_, int count_) => CountChanged?.Invoke(relic_, count_);
     }
 }

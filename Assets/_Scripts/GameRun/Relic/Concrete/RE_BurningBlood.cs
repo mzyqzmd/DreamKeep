@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>燃烧之血：战斗结束时回复生命。
     /// 结束事件为直发型且播完才 EndCombat，处理器内排空能在战斗态清空之前把回血与演出完整落地。</summary>
-    public sealed class RE_BurningBlood : RelicEffect<SO_BurningBlood>
+    public sealed class RE_BurningBlood : RelicEffect_T<SO_BurningBlood>
     {
         public RE_BurningBlood(SO_BurningBlood data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

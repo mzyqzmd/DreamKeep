@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>水银沙漏：每个玩家回合开始时对全体敌人造成伤害，遗物伤害不吃力量与易伤。</summary>
-    public sealed class RE_MercuryHourglass : RelicEffect<SO_MercuryHourglass>
+    public sealed class RE_MercuryHourglass : RelicEffect_T<SO_MercuryHourglass>
     {
         public RE_MercuryHourglass(SO_MercuryHourglass data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

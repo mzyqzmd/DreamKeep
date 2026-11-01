@@ -7,7 +7,6 @@ using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
-using _DreamKeep.Utility;
 
 namespace _DreamKeep.Presentation
 {
@@ -59,9 +58,6 @@ namespace _DreamKeep.Presentation
 
             // 背景抽取放在洗牌之后：它同样消耗整局随机流，放在洗牌前会让牌序跟着背景变化而偏移
             SO_Background background = run.Rng.Pick(_backgroundPool.Select(_encounterKind));
-
-            // 表现流：弃牌波抖动这类装饰性随机单独一条，绝不推进整局的玩法随机（洗牌与随机目标）
-            builder_.RegisterInstance(new Rng(Environment.TickCount)).Keyed("Presentation");
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
@@ -115,7 +111,7 @@ namespace _DreamKeep.Presentation
             if (!_rewardPanelParent)
                 throw new InvalidOperationException(
                     $"{nameof(BattleLifetimeScope)} 未接线奖励面板停泊位（_rewardPanelParent，拖本段 Canvas_HUD 根）");
-            Parent.Container.Resolve<PopFactory>().AcquireRewardPanel(_rewardPanelParent);
+            Parent.Container.Resolve<PopPanelFactory>().AcquireRewardPanel(_rewardPanelParent);
         }
 
         // 敌人视图预制体列表与遭遇同源派生：下标即敌人下标，未接线的配置留 null 交生成侧报错跳过该敌人

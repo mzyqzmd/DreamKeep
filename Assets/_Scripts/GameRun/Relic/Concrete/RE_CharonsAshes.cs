@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>卡戎之灰：每消耗一张牌，对全体敌人造成伤害（遗物伤害不吃力量与易伤）。</summary>
-    public sealed class RE_CharonsAshes : RelicEffect<SO_CharonsAshes>
+    public sealed class RE_CharonsAshes : RelicEffect_T<SO_CharonsAshes>
     {
         public RE_CharonsAshes(SO_CharonsAshes data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

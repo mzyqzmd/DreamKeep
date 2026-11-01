@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>历石：指定回合的回合结束时对全体敌人造成伤害（遗物伤害不吃力量与易伤）。</summary>
-    public sealed class RE_StoneCalendar : RelicEffect<SO_StoneCalendar>
+    public sealed class RE_StoneCalendar : RelicEffect_T<SO_StoneCalendar>
     {
         public RE_StoneCalendar(SO_StoneCalendar data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

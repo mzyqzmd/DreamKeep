@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
-using _DreamKeep.Utility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
@@ -32,17 +31,14 @@ namespace _DreamKeep.Presentation
         private float _flyJitterPx = 24f;
 
         private UI_HandView _handView;
-        private Rng _rng;
 
         // 生命周期：本体由 RequireComponent 保证同节点必有
         private void Awake() => _handView = GetComponent<UI_HandView>();
 
-        // 装配：取域侧事件与表现层随机流；事件清单一处看完，各事件的演出在下面。
-        // 随机数取带 key 的表现流：抖动只打散轨迹，不该推进玩法随机（洗牌与随机目标）那一条流
+        // 装配：取域侧事件；事件清单一处看完，各事件的演出在下面
         [Inject]
-        public void Construct(BattleEventDispatcher eventDispatcher_, [Key("Presentation")] Rng rng_)
+        public void Construct(BattleEventDispatcher eventDispatcher_)
         {
-            _rng = rng_;
             eventDispatcher_.Register<BE_DiscardReshuffled>(OnDiscardReshuffledAsync);
             eventDispatcher_.Register<BE_CardDrawn>(OnCardDrawnAsync);
             eventDispatcher_.Register<BE_CardPlayed>(OnCardPlayedAsync);
@@ -207,7 +203,8 @@ namespace _DreamKeep.Presentation
 
         // 起落点的随机抖动：±幅度内均匀分布的画布像素，经节点换算成世界向量，只打散重叠轨迹、不改朝向
         private Vector3 Jitter(Transform node_) =>
-            node_.TransformVector(new Vector2(_rng.Next(-2f, 2f), _rng.Next(-2f, 2f)) * _flyJitterPx);
+            node_.TransformVector(new Vector2(UnityEngine.Random.Range(-2f, 2f), UnityEngine.Random.Range(-2f, 2f)) *
+                _flyJitterPx);
 
         // 飞到目标姿态并缩到 0：两处归宿飞行（离场、弃牌波）共用的成品段落；起落点的抖动与进堆通知留在各自调用点
         private UniTask FlyOutAsync(UI_CardBattle view_, Vector3 position_, Quaternion rotation_, float duration_) =>

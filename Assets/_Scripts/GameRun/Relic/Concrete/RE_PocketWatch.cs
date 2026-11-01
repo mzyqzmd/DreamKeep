@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
 {
     /// <summary>怀表：本回合打出的牌不超过阈值时，下个玩家回合额外抽牌。
     /// 回合末落标记、下回合开窗（初始抽牌之后）兑现。</summary>
-    public sealed class RE_PocketWatch : RelicEffect<SO_PocketWatch>
+    public sealed class RE_PocketWatch : RelicEffect_T<SO_PocketWatch>
     {
         private int _played;
         private bool _bonusPending;

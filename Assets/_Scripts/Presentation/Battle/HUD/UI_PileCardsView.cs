@@ -21,7 +21,7 @@ namespace _DreamKeep.Presentation
     public sealed class UI_PileCardsView : MonoBehaviour
     {
         [Header("陈列")] [Tooltip("卡实例预制体：牌堆查看卡（四内嵌脸 + 悬停气泡）")] [SerializeField]
-        private UI_CardInPile _cardPrefab;
+        private UI_CardDisplay _cardPrefab;
 
         [Tooltip("网格挂载点：GridLayoutGroup 的 content，卡实例的出生与陈列父级")] [SerializeField]
         private RectTransform _gridContent;
@@ -44,8 +44,8 @@ namespace _DreamKeep.Presentation
         private string _exhaustTip = "被消耗的牌会按进入顺序放在这里，本场战斗不会再回到牌堆";
 
         private BattleQueryDispatcher _queryDispatcher;
-        private MonoObjectPool<UI_CardInPile> _pool;
-        private readonly List<UI_CardInPile> _shown = new(); // 当前陈列的实例（顺序随陈列序对齐）
+        private MonoObjectPool<UI_CardDisplay> _pool;
+        private readonly List<UI_CardDisplay> _shown = new(); // 当前陈列的实例（顺序随陈列序对齐）
         private readonly List<CardModel> _domain = new(); // 查询缓冲：当前堆的域内卡序
         private EPileType _kind;
         private bool _open;
@@ -66,7 +66,7 @@ namespace _DreamKeep.Presentation
         {
             _queryDispatcher = queryDispatcher_;
             // 池化实例在容器外生成：新建时补一次注入（卡内悬停气泡要 PopFactory），复用实例的依赖早已就位
-            _pool = new MonoObjectPool<UI_CardInPile>(_gridContent, 64,
+            _pool = new MonoObjectPool<UI_CardDisplay>(_gridContent, 64,
                 onCreate_: instance_ => resolver_.InjectGameObject(instance_.gameObject));
             // 影响三堆的五条事件全订（打出堆与遗忘不碰三堆、不订）：面板开着才对账，关着一条事件零成本
             eventDispatcher_.Register<BE_CardDrawn>(_ => OnPileChanged());
@@ -130,7 +130,7 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _domain.Count; i++)
             {
                 if (ShownOf(_domain[i])) continue;
-                UI_CardInPile instance = _pool.Get(_cardPrefab);
+                UI_CardDisplay instance = _pool.Get(_cardPrefab);
                 instance.Bind(_domain[i]);
                 _shown.Add(instance);
             }
@@ -141,13 +141,13 @@ namespace _DreamKeep.Presentation
             // 显示名单只当"当前陈列中的实例集合"用，没有任何地方读它的顺序，故不必跟着重排
             for (int i = 0; i < _domain.Count; i++)
             {
-                UI_CardInPile instance = ShownOf(_domain[i]);
+                UI_CardDisplay instance = ShownOf(_domain[i]);
                 if (instance && instance.transform.GetSiblingIndex() != i) instance.transform.SetSiblingIndex(i);
             }
         }
 
         // 找显示中绑定了指定卡的实例：找不到返回 null
-        private UI_CardInPile ShownOf(CardModel card_)
+        private UI_CardDisplay ShownOf(CardModel card_)
         {
             for (int i = 0; i < _shown.Count; i++)
                 if (_shown[i].Card == card_)

@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
+using TMPro;
 
 namespace _DreamKeep.Presentation
 {
@@ -18,6 +19,9 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("涟漪层：比图标更大的透明层，由着色器按图标轮廓算出向外扩散的环")] [SerializeField]
         private Image _ripple;
+
+        [Tooltip("节奏型遗物右下角的计数数字：收到首条计数通知才显示，非节奏型遗物恒隐藏")] [SerializeField]
+        private TextMeshProUGUI _number;
 
         [Tooltip("两层共用的遗物着色器")] [SerializeField]
         private Shader _relicShader;
@@ -115,6 +119,7 @@ namespace _DreamKeep.Presentation
         public void Bind(SO_Relic relic_)
         {
             EnsureMaterials();
+            _number.gameObject.SetActive(false); // 默认隐藏：非节奏型遗物永不收到计数通知、恒不显示
             _relic = relic_;
             _icon.sprite = relic_.Icon;
             _hoverTip.SetContents(_relic.RelicName, _relic.Description);
@@ -191,5 +196,16 @@ namespace _DreamKeep.Presentation
             _hoverTip.SetContents(_relic.RelicName,
                 exhausted_ ? _relic.Description + "\n" + ExhaustedTip : _relic.Description);
         }
+
+        #region 节奏计数：右下角数字随遗物效果实时刷新
+
+        /// <summary>刷新节奏型遗物的当前计数值；首条通知即点亮数字，非节奏型遗物永不调用故数字恒隐藏。</summary>
+        public void SetCount(int count_)
+        {
+            _number.gameObject.SetActive(true);
+            _number.text = count_.ToString();
+        }
+
+        #endregion
     }
 }

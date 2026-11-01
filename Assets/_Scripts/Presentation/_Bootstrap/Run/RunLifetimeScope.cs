@@ -24,6 +24,7 @@ namespace _DreamKeep.Presentation
             // 弹层与特效工厂注册在整局层：池要跨段复用，段内编排者（BattlePopRoot / BattleVfxRoot）从父容器解析即可，
             // 段根 prefab 因此不必引用场景里的常驻对象
             builder_.RegisterComponentInHierarchy<PopFactory>();
+            builder_.RegisterComponentInHierarchy<PopPanelFactory>();
             builder_.RegisterComponentInHierarchy<VfxFactory>();
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();

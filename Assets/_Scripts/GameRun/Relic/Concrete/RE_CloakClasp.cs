@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>斗篷扣：回合结束时按当前手牌张数获得格挡（此时弃牌尚未执行）。</summary>
-    public sealed class RE_CloakClasp : RelicEffect<SO_CloakClasp>
+    public sealed class RE_CloakClasp : RelicEffect_T<SO_CloakClasp>
     {
         public RE_CloakClasp(SO_CloakClasp data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)

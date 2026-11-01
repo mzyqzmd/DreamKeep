@@ -33,17 +33,14 @@ namespace _DreamKeep.Presentation
 
         private UI_ActorRoot _actorRoot;
         private PopFactory _popFactory;
-        private Rng _rng;
 
-        #region 装配：注入事件门面、单位视图登记表、通用弹层工厂与表现流随机
+        #region 装配：注入事件门面、单位视图登记表与通用弹层工厂
 
         [Inject]
-        public void Construct(BattleEventDispatcher dispatcher_, UI_ActorRoot actorRoot_, PopFactory popFactory_,
-            [Key("Presentation")] Rng rng_)
+        public void Construct(BattleEventDispatcher dispatcher_, UI_ActorRoot actorRoot_, PopFactory popFactory_)
         {
             _actorRoot = actorRoot_;
             _popFactory = popFactory_;
-            _rng = rng_;
             dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
             dispatcher_.Register<BE_HealthLost>(OnHealthLost);
             dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
@@ -84,7 +81,7 @@ namespace _DreamKeep.Presentation
         private Vector3 AnchorOf(UI_Actor view_)
         {
             RectTransform body = (RectTransform)view_.Skeleton.transform;
-            float jitter = _rng.Next(-_jitterPx, _jitterPx);
+            float jitter = UnityEngine.Random.Range(-_jitterPx, _jitterPx);
             return UiGeometry.AnchorPoint(body, EUiAnchor.MiddleCenter) +
                    body.up * (_liftPx * body.lossyScale.y) +
                    body.right * (jitter * body.lossyScale.x);

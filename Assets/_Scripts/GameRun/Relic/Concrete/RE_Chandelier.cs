@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>吊灯：指定回合的玩家回合开始时获得能量（回能之后结算）。</summary>
-    public sealed class RE_Chandelier : RelicEffect<SO_Chandelier>
+    public sealed class RE_Chandelier : RelicEffect_T<SO_Chandelier>
     {
         public RE_Chandelier(SO_Chandelier data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

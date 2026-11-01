@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>灯笼：指定回合的玩家回合开始时获得能量（回能之后结算）。</summary>
-    public sealed class RE_Lantern : RelicEffect<SO_Lantern>
+    public sealed class RE_Lantern : RelicEffect_T<SO_Lantern>
     {
         public RE_Lantern(SO_Lantern data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

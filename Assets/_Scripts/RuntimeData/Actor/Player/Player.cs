@@ -115,5 +115,25 @@ namespace _DreamKeep.RuntimeData
         public void EndCombat() => CombatState = null;
 
         #endregion
+
+        #region 跨节点遗物计数：开心小花/摆动球/金纸这类"每 N 回合或每 N 张"的计数额跨战斗保留，住整局层；战斗内型计数为效果实例私有不住此
+
+        private readonly Dictionary<SO_Relic, int> _relicCounters = new();
+
+        /// <summary>读取跨节点遗物当前计数，未记录即 0。</summary>
+        public int RelicCounterOf(SO_Relic relic_) => _relicCounters.TryGetValue(relic_, out int count) ? count : 0;
+
+        /// <summary>计数 +1 并写回，返回推进后的新值（key 不存在则从 1 起）。</summary>
+        public int AdvanceRelicCounter(SO_Relic relic_)
+        {
+            _relicCounters.TryGetValue(relic_, out int count);
+            _relicCounters[relic_] = ++count;
+            return count;
+        }
+
+        /// <summary>计数归零。</summary>
+        public void ResetRelicCounter(SO_Relic relic_) => _relicCounters[relic_] = 0;
+
+        #endregion
     }
 }

@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>面包：首回合少获得能量，其余回合每回合额外获得能量（回能之后结算）。</summary>
-    public sealed class RE_Bread : RelicEffect<SO_Bread>
+    public sealed class RE_Bread : RelicEffect_T<SO_Bread>
     {
         public RE_Bread(SO_Bread data_, BattleContext context_, ActionSystem actions_, BattleEventDispatcher dispatcher_,
             RelicTriggerNotifier notifier_)

@@ -28,8 +28,7 @@ namespace _DreamKeep.Presentation
         [Tooltip("整局顶栏：主菜单期间隐藏、进入段场景后显示（同场景，Inspector 拖引用，零查找）")] [SerializeField]
         private UI_TopBar _topBar;
 
-        [Tooltip("首段场景名（临时：主菜单点开始后加载；未来由地图决定）")] [SerializeField]
-        private string _firstSegmentName = "Scene_Battle";
+        public const string BattleSegmentName = "Scene_Battle";
 
         /// <summary>先古之民段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
         public const string AncientSegmentName = "Scene_Ancient";
@@ -37,9 +36,12 @@ namespace _DreamKeep.Presentation
         /// <summary>休息段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
         public const string RestSegmentName = "Scene_Rest";
 
+        /// <summary>宝箱段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
+        public const string ChestSegmentName = "Scene_Chest";
+
         private BattleSession _session;
         private RunState _run;
-        private PopFactory _popFactory;
+        private PopPanelFactory _popFactory;
         private Scene _currentSegment;
         private bool _awaitingReward; // 奖励面板已弹，等玩家点继续
         private bool _switching; // 段装卸中：卸旧段 + 装新段
@@ -84,16 +86,12 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(BattleSession session_, RunState run_, PopFactory popFactory_)
+        public void Construct(BattleSession session_, RunState run_, PopPanelFactory popFactory_)
         {
             _session = session_;
             _run = run_;
             _popFactory = popFactory_;
         }
-
-        /// <summary>激活顶栏后加载并开启第一段（Play 模式测试入口，由 Tools/DreamKeep/开发面板 调用）。</summary>
-        public void StartFirstSegment() => StartSegment(_firstSegmentName);
-
         /// <summary>按段名加载并开启一段（"选定下一个节点"）：收起地图与奖励面板、关旧会话、卸掉旧段后再加载新段。</summary>
         public void StartSegment(string name_)
         {

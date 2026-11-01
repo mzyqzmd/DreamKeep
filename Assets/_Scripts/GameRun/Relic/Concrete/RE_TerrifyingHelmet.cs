@@ -7,7 +7,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>骇人头盔：打出费用达到阈值的牌时获得格挡。</summary>
-    public sealed class RE_TerrifyingHelmet : RelicEffect<SO_TerrifyingHelmet>
+    public sealed class RE_TerrifyingHelmet : RelicEffect_T<SO_TerrifyingHelmet>
     {
         public RE_TerrifyingHelmet(SO_TerrifyingHelmet data_, BattleContext context_, ActionSystem actions_,
             BattleEventDispatcher dispatcher_, RelicTriggerNotifier notifier_)
