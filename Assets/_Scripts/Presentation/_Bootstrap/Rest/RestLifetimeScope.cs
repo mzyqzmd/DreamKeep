@@ -25,6 +25,8 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Sprite _healIcon;
         [Tooltip("锻造选项图标（option_smith）")]
         [SerializeField] private Sprite _smithIcon;
+        [Tooltip("烹饪选项图标（option_cook）")]
+        [SerializeField] private Sprite _cookIcon;
         [Tooltip("挖掘选项图标（option_dig）")]
         [SerializeField] private Sprite _digIcon;
 
@@ -38,7 +40,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(Require<UI_RestProceedButton>());
             builder_.RegisterInstance(_commonPool).Keyed("Common");
             builder_.RegisterInstance(_rarePool).Keyed("Rare");
-            builder_.RegisterInstance(new RestEntry.OptionIcons(_healIcon, _smithIcon, _digIcon));
+            builder_.RegisterInstance(new RestEntry.OptionIcons(_healIcon, _smithIcon, _cookIcon, _digIcon));
             builder_.RegisterEntryPoint<RestEntry>();
         }
 

@@ -28,7 +28,8 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>生命变更通知。</summary>
         public event Action<int> HpChanged;
-        public int MaxHp { get; }
+        /// <summary>最大生命：构造期取配置初值，局内可经 <see cref="RaiseMaxHp"/> 增长（战斗内恒定）。</summary>
+        public int MaxHp { get; private set; }
         public int Block { get; set; }
 
         public bool IsDead => CurrentHp <= 0;
@@ -40,6 +41,18 @@ namespace _DreamKeep.RuntimeData
             MaxHp = maxHp_;
             CurrentHp = maxHp_;
         }
+
+        #region 提升最大生命：烹饪这类局内效果用，上限与当前生命同步加，非正数直接忽略
+
+        /// <summary>提高最大生命上限，当前生命同步加同量（等价于"上限+N 并回复 N 点"）；顶栏经 HpChanged 自动刷新。</summary>
+        public void RaiseMaxHp(int amount_)
+        {
+            if (amount_ <= 0) return;
+            MaxHp += amount_;
+            CurrentHp += amount_; // 先抬上限再回血，CurrentHp 恒不超过 MaxHp
+        }
+
+        #endregion
 
         #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回挂载实例供动作侧发事件
 

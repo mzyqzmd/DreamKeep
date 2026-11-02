@@ -16,7 +16,7 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: b6df80ef246c2d345aeb2eee3c5d11df, type: 3}
   _rarity: 3
   _description: "\u7B2C <color=yellow>1</color> \u56DE\u5408\u5C11\u83B7\u5F97 <color=yellow>1</color>
-    \u70B9\u80FD\u91CF\uFF0C\u4E4B\u540E\u6BCF\u56DE\u5408\u5F00\u59CB\u65F6\u83B7\u5F97
+    \u70B9\u80FD\u91CF\uFF0C<br>\u4E4B\u540E\u6BCF\u56DE\u5408\u5F00\u59CB\u65F6\u83B7\u5F97
     <color=green>1</color> \u70B9\u80FD\u91CF\u3002"
   _energy: 1
   _firstTurnPenalty: 1

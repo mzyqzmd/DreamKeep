@@ -45,5 +45,12 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
+
+        #region 涟漪开关：选中态等场合由绑定方显式开关 card_ripple 动效（Bind 恒按陈列态关闭）
+
+        /// <summary>开关当前牌面的 card_ripple 动效边框：必须在 Bind 之后调用，节点缺失静默跳过。</summary>
+        public void SetRippleVisible(bool visible_) => _faces.Current.SetRippleVisible(visible_);
+
+        #endregion
     }
 }

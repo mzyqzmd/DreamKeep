@@ -16,7 +16,7 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: ce7754e2b6ad971409df53f6ea4f0d69, type: 3}
   _rarity: 3
   _description: "\u6BCF\u4E2A\u56DE\u5408\u5F00\u59CB\u65F6\u83B7\u5F97 <color=green>2</color>
-    \u70B9\u529B\u91CF\uFF0C\u6240\u6709\u654C\u4EBA\u83B7\u5F97 <color=yellow>1</color>
+    \u70B9\u529B\u91CF\uFF0C<br>\u6240\u6709\u654C\u4EBA\u83B7\u5F97 <color=yellow>1</color>
     \u70B9\u529B\u91CF\u3002"
   _strength: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
   _selfLayers: 2

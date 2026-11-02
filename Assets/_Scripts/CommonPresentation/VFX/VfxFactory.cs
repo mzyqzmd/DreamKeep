@@ -17,6 +17,7 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private UI_PotionSplashVfx _potionSplashVfxPrefab;
         [SerializeField] private UI_OneShotVfx _restSmokeVfxPrefab;
         [SerializeField] private UI_OneShotVfx _smithForgeVfxPrefab;
+        [SerializeField] private UI_RemoveCardVfx _removeCardVfxPrefab;
 
         private MonoObjectPool<UI_OneShotVfx> _vfxPool;
 
@@ -66,6 +67,17 @@ namespace _DreamKeep.CommonPresentation
             PlayWithCallback(_smithForgeVfxPrefab, parent_, worldPosition_, scale_, onFinished_, vfx_ =>
             {
                 if (vfx_ is UI_SmithForgeVfx smithVfx) smithVfx.Bind(card_);
+            });
+        }
+
+        /// <summary>移除卡牌演出：以一段 Tween 展示被永久移除的卡（弹出→停顿→压扁渐黑），根下的展示卡写本次移除的牌；
+        /// 槽位空则立刻回调（等待方不会挂死）。</summary>
+        public void PlayRemoveCard(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
+            Action onFinished_)
+        {
+            PlayWithCallback(_removeCardVfxPrefab, parent_, worldPosition_, scale_, onFinished_, vfx_ =>
+            {
+                if (vfx_ is UI_RemoveCardVfx removeVfx) removeVfx.Bind(card_);
             });
         }
 

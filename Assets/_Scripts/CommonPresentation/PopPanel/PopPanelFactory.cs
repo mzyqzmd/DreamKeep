@@ -4,19 +4,22 @@ using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 
 namespace _DreamKeep.CommonPresentation
 {
-    /// <summary>全屏交互面板工厂：挂在场景 GameRoot 下，统一懒建并缓存奖励面板与卡牌三选一面板两个常驻交互面板——
+    /// <summary>全屏交互面板工厂：挂在场景 GameRoot 下，统一懒建并缓存奖励面板、卡牌三选一面板与卡牌移除面板三个常驻交互面板——
     /// 面板由本工厂在容器外实例化后补一次注入（卡上的悬停气泡要靠 PopFactory，由容器内注册解析），并先关掉免得闪一帧；
     /// 内容与退场都归面板与调用方，本工厂只负责造、存放与停泊父级切换。
-    /// 面板一律挂进画布才渲染：本工厂不在 Canvas 子树下，停泊父级（_panelParent）由调用方决定。</summary>
+    /// 面板一律挂进画布才渲染：本工厂不在 Canvas 子树下，段场景面板由段装配显式停泊；_panelParent 只是 run 级默认停泊位
+    /// （主菜单自己的画布），供 SegmentSceneManager 的无参取用与面板被段卸载带走后的兜底重建。</summary>
     public sealed class PopPanelFactory : MonoBehaviour
     {
         [SerializeField] private UI_RewardPanel _rewardPanelPrefab;
         [SerializeField] private UI_CardOneInThreePanel _cardChoicePanelPrefab;
-        [Tooltip("全屏面板的挂载父级：本工厂不在 Canvas 子树下，面板必须挂进画布才渲染")] [SerializeField]
+        [SerializeField] private UI_CardRemovePanel _cardRemovePanelPrefab;
+        [Tooltip("run 级默认停泊位（主菜单自己的画布）：仅兜底首次创建未给父级的取用，段场景面板由段装配显式停泊")] [SerializeField]
         private RectTransform _panelParent;
 
         private UI_RewardPanel _rewardPanel;
         private UI_CardOneInThreePanel _cardChoicePanel;
+        private UI_CardRemovePanel _cardRemovePanel;
         private IObjectResolver _resolver;
 
         [Inject]
@@ -42,6 +45,15 @@ namespace _DreamKeep.CommonPresentation
             if (!_cardChoicePanel) _cardChoicePanel = CreatePanel(_cardChoicePanelPrefab, parent_);
             else Relocate(_cardChoicePanel.transform, parent_);
             return _cardChoicePanel;
+        }
+
+        /// <summary>取卡牌移除面板单例（首次访问才实例化）：玩家从卡组选出指定张数，移除与删牌演出归面板自己，
+        /// 结果经 WaitResultAsync 交付；停泊父级语义同奖励面板。</summary>
+        public UI_CardRemovePanel AcquireCardRemovePanel(RectTransform parent_ = null)
+        {
+            if (!_cardRemovePanel) _cardRemovePanel = CreatePanel(_cardRemovePanelPrefab, parent_);
+            else Relocate(_cardRemovePanel.transform, parent_);
+            return _cardRemovePanel;
         }
 
         #endregion

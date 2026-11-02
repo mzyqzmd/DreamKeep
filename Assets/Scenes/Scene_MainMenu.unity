@@ -1462,7 +1462,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: -0.014, y: 0.14116669}
   m_AnchorMax: {x: 0.09021875, y: 0.23700002}
-  m_AnchoredPosition: {x: -2.33667, y: 0.75994873}
+  m_AnchoredPosition: {x: -2.336914, y: 0.76000977}
   m_SizeDelta: {x: -7, y: -1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &495468204
@@ -3257,7 +3257,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.961, y: 0.3125122}
   m_AnchorMax: {x: 0.9923907, y: 0.9275122}
-  m_AnchoredPosition: {x: -0.099975586, y: -0.00006866455}
+  m_AnchoredPosition: {x: -0.100097656, y: -0.00006866455}
   m_SizeDelta: {x: 0.73999023, y: -0.69000244}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1177374420
@@ -3920,7 +3920,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.7793907, y: 0.35751218}
   m_AnchorMax: {x: 0.856875, y: 0.85248786}
-  m_AnchoredPosition: {x: 1.0999756, y: -0.3999939}
+  m_AnchoredPosition: {x: 1.1000977, y: -0.3999939}
   m_SizeDelta: {x: -1.6201172, y: 6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1454682174
@@ -5544,7 +5544,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.92260945, y: 0.335}
   m_AnchorMax: {x: 0.9543907, y: 0.8974879}
-  m_AnchoredPosition: {x: -0.8898926, y: 0.49993896}
+  m_AnchoredPosition: {x: -0.88964844, y: 0.49993896}
   m_SizeDelta: {x: -0.2199707, y: -1.0800018}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1867627899
@@ -6163,6 +6163,7 @@ MonoBehaviour:
   _potionSplashVfxPrefab: {fileID: 6439136892047726907, guid: 016b270f2b54ad24980b892f5a224fc7, type: 3}
   _restSmokeVfxPrefab: {fileID: 6746552872724657657, guid: ddd10241ba395a64886c4f44932677ed, type: 3}
   _smithForgeVfxPrefab: {fileID: 7998096263367700376, guid: 7da67d6d2b97d704cbe25005bcc4d5b6, type: 3}
+  _removeCardVfxPrefab: {fileID: 669023036313959603, guid: 832902cf3ef750649a6349b9ad07d7cb, type: 3}
 --- !u!114 &2091153475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6237,6 +6238,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rewardPanelPrefab: {fileID: 498558448144999550, guid: aa7e888383526654db054d04458db9db, type: 3}
   _cardChoicePanelPrefab: {fileID: 2319560588612312606, guid: 7978aaef9ad144a41b195949c7b5481a, type: 3}
+  _cardRemovePanelPrefab: {fileID: 1557543320972509723, guid: 9f387248eec45dd4882af86d02150db3, type: 3}
   _panelParent: {fileID: 401056685}
 --- !u!1 &2096025520
 GameObject:
