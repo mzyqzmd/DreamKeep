@@ -51,9 +51,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _clip: {fileID: 0}
   _cardView: {fileID: 3355662207175235253}
-  _popDuration: 0.1
-  _holdDuration: 0.2
-  _squashDuration: 0.1
+  _popDuration: 0.2
+  _holdDuration: 0.4
+  _squashDuration: 0.2
   _squashStretchX: 1.5
 --- !u!1 &2410559432896619172
 GameObject:

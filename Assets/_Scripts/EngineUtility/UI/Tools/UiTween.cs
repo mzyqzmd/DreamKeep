@@ -63,6 +63,34 @@ namespace _DreamKeep.EngineUtility
             return slot_;
         }
 
+        /// <summary>把在跑的补间立即推到终点并清槽：用于「打断前先归位」——被半途打断的位移类演出不会把中间态当成新基准。</summary>
+        public static void Settle(ref Tween slot_)
+        {
+            if (slot_ == null || !slot_.IsActive()) return;
+            slot_.Complete();
+            slot_ = null;
+        }
+
+        /// <summary>横向抖动：以当前 anchoredPosition 为基准左右摆几个来回后精确归位，用作「这一下不行」的反馈
+        /// （购买被拒等）。同通道独占：再次调用先把旧抖动跳回它自己的基准（Settle），半途位移不会被当成新基准，
+        /// 连续触发（疯狂点击买不起的商品）也不会越抖越偏。</summary>
+        public static Tween PlayShake(ref Tween slot_, RectTransform target_, float amplitudePx_, float duration_)
+        {
+            Settle(ref slot_);
+            const int steps = 5; // 奇数次：末次回到基准，抖动结束恰好归位
+            Vector2 rest = target_.anchoredPosition;
+            float step = duration_ / steps;
+            Sequence sequence = DOTween.Sequence();
+            for (int i = 1; i <= steps; i++)
+            {
+                float offset = i == steps ? 0f : (i % 2 == 1 ? amplitudePx_ : -amplitudePx_);
+                sequence.Append(target_.DOAnchorPos(rest + new Vector2(offset, 0f), step));
+            }
+
+            slot_ = sequence;
+            return slot_;
+        }
+
         /// <summary>等待补间结束：正常播完与中途被 Kill 都放行，杜绝 await 悬挂；已经结束的补间立即返回。</summary>
         public static UniTask WaitAsync(this Tween tween_)
         {

@@ -47,6 +47,19 @@ namespace _DreamKeep.CommonPresentation
             return _cardChoicePanel;
         }
 
+        /// <summary>收起已建出的奖励面板（未建过则什么都不做）：段切换前的收场兜底用——
+        /// 不得走 AcquireRewardPanel().Close()，那会为"关一次"凭空懒建出一个面板克隆体。</summary>
+        public void TryCloseRewardPanel()
+        {
+            if (_rewardPanel) _rewardPanel.Close();
+        }
+
+        /// <summary>收起已建出的卡牌三选一面板（未建过则什么都不做）：同上，收场禁用懒建取用。</summary>
+        public void TryCloseCardChoicePanel()
+        {
+            if (_cardChoicePanel) _cardChoicePanel.Close();
+        }
+
         /// <summary>取卡牌移除面板单例（首次访问才实例化）：玩家从卡组选出指定张数，移除与删牌演出归面板自己，
         /// 结果经 WaitResultAsync 交付；停泊父级语义同奖励面板。</summary>
         public UI_CardRemovePanel AcquireCardRemovePanel(RectTransform parent_ = null)

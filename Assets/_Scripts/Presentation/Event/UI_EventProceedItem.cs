@@ -3,8 +3,7 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    public class UI_EventProceedItem : UI_Button
+    public sealed class UI_EventProceedItem : UI_Button
     {
-        
     }
 }

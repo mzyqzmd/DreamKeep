@@ -7,5 +7,8 @@ namespace _DreamKeep.ConfigData
         Common,
         Rare,
         Shop,
+
+        /// <summary>远古：先古之民专属发放，不参与常规掉落（涅奥池等）。</summary>
+        Ancient,
     }
 }

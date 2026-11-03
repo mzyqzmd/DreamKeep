@@ -2193,10 +2193,11 @@ MonoBehaviour:
   autoInjectGameObjects: []
   _commonPool: {fileID: 11400000, guid: 38638f9c8f3550243b4d5c6432ee892a, type: 2}
   _rarePool: {fileID: 11400000, guid: 8f36bccb1308b5c449f08eed0fefa7d7, type: 2}
-  _healIcon: {fileID: 21300000, guid: 170a704fe4d816444a1685db3ab07322, type: 3}
-  _smithIcon: {fileID: 21300000, guid: 82542a0d1bd1b124dae89e43fb60bd19, type: 3}
-  _cookIcon: {fileID: 21300000, guid: 7134853066720024fb1f74a383e339fe, type: 3}
-  _digIcon: {fileID: 21300000, guid: f957a62ac7a528142a27717171bd1f43, type: 3}
+  _restOptions:
+  - {fileID: 11400000, guid: f41aacb180b49dc48b77db15e6d12c50, type: 2}
+  - {fileID: 11400000, guid: 99c9c914530b61e4aa0fa65f51f6bfdc, type: 2}
+  - {fileID: 11400000, guid: cd33dbd9aabf36f4783bb0c357b886fd, type: 2}
+  - {fileID: 11400000, guid: 348e288fc40ba074a9b0e34e1f954e9b, type: 2}
 --- !u!114 &1290516625942660943
 MonoBehaviour:
   m_ObjectHideFlags: 0

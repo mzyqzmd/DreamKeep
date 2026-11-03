@@ -68,6 +68,9 @@ namespace _DreamKeep.EngineUtility
             UiTween.PlayScalar(ref _tween, () => ScaleTarget.localScale.x,
                 value_ => ScaleTarget.localScale = Vector3.one * value_, target_, _duration, _ease);
 
+        /// <summary>同步自驱基准：外部整体缩放（如整行适配）写完缩放后调用，进入按新基准放大、离开回到新基准。</summary>
+        public void SetBaseScale(float baseScale_) => _baseScale = baseScale_;
+
         /// <summary>交接通道：杀补间并清槽，之后由别的写者接管（宿主重排、回收前调）。</summary>
         public void Kill()
         {

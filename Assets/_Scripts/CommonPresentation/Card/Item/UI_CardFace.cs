@@ -97,19 +97,14 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
+        private const string RippleNodeName = "card_ripple"; // 编辑器漏接线时的兜底名：与四张脸预制体里的节点同名
+
         private Image[] _faceImages;
         private TextMeshProUGUI[] _faceTexts;
         private Color[] _imageColors;
         private Color[] _textColors;
 
         public CardModel Card { get; private set; }
-
-        // 生命周期：建两个数值渲染器组（颜色取编辑器值；卡面款的压暗随可打状态在 SetPlayableLook 里更新）
-        private void Awake()
-        {
-            _faceValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
-            _tipValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
-        }
 
         #region 绑定卡面：刷新内容与外观，并把运行时卡模型收在牌面上
 
@@ -155,17 +150,33 @@ namespace _DreamKeep.CommonPresentation
             SetPlayableLook(true);
         }
 
-        // 缓存懒建：收齐卡面全部图形/文本与它们的编辑期本色、按名找出涟漪动效节点——集合与本色运行期不变，
-        // 首次 Bind 建一次即可反复用；card_ripple 优先用编辑器接线，未接则按名在直接子节点找（四张脸都摆着，漏摆留 null、开关静默跳过）
+        // 缓存懒建：收齐卡面全部图形/文本与它们的编辑期本色、按名找出涟漪动效节点、建两个数值渲染器——
+        // 集合与本色运行期不变，首次 Bind 建一次即可反复用；card_ripple 优先用编辑器接线，未接则按名在直接子节点找
+        // （四张脸都摆着，漏摆留 null、开关静默跳过）。渲染器不能放 Awake：陈列卡可能在失活的面板里被绑定，Awake 不会跑
         private void EnsureCache()
         {
-            if (_faceImages != null) return;
-            _faceImages = GetComponentsInChildren<Image>(true);
-            _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
-            _imageColors = new Color[_faceImages.Length];
-            _textColors = new Color[_faceTexts.Length];
-            for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
-            for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+            if (_faceImages == null)
+            {
+                _faceImages = GetComponentsInChildren<Image>(true);
+                _faceTexts = GetComponentsInChildren<TextMeshProUGUI>(true);
+                _imageColors = new Color[_faceImages.Length];
+                _textColors = new Color[_faceTexts.Length];
+                for (int i = 0; i < _faceImages.Length; i++) _imageColors[i] = _faceImages[i].color;
+                for (int i = 0; i < _faceTexts.Length; i++) _textColors[i] = _faceTexts[i].color;
+            }
+
+            // 涟漪节点兜底：编辑器漏接线时按名在直接子节点找，否则陈列态关不掉动效会一路亮到最后
+            if (_ripple == null)
+            {
+                Transform ripple = transform.Find(RippleNodeName);
+                if (ripple) _ripple = ripple.gameObject;
+            }
+
+            if (_faceValueRenderer == null)
+            {
+                _faceValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
+                _tipValueRenderer = new CardValueRenderer(_valueBoostColor, _valueReduceColor, _costLowerColor);
+            }
         }
 
         #endregion

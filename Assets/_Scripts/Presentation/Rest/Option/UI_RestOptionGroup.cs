@@ -35,30 +35,12 @@ namespace _DreamKeep.Presentation
         private readonly List<RestOption> _options = new();
         private int _hoveredIndex = -1;
 
-        /// <summary>单条休息选项：标题、说明、图标、是否可点（false＝置灰，悬停文案仍显示）。</summary>
-        public readonly struct RestOption
-        {
-            public readonly string Title;
-            public readonly string Description;
-            public readonly Sprite Icon;
-            public readonly bool Enabled;
-
-            public RestOption(string title_, string description_, Sprite icon_, bool enabled_)
-            {
-                Title = title_;
-                Description = description_;
-                Icon = icon_;
-                Enabled = enabled_;
-            }
-        }
-
-        // 场景不再摆死槽位：Awake 时 _slots 为空，按钮在 Show 里动态接入
-        protected override void Awake() => base.Awake();
-
         #region 对外展示：选项列表 Bind 后错峰淡入，点选一次即锁
 
         public void Show(IReadOnlyList<RestOption> options_)
         {
+            SetPanelVisible(true); // 先激活面板：Instantiate 进失活父级的实例 Awake 不跑，后面的 SetEnabled 会踩空
+
             // 清掉上一轮的动态实例与订阅
             ClearButtons();
             for (int i = _slots.Count - 1; i >= 0; i--)
@@ -92,7 +74,6 @@ namespace _DreamKeep.Presentation
                 AddButton(slot);
             }
 
-            SetPanelVisible(true); // 激活即同步触发 Awake，保证点击/悬停路由就绪
             Unlock(); // 清掉上一轮点选锁，使本轮可重新点选
             _hoveredIndex = -1;
             SetDescriptionVisible(false);

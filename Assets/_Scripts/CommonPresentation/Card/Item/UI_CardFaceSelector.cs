@@ -60,9 +60,18 @@ namespace _DreamKeep.CommonPresentation
         {
             UI_CardFace face = Select(card_);
             face.Bind(card_);
-            face.SetRippleVisible(false); // 陈列态不播 card_ripple，保持静态牌面
+            HideRipple(); // 陈列态四张脸一律不播 card_ripple：只关当前脸时，之后切过来的那张会带着动效复活
             face.CollectTipLines(tips_);
             return face;
+        }
+
+        // 四张脸全关：未激活的脸也一起处理，切换牌面后不会再把涟漪带回来
+        private void HideRipple()
+        {
+            if (_attackFace) _attackFace.SetRippleVisible(false);
+            if (_skillFace) _skillFace.SetRippleVisible(false);
+            if (_abilityFace) _abilityFace.SetRippleVisible(false);
+            if (_curseFace) _curseFace.SetRippleVisible(false);
         }
 
         #endregion

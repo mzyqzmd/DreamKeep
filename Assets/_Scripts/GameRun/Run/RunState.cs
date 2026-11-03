@@ -44,6 +44,17 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
+        private int _cardRemovalsUsed;
+
+        /// <summary>整局在商店买过的删牌次数：商店删牌服务按它涨价，用得越多越贵。</summary>
+        public int CardRemovalsUsed => _cardRemovalsUsed;
+
+        #region 记一次商店删牌：成交后调用一次，价格由商店段自己按本值重算
+
+        public void RecordCardRemoval() => _cardRemovalsUsed++;
+
+        #endregion
+
         private int _floor = 1;
 
         /// <summary>当前层数，从 1 开始；由跑图流程推进。set 内抛 FloorChanged。</summary>

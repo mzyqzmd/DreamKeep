@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
+using _DreamKeep.CommonPresentation;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
 
@@ -26,6 +27,13 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_RelicSelectPanel>();
             builder_.RegisterComponentInHierarchy<UI_ChestProceedButton>();
             builder_.RegisterEntryPoint<ChestEntry>();
+
+            // 段场景晚于整局容器加载：段内游离的气泡发起器（预摆特写卡、弹板子树等不在显式注入子树里的）在此兜底注入；
+            // 已被注入过的实例重复跑一遍 [Inject] 只是把依赖再赋值一次，无副作用
+            builder_.RegisterBuildCallback(resolver_ =>
+            {
+                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+            });
         }
     }
 }

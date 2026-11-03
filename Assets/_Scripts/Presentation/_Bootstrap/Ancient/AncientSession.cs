@@ -37,6 +37,11 @@ namespace _DreamKeep.Presentation
         /// <summary>本段是否已领取：领取一次后整段收尾，复访会开新段重掷。</summary>
         private bool Claimed { get; set; }
 
+        /// <summary>该候选能否领取：生命值不足以支付拾取代价（扣完至少留 1 点）时置灰用；越界返回 false。</summary>
+        public bool CanClaim(int choiceIndex_) =>
+            choiceIndex_ >= 0 && choiceIndex_ < _choices.Count &&
+            _run.Player.Creature.CurrentHp - _choices[choiceIndex_].PickupHpCost >= 1;
+
         #region 领取：守卫通过后遗物入列并标记本段已领取
 
         /// <summary>领取下标对应的候选遗物：重复领取或下标非法返回 false，入列失败也返回 false 且不标记。</summary>

@@ -6,7 +6,8 @@ using UnityEngine;
 namespace _DreamKeep.EngineUtility
 {
     /// <summary>按钮组的抽象基类：管理一组 UI_Button，点击其中一个即上报其下标并（默认）锁组，
-    /// 通过 WaitChoiceAsync 把选中下标交给调用方。具体选项组继承本类，只需提供按钮清单（GetButtons）。</summary>
+    /// 通过 WaitChoiceAsync 把选中下标交给调用方。具体选项组继承本类，只需提供按钮清单（GetButtons）；
+    /// 需要「选择定案后锁外观」的组覆写 OnChoiceMade 即可。</summary>
     public abstract class UI_ButtonGroup : MonoBehaviour
     {
         private readonly List<UI_Button> _buttons = new();
@@ -30,6 +31,7 @@ namespace _DreamKeep.EngineUtility
 
         protected virtual void Awake()
         {
+            if (_buttons.Count > 0) return; // 组初始失活时 Show 可能先于 Awake 接线过：防重复订阅与错位下标
             _buttons.AddRange(GetButtons());
             for (int i = 0; i < _buttons.Count; i++)
             {
@@ -77,7 +79,13 @@ namespace _DreamKeep.EngineUtility
         {
             if (_locked) return;
             _locked = true;
+            OnChoiceMade(index_); // 先锁外观再交出去：TrySetResult 会同步续跑消费者，可能立即还池重建选项
             _choice?.TrySetResult(index_);
+        }
+
+        /// <summary>选择定案后的扩展点（此时已锁组、还没交给等待方）：子类可在这里统一改写选项外观。</summary>
+        protected virtual void OnChoiceMade(int index_)
+        {
         }
     }
 }

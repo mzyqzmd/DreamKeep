@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c6ce5a554ef2c34393947446c6fd4f5, type: 3}
+  m_Name: Event_Wellspring
+  m_EditorClassIdentifier: 
+  _eventName: "\u9192\u6CC9"
+  _background: {fileID: 11400000, guid: 2a3c5046e1d71fb44a1d40e1f9077209, type: 2}
+  _narrative: "\u4E00\u6C6A\u6CC9\u3002\u6C34\u9762\u6D6E\u7740\u5854\u9876\u6F0F\u4E0B\u6765\u7684\u5149\uFF0C\u4F60\u4F38\u624B\uFF0C\u5149\u5C31\u6563\uFF1B\u4F60\u4E0D\u52A8\uFF0C\u5149\u53C8\u6162\u6162\u805A\u56DE\u6765\uFF0C\u50CF\u5728\u88AB\u8C01\u5C0F\u5FC3\u5730\u6536\u62E2\u3002\u6CC9\u5E95\u6C89\u7740\u4E9B\u770B\u4E0D\u6E05\u7684\u4E1C\u897F\uFF0C\u6709\u7684\u6CDB\u7740\u836F\u6C34\u7279\u6709\u7684\u5FAE\u5149\uFF0C\u6709\u7684\u53EA\u662F\u522B\u4EBA\u4E22\u4E0B\u7684\u65E7\u68A6\u3002\u6CC9\u8FB9\u77F3\u4E0A\u7559\u6709\u5750\u8FC7\u7684\u75D5\u8FF9\uFF0C\u8BF4\u660E\u6765\u8FC7\u7684\u4EBA\u591A\u534A\u6CA1\u6025\u7740\u8D70\u2014\u2014\u4ED6\u4EEC\u8981\u4E48\u638F\u51FA\u91D1\u5E01\u6362\u8D70\u4E24\u74F6\u5FAE\u5149\uFF0C\u8981\u4E48\u628A\u6525\u5F97\u592A\u4E45\u7684\u724C\u6309\u8FDB\u6C34\u91CC\uFF0C\u6362\u56DE\u4E00\u70B9\u5598\u606F\u7684\u4F59\u5730\u3002"
+  _options:
+  - _name: "\u638F\u516B\u5341\u679A\u91D1\u5E01\u635E"
+    _subtitle: "\u5931\u53BB <color=yellow>80</color> \u91D1\u5E01\uFF0C\u83B7\u5F97
+      <color=yellow>2</color> \u74F6\u968F\u673A\u666E\u901A\u836F\u6C34"
+    _condition: 1
+    _conditionValue: 80
+    _displayCard: {fileID: 0}
+    _resultText: "\u4F60\u628A\u516B\u5341\u679A\u91D1\u5E01\u4E00\u679A\u679A\u6309\u8FDB\u6CC9\u91CC\uFF0C\u91D1\u5E01\u6C89\u5E95\uFF0C\u4E24\u74F6\u6CDB\u7740\u5FAE\u5149\u7684\u836F\u6C34\u4FBF\u4ECE\u6C34\u5E95\u6D6E\u4E0A\u6765\uFF0C\u7A33\u7A33\u505C\u5728\u4F60\u9762\u524D\u3002\u9762\u677F\u4E0A\u5B83\u4FE9\u5E76\u6392\u8EBA\u7740\uFF0C\u4F60\u4E00\u74F6\u4E00\u74F6\u5730\u9886\u2014\u2014\u69FD\u4F4D\u82E5\u5DF2\u585E\u6EE1\uFF0C\u5C31\u5148\u559D\u6389\u4E00\u74F6\u817E\u51FA\u5730\u65B9\u518D\u56DE\u6765\u62FF\u3002\u4E24\u74F6\u90FD\u6765\u81EA\u666E\u901A\u836F\u6C34\u6C60\uFF0C\u5FAE\u5149\u4E0D\u7B97\u60CA\u8273\uFF0C\u5374\u662F\u5B9E\u6253\u5B9E\u80FD\u63E3\u8D70\u7684\u5E95\u724C\u3002"
+    _effects:
+    - rid: 6594183605612707881
+    - rid: 6594183605612707882
+  - _name: "\u628A\u4E24\u5F20\u724C\u6309\u8FDB\u6C34\u91CC"
+    _subtitle: "\u4ECE\u4F60\u724C\u5E93\u4E2D\u79FB\u9664 <color=yellow>2</color>
+      \u5F20\u724C\uFF0C\u5C06\u4E00\u5F20 <color=yellow>\u5931\u7720</color> \u52A0\u5165\u4F60\u7684\u724C\u5E93"
+    _condition: 3
+    _conditionValue: 2
+    _displayCard: {fileID: 11400000, guid: a5e6610f56b5c13449799b8d701baaad, type: 2}
+    _resultText: "\u4F60\u6311\u51FA\u4E24\u5F20\u6700\u6C89\u624B\u7684\u724C\uFF0C\u4E00\u5F20\u63A5\u4E00\u5F20\u6309\u8FDB\u6CC9\u5FC3\u3002\u6C34\u9762\u6643\u4E86\u4E24\u5708\uFF0C\u5B83\u4EEC\u5316\u4E86\uFF1B\u540C\u4E00\u6C6A\u6C34\u53C8\u628A\u4E00\u5F20\u5199\u7740\u300C\u5931\u7720\u300D\u7684\u6697\u724C\u63A8\u4E0A\u5CB8\u2014\u2014\u5B83\u8D56\u7740\u4E0D\u8D70\uFF0C\u6BCF\u4E2A\u56DE\u5408\u90FD\u8DDF\u7740\u4F60\uFF0C\u5374\u4E0D\u80AF\u66FF\u4F60\u51FA\u624B\u3002\u724C\u7EC4\u8F7B\u4E86\u4E24\u683C\uFF0C\u53C8\u6C89\u4E86\u4E00\u683C\uFF0C\u8FD9\u7B14\u4EA4\u6613\u4E8F\u4E0D\u4E8F\uFF0C\u53EA\u6709\u591C\u6DF1\u65F6\u624D\u77E5\u9053\u3002"
+    _effects:
+    - rid: 6594183605612707883
+    - rid: 6594183605612707884
+  - _name: "\u5750\u5728\u6CC9\u8FB9\u6B47\u4E00\u4F1A"
+    _subtitle: "\u6062\u590D <color=green>7</color> \u70B9\u751F\u547D"
+    _condition: 0
+    _conditionValue: 0
+    _displayCard: {fileID: 0}
+    _resultText: "\u4F60\u5728\u6CC9\u8FB9\u77F3\u4E0A\u5750\u4E86\u4E0B\u6765\uFF0C\u4EFB\u6C34\u6C7D\u6F2B\u8FC7\u819D\u76D6\u3002\u51C9\u610F\u987A\u7740\u9AA8\u7F1D\u722C\u4E0A\u6765\uFF0C\u628A\u4E00\u8DEF\u7684\u75B2\u4E4F\u6CE1\u8F6F\u4E86\u4E03\u5206\u3002\u4F60\u4EC0\u4E48\u4E5F\u6CA1\u62FF\uFF0C\u4EC0\u4E48\u4E5F\u6CA1\u6362\uFF0C\u8D77\u8EAB\u65F6\u53EA\u89C9\u5F97\u80F8\u53E3\u677E\u4E86\u4E00\u5708\uFF0C\u6CC9\u8FD8\u662F\u90A3\u6C6A\u6CC9\uFF0C\u4F60\u5374\u6BD4\u6765\u65F6\u66F4\u50CF\u80FD\u6253\u786C\u4ED7\u7684\u4EBA\u3002"
+    _effects:
+    - rid: 6594183605612707885
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183605612707881
+      type: {class: EED_SpendGold, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 80
+    - rid: 6594183605612707882
+      type: {class: EED_RewardPotions, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _pool: {fileID: 11400000, guid: b10f622058f379141bae684b6a23083b, type: 2}
+        _count: 2
+        _panelTitle: "\u635E\u51FA\u8D27\u4E86\uFF01"
+    - rid: 6594183605612707883
+      type: {class: EED_RemoveCards, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _count: 2
+    - rid: 6594183605612707884
+      type: {class: EED_AddCard, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _card: {fileID: 11400000, guid: a5e6610f56b5c13449799b8d701baaad, type: 2}
+    - rid: 6594183605612707885
+      type: {class: EED_RestoreHp, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 7

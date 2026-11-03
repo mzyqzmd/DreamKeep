@@ -32,5 +32,15 @@ namespace _DreamKeep.CommonPresentation
         }
 
         #endregion
+
+        #region 悬停气泡：内容由 Bind 注入，弹出与收起的时机交给宿主（事件选项条在指针进出时调用）
+
+        /// <summary>弹出词条说明气泡（外部驱动模式：宿主判定的时刻调用）。</summary>
+        public void ShowTip() => _hoverTip.Show();
+
+        /// <summary>收起词条说明气泡。</summary>
+        public void HideTip() => _hoverTip.Hide();
+
+        #endregion
     }
 }

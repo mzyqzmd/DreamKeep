@@ -88,7 +88,7 @@ namespace _DreamKeep.CommonPresentation
         public void Close()
         {
             _showToken++; // 本轮作废：还悬着的三选一回调不再发奖
-            if (_popFactory) _popFactory.AcquireCardChoicePanel().Close();
+            if (_popFactory) _popFactory.TryCloseCardChoicePanel(); // 只关已建出的实例，不为收场懒建
             ClearItems();
             _onProceed = null;
             gameObject.SetActive(false);

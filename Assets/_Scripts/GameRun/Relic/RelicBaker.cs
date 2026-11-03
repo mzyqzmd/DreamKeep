@@ -78,9 +78,15 @@ namespace _DreamKeep.GameRun
                 SO_UnceasingTop data => new RE_UnceasingTop(data, context_, actions_, dispatcher_, notifier_),
                 SO_MeatOnTheBone data => new RE_MeatOnTheBone(data, context_, actions_, dispatcher_, notifier_),
 
-                // 纯局外效果：无战斗内行为（挖掘/烹饪资格由 RestEntry 判定），显式登记 null 豁免
+                // 纯局外效果：无战斗内行为（挖掘/烹饪资格由 RestEntry 判定，拾起时效果由先古段结算），显式登记 null 豁免
                 SO_Shovel => null,
                 SO_MeatCleaver => null,
+                SO_GoldenPearl => null,
+                SO_NutritiousOyster => null,
+                SO_Pomander => null,
+                SO_PrecariousShears => null,
+                SO_ArcaneScroll => null,
+                SO_SmallCapsule => null,
 
                 _ => throw new ArgumentOutOfRangeException(nameof(config_), $"{config_.name} 的效果类型未登记"),
             };

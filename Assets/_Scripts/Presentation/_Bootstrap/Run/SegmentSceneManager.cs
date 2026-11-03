@@ -39,6 +39,12 @@ namespace _DreamKeep.Presentation
         /// <summary>宝箱段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
         public const string ChestSegmentName = "Scene_Chest";
 
+        /// <summary>事件段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
+        public const string EventSegmentName = "Scene_Event";
+
+        /// <summary>商店段场景名：段内各处与开发面板共用，避免散落字面量。</summary>
+        public const string ShopSegmentName = "Scene_Shop";
+
         private BattleSession _session;
         private RunState _run;
         private PopPanelFactory _popFactory;
@@ -144,7 +150,8 @@ namespace _DreamKeep.Presentation
             try
             {
                 // 进新段前收起上一场的奖励面板与地图：面板不随「继续」关闭，留着会挡住下一场
-                if (_popFactory) _popFactory.AcquireRewardPanel().Close();
+                // （只关已建出的实例：为关一次而懒建，会在常驻画布凭空多出面板克隆体）
+                if (_popFactory) _popFactory.TryCloseRewardPanel();
                 if (_topBar) _topBar.CloseMap();
                 if (_session.IsOpen) _session.Close();
                 // 必须先卸旧段：新段构建时会按类型扫场景注册，两段同类组件共存会互相污染

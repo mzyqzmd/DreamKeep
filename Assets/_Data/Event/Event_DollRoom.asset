@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de2c9add31a70d5468c300a3a10c060a, type: 3}
+  m_Name: Event_DollRoom
+  m_EditorClassIdentifier: 
+  _eventName: "\u73A9\u5076\u5267\u573A"
+  _background: {fileID: 11400000, guid: 78894e56decbe104fa747f2532a09d3c, type: 2}
+  _narrative: "\u4E09\u4E2A\u73A9\u5076\u5750\u5728\u4E00\u6392\uFF0C\u90FD\u8499\u7740\u7070\uFF0C\u50CF\u88AB\u8C01\u5FD8\u5728\u8FD9\u91CC\u5F88\u4E45\u4E86\u3002\u6700\u4E0A\u9762\u90A3\u4E2A\u6000\u91CC\u62B1\u7740\u4E00\u4EF6\u53D1\u5149\u7684\u4E1C\u897F\uFF0C\u5149\u4ECE\u7070\u91CC\u900F\u51FA\u6765\uFF0C\u4E00\u660E\u4E00\u6697\uFF1B\u4E2D\u95F4\u90A3\u4E2A\u5728\u53D1\u6296\uFF0C\u6296\u5F97\u7070\u7C0C\u7C0C\u5F80\u4E0B\u6389\uFF1B\u6700\u4E0B\u9762\u90A3\u4E2A\u4E00\u52A8\u4E0D\u52A8\uFF0C\u7070\u539A\u5F97\u770B\u4E0D\u51FA\u672C\u6765\u9762\u76EE\u3002\u5B83\u4EEC\u4E0D\u8BF4\u8BDD\uFF0C\u53EA\u7528\u59FF\u52BF\u9080\u4F60\uFF1A\u8981\u4E48\u76F4\u63A5\u62FF\u8D70\u6700\u4E0A\u9762\u7684\uFF0C\u8981\u4E48\u628A\u8C01\u64E6\u5E72\u51C0\u6362\u5B83\u4EEC\u5F00\u53E3\uFF0C\u8981\u4E48\u5750\u5230\u5B83\u4EEC\u4E2D\u95F4\uFF0C\u7B49\u5B83\u4EEC\u4E00\u8D77\u9192\u8FC7\u6765\u3002"
+  _options:
+  - _name: "\u62B1\u8D70\u6700\u4E0A\u9762\u90A3\u4E2A"
+    _subtitle: "\u83B7\u5F97 <color=yellow>1</color> \u4EF6\u968F\u673A\u666E\u901A\u9057\u7269"
+    _condition: 0
+    _conditionValue: 0
+    _displayCard: {fileID: 0}
+    _resultText: "\u4F60\u6CA1\u591A\u60F3\uFF0C\u4F38\u624B\u628A\u6700\u4E0A\u9762\u7684\u73A9\u5076\u6458\u4E0B\u6765\u3002\u5B83\u6000\u91CC\u7684\u5149\u6574\u4E2A\u6E21\u8FDB\u4F60\u638C\u5FC3\uFF0C\u51DD\u6210\u4E00\u4EF6\u6C89\u7538\u7538\u7684\u666E\u901A\u9057\u7269\u2014\u2014\u4F60\u751A\u81F3\u6CA1\u8D39\u529B\u6C14\u64E6\u7070\u5C31\u5F97\u624B\u4E86\u3002\u53E6\u5916\u4E24\u4E2A\u73A9\u5076\u4F9D\u65E7\u8499\u7740\u7070\uFF0C\u76EE\u9001\u4F60\u79BB\u5F00\uFF0C\u50CF\u65E9\u6599\u5230\u4F60\u4F1A\u6311\u6700\u7701\u4E8B\u7684\u90A3\u4E00\u4E2A\u3002"
+    _effects:
+    - rid: 6594183605612707864
+  - _name: "\u628A\u5B83\u4EEC\u64E6\u5E72\u51C0"
+    _subtitle: "\u5931\u53BB <color=red>5</color> \u70B9\u751F\u547D\uFF0C\u4ECE
+      <color=yellow>2</color> \u4EF6\u968F\u673A\u666E\u901A\u9057\u7269\u4E2D\u9009\u62E9
+      <color=yellow>1</color> \u4EF6"
+    _condition: 2
+    _conditionValue: 6
+    _displayCard: {fileID: 0}
+    _resultText: "\u4F60\u8E72\u4E0B\uFF0C\u628A\u4E09\u4E2A\u73A9\u5076\u6328\u4E2A\u64E6\u4E86\u4E00\u904D\u3002\u7070\u843D\u4E0B\uFF0C\u5B83\u4EEC\u7EC8\u4E8E\u80AF\u4EAE\u51FA\u6000\u91CC\u85CF\u7740\u7684\u4E24\u4EF6\u666E\u901A\u9057\u7269\u4EFB\u4F60\u6311\u2014\u2014\u5B83\u4EEC\u5E76\u6392\u4EAE\u7740\uFF0C\u526F\u6807\u9898\u5404\u81EA\u62A5\u51FA\u540D\u53F7\u4E0E\u65A4\u4E24\u3002\u4F60\u6311\u4E2D\u5408\u624B\u7684\u90A3\u4EF6\uFF0C\u6307\u5C16\u5374\u6CBE\u4E86\u521A\u624D\u64E6\u7070\u65F6\u8E6D\u5230\u7684\u4E94\u70B9\u8840\u2014\u2014\u4E0D\u6DF1\uFF0C\u53EF\u8DB3\u591F\u8BA9\u4F60\u8BB0\u4F4F\u8FD9\u8D9F\u4E0D\u662F\u767D\u64E6\u7684\u3002\u5269\u4E0B\u7684\u90A3\u4EF6\u91CD\u65B0\u8499\u4E0A\u7070\uFF0C\u7B49\u4F60\u4E0B\u6B21\u4E5F\u8BB8\u518D\u6765\u3002"
+    _effects:
+    - rid: 6594183605612707865
+    - rid: 6594183605612707866
+  - _name: "\u5750\u5230\u5B83\u4EEC\u4E2D\u95F4\u7B49\u5B83\u4EEC\u9192"
+    _subtitle: "\u5931\u53BB <color=red>15</color> \u70B9\u751F\u547D\uFF0C\u4ECE
+      <color=yellow>3</color> \u4EF6\u968F\u673A\u7A00\u6709\u9057\u7269\u4E2D\u9009\u62E9
+      <color=yellow>1</color> \u4EF6"
+    _condition: 2
+    _conditionValue: 16
+    _displayCard: {fileID: 0}
+    _resultText: "\u4F60\u6324\u8FDB\u73A9\u5076\u4E2D\u95F4\u5750\u4E0B\uFF0C\u95ED\u7740\u773C\u7B49\u3002\u5B83\u4EEC\u4E00\u4E2A\u63A5\u4E00\u4E2A\u9192\u4E86\uFF0C\u6296\u843D\u7684\u7070\u91CC\u6D6E\u8D77\u4E09\u4EF6\u7A00\u6709\u9057\u7269\u56F4\u7740\u4F60\u8F6C\uFF0C\u4EFB\u4F60\u4ECE\u5BB9\u6311\u4E00\u4EF6\u6700\u597D\u7684\u3002\u53EF\u8FD9\u4E00\u7B49\u8017\u6389\u4E86\u4F60\u5341\u4E94\u70B9\u8840\uFF0C\u9192\u8FC7\u795E\u6765\u4F60\u8138\u8272\u53D1\u767D\uFF0C\u6000\u91CC\u5374\u591A\u4E86\u4EF6\u65C1\u4EBA\u8F7B\u6613\u62FF\u4E0D\u5230\u7684\u539A\u793C\u2014\u2014\u503C\u4E0D\u503C\uFF0C\u53EA\u6709\u4F60\u548C\u81EA\u5DF1\u7B97\u5F97\u6E05\u3002"
+    _effects:
+    - rid: 6594183605612707867
+    - rid: 6594183605612707868
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183605612707864
+      type: {class: EED_RandomRelic, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _pool: {fileID: 11400000, guid: 38638f9c8f3550243b4d5c6432ee892a, type: 2}
+    - rid: 6594183605612707865
+      type: {class: EED_LoseHp, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 5
+    - rid: 6594183605612707866
+      type: {class: EED_RelicChoice, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _pool: {fileID: 11400000, guid: 38638f9c8f3550243b4d5c6432ee892a, type: 2}
+        _count: 2
+        _pickTitle: "\u9009\u62E9\u8FD9\u4E2A"
+    - rid: 6594183605612707867
+      type: {class: EED_LoseHp, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 15
+    - rid: 6594183605612707868
+      type: {class: EED_RelicChoice, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _pool: {fileID: 11400000, guid: 8f36bccb1308b5c449f08eed0fefa7d7, type: 2}
+        _count: 3
+        _pickTitle: "\u9009\u62E9\u8FD9\u4E2A"

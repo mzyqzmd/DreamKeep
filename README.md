@@ -36,9 +36,9 @@
 
 ## 架构概览
 
-一句话总纲：**八个程序集、一张无环依赖 DAG、四通道解耦（命令上行 / 事件下行 / 只读查询 / 状态介入）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处；表现层与战斗逻辑经四通道解耦，奖励兑现等运行期写入口经显式注入的 `RunState` 引用完成（不绕过动作系统）；多场景阶段（先古之民段 / 休息段 / 战斗段）由整局层（RunState）统一持有进度、按场景名叠加编排。**
+一句话总纲：**八个程序集、一张无环依赖 DAG、四通道解耦（命令上行 / 事件下行 / 只读查询 / 状态介入）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处；表现层与战斗逻辑经四通道解耦，奖励兑现等运行期写入口经显式注入的 `RunState` 引用完成（不绕过动作系统）；多场景阶段（先古之民段 / 休息段 / 宝箱段 / 战斗段）由整局层（RunState）统一持有进度、按场景名叠加编排。**
 
-> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **94 / 100**）。
+> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **95 / 100**）。
 
 ### 程序集与依赖（asmdef 强制，已用 GUID 反解核验无环）
 
@@ -60,7 +60,7 @@
 
 `ConfigData` 是纯资产/数据层，不依赖 `Utility`——实际是扇形汇入而非单链。全部程序集构成有向无环图，编译期即生效，无任何反向引用或环。
 
-> **关于空骨架程序集**：`GameEvent` / `GameRest` / `GameShop` 三个空骨架 asmdef **已于本轮删除**（H-1 彻底解决），依赖图不再表达"比实际需要更多"的约束。当前 8 个 asmdef 全部有实质代码。
+> **关于空骨架程序集**：`GameEvent` / `GameRest` / `GameShop` 三个空骨架 asmdef **已于 2026-10-31 删除**（H-1 彻底解决），依赖图不再表达"比实际需要更多"的约束。当前 8 个 asmdef 全部有实质代码。
 
 ### 八个有实质代码的域
 
@@ -68,12 +68,12 @@
 | ---------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
 | **Utility**            | 纯 C# 通用件（零业务、零引擎依赖）       | 状态机 `StateMachine<T>`、确定性随机 `Rng`、可修正数值引擎 `ModifiableStat`、纯 C# 对象池 `ObjectPool<T>`                  |
 | **EngineUtility**      | 引擎级通用件（依赖 UnityEngine，不含业务） | 组件池 `MonoObjectPool<T>`、贝塞尔 `Curve`、UI 几何 `UiGeometry`、补间 `UiTween`、悬停执行器、按钮/面板抽象基类（已无 `Utility` 依赖）           |
-| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据、**遗物 `SO_Relic` + 52 具体 `SO_*`**、**药水 `SO_Potion` + 15 具体 `SO_*`**、**Ancient（先古之民/事件）5 文件**、**Run/Encounter+Background 6 文件** |
+| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据、**遗物 `SO_Relic` + ~54 具体 `SO_*` + 2 池**、**药水 `SO_Potion` + 17 具体 `SO_*`**、**Ancient（先古之民/事件）5 文件**、**Run/Encounter+Background 6 文件**、**切肉刀遗物 `SO_MeatCleaver`** |
 | **RuntimeData**        | 运行时对象（纯 C#，配置只读一次即烘焙）    | `Creature` / `Player`（3 槽药水 + 持卡组/遗物引用）/ `CardModel`(=`CM_Static`+`CM_Runtime`+`CM_ValuePatch`) / `CardPile`、`BattlePerk`+`BP_*`、`CardAffix`+`CA_*`、三个烘焙器、`EI_*` 意图 |
 | **GameBattle**         | 战斗域（流程、规则、桥）              | 八阶段状态机、20 个 `BattleAction` + `ActionSystem`、状态介入层 `Hook`、三个 Resolver、命令/事件/查询三桥、分派守卫、奖励注入接线          |
 | **GameRun**            | 跑图/局外域（**已大幅落地**）           | `RelicEffect`（订阅战斗事件+组合动作）+ `RelicBaker`（按 `SO_Relic` 子类分派并登记 `IDeathGuard`）+ 51 个 `RE_*`；`Reward`（`ERewardKind`/`RunReward`/`EncounterRewardRoller`）；`Run`（`RunState` 整局进度 + 事件下行） |
-| **CommonPresentation** | 通用表现层（与 `Presentation` **平级**，被其依赖） | `UI_CardFace` + `UI_CardFaceSelector` + `UI_ConcreteCardView` + `UI_CardSelect` + `CardValueRenderer` + `CardSorter`、`UI_HoverTip` + `PopFactory`、`UI_NumberPopTip`、VFX 族（含 `UI_SmithForgeVfx`）、`UI_RewardPanel`（经注入 `RunState` 兑现奖励，表现层→域的正常方向） |
-| **Presentation**       | 各场景阶段专属表现与装配（**三新阶段 + 整局层**） | Battle（单位/卡牌/HUD/瞄准/弹层特效/奖励泊入）；**Ancient 段**（Dialogue/Option/Root + Bootstrap）；**Rest 段**（Option/UI_SmithPanel/UI_RestVFXRoot + Bootstrap）；**Run 整局层**（TopBar：DeckPanel/MapPanel/MenuPanel/LayerBar/Relics/Potion + `SegmentSceneManager` 阶段编排）；DI 组合根 `BattleLifetimeScope`/`AncientLifetimeScope`/`RestLifetimeScope`/`RunLifetimeScope` |
+| **CommonPresentation** | 通用表现层（与 `Presentation` **平级**，被其依赖） | `UI_CardFace` + `UI_CardFaceSelector` + `UI_ConcreteCardView` + `UI_CardSelect` + `CardValueRenderer` + `CardSorter`、`UI_HoverTip` + `PopFactory`、`UI_NumberPopTip`、VFX 族（含 `UI_SmithForgeVfx`）、`UI_RewardPanel`（经注入 `RunState` 兑现奖励，表现层→域的正常方向）、**`UI_CardRemovePanel` / `UI_CardUpgradePanel` 跨段复用弹板** |
+| **Presentation**       | 各场景阶段专属表现与装配（**四新阶段 + 整局层**） | Battle（单位/卡牌/HUD/瞄准/弹层特效/奖励泊入）；**Ancient 段**（Dialogue/Option/Root + Bootstrap）；**Rest 段**（Option/UI_SmithPanel/UI_RestVFXRoot + Bootstrap）；**Chest 段（宝箱段，7 文件）**（UI_Chest/UI_ChestProceedButton/UI_RelicSelectPanel/UI_RelicToSelectSlot + ChestEntry/ChestLifetimeScope/ChestSession）；**Run 整局层**（TopBar：DeckPanel/MapPanel/MenuPanel/LayerBar/Relics/Potion + `SegmentSceneManager` 阶段编排）；`Presentation/Event` 3 个待接入 UI 构件；DI 组合根 `Battle/Ancient/Rest/Chest/Run` 五个 `*LifetimeScope` |
 
 ### 四通道通信（表现层 ↔ 战斗逻辑）
 
@@ -97,8 +97,8 @@
 ### 多场景阶段与整局层（本轮新增）
 
 - **整局层 `RunState`**（`GameRun/Run`，纯 C#）：持有 `Floor`/`Rng`/`Player` 的遗物·药水·卡组等整局状态；数值变更以 `event Action` 下行通知 HUD。
-- **阶段编排 `SegmentSceneManager`**（`Presentation/_Bootstrap/Run`，245 行）：按**场景名字符串**（`Scene_Ancient`/`Scene_Rest`/`Scene_Battle`）Additive 加载/卸载阶段，无对下一阶段类型的硬引用；整局常驻靠 `RunLifetimeScope` + 叠加场景实现，**无 `DontDestroyOnLoad`**。
-- **四个 `*LifetimeScope`**（Ancient/Rest/Run + Battle）：结构一致，`Configure` 内只装配本阶段类型，各段 scope 互不引用。
+- **阶段编排 `SegmentSceneManager`**（`Presentation/_Bootstrap/Run`，243 行）：按**场景名字符串**（`Scene_Ancient`/`Scene_Rest`/`Scene_Chest`/`Scene_Battle`）Additive 加载/卸载阶段，无对下一阶段类型的硬引用；整局常驻靠 `RunLifetimeScope` + 叠加场景实现，**无 `DontDestroyOnLoad`**。
+- **五个 `*LifetimeScope`**（Ancient/Rest/Chest/Run + Battle）：结构一致，`Configure` 内只装配本阶段类型，各段 scope 互不引用。
 
 ### 核心纪律（新增代码请沿用）
 
@@ -113,21 +113,21 @@
 - **可复用件放对层。** 只依赖 UnityEngine 的通用工具 → `EngineUtility`；跨场景复用的表现件 → `CommonPresentation`；只有某阶段专属的 → `Presentation/<阶段>/`。`CommonPresentation` 与 `Presentation` 为平级表现层，`Presentation` 依赖 `CommonPresentation` 是故意设计。
 - **整局进度由 `RunState` 持有，表现层只读。** 新场景 UI 一律 `[Inject] RunState`，不自行改写（奖励兑现等受控写入口除外）。
 
-### 代码规模（2026-10-31 工作树，`HEAD = e2e10eb`）
+### 代码规模（2026-11-02 工作树，`HEAD = 5f8e4d0`）
 
 | 域                   |      文件 |       行数 |
 | ------------------- | ------: | -------: |
 | Utility             |       7 |      237 |
-| ConfigData          |     127 |     2022 |
-| RuntimeData         |      42 |     1656 |
-| EngineUtility       |      14 |      710 |
+| ConfigData          |     129 |     2052 |
+| RuntimeData         |      42 |     1689 |
+| EngineUtility       |      14 |      707 |
 | GameBattle          |      77 |     2479 |
-| GameRun             |      59 |     2074 |
-| CommonPresentation  |      25 |     2586 |
-| Presentation        |      74 |     6870 |
-| **合计**              | **425** | **18634** |
+| GameRun             |      58 |     2091 |
+| CommonPresentation  |      30 |     3118 |
+| Presentation        |      82 |     7115 |
+| **合计**              | **439** | **19488** |
 
-406 / 425 个文件在 150 行以内（95.5%）。超出的 19 个均为内聚单体：`UI_HandView` 451 / `UI_PotionGroup` 400 / `UI_CardBattle` 366 / `UI_CardFace` 251 / `SegmentSceneManager` 245 / `UI_SmithForgeVfx` 243 / `UI_HandHover` 227 / `UI_HandShow` 218 / `UI_HoverTip` 210 / `UI_Actor` 198 / `UI_RelicSlot` 194 / `UI_RewardPanel` 192 / `RestEntry` 183 / `BattleTargetDirector` 178 / `UI_PileCardsView` 164 / `UI_DeckPanel` 163 / `CardModelBaker` 160 / `CM_Runtime` 156。
+419 / 439 个文件在 150 行以内（95.4%）。超出的 20 个均为内聚单体：`UI_HandView` 451 / `UI_PotionGroup` 400 / `UI_CardBattle` 366 / `UI_CardFace` 251 / `SegmentSceneManager` 243 / `UI_HandHover` 227 / `UI_CardRemovePanel` 224 / `RestEntry` 223 / `UI_HandShow` 215 / `UI_RelicSlot` 210 / `UI_HoverTip` 210 / `UI_SmithForgeVfx` 202 / `UI_Actor` 198 / `UI_RewardPanel` 192 / `BattleTargetDirector` 178 / `UI_PileCardsView` 164 / `UI_CardUpgradePanel` 164 / `UI_DeckPanel` 163 / `CardModelBaker` 160 / `CM_Runtime` 156。
 
 ---
 
@@ -148,7 +148,9 @@
 - 遗物系统（跑图域 `GameRun`）：`SO_Relic` + **52 个具体遗物资产**；`RE_*` 触发效果经订阅战斗事件 + 组合 `BattleAction` 接入（零反向依赖），`LizardTail` 经 `IDeathGuard` 介入致命伤；`RelicBaker` 按资产类型分派（漏登记显式 `throw`）。战斗内已可触发
 - 药水系统（战斗内可消耗）：`SO_Potion` + 15 个具体药水资产；饮用经 `BC_UsePotion` → `PotionResolver` → `BA_ConsumePotion` 取走并广播 `BE_PotionConsumed`，落点规则全在 Resolver；玩家运行时持 3 槽药水。丢弃走即时旁路
 - **战后奖励结算**：`SO_Encounter.Reward` → `EncounterRewardRoller`（同种子可复现）掷出金币 / 卡牌三选一 / 概率药水 / 精英遗物清单 → `UI_RewardPanel` 展示并兑现
-- **整局层与多场景阶段**：`RunState` 持有整局进度；`SegmentSceneManager` 按场景名叠加编排 Ancient / Rest / Battle 三阶段；四个 `*LifetimeScope` 各自隔离装配
+- **整局层与多场景阶段**：`RunState` 持有整局进度；`SegmentSceneManager` 按场景名叠加编排 Ancient / Rest / **Chest（宝箱段）** / Battle 四阶段；五个 `*LifetimeScope`（Ancient/Rest/Chest/Run + Battle）各自隔离装配
+- **宝箱段（第四场景阶段）**：`ChestLifetimeScope`（`Parent.Resolve<RunState>()` + 普通/稀有 `SO_RelicPool` 装配 `ChestSession`）+ `ChestEntry`（`IStartable` 驱动开箱→出遗物→领取→闪光锁定→收段）+ `UI_Chest`（Spine 骨骼 + 指针交互）+ `UI_ChestProceedButton`（`UI_Button` 子类，`[Inject] SegmentSceneManager` 收段）；与既有阶段完全同模板、零结构漂移
+- **跨段复用弹板**：`UI_CardRemovePanel`（删牌）/ `UI_CardUpgradePanel`（锻造升级）继承 `UI_Panel`，复用 `UI_ConcreteCardView` 牌面、`VfxFactory`、`MonoObjectPool`，跨阶段复用
 
 **表现层（已成型）**
 
@@ -159,7 +161,7 @@
 - 弹层与特效：伤害/回血数字飘字、受击与回复一次性特效、说明气泡、回合横幅
 - 状态特效：状态施加爆发演出 + 常驻状态图标（池化），复用既有事件驱动/池化管线
 - 卡面：内嵌牌面按类型切换、稀有度换边框、不可打整卡压暗、数值修正着色、关键词悬停说明
-- **先古之民段 / 休息段表现**：对话/选项演出、铁匠（UI_SmithPanel）与休息特效（UI_RestVFXRoot）、整局顶栏（卡组/地图/菜单/遗物/药水栏）
+- **先古之民段 / 休息段 / 宝箱段表现**：对话/选项演出、铁匠（UI_SmithPanel）与休息特效（UI_RestVFXRoot，往期视图内 `FindObjectOfType`/`Update` 异味已随目录重排移除）、宝箱（UI_Chest Spine 骨骼 + 指针交互）、整局顶栏（卡组/地图/菜单/遗物/药水栏）
 
 **已有内容资产**
 
@@ -167,21 +169,21 @@
 - 敌人 1 种（树枝史莱姆 TwigSlime，四条意图 + 最前槽位替换）+ 玩家 1 套
 - 状态 5 种（再生 / 力量 / 敏捷 / 易伤 / 虚弱，均数据驱动）
 - 词条 10 种 + 升级补丁 4 种 + 意图 6 种
-- 遗物 **52 种**（含 Anchor / BurningBlood / CentennialPuzzle / GremlinHorn / HappyFlower / LizardTail / Orichalcum / Pendulum / Shuriken 及 42 个新增内容遗物，战斗内效果已通）
-- 药水 15 种（Block / Blood / Energy / Fire / Strength / Weak / PotionOfBinding 等，战斗内饮用已通）
-- 场景 3 个：`Scene_Battle` / `Scene_Rest` / `Scene_MainMenu`（整局层驱动 Ancient/Rest/Battle 叠加段）
+- 遗物 **~54 种**（含 Anchor / BurningBlood / CentennialPuzzle / GremlinHorn / HappyFlower / LizardTail / MeatCleaver / Orichalcum / Pendulum / Shuriken 及 40+ 个新增内容遗物，战斗内/休息/宝箱效果已通；`SO_MeatCleaver` 经 `RelicBaker` 显式 `=> null` 登记、效果走休息烹饪流）
+- 药水 17 种（Block / Blood / Energy / Fire / Strength / Weak / PotionOfBinding 等，战斗内饮用已通）
+- 场景 4 个阶段：`Scene_Battle` / `Scene_Rest` / `Scene_Chest` / `Scene_MainMenu`（整局层驱动 Ancient/Rest/Chest/Battle 叠加段）
 - 预制体若干（卡面、意图图标、单位、弹层、特效、面板）
 
-### 近期落地（2026-10 下旬至 10-31）
+### 近期落地（2026-10 下旬至 11-02）
 
-- **多场景阶段架构落地**：新增先古之民段（Ancient）、休息段（Rest）与整局层（Run）；`RunState` 持有整局进度、`SegmentSceneManager` 按场景名叠加编排、`RunLifetimeScope` 注册常驻件，四个 `*LifetimeScope` 各自隔离装配。常驻靠叠加场景 + 组合根，无 `DontDestroyOnLoad`。
-- **遗物内容大扩张**：具体遗物从 9 暴增至 **52**，仍保持"数据驱动 + `RelicBaker` 类型分派 + 订阅战斗事件组合动作"模式，零漂移；`RelicBaker` 末位 `_ => throw` 防静默失效。药水同期扩至 15。
-- **战后奖励结算**：`SO_Encounter.Reward` + `EncounterRewardRoller`（同种子可复现）+ `UI_RewardPanel` 打通胜利分支（金币 / 卡牌三选一 / 概率药水 / 精英遗物），奖励兑现后继续开地图。战败分支收段照旧。
-- **卡牌升级预览**：`CM_Static`/`CardModel` 新增 `CanUpgrade`/`BaseVersion`/`ToMutable()`/`Upgrade()`，三选一/卡组详情复用临时 `ToMutable().Upgrade()` 副本预览，不写回域。
-- **牌面复用组件化**：`UI_ConcreteCardView`/`UI_CardSelect`/`UI_CardOneInThreePanel` 全部复用 `UI_CardFace`，无重复渲染。
-- **`EngineUtility` 依赖纯净**：已无 `Utility` 依赖，纯 `UniTask` + `DOTween` 引擎件。
-- **H-1 彻底解决**：删除 `GameEvent`/`GameRest`/`GameShop` 三个空骨架 asmdef 及目录，依赖图不再表达多余约束。
-- **分层澄清**：`CommonPresentation` 与 `Presentation` 为平级表现层、`Presentation` 依赖 `CommonPresentation` 为故意设计；`CommonPresentation → GameRun` 属正常的表现层向下依赖，`UI_RewardPanel` 经注入 `RunState` 兑现奖励在允许方向上（非越界、非架构缺陷，往期误判的 H-2 不成立）。
+- **宝箱段（第四场景阶段）上线**：新增 `ChestLifetimeScope`（`Parent.Resolve<RunState>()` + 普通/稀有 `SO_RelicPool` 装配 `ChestSession`）、`ChestEntry`（`IStartable` 驱动开箱→出遗物→领取→闪光锁定→收段）、`UI_Chest`（Spine 骨骼 + 指针交互）、`UI_ChestProceedButton`（`UI_Button` 子类，`[Inject] SegmentSceneManager` 收段）。与 Ancient/Rest/Battle 完全同模板、零结构漂移，是第四阶段以零成本加入的正面证据。
+- **跨段复用弹板**：`UI_CardRemovePanel`（删牌）+ `UI_CardUpgradePanel`（锻造升级）继承 `UI_Panel`，复用 `UI_ConcreteCardView` 牌面、`VfxFactory`、`MonoObjectPool`，跨阶段复用；统一卡牌详情特写与弹层停泊也已完成。
+- **目录重排 + 异味清理**：宝箱段与弹层拆分触发目录重排；**往期唯一活跃反模式 `UI_RestVFXRoot.cs:56` 视图内 `FindObjectOfType`/`Update` 已彻底移除**（文件迁至 `Presentation/Rest/Root` 且不再含查找/轮询），全库剩余 `FindObjectOfType` 仅 DI 根合法用法，`Update()` 由 9 降至 8。
+- **休息烹饪 + 切肉刀遗物**：`RestEntry` 接入休息烹饪交互；`SO_MeatCleaver` 经 `RelicBaker` 显式 `=> null` 登记、效果走休息烹饪流（非静默缺失）。
+- **内容资产续增**：具体遗物由 52 增至 **~54**、药水由 15 增至 **17**，仍保持"数据驱动 + `RelicBaker` 类型分派 + 订阅战斗事件组合动作"模式，零漂移；`RelicBaker` 末位 `_ => throw` 防静默失效。
+- **多场景阶段架构落地（上轮）**：新增先古之民段（Ancient）、休息段（Rest）与整局层（Run）；`RunState` 持有整局进度、`SegmentSceneManager` 按场景名叠加编排、`RunLifetimeScope` 注册常驻件，五个 `*LifetimeScope` 各自隔离装配。
+- **H-1 彻底解决（上轮）**：删除 `GameEvent`/`GameRest`/`GameShop` 三个空骨架 asmdef 及目录，依赖图不再表达多余约束。
+- **分层澄清（上轮）**：`CommonPresentation` 与 `Presentation` 为平级表现层、`Presentation` 依赖 `CommonPresentation` 为故意设计；`CommonPresentation → GameRun` 属正常的表现层向下依赖，`UI_RewardPanel` 经注入 `RunState` 兑现奖励在允许方向上（非越界、非架构缺陷，往期误判的 H-2 不成立）。
 
 ### 已知未完成 / 待收口（功能完整性 + 架构，非全部为缺陷）
 
@@ -196,7 +198,8 @@
 | 格挡 / 治疗意图数值 | 数据层有 `Amount`，意图图标均为"纯图标占位"，玩家无法预判敌人会挡多少 / 回多少 |
 | 音效 | 代码中已留触发点 TODO（发牌、进堆），音效层尚未开写 |
 | `BattleEventDispatcher.Unregister` | 单位视图销毁后事件处理器仍留在字典（单场战斗内有界滞留，靠表现层 null 检查兜住，无实际 bug） |
-| `UI_RestVFXRoot` 视图内 `FindObjectOfType` | 小瑕疵，建议注入 `UI_RestBackgroundRoot` |
+| `Presentation/Event` 三构件零引用 | `UI_EventPanel` / `UI_EventOptionItem` / `UI_EventProceedItem`（各 8–9 行）当前无代码引用，疑似待接入死代码；建议确认后接入或删除 |
+| ~~`UI_RestVFXRoot` 视图内 `FindObjectOfType`~~ | **已解决**：目录重排后该文件不再含查找/轮询，`FindObjectOfType`/`Update` 异味彻底移除 |
 
 ---
 
@@ -212,6 +215,8 @@
 4. ✅ 卡牌升级子系统全链路打通。
 5. ✅ `EngineUtility` / `CommonPresentation` / 三新场景阶段拆出，跨场景复用边界建立。
 6. ✅ **删除 `GameEvent`/`GameRest`/`GameShop` 三个空骨架**（H-1 解决）。
+7. ✅ **宝箱段（第四场景阶段）上线** + 跨段复用删牌/锻造弹板 + 统一卡牌详情特写与弹层停泊。
+8. ✅ **休息烹饪 + 切肉刀遗物**；目录重排后 `UI_RestVFXRoot` 视图查找异味彻底移除（往期唯一活跃反模式）。
 
 ### 阶段二：补齐战斗内功能空洞 + 修架构异味（最高优先级）
 
@@ -230,6 +235,7 @@
 5. `UI_CardBattle` 再切一刀：姿态通道与补间通道合并为 `CardPose`。
 6. 分派守卫为手抄惯用法，建议抽一层微型 `ReentrancyGuard`/`RunOnceGuard` 并区分 `IDeathGuard` 命名（M-6）。
 7. `GameRun` 轻微偏离载荷纪律（`RelicEffect` 常驻 SO 引用、`RelicTriggerNotifier` 以 SO 作事件载荷），新增时优先回 struct 载荷（M-8）。
+8. 清理 `Presentation/Event` 三构件（`UI_EventPanel` / `UI_EventOptionItem` / `UI_EventProceedItem`）——确认是待接入 UI 还是死代码，接入则接线、否则删除，避免遗留悬空文件。
 
 ### 阶段四：新系统（视毕设进度决定是否开写）
 
@@ -250,9 +256,9 @@ git lfs pull
 
 1. Unity Hub → `Add project from disk` → 选择本仓库根目录
 2. 等待 `Library/` 首次导入完成
-3. 打开 `Assets/Scenes/Scene_MainMenu.unity`（整局层入口，会叠加编排 Ancient/Rest/Battle 段）运行
+3. 打开 `Assets/Scenes/Scene_MainMenu.unity`（整局层入口，会叠加编排 Ancient/Rest/Chest/Battle 段）运行
 
-> 注：当前 3 个场景（`Scene_MainMenu` / `Scene_Rest` / `Scene_Battle`）由 `SegmentSceneManager` 按场景名叠加加载；直接打开 `Scene_Battle` 也能独立运行战斗段（依赖注入由 `BattleLifetimeScope` 接管）。
+> 注：当前 4 个场景阶段（`Scene_MainMenu` / `Scene_Rest` / `Scene_Chest` / `Scene_Battle`）由 `SegmentSceneManager` 按场景名叠加加载；直接打开 `Scene_Battle` 也能独立运行战斗段（依赖注入由 `BattleLifetimeScope` 接管）。
 
 ---
 
@@ -260,7 +266,7 @@ git lfs pull
 
 | 文档 | 内容 |
 | --- | --- |
-| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 94/100、六维分项评分、逐模块分析、反模式扫描、不变量核验、问题清单 |
+| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 95/100、六维分项评分、逐模块分析、反模式扫描、不变量核验、问题清单 |
 | [Doc/世界观与背景设定.md](Doc/世界观与背景设定.md) | 游戏世界观与背景设定文档 |
 | [.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md](.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md) | 纯游戏设计稿（v3.5）：玩法 / 数值 / 题材定案，不含实现 |
 | [.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md](.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md) | 架构定案与 P0 待办清单：「代码放哪、依赖谁、先做什么」以此为准 |

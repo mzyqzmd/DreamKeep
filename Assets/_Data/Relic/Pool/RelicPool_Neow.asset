@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: RelicPool_Neow
   m_EditorClassIdentifier: 
   _relics:
-  - {fileID: 11400000, guid: 4349d48e1efbcac448d2a5ec77cf666c, type: 2}
-  - {fileID: 11400000, guid: 05f2921118931dd4d9b98f04ebdb2424, type: 2}
-  - {fileID: 11400000, guid: 6a15c3c562e83944d846f33f2312af2f, type: 2}
+  - {fileID: 11400000, guid: afba215a05823394e9379a9e362335d7, type: 2}
+  - {fileID: 11400000, guid: 52d7cf156767d394687be366a39d3007, type: 2}
+  - {fileID: 11400000, guid: cf4251caf2ab730498e1807b1ed2873b, type: 2}
+  - {fileID: 11400000, guid: 60e2d2627d9aee7418ceda1eeb1851dd, type: 2}
+  - {fileID: 11400000, guid: 2da596eef53c3c44dbdacce6fec0ef2a, type: 2}
+  - {fileID: 11400000, guid: d31075a9db90fc445a510da66f11008e, type: 2}

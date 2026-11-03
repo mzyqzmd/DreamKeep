@@ -7,7 +7,7 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.Presentation
 {
     /// <summary>遗物信息面板：由遗物栏懒建的单实例弹层，点击遗物槽位时写入该遗物的名称、稀有度、图标与描述，
-    /// 稀有度一行按档位着色（初始/普通白、稀有金黄、商店天蓝），已用尽的遗物在描述末尾补一行提示；
+    /// 稀有度一行按档位着色（初始/普通白、稀有金黄、商店天蓝、远古暗红），已用尽的遗物在描述末尾补一行提示；
     /// 点击面板外的遮罩收起，点面板框内不响应。</summary>
     public sealed class UI_RelicsInfoPanel : MonoBehaviour, IPointerClickHandler
     {
@@ -30,6 +30,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("稀有遗物的颜色")] [SerializeField] private Color _rareColor = new(1f, 0.83f, 0.3f);
 
         [Tooltip("商店遗物的颜色")] [SerializeField] private Color _shopColor = new(0.45f, 0.72f, 1f);
+
+        [Tooltip("远古遗物的颜色（偏暗的亮红）")] [SerializeField]
+        private Color _ancientColor = new(0.8f, 0.2f, 0.24f);
 
         #region 展示一件遗物
 
@@ -64,6 +67,7 @@ namespace _DreamKeep.Presentation
             ERelicRarity.Starter => ("初始遗物", _normalColor),
             ERelicRarity.Rare => ("稀有遗物", _rareColor),
             ERelicRarity.Shop => ("商店遗物", _shopColor),
+            ERelicRarity.Ancient => ("远古遗物", _ancientColor),
             _ => ("普通遗物", _normalColor),
         };
     }

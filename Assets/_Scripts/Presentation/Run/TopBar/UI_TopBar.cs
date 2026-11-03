@@ -1,7 +1,9 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 
@@ -14,6 +16,10 @@ namespace _DreamKeep.Presentation
     {
         [SerializeField] private TextMeshProUGUI _hpText;
         [SerializeField] private TextMeshProUGUI _goldText;
+
+        [Tooltip("金币跳变时长（秒）：数字从旧值滚到新值，0 即瞬间写入")] [SerializeField]
+        private float _goldTickDuration = 0.35f;
+
         [SerializeField] private UI_LayerBar _layerBar;
         [SerializeField] private TextMeshProUGUI _timeText;
         [SerializeField] private Button _mapButton;
@@ -30,6 +36,9 @@ namespace _DreamKeep.Presentation
         private RunState _run;
         private float _runStart;
         private int _lastShownSeconds = -1;
+        private Tween _goldTween;
+        private int _shownGold;
+        private bool _goldInitialized;
 
         [Inject]
         public void Construct(RunState run_)
@@ -57,6 +66,7 @@ namespace _DreamKeep.Presentation
 
         private void OnDestroy()
         {
+            _goldTween?.Kill(); // 顶栏随整局常驻，补间兜底在自己身上收
             if (_run == null) return;
             _run.Player.Creature.HpChanged -= OnHpChanged;
             _run.GoldChanged -= OnGoldChanged;
@@ -80,10 +90,33 @@ namespace _DreamKeep.Presentation
             _hpText.text = $"{creature.CurrentHp} / {creature.MaxHp}";
         }
 
+        // 金币：首帧直接写初值，之后每次变更从当前显示值滚到新值（连续买卖时从中途续跑，不叠加、不倒退）
         private void RefreshGold()
         {
             if (_goldText == null) return;
-            _goldText.text = _run.Gold.ToString();
+            if (!_goldInitialized)
+            {
+                _goldInitialized = true;
+                WriteGold(_run.Gold);
+                return;
+            }
+
+            if (_goldTickDuration <= 0f)
+            {
+                WriteGold(_run.Gold);
+                return;
+            }
+
+            UiTween.PlayScalar(ref _goldTween, () => _shownGold, value_ => WriteGold(Mathf.RoundToInt(value_)),
+                _run.Gold, _goldTickDuration).OnComplete(() => WriteGold(_run.Gold));
+        }
+
+        // 只在整数真的变了才写 TMP：补间每帧都会回调，重复赋值会白白触发文字重排
+        private void WriteGold(int value_)
+        {
+            if (_shownGold == value_) return;
+            _shownGold = value_;
+            _goldText.text = value_.ToString();
         }
 
         #endregion

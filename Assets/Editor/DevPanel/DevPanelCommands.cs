@@ -83,6 +83,24 @@ internal static class DevPanelCommands
         return "已请求加载宝箱段";
     }
 
+    /// <summary>加载事件段（进入后随机掷一则已实装事件，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    internal static string StartEventSegment()
+    {
+        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
+        manager.StartSegment(SegmentSceneManager.EventSegmentName);
+        return "已请求加载事件段";
+    }
+
+    /// <summary>加载商店段（进店掷一次货架，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    internal static string StartShopSegment()
+    {
+        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
+        manager.StartSegment(SegmentSceneManager.ShopSegmentName);
+        return "已请求加载商店段";
+    }
+
     #endregion
 
     #region 整局：血量与金币
