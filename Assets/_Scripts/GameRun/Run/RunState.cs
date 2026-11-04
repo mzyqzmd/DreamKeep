@@ -14,6 +14,12 @@ namespace _DreamKeep.GameRun
         public SO_Player Config { get; }
         public Player Player { get; }
 
+        /// <summary>整章地图：构造时从生成配置一次性生成，之后只随 EnterMapNode 演进。</summary>
+        public MapGraph Map { get; }
+
+        /// <summary>地图生成配置：问号揭示的权重与行限制都从这读。</summary>
+        public SO_MapGenerationConfig MapConfig { get; }
+
         /// <summary>整局唯一随机流：洗牌、随机目标、遭遇血量浮动都走它，保证同种子可复现。</summary>
         public Rng Rng { get; }
 
@@ -41,6 +47,44 @@ namespace _DreamKeep.GameRun
             if (amount_ <= 0) return;
             Gold += amount_;
         }
+
+        #endregion
+
+        #region 支出金币：商店购买与事件统一走这里，钳到不为负；非正数忽略（误填负数由"反向加钱"变"忽略"）
+
+        public void SpendGold(int amount_)
+        {
+            if (amount_ <= 0) return;
+            Gold = Math.Max(0, Gold - amount_);
+        }
+
+        #endregion
+
+        #region 回滚金币快照：取消自选面板这类事务回滚用，写回已知合法值，不做规则钳制
+
+        public void RestoreGoldTo(int value_) => Gold = value_;
+
+        #endregion
+
+        #region 段级玩家生命写入：支出保底留 1 绝不致死（战斗内伤害允许杀人，故收在 GameRun 不放 Creature）、回复钳上限
+
+        public void SpendPlayerHp(int amount_)
+        {
+            if (amount_ <= 0) return;
+            Player.Creature.CurrentHp = Math.Max(1, Player.Creature.CurrentHp - amount_);
+        }
+
+        public void RestorePlayerHp(int amount_)
+        {
+            if (amount_ <= 0) return;
+            Player.Creature.CurrentHp = Math.Min(Player.Creature.CurrentHp + amount_, Player.Creature.MaxHp);
+        }
+
+        #endregion
+
+        #region 回滚生命快照：取消自选面板这类事务回滚用，写回已知合法值，双向可加可扣
+
+        public void RestorePlayerHpTo(int value_) => Player.Creature.CurrentHp = value_;
 
         #endregion
 
@@ -72,10 +116,64 @@ namespace _DreamKeep.GameRun
         /// <summary>层数变更通知：整局层（顶栏 / 层栏）订阅。</summary>
         public event Action<int> FloorChanged;
 
-        public RunState(SO_Player config_, int seed_)
+        #region 进入地图节点：只记当前位置并推进层数（层数 = 行号 + 1，起点行即第 1 层）
+
+        public void EnterMapNode(MapNode node_)
+        {
+            if (node_.PointType == EMapPointType.Event && node_.RevealedType == EMapPointType.None)
+                node_.RevealedType = RollUnknownReveal(node_.Coord.Row); // 进入即揭示：切段、遭遇与图标都按真实内容走
+            Map.EnterNode(node_);
+            Floor = node_.Coord.Row + 1;
+        }
+
+        #endregion
+
+        #region 段进行态与通过判定：进段挂起整图可走态，内容完成当帧解除并标记通过（幂等）
+
+        /// <summary>段进行态：进段时挂起，内容完成或段收尾时解除；挂起期间地图没有任何可走节点。</summary>
+        public void SetSegmentPending(bool pending_) => Map.SetSegmentPending(pending_);
+
+        public void CompleteMapNode()
+        {
+            Map.SetSegmentPending(false); // 内容完成当帧就解除挂起：下一层立刻可点，不等段收尾
+            Map.MarkCleared(Map.CurrentNode);
+        }
+
+        #endregion
+
+        #region 问号揭示：进入时按配置权重掷出真实内容，遵守与生成期相同的行限制
+
+        // 加权取样走整局随机流，同种子可复现；行限制全滤空时兜底普通战斗
+        private EMapPointType RollUnknownReveal(int row_)
+        {
+            List<EMapPointType> pool = new();
+            AddToPool(EMapPointType.Monster, MapConfig.RevealMonster);
+            AddToPool(EMapPointType.Elite, MapConfig.RevealElite);
+            AddToPool(EMapPointType.Shop, MapConfig.RevealShop);
+            AddToPool(EMapPointType.Rest, MapConfig.RevealRest);
+            AddToPool(EMapPointType.Treasure, MapConfig.RevealTreasure);
+            AddToPool(EMapPointType.Event, MapConfig.RevealEvent);
+            return pool.Count == 0 ? EMapPointType.Monster : Rng.Pick(pool);
+
+            void AddToPool(EMapPointType type_, int weight_)
+            {
+                if (weight_ <= 0 || !StandardMapGenerator.IsRowLegal(type_, row_, Map.Rows, MapConfig)) return;
+                for (int i = 0; i < weight_; i++) pool.Add(type_);
+            }
+        }
+
+        #endregion
+
+        public RunState(SO_Player config_, int seed_, SO_MapGenerationConfig mapConfig_)
         {
             Config = config_;
+            MapConfig = mapConfig_;
             Rng = new Rng(seed_);
+
+            // 地图：整局一张，从主流派生子种子生成（消耗主流一格，同种子整局仍可复现）
+            Map = StandardMapGenerator.Generate(mapConfig_, new Rng(Rng.Next(int.MaxValue)));
+            EnterMapNode(Map.StartNode);
+
             Gold = config_.StartGold;
             Player = new Player(config_.Name, config_.MaxHp, config_.StartRelics, config_.StartPotions);
 

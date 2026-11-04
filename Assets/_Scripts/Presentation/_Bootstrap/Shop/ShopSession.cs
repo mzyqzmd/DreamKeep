@@ -130,7 +130,7 @@ namespace _DreamKeep.Presentation
             int price = PriceOfCard(card_);
             if (_run.Gold < price) return EShopBuyResult.NotEnoughGold;
 
-            _run.Gold -= price;
+            _run.SpendGold(price);
             _run.Player.AddCard(card_.ToMutable());
             shelf[shelf.IndexOf(card_)] = null;
             return EShopBuyResult.Success;
@@ -145,7 +145,7 @@ namespace _DreamKeep.Presentation
             int price = PriceOfRelic(relic_);
             if (_run.Gold < price) return EShopBuyResult.NotEnoughGold;
 
-            _run.Gold -= price;
+            _run.SpendGold(price);
             _run.Player.AddRelic(relic_);
             _relics[index] = null;
             return EShopBuyResult.Success;
@@ -161,7 +161,7 @@ namespace _DreamKeep.Presentation
             if (_run.Gold < price) return EShopBuyResult.NotEnoughGold;
             if (!_run.Player.TryAddPotion(potion_)) return EShopBuyResult.PotionSlotsFull;
 
-            _run.Gold -= price;
+            _run.SpendGold(price);
             _potions[index] = null;
             return EShopBuyResult.Success;
         }
@@ -181,7 +181,7 @@ namespace _DreamKeep.Presentation
         public void CompleteRemoval()
         {
             if (_removalUsed) return;
-            _run.Gold -= RemovalPrice;
+            _run.SpendGold(RemovalPrice);
             _run.RecordCardRemoval();
             _removalUsed = true;
         }

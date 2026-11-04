@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2fc7ca0540f1fe47954d02d23a6e673, type: 3}
+  m_Name: MapGenerationConfig
+  m_EditorClassIdentifier: 
+  _mapWidth: 10
+  _roomRows: 20
+  _pathCount: 7
+  _numOfElites: 10
+  _numOfShops: 4
+  _unknownMean: 18
+  _unknownStd: 1
+  _unknownMin: 15
+  _unknownMax: 24
+  _restMean: 7
+  _restStd: 1
+  _restMin: 4
+  _restMax: 8
+  _lowerRowLimit: 5
+  _upperRestRowLimit: 5
+  _revealMonster: 25
+  _revealElite: 15
+  _revealShop: 15
+  _revealRest: 5
+  _revealTreasure: 15
+  _revealEvent: 25

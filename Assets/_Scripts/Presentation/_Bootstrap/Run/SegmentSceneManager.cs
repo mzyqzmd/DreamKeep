@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -27,6 +28,9 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("整局顶栏：主菜单期间隐藏、进入段场景后显示（同场景，Inspector 拖引用，零查找）")] [SerializeField]
         private UI_TopBar _topBar;
+
+        [Tooltip("地图编排器：节点点击上报的来源（同场景，Inspector 拖引用）")] [SerializeField]
+        private UI_MapView _mapView;
 
         public const string BattleSegmentName = "Scene_Battle";
 
@@ -57,6 +61,9 @@ namespace _DreamKeep.Presentation
             // 等玩家领奖、或正在换段时不再重复触发；点继续后会话已关，这里也自然早退
             if (_awaitingReward || _switching) return;
             if (_session == null || !_session.IsOpen || !_session.Loop.IsFinished) return;
+
+            // 胜利即通过：地图推进不等奖励面板的「继续」；战败走结算面板不标记（Boss 胜利也标，但本局已结束、不再开图）
+            if (_session.Loop.IsVictory) _run.CompleteMapNode();
 
             // 胜利且本场配了奖励：段与会话都还活着时就地结算——药水/遗物栏在领取瞬间还能正常刷新；
             // 点继续只关会话、开地图（见 CompleteSegment），段留在场上等下一个节点
@@ -97,13 +104,48 @@ namespace _DreamKeep.Presentation
             _session = session_;
             _run = run_;
             _popFactory = popFactory_;
+            if (_mapView) _mapView.NodeClicked += OnMapNodeClicked;
         }
+
+        #region 选点切段：域推进 → 收图 → 按节点类型装载对应段
+
+        // 问号节点在 RunState.EnterMapNode 内进入即揭示真实类型，这里按 ResolvedType 分派段场景
+        private void OnMapNodeClicked(MapNode node_)
+        {
+            if (_switching) return; // 换段期间忽略二次点击：不能让域推进了而段没切
+            _run.EnterMapNode(node_);
+            StartSegment(SegmentNameOf(node_.ResolvedType)); // 问号节点取揭示结果，其余即自身类型
+        }
+
+        private static string SegmentNameOf(EMapPointType type_)
+        {
+            switch (type_)
+            {
+                case EMapPointType.Monster:
+                case EMapPointType.Elite:
+                case EMapPointType.Boss:
+                    return BattleSegmentName;
+                case EMapPointType.Shop:
+                    return ShopSegmentName;
+                case EMapPointType.Rest:
+                    return RestSegmentName;
+                case EMapPointType.Treasure:
+                    return ChestSegmentName;
+                case EMapPointType.Event:
+                    return EventSegmentName;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type_), type_, "节点类型没有对应段场景");
+            }
+        }
+
+        #endregion
         /// <summary>按段名加载并开启一段（"选定下一个节点"）：收起地图与奖励面板、关旧会话、卸掉旧段后再加载新段。</summary>
         public void StartSegment(string name_)
         {
             if (_switching) return;
             _switching = true;
             _awaitingReward = false;
+            _run.SetSegmentPending(true); // 进段即挂起整图可走态：内容没完成前一个节点都点不了、也不会有呼吸
             SwitchSegmentAsync(name_).Forget();
         }
 
@@ -115,6 +157,7 @@ namespace _DreamKeep.Presentation
         {
             if (_switching) return;
             _awaitingReward = false;
+            _run.SetSegmentPending(false); // 段收尾：解除挂起（内容已通过的节点本来当帧就解除了，这里兜住异常收尾）
             if (_session.IsOpen) _session.Close(); // 先关句柄：常驻药水栏要在旧段中间件还活着时注销瞄准
             if (_topBar) _topBar.OpenMap();
         }
@@ -127,6 +170,7 @@ namespace _DreamKeep.Presentation
             if (_switching) return;
             _switching = true;
             _awaitingReward = false;
+            _run.SetSegmentPending(false);
             if (_session.IsOpen) _session.Close();
             EndSegmentAsync().Forget();
         }
@@ -156,7 +200,12 @@ namespace _DreamKeep.Presentation
                 if (_session.IsOpen) _session.Close();
                 // 必须先卸旧段：新段构建时会按类型扫场景注册，两段同类组件共存会互相污染
                 await UnloadCurrentSegmentAsync();
-                await LoadSegmentAsync(name_);
+                if (!await LoadSegmentAsync(name_)) _run.SetSegmentPending(false); // 进段失败：解除挂起，别把整图焊死在无可走态
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                _run.SetSegmentPending(false); // 装配异常同样兜底：段没跑起来，地图必须保持可选
             }
             finally
             {
@@ -164,11 +213,15 @@ namespace _DreamKeep.Presentation
             }
         }
 
-        private async UniTask LoadSegmentAsync(string name_)
+        private async UniTask<bool> LoadSegmentAsync(string name_)
         {
             // 加载到待激活态，先不激活段场景，避免相机闪帧。
             AsyncOperation load = SceneManager.LoadSceneAsync(name_, LoadSceneMode.Additive);
-            if (load == null) return;
+            if (load == null)
+            {
+                Debug.LogError($"[{nameof(SegmentSceneManager)}] 段场景 {name_} 不在构建列表，本段无法加载");
+                return false;
+            }
 
             load.allowSceneActivation = false;
             await UniTask.WaitUntil(() => load.progress >= 0.9f);
@@ -186,7 +239,12 @@ namespace _DreamKeep.Presentation
 
                 // 段已激活、根可访问：先记账，后面任何早退都要留得下可回收的段
                 Scene newScene = SceneManager.GetSceneByName(name_);
-                if (!newScene.IsValid()) return;
+                if (!newScene.IsValid())
+                {
+                    Debug.LogError($"[{nameof(SegmentSceneManager)}] 段场景 {name_} 激活后取不到句柄，本段无法收尾");
+                    return false;
+                }
+
                 _currentSegment = newScene;
 
                 // 关掉段内自带相机 / EventSystem / AudioListener（组件级，资产仍保留供编辑查看）
@@ -208,7 +266,11 @@ namespace _DreamKeep.Presentation
                     }
                 }
 
-                if (segmentScope == null) return;
+                if (segmentScope == null)
+                {
+                    Debug.LogError($"[{nameof(SegmentSceneManager)}] 段场景 {name_} 里没有 LifetimeScope，本段不会构建");
+                    return false;
+                }
 
                 // 段内画布先补常驻相机（必须在 Build 之前：注入与卡池实例生成都在 Build 内、且会缓存 canvas.worldCamera，
                 // 挪前才能保证 BattleTargetDirector / UI_HandView / UI_HoverOffset 读到常驻相机，根治卡不跟手与箭头冻结）
@@ -222,6 +284,7 @@ namespace _DreamKeep.Presentation
 
                 // 进入段场景后，整局顶栏才显示
                 if (_topBar) _topBar.gameObject.SetActive(true);
+                return true;
             }
             finally
             {

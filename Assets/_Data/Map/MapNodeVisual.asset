@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88a48ce5a2105674d987608e38167bb9, type: 3}
+  m_Name: MapNodeVisual
+  m_EditorClassIdentifier: 
+  _entries:
+  - _type: 1
+    _icon: {fileID: 21300000, guid: 63432b83dce6bbc4388c449a06e90c2a, type: 3}
+    _outline: {fileID: 21300000, guid: b80472f5b34a6294c8aa52d5eb259267, type: 3}
+  - _type: 2
+    _icon: {fileID: 21300000, guid: 77946416575caf140b313cb607ffdb2b, type: 3}
+    _outline: {fileID: 21300000, guid: 097218d55df36c84093db5a4c872665b, type: 3}
+  - _type: 3
+    _icon: {fileID: 21300000, guid: ee59239bcae92db40b90b88233621a13, type: 3}
+    _outline: {fileID: 21300000, guid: c2cb2f305564e334db98c3b3a7b89965, type: 3}
+  - _type: 4
+    _icon: {fileID: 21300000, guid: acc8a171b86a6d546903661d4b8fc35f, type: 3}
+    _outline: {fileID: 21300000, guid: 50e5e7ea60b192d47bf169a20ca0c0cd, type: 3}
+  - _type: 5
+    _icon: {fileID: 21300000, guid: 61ae5769a876aba4fbb4c79e5d5e11c1, type: 3}
+    _outline: {fileID: 21300000, guid: d9c25113a88828d4e99f030fd706c919, type: 3}
+  - _type: 6
+    _icon: {fileID: 21300000, guid: 0a5082efcbdb1614790bbd65c24e03fb, type: 3}
+    _outline: {fileID: 21300000, guid: b6991cdd801008a49940841066dfa9a5, type: 3}
+  - _type: 7
+    _icon: {fileID: 21300000, guid: 92db6b6de100267448d1df1dd1309f88, type: 3}
+    _outline: {fileID: 21300000, guid: 81703b0798e19444a8d337b637cb0130, type: 3}
+  - _type: 8
+    _icon: {fileID: 21300000, guid: 02d74f662e8451d42a2843300bd56394, type: 3}
+    _outline: {fileID: 21300000, guid: ab702e71b423f814eb72fc7050c14b52, type: 3}
+  _unknownVariants:
+  - _type: 2
+    _icon: {fileID: 21300000, guid: 5b48b27103d1b194886c2d4623e2c929, type: 3}
+    _outline: {fileID: 21300000, guid: e4578e3c7e956db46a48ef2bc87f1764, type: 3}
+  - _type: 3
+    _icon: {fileID: 21300000, guid: babd770f695097643ac00714aa510564, type: 3}
+    _outline: {fileID: 21300000, guid: 9b042dd5d8cedf84b9f2578394f05e8b, type: 3}
+  - _type: 4
+    _icon: {fileID: 21300000, guid: d20a9051ce9978a42b34e36b22480670, type: 3}
+    _outline: {fileID: 21300000, guid: bafd80244f6649e4686adf7e74e96437, type: 3}
+  - _type: 6
+    _icon: {fileID: 21300000, guid: 4b3f067e029faab488ae640f80a8f131, type: 3}
+    _outline: {fileID: 21300000, guid: 75eb08c335079f245a190f25013bc8cd, type: 3}

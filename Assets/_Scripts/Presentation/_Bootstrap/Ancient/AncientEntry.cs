@@ -48,6 +48,7 @@ namespace _DreamKeep.Presentation
             if (_session.Choices.Count == 0)
             {
                 Debug.LogError($"[{nameof(AncientEntry)}] 遗物池没有可用候选，本段直接收尾");
+                _run.CompleteMapNode(); // 兜底解除段挂起并幂等标记通过（起点在图构造时已预置已通过），保证池空也能正常收尾开图
                 _segmentManager.CompleteSegment();
                 return;
             }
@@ -87,13 +88,15 @@ namespace _DreamKeep.Presentation
                     Debug.LogError($"[{nameof(AncientEntry)}] {relic.name} 的拾起时结算异常：{e}");
                 }
 
+                _run.CompleteMapNode(); // 遗物领取完成即通过（起点开局已预置，幂等）
                 break;
             }
 
             _segmentManager.CompleteSegment();
         }
 
-        // 拾起时结算：一次性效果的唯一落点，按资产类型分派（与 RelicBaker 里的 null 豁免成对）
+        // 拾起时结算：一次性效果的唯一落点，按资产类型分派（与 RelicBaker 里的 null 豁免成对）；
+        // 扣血代价的置灰已在选项上挡了一道，真选中时仍保底留 1 绝不致死（口径收在 RunState.SpendPlayerHp）
         private async UniTask ResolvePickupAsync(SO_Relic relic_)
         {
             switch (relic_)
@@ -105,11 +108,11 @@ namespace _DreamKeep.Presentation
                     _run.Player.Creature.RaiseMaxHp(oyster.MaxHpGain);
                     break;
                 case SO_Pomander pomander:
-                    SpendHp(relic_.PickupHpCost);
+                    _run.SpendPlayerHp(relic_.PickupHpCost);
                     await PickCardsAsync(_upgradePanel, pomander.CardCount);
                     break;
                 case SO_PrecariousShears shears:
-                    SpendHp(relic_.PickupHpCost);
+                    _run.SpendPlayerHp(relic_.PickupHpCost);
                     await PickCardsAsync(_removePanel, shears.CardCount);
                     break;
                 case SO_ArcaneScroll scroll:
@@ -122,14 +125,6 @@ namespace _DreamKeep.Presentation
                     Debug.LogError($"[{nameof(AncientEntry)}] {relic_.name} 的拾起时效果未登记");
                     break;
             }
-        }
-
-        // 拾取代价扣血：置灰已在选项上挡了一道，真选中时仍保底留 1 点，绝不致死
-        private void SpendHp(int cost_)
-        {
-            if (cost_ <= 0) return;
-            Creature creature = _run.Player.Creature;
-            creature.CurrentHp = Mathf.Max(1, creature.CurrentHp - cost_);
         }
 
         // 强制选牌：Show 内部的清场会把取消许可复位，故 Show 之后再关掉；万一仍返回取消就重弹，玩家不能空手离场

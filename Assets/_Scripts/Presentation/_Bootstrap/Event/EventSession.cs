@@ -45,6 +45,7 @@ namespace _DreamKeep.Presentation
 
             EventOptionData chosen = await ChooseOptionAsync(config);
             _panel.ShowResult(chosen.ResultText);
+            _run.CompleteMapNode(); // 结果页弹出即通过，不等玩家点「继续」
 
             _options.Show(Array.Empty<EventOptionViewModel>(), true);
         }
@@ -64,9 +65,9 @@ namespace _DreamKeep.Presentation
                 int goldSnapshot = _run.Gold;
                 if (!await RunEffectsAsync(option.Effects)) return option;
 
-                // 玩家在自选面板取消了：写回血量与金币快照，重开第 1 页选项（删牌面板取消时未动牌组，无需回滚）
-                _run.Player.Creature.CurrentHp = hpSnapshot;
-                _run.Gold = goldSnapshot;
+                // 玩家在自选面板取消了：回滚血量与金币快照，重开第 1 页选项（删牌面板取消时未动牌组，无需回滚）
+                _run.RestorePlayerHpTo(hpSnapshot);
+                _run.RestoreGoldTo(goldSnapshot);
             }
         }
 
@@ -150,10 +151,10 @@ namespace _DreamKeep.Presentation
                 $"{effect_.GetType().Name} 未登记：漏登记会让该效果点了没反应"),
         };
 
-        // 支出金币：金额不足已由选项条件置灰兜住，这里仍钳到不为负（配置失误时与条件口径一致）
+        // 支出金币：金额不足已由选项条件置灰兜住，钳到不为负的口径收在 RunState.SpendGold
         private UniTask<bool> SpendGold(EED_SpendGold effect_)
         {
-            _run.Gold = Mathf.Max(0, _run.Gold - effect_.Amount);
+            _run.SpendGold(effect_.Amount);
             return UniTask.FromResult(false);
         }
 
@@ -164,19 +165,17 @@ namespace _DreamKeep.Presentation
             return UniTask.FromResult(false);
         }
 
-        // 失去生命：当前生命严格大于扣血值才可选（HpAbove），这里仍保底留 1 点，绝不致死（对齐先古拾取代价口径）
+        // 失去生命：当前生命严格大于扣血值才可选（HpAbove）；保底留 1 绝不致死的口径收在 RunState.SpendPlayerHp（对齐先古拾取代价口径）
         private UniTask<bool> LoseHp(EED_LoseHp effect_)
         {
-            Creature creature = _run.Player.Creature;
-            creature.CurrentHp = Mathf.Max(1, creature.CurrentHp - effect_.Amount);
+            _run.SpendPlayerHp(effect_.Amount);
             return UniTask.FromResult(false);
         }
 
-        // 恢复生命：钳到上限，满血时白选（选项永远可选的保底出口）
+        // 恢复生命：钳到上限（收在 RunState.RestorePlayerHp），满血时白选（选项永远可选的保底出口）
         private UniTask<bool> RestoreHp(EED_RestoreHp effect_)
         {
-            Creature creature = _run.Player.Creature;
-            creature.CurrentHp = Mathf.Min(creature.CurrentHp + effect_.Amount, creature.MaxHp);
+            _run.RestorePlayerHp(effect_.Amount);
             return UniTask.FromResult(false);
         }
 

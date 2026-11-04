@@ -25,24 +25,27 @@ namespace _DreamKeep.Presentation
         [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")]
         [SerializeField] private RectTransform _rewardPanelParent;
 
-        [Header("临时：地图落地后删除")]
-        [Tooltip("0 表示跟随整局层数，大于 0 时覆盖（用于本地验证强怪池）")]
-        [SerializeField] private int _floor;
-        [SerializeField] private EEncounterKind _encounterKind;
-
         protected override void Configure(IContainerBuilder builder_)
         {
             RunState run = Parent.Container.Resolve<RunState>();
             // 段会话句柄住整局容器：本段把自己的门面写进去，常驻 UI 据此响应或静默
             BattleSession session = Parent.Container.Resolve<BattleSession>();
-            int floor = _floor > 0 ? _floor : run.Floor;
+            int floor = run.Floor;
+
+            // 遭遇种类由地图节点决定：问号节点取揭示结果（揭示为精英就得进精英遭遇），其余只会是 Monster/Elite/Boss
+            EEncounterKind kind = run.Map.CurrentNode.ResolvedType switch
+            {
+                EMapPointType.Elite => EEncounterKind.Elite,
+                EMapPointType.Boss => EEncounterKind.Boss,
+                _ => EEncounterKind.Normal, // 开发面板等旁路直开 Scene_Battle 时当前节点仍是起点：按普通遭遇兜底
+            };
 
             // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
-            IReadOnlyList<SO_Encounter> encounters = _monsterPool.Select(_encounterKind, floor);
+            IReadOnlyList<SO_Encounter> encounters = _monsterPool.Select(kind, floor);
             SO_Encounter encounter = run.Rng.Pick(encounters);
             if (encounter == null)
                 throw new InvalidOperationException(
-                    $"第 {floor} 层的 {_encounterKind} 遭遇池为空（{nameof(SO_MonsterPool)} 未配置该档）");
+                    $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_MonsterPool)} 未配置该档）");
 
             BattleContext battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
 
@@ -57,7 +60,7 @@ namespace _DreamKeep.Presentation
                 RelicBaker.Bake(relic, battleContext, loop.ActionSystem, dispatcher, relicNotifier);
 
             // 背景抽取放在洗牌之后：它同样消耗整局随机流，放在洗牌前会让牌序跟着背景变化而偏移
-            SO_Background background = run.Rng.Pick(_backgroundPool.Select(_encounterKind));
+            SO_Background background = run.Rng.Pick(_backgroundPool.Select(kind));
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）

@@ -2802,9 +2802,9 @@ MonoBehaviour:
   _closeButton: {fileID: 341892652}
   _merchantHand: {fileID: 229809693}
   _concreteView: {fileID: 1042266601}
-  _openDropPx: 300
+  _openDropPx: 1500
   _openDuration: 0.5
-  _closeDuration: 0.4
+  _closeDuration: 0.5
 --- !u!1 &1496980545
 GameObject:
   m_ObjectHideFlags: 0

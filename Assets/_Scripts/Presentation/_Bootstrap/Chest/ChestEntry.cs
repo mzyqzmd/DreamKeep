@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer.Unity;
+using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
@@ -12,13 +13,16 @@ namespace _DreamKeep.Presentation
         private readonly UI_Chest _chest;
         private readonly UI_RelicSelectPanel _panel;
         private readonly UI_ChestProceedButton _proceedButton;
+        private readonly RunState _run;
 
-        public ChestEntry(ChestSession session_, UI_Chest chest_, UI_RelicSelectPanel panel_, UI_ChestProceedButton proceedButton_)
+        public ChestEntry(ChestSession session_, UI_Chest chest_, UI_RelicSelectPanel panel_, UI_ChestProceedButton proceedButton_,
+            RunState run_)
         {
             _session = session_;
             _chest = chest_;
             _panel = panel_;
             _proceedButton = proceedButton_;
+            _run = run_;
         }
 
         public void Start() => PlayAsync().Forget();
@@ -35,6 +39,7 @@ namespace _DreamKeep.Presentation
                 Debug.LogError($"[{nameof(ChestEntry)}] 遗物入列失败，已重开点选");
             }
 
+            _run.CompleteMapNode(); // 遗物领到手即通过，不等玩家点「继续」
             await _chest.PlayShineFadeAndLockAsync(); // 宝箱闪光并锁定交互
             _proceedButton.Show();
             await _proceedButton.WaitProceedAsync(); // 只等首次点击收束流程，收段开地图由按钮每次点击触发

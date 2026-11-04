@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _weak:
   - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
-  _strong: []
-  _elite: []
-  _boss: []
+  _strong:
+  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
+  _elite:
+  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
+  _boss:
+  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}

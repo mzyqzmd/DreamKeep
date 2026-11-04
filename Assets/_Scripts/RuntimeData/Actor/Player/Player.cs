@@ -110,9 +110,13 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        #region 战斗结束：清空战斗态，局内卡组不受影响
+        #region 战斗结束：清空战斗态与身上状态，局内卡组不受影响
 
-        public void EndCombat() => CombatState = null;
+        public void EndCombat()
+        {
+            Creature.ClearPerks(); // 状态只在本场有效：不清会被带进下一场
+            CombatState = null;
+        }
 
         #endregion
 

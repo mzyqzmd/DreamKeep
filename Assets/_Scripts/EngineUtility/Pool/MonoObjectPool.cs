@@ -71,13 +71,13 @@ namespace _DreamKeep.EngineUtility
             // 归还即出表：重复归还下一次自然查不到
             Stack<T> idle = IdleOf(prefab_);
             _onReturn?.Invoke(instance_); // 复位先于失活：失活会触发组件自己的 OnDisable 兜底，复位动作要在它之前
+            instance_.gameObject.SetActive(false); // 统一先失活：桶满销毁延迟到帧末，销毁窗口内不得再表现为激活子节点
             if (idle.Count >= _maxSize)
             {
                 UnityEngine.Object.Destroy(instance_.gameObject);
                 return;
             }
 
-            instance_.gameObject.SetActive(false);
             idle.Push(instance_);
         }
 

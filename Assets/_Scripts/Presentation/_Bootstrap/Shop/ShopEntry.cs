@@ -61,6 +61,7 @@ namespace _DreamKeep.Presentation
         {
             if (_rug.gameObject.activeSelf) return;
             _rug.PlayOpenAsync().Forget();
+            _run.CompleteMapNode(); // 首次掀开摊子即通过（幂等），不等玩家点「继续」
             if (_proceedShown) return;
             _proceedShown = true;
             _proceedButton.Show();

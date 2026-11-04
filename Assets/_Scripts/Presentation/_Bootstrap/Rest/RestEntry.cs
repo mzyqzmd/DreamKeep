@@ -79,25 +79,29 @@ namespace _DreamKeep.Presentation
                 if (chosen is SO_RestOption_Heal heal)
                 {
                     await RestAsync(creature, heal);
+                    _run.CompleteMapNode(); // 回血到账即通过，不等烟雾演出播完
                     break;
                 }
 
                 if (chosen is SO_RestOption_Forge)
                 {
-                    if (await ForgeAsync()) break;
-                    continue; // 锻造取消：回到选项重选
+                    if (!await ForgeAsync()) continue; // 锻造取消：回到选项重选
+                    _run.CompleteMapNode(); // 升级已确认（不可撤销）即通过
+                    break;
                 }
 
                 if (chosen is SO_RestOption_Cook)
                 {
-                    if (await CookAsync(cleaver)) break;
-                    continue; // 烹饪取消：回到选项重选
+                    if (!await CookAsync(cleaver)) continue; // 烹饪取消：回到选项重选
+                    _run.CompleteMapNode(); // 牌已移除、上限已加即通过
+                    break;
                 }
 
                 // 挖掘（组合根白名单保证只剩这一种类型）：点进来即说明候选非空；
                 // 先领取（同步触发 RelicAdded 补遗物栏槽位）再播涟漪，槽位才找得到
                 SO_Relic dug = _run.Rng.TakeShuffled(digCandidates, 1)[0];
                 _run.Player.AddRelic(dug);
+                _run.CompleteMapNode(); // 遗物到手即通过，不等涟漪播完
                 _notifier.NotifyTriggered(dug); // 仅播涟漪，不触发遗物效果（效果只在 RelicEffect.PerformAsync 里跑）
                 break;
             }
@@ -177,12 +181,13 @@ namespace _DreamKeep.Presentation
         }
 
 
-        // 休息：烟雾播完按配置比例回复生命（向上取整，钳到上限）
+        // 休息：先按配置比例回复生命（向上取整；钳上限的口径收在 RunState.RestorePlayerHp）再播烟雾，
+        // 演出只是装饰——中途开图/切段也不会把回血丢掉
         private async UniTask RestAsync(Creature creature_, SO_RestOption_Heal heal_)
         {
-            await _vfxRoot.PlayRestSmokeAsync();
             int amount = Mathf.CeilToInt(creature_.MaxHp * heal_.HealMaxHpRatio);
-            creature_.CurrentHp = Mathf.Min(creature_.MaxHp, creature_.CurrentHp + amount);
+            _run.RestorePlayerHp(amount);
+            await _vfxRoot.PlayRestSmokeAsync();
         }
 
         /// <summary>锻造：休息段一次只升一张，其余（选卡、预览、升级、锤击与关板）全归面板自己管；

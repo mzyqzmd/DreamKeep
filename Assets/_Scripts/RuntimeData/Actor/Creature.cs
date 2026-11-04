@@ -70,6 +70,9 @@ namespace _DreamKeep.RuntimeData
             return mounted;
         }
 
+        /// <summary>清空身上全部状态：战斗收尾调用，perk 只在本场有效，不带进下一场。</summary>
+        public void ClearPerks() => _perks.Clear();
+
         #endregion
 
         #region 回合边界：结算指定时机的状态层数（递减一层），归零项移除并逐个带回，供动作侧发移除事件

@@ -55,7 +55,7 @@ namespace _DreamKeep.Presentation
             _run.GoldChanged += OnGoldChanged;
             _run.FloorChanged += OnFloorChanged;
 
-            if (_mapPanel) _mapPanel.Hide(); // 地图由按钮或战后流程打开，装配时一律收起
+            if (_mapPanel) _mapPanel.HideImmediate(); // 装配时立即收起，不起收起动画、不留透明激活层
             WireButtons();
 
             // 计时起点 = run 装配完成这一刻；停表钩子待存档系统落地后接入
@@ -139,20 +139,31 @@ namespace _DreamKeep.Presentation
         /// <summary>收起地图面板：段加载器在选定下一个节点、装载新段前调用，避免遮罩盖住新段。</summary>
         public void CloseMap()
         {
-            if (_mapPanel) _mapPanel.Hide();
+            // 切段必须立即收图：开图动画期间选点时 Hide 会被 _switching 吞掉，透明遮罩会盖住新段并吃掉点击
+            if (_mapPanel) _mapPanel.HideImmediate();
         }
 
         private void ToggleMap()
         {
-            if (_mapPanel) _mapPanel.Toggle();
-            else Debug.Log("地图面板未接线");
+            if (_mapPanel == null)
+            {
+                Debug.Log("地图面板未接线");
+                return;
+            }
+            if (_deckPanel && _deckPanel.gameObject.activeSelf) _deckPanel.Hide(); // 面板互斥：开图关卡组
+            _mapPanel.Toggle();
         }
 
-        // 卡组面板开关：与地图同款 Toggle；面板尚未摆进场景时引用为空，点击仅作空监听
+        // 卡组面板开关：与地图互斥（开组关图）；面板尚未摆进场景时引用为空，点击仅作空监听
         private void ToggleDeck()
         {
-            if (_deckPanel) _deckPanel.Toggle();
-            else Debug.Log("卡组面板未接线");
+            if (_deckPanel == null)
+            {
+                Debug.Log("卡组面板未接线");
+                return;
+            }
+            if (_mapPanel && _mapPanel.gameObject.activeSelf) _mapPanel.Hide();
+            _deckPanel.Toggle();
         }
 
         // 菜单仍是占位：面板尚未摆进场景时引用为空，点击仅作空监听

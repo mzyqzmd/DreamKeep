@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -13,10 +14,12 @@ namespace _DreamKeep.Presentation
     {
         [SerializeField] private SO_Player _playerConfig;
         [SerializeField] private int _seed = 12345;
+        [SerializeField] private SO_MapGenerationConfig _mapConfig;
 
         protected override void Configure(IContainerBuilder builder_)
         {
-            builder_.RegisterInstance(new RunState(_playerConfig, _seed));
+            if (!_mapConfig) throw new InvalidOperationException("RunLifetimeScope._mapConfig 未接线，无法生成整局地图");
+            builder_.RegisterInstance(new RunState(_playerConfig, _seed, _mapConfig));
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
@@ -31,6 +34,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
             builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
             builder_.RegisterComponentInHierarchy<UI_DeckPanel>(); // 卡组查看：整副局内卡组的陈列，跑图/战斗段都随顶栏开关
+            builder_.RegisterComponentInHierarchy<UI_MapView>(); // 地图编排器：装配时从 RunState 拿整章图一次性建视图
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
