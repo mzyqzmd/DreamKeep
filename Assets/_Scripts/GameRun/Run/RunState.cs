@@ -150,7 +150,6 @@ namespace _DreamKeep.GameRun
             AddToPool(EMapPointType.Monster, MapConfig.RevealMonster);
             AddToPool(EMapPointType.Elite, MapConfig.RevealElite);
             AddToPool(EMapPointType.Shop, MapConfig.RevealShop);
-            AddToPool(EMapPointType.Rest, MapConfig.RevealRest);
             AddToPool(EMapPointType.Treasure, MapConfig.RevealTreasure);
             AddToPool(EMapPointType.Event, MapConfig.RevealEvent);
             return pool.Count == 0 ? EMapPointType.Monster : Rng.Pick(pool);

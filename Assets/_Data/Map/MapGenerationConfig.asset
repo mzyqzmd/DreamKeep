@@ -30,6 +30,6 @@ MonoBehaviour:
   _revealMonster: 25
   _revealElite: 15
   _revealShop: 15
-  _revealRest: 5
-  _revealTreasure: 15
-  _revealEvent: 25
+  _revealRest: 0
+  _revealTreasure: 10
+  _revealEvent: 35

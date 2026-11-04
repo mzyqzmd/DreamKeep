@@ -1,4 +1,4 @@
-namespace _DreamKeep.ConfigData
+namespace _DreamKeep.GameRun
 {
     /// <summary>类型配额：固定语义行之外，各随机类型在本章的目标数量，由生成配置掷高斯得出。</summary>
     public class MapPointTypeCounts

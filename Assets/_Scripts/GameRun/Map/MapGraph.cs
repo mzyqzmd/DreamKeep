@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.GameRun
 {

@@ -1,4 +1,4 @@
-namespace _DreamKeep.ConfigData
+namespace _DreamKeep.GameRun
 {
     /// <summary>节点可达性四态（同文档 MapPointState）：仅供 UI 展示，不参与生成。</summary>
     public enum EMapNodeState

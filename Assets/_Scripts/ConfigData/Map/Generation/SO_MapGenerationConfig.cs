@@ -51,8 +51,6 @@ namespace _DreamKeep.ConfigData
 
         [Tooltip("揭示为商店的权重")] [SerializeField] private int _revealShop = 10;
 
-        [Tooltip("揭示为休息的权重")] [SerializeField] private int _revealRest = 10;
-
         [Tooltip("揭示为宝箱的权重")] [SerializeField] private int _revealTreasure = 10;
 
         [Tooltip("揭示为事件的权重")] [SerializeField] private int _revealEvent = 15;
@@ -75,7 +73,6 @@ namespace _DreamKeep.ConfigData
         public int RevealMonster => _revealMonster;
         public int RevealElite => _revealElite;
         public int RevealShop => _revealShop;
-        public int RevealRest => _revealRest;
         public int RevealTreasure => _revealTreasure;
         public int RevealEvent => _revealEvent;
     }

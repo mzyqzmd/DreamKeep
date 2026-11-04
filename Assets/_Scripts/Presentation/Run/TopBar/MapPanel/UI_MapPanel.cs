@@ -20,7 +20,6 @@ namespace _DreamKeep.Presentation
         private Tween _slideTween;
         private UI_MapView _view;
         private bool _refsReady;
-        private bool _switching;
         private bool _opening;
         private bool _closing;
         private float _switchEndsAt;
@@ -57,15 +56,14 @@ namespace _DreamKeep.Presentation
             if (_closing) gameObject.SetActive(false);
             _opening = false;
             _closing = false;
-            _switching = false;
         }
 
         /// <summary>打开：视图从上方一整屏滑入停靠位；开合动画进行中忽略。</summary>
         public void Show()
         {
             EnsureRefs();
-            if (_switching) return;
-            _switching = _opening = true;
+            if (_opening || _closing) return;
+            _opening = true;
             _closing = false;
             _switchEndsAt = Time.unscaledTime + _slideDuration + 0.02f;
             gameObject.SetActive(true);
@@ -82,8 +80,8 @@ namespace _DreamKeep.Presentation
         public void Hide()
         {
             if (!gameObject.activeSelf) return; // 已收起：不起动画（inactive 下 Update 不跑，开合标志会锁死）
-            if (_switching) return;
-            _switching = _closing = true;
+            if (_opening || _closing) return;
+            _closing = true;
             _opening = false;
             _switchEndsAt = Time.unscaledTime + _slideDuration + 0.02f;
 
@@ -99,7 +97,7 @@ namespace _DreamKeep.Presentation
             EnsureRefs();
             _slideTween?.Kill();
             _slideTween = null;
-            _switching = _opening = _closing = false;
+            _opening = _closing = false;
             _mapView.anchoredPosition = _restPosition;
             gameObject.SetActive(false);
         }
