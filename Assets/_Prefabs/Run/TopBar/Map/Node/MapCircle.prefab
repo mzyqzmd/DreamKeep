@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _frame: {fileID: 8217175806600290610}
   _animator: {fileID: 8325486224760615077}
-  _sizePadding: 1.05
+  _sizePadding: 1.1
 --- !u!95 &8325486224760615077
 Animator:
   serializedVersion: 5

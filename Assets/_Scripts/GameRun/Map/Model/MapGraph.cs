@@ -14,7 +14,7 @@ namespace _DreamKeep.GameRun
         public MapNode CurrentNode { get; private set; }
 
         private readonly MapNode[,] _grid;
-        private readonly HashSet<MapNode> _cleared = new HashSet<MapNode>();
+        private readonly HashSet<MapNode> _cleared = new();
 
         public MapGraph(int width_, int rows_, MapNode[,] grid_, MapNode startNode_, MapNode bossNode_)
         {
@@ -69,9 +69,9 @@ namespace _DreamKeep.GameRun
         private void RecalculateTravelability()
         {
             for (int col = 0; col < Width; col++)
-                for (int row = 0; row < Rows; row++)
-                    if (_grid[col, row] != null)
-                        _grid[col, row].State = StateOf(_grid[col, row]);
+            for (int row = 0; row < Rows; row++)
+                if (_grid[col, row] != null)
+                    _grid[col, row].State = StateOf(_grid[col, row]);
 
             if (BossNode != null) BossNode.State = StateOf(BossNode);
 

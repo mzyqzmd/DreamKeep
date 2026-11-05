@@ -155,18 +155,10 @@ namespace _DreamKeep.Presentation
             _run.Player.AddCard(CardModelBaker.Bake(_run.Rng.Pick(candidates)).ToMutable());
         }
 
-        // 随机遗物：多池合并等权抽一件，跳过已持有与断引用
+        // 随机遗物：多池合并等权抽一件（RelicRoller 收集口径）
         private void AddRandomRelic(IReadOnlyList<SO_RelicPool> pools_)
         {
-            List<SO_Relic> candidates = new();
-            for (int p = 0; p < pools_.Count; p++)
-            {
-                if (pools_[p] == null) continue;
-                IReadOnlyList<SO_Relic> relics = pools_[p].Relics;
-                for (int i = 0; i < relics.Count; i++)
-                    if (relics[i] != null && !_run.Player.HasRelic(relics[i])) candidates.Add(relics[i]);
-            }
-
+            List<SO_Relic> candidates = RelicRoller.CollectCandidates(_run.Player, pools_);
             if (candidates.Count == 0)
             {
                 Debug.LogError($"[{nameof(AncientEntry)}] 随机遗物没有可发放的候选（池空或已全部持有）");

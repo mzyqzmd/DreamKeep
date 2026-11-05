@@ -15,7 +15,7 @@ namespace _DreamKeep.GameRun
         /// <summary>生成一张整章地图；固定语义行（首行怪 / Boss 前休整 / 倒数第 7 行宝藏）与配额合法性都照文档执行。</summary>
         public static MapGraph Generate(SO_MapGenerationConfig config_, Rng rng_)
         {
-            if (config_ == null) throw new ArgumentNullException(nameof(config_));
+            if (!config_) throw new ArgumentNullException(nameof(config_));
             if (rng_ == null) throw new ArgumentNullException(nameof(rng_));
 
             int width = config_.MapWidth;
@@ -73,7 +73,6 @@ namespace _DreamKeep.GameRun
         private static int NextColumn(MapNode[,] grid_, MapNode node_, int width_, Rng rng_)
         {
             int col = node_.Coord.Col;
-            int row = node_.Coord.Row;
             List<int> candidates = new List<int>(3) { col - 1, col, col + 1 };
             Shuffle(candidates, rng_);
             foreach (int candidate in candidates)

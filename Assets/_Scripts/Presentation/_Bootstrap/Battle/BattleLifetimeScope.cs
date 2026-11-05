@@ -19,7 +19,7 @@ namespace _DreamKeep.Presentation
     /// [Inject] 只给"容器造不了它"的对象（场景 / 层级组件、容器外的预制体）；纯 C# 类一律构造函数注入、不加标记。</summary>
     public class BattleLifetimeScope : LifetimeScope
     {
-        [SerializeField] private SO_MonsterPool _monsterPool;
+        [SerializeField] private SO_EncounterPool encounterPool;
         [SerializeField] private SO_BackgroundPool _backgroundPool;
 
         [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")]
@@ -41,11 +41,11 @@ namespace _DreamKeep.Presentation
             };
 
             // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
-            IReadOnlyList<SO_Encounter> encounters = _monsterPool.Select(kind, floor);
+            IReadOnlyList<SO_Encounter> encounters = encounterPool.Select(kind, floor);
             SO_Encounter encounter = run.Rng.Pick(encounters);
             if (encounter == null)
                 throw new InvalidOperationException(
-                    $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_MonsterPool)} 未配置该档）");
+                    $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_EncounterPool)} 未配置该档）");
 
             BattleContext battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
 

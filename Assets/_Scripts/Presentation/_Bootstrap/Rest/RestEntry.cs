@@ -76,21 +76,21 @@ namespace _DreamKeep.Presentation
 
                 // 选项序与 BuildOptions 一致（配置列表顺序）；置灰选项吞点击（基类 Enabled 接管），故 choice 只会落在可用项上
                 SO_RestOption chosen = shown[choice];
-                if (chosen is SO_RestOption_Heal heal)
+                if (chosen is SO_HealRestOption heal)
                 {
                     await RestAsync(creature, heal);
                     _run.CompleteMapNode(); // 回血到账即通过，不等烟雾演出播完
                     break;
                 }
 
-                if (chosen is SO_RestOption_Forge)
+                if (chosen is SO_ForgeRestOption)
                 {
                     if (!await ForgeAsync()) continue; // 锻造取消：回到选项重选
                     _run.CompleteMapNode(); // 升级已确认（不可撤销）即通过
                     break;
                 }
 
-                if (chosen is SO_RestOption_Cook)
+                if (chosen is SO_CookRestOption)
                 {
                     if (!await CookAsync(cleaver)) continue; // 烹饪取消：回到选项重选
                     _run.CompleteMapNode(); // 牌已移除、上限已加即通过
@@ -99,7 +99,7 @@ namespace _DreamKeep.Presentation
 
                 // 挖掘（组合根白名单保证只剩这一种类型）：点进来即说明候选非空；
                 // 先领取（同步触发 RelicAdded 补遗物栏槽位）再播涟漪，槽位才找得到
-                SO_Relic dug = _run.Rng.TakeShuffled(digCandidates, 1)[0];
+                SO_Relic dug = _run.Rng.Pick(digCandidates);
                 _run.Player.AddRelic(dug);
                 _run.CompleteMapNode(); // 遗物到手即通过，不等涟漪播完
                 _notifier.NotifyTriggered(dug); // 仅播涟漪，不触发遗物效果（效果只在 RelicEffect.PerformAsync 里跑）
@@ -116,7 +116,7 @@ namespace _DreamKeep.Presentation
         private void OnProceedButtonClicked() => _segmentManager.CompleteSegment();
 
         /// <summary>按配置列表组装选项：持有切肉刀/铲子才放行烹饪/挖掘；同时算好挖掘候选
-        /// （Common+Rare 合并过滤已持有，照 AncientSession.RollChoices 口径）。
+        /// （Common+Rare 合并过滤已持有，RelicRoller 收集口径）。
         /// 返回与 options_ 平行的配置列表，点选后按它分派结算。</summary>
         private List<SO_RestOption> BuildOptions(SO_MeatCleaver cleaver_, List<SO_Relic> digCandidates_, out RestOption[] options_)
         {
@@ -127,23 +127,23 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _restOptions.Count; i++)
             {
                 SO_RestOption option = _restOptions[i];
-                if (option is SO_RestOption_Cook && cleaver_ == null) continue;
-                if (option is SO_RestOption_Dig && !hasShovel) continue;
+                if (option is SO_CookRestOption && cleaver_ == null) continue;
+                if (option is SO_DigRestOption && !hasShovel) continue;
 
                 bool enabled;
                 string dynamicText;
-                if (option is SO_RestOption_Heal heal)
+                if (option is SO_HealRestOption heal)
                 {
                     int amount = Mathf.CeilToInt(_run.Player.Creature.MaxHp * heal.HealMaxHpRatio);
                     enabled = true;
                     dynamicText = $"回复 <color=green>{Mathf.RoundToInt(heal.HealMaxHpRatio * 100f)}</color>% 生命值（{amount}）";
                 }
-                else if (option is SO_RestOption_Forge)
+                else if (option is SO_ForgeRestOption)
                 {
                     enabled = _run.Player.Deck.Cards.Any(static c => c.CanUpgrade);
                     dynamicText = null; // 说明只有静态文本
                 }
-                else if (option is SO_RestOption_Cook)
+                else if (option is SO_CookRestOption)
                 {
                     enabled = _run.Player.Deck.Count >= cleaver_.RemoveCards;
                     dynamicText = $"删除 <color=yellow>{cleaver_.RemoveCards}</color> 张牌，<br>并提高 <color=green>{cleaver_.HpGain}</color> 点最大生命值";
@@ -163,27 +163,14 @@ namespace _DreamKeep.Presentation
             return configs;
         }
 
-        // 合并两池并跳过已持有与断引用的项；无铲子时也算（结果只影响置灰态，不影响选项出现）
-        private List<SO_Relic> CollectDigCandidates()
-        {
-            List<SO_Relic> candidates = new();
-            AddUnowned(_commonPool);
-            AddUnowned(_rarePool);
-            return candidates;
-
-            void AddUnowned(SO_RelicPool pool_)
-            {
-                if (pool_ == null) return;
-                foreach (SO_Relic relic in pool_.Relics)
-                    if (relic != null && !_run.Player.HasRelic(relic))
-                        candidates.Add(relic);
-            }
-        }
+        // 合并两池候选（RelicRoller 收集口径）；无铲子时也算（结果只影响置灰态，不影响选项出现）
+        private List<SO_Relic> CollectDigCandidates() =>
+            RelicRoller.CollectCandidates(_run.Player, new[] { _commonPool, _rarePool });
 
 
         // 休息：先按配置比例回复生命（向上取整；钳上限的口径收在 RunState.RestorePlayerHp）再播烟雾，
         // 演出只是装饰——中途开图/切段也不会把回血丢掉
-        private async UniTask RestAsync(Creature creature_, SO_RestOption_Heal heal_)
+        private async UniTask RestAsync(Creature creature_, SO_HealRestOption heal_)
         {
             int amount = Mathf.CeilToInt(creature_.MaxHp * heal_.HealMaxHpRatio);
             _run.RestorePlayerHp(amount);

@@ -57,12 +57,12 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _restOptions.Count; i++)
                 if (!_restOptions[i]) throw new InvalidOperationException($"[{nameof(RestLifetimeScope)}] 休息选项第 {i} 项为空引用");
 
-            if (_restOptions.Any(o => o is not SO_RestOption_Heal and not SO_RestOption_Forge and not SO_RestOption_Cook and not SO_RestOption_Dig))
+            if (_restOptions.Any(o => o is not SO_HealRestOption and not SO_ForgeRestOption and not SO_CookRestOption and not SO_DigRestOption))
                 throw new InvalidOperationException($"[{nameof(RestLifetimeScope)}] 休息选项含未登记的类型，段入口不知道怎么结算");
 
-            if (run_.Player.Relics.Any(static r => r is SO_MeatCleaver) && _restOptions.All(static o => o is not SO_RestOption_Cook))
+            if (run_.Player.Relics.Any(static r => r is SO_MeatCleaver) && _restOptions.All(static o => o is not SO_CookRestOption))
                 throw new InvalidOperationException($"[{nameof(RestLifetimeScope)}] 玩家持有切肉刀，但选项列表没有烹饪");
-            if (run_.Player.Relics.Any(static r => r is SO_Shovel) && _restOptions.All(static o => o is not SO_RestOption_Dig))
+            if (run_.Player.Relics.Any(static r => r is SO_Shovel) && _restOptions.All(static o => o is not SO_DigRestOption))
                 throw new InvalidOperationException($"[{nameof(RestLifetimeScope)}] 玩家持有铲子，但选项列表没有挖掘");
         }
 

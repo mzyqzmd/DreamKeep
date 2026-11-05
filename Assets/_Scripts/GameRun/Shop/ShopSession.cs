@@ -5,7 +5,7 @@ using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.GameRun
 {
     /// <summary>商店段模型：进段时按场景固定的槽位数掷一次货架，之后回答报价、结算购买与删牌服务。
     /// 纯 C#，不认识引擎与容器；掷骰走整局唯一随机流，同种子可复现。
@@ -241,17 +241,11 @@ namespace _DreamKeep.Presentation
         {
             if (pool_ == null) return;
 
-            List<SO_Relic> candidates = new();
-            IReadOnlyList<SO_Relic> relics = pool_.Relics;
-            for (int i = 0; i < relics.Count; i++)
-            {
-                SO_Relic relic = relics[i];
-                if (relic == null || _run.Player.HasRelic(relic) || _relics.Contains(relic)) continue;
-                candidates.Add(relic);
-            }
-
+            // 附加过滤跳过已上架；等权取一件与逐个 Next 同消耗一格随机流
+            List<SO_Relic> candidates = RelicRoller.CollectCandidates(_run.Player, new[] { pool_ },
+                relic => !_relics.Contains(relic));
             if (candidates.Count == 0) return;
-            _relics.Add(candidates[rng_.Next(candidates.Count)]);
+            _relics.Add(rng_.Pick(candidates));
         }
 
         // 药水：两池合并去重后不放回抽取三瓶

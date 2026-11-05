@@ -9,13 +9,14 @@ namespace _DreamKeep.GameRun
     {
         /// <summary>网格坐标：生成期间可被布局后处理平移（同程序集），生成后只读消费。</summary>
         public MapCoord Coord { get; internal set; }
+
         public EMapPointType PointType { get; internal set; }
 
         /// <summary>固定语义行与锚点为假：生成器的类型改写与剪枝不得碰它们。</summary>
         public bool CanBeModified { get; internal set; } = true;
 
-        public List<MapNode> Parents { get; } = new List<MapNode>();
-        public List<MapNode> Children { get; } = new List<MapNode>();
+        public List<MapNode> Parents { get; } = new();
+        public List<MapNode> Children { get; } = new();
 
         public EMapNodeState State { get; internal set; } = EMapNodeState.Untravelable;
 

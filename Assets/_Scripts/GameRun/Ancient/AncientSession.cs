@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.GameRun
 {
     /// <summary>先古之民段模型：一次拜访＝随机抽一段对话、掷出三件候选遗物、守卫领取一件。
     /// 纯 C#，不认识引擎与容器；掷骰走整局随机流，同种子可复现。
@@ -55,17 +55,8 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 掷候选：收集池内有效且未持有的遗物，再局部洗牌无放回取前三（照 EncounterRewardRoller 口径）
-        private void RollChoices()
-        {
-            List<SO_Relic> candidates = new();
-            SO_RelicPool pool = _config.RelicPool;
-            if (pool != null)
-                foreach (SO_Relic relic in pool.Relics)
-                    if (relic != null && !_run.Player.HasRelic(relic))
-                        candidates.Add(relic);
-
-            _choices.AddRange(_run.Rng.TakeShuffled(candidates, ChoiceCount));
-        }
+        // 掷候选：RelicRoller 收集池内未持有遗物，再局部洗牌无放回取前三
+        private void RollChoices() =>
+            _choices.AddRange(_run.Rng.TakeShuffled(RelicRoller.CollectCandidates(_run.Player, new[] { _config.RelicPool }), ChoiceCount));
     }
 }

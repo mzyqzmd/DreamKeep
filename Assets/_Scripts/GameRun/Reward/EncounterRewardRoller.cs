@@ -63,9 +63,8 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 合并多份池成一份候选集：断引用与 keep_ 拒绝的项跳过，同引用只收一次——同一项在两份池里不会重复出现
-        private static List<T> Collect<T, TPool>(IReadOnlyList<TPool> pools_, Func<TPool, IReadOnlyList<T>> items_,
-            Func<T, bool> keep_ = null)
+        // 合并多份池成一份候选集：断引用的项跳过，同引用只收一次——同一项在两份池里不会重复出现
+        private static List<T> Collect<T, TPool>(IReadOnlyList<TPool> pools_, Func<TPool, IReadOnlyList<T>> items_)
         {
             List<T> collected = new();
             HashSet<T> seen = new();
@@ -78,7 +77,6 @@ namespace _DreamKeep.GameRun
                 {
                     T item = items[j];
                     if (item == null) continue;
-                    if (keep_ != null && !keep_(item)) continue;
                     if (seen.Add(item)) collected.Add(item);
                 }
             }
@@ -123,12 +121,11 @@ namespace _DreamKeep.GameRun
             rewards_.Add(RunReward.PotionOf(potions[rng_.Next(potions.Count)]));
         }
 
-        // 遗物：合并池后跳过已持有与断引用的项，再不放回抽取；不够件数时按实际数量发，并留一条警告
+        // 遗物：RelicRoller 合并池后跳过已持有与断引用的项，再不放回抽取；不够件数时按实际数量发，并留一条警告
         private static void RollRelics(SO_EncounterReward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.RelicCount <= 0) return;
-            List<SO_Relic> candidates = Collect(config_.RelicPools, static pool_ => pool_.Relics,
-                relic_ => !run_.Player.HasRelic(relic_));
+            List<SO_Relic> candidates = RelicRoller.CollectCandidates(run_.Player, config_.RelicPools);
             if (candidates.Count == 0)
             {
                 Debug.LogWarning($"奖励配置 {config_.name} 配了 {config_.RelicCount} 件遗物奖励，但遗物池列表没有可发的遗物，已跳过。");
