@@ -34,20 +34,16 @@ namespace _DreamKeep.Presentation
         public void Start()
         {
             _events.Register<AE_ErrorReported>(reported_ => Debug.LogError(reported_.Message));
+            // 强制选牌：交回取消由域流程重弹（cancelable=false 的时机由 helper 内部保证）
             _events.Register<AE_UpgradeCardsRequested>(requested_ =>
-                PickCardsAsync(_upgradePanel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_upgradePanel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_), cancelable_: false).Forget());
             _events.Register<AE_RemoveCardsRequested>(requested_ =>
-                PickCardsAsync(_removePanel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_), cancelable_: false).Forget());
             _events.Register<AE_AncientCompleted>(completed_ => _segmentManager.CompleteSegment());
             _loop.Start();
         }
 
-        // 强制选牌：Show 内部的清场会把取消许可复位，故 Show 之后再关掉；交回取消由域流程重弹
-        private async UniTask PickCardsAsync(UI_CardSelectPanel panel_, int count_)
-        {
-            panel_.Show(_run.Player, count_);
-            panel_.SetCancelable(false);
-            _commands.SubmitCardSelection(await panel_.WaitResultAsync());
-        }
     }
 }

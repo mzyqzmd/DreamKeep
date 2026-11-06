@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
-using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 
@@ -168,6 +167,37 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
+        #region 货架快照：表现层铺格子与重染价格的唯一数据源
+
+        /// <summary>货架快照：售出格为 null（价格记 0、半价记 false），视图按 null 收起该格。
+        /// 组装直接用内部名册与价格表，不经公开报价面反查重组。</summary>
+        public ShopShelfSnapshot BuildSnapshot()
+        {
+            return new ShopShelfSnapshot(_commonRareCards, _superRareCards, _relics, _potions,
+                PriceSnapshot(_commonRareCards, _commonRarePrices), PriceSnapshot(_superRareCards, _superRarePrices),
+                PriceSnapshot(_relics, _relicPrices), PriceSnapshot(_potions, _potionPrices),
+                SaleSnapshot(_commonRareCards, _commonRareSaleIndex), SaleSnapshot(_superRareCards, _superRareSaleIndex),
+                _run.Gold, RemovalPrice, _removalUsed);
+        }
+
+        // 价格快照：售出格价格记 0
+        private static List<int> PriceSnapshot<T>(List<T> shelf_, List<int> prices_) where T : class
+        {
+            List<int> snapshot = new(shelf_.Count);
+            for (int i = 0; i < shelf_.Count; i++) snapshot.Add(shelf_[i] == null ? 0 : prices_[i]);
+            return snapshot;
+        }
+
+        // 半价快照：售出格记 false
+        private static List<bool> SaleSnapshot(List<CardModel> shelf_, int saleIndex_)
+        {
+            List<bool> snapshot = new(shelf_.Count);
+            for (int i = 0; i < shelf_.Count; i++) snapshot.Add(shelf_[i] != null && i == saleIndex_);
+            return snapshot;
+        }
+
+        #endregion
+
         #region 删牌服务：每店一次，价格随整局已用次数递增
 
         /// <summary>能否买删牌服务：本店没用过、且买得起。买不起也允许开面板会白选一轮，故一并挡在这里。</summary>
@@ -210,23 +240,11 @@ namespace _DreamKeep.GameRun
         // 卡：多池合并去重后不放回抽取，不足按实数出；canonical 原型先烘焙，卖出时才克隆成局内卡
         private void RollCards(List<CardModel> into_, Rng rng_, int count_, SO_CardPool first_, SO_CardPool second_ = null)
         {
-            List<SO_Card> candidates = new();
-            CollectCards(candidates, first_);
-            CollectCards(candidates, second_);
+            List<SO_Card> candidates = EncounterRewardRoller.Collect(
+                new[] { first_, second_ }, static pool_ => pool_.Cards);
 
             List<SO_Card> taken = rng_.TakeShuffled(candidates, count_);
             for (int i = 0; i < taken.Count; i++) into_.Add(CardModelBaker.Bake(taken[i]));
-        }
-
-        private static void CollectCards(List<SO_Card> into_, SO_CardPool pool_)
-        {
-            if (pool_ == null) return;
-            IReadOnlyList<SO_Card> cards = pool_.Cards;
-            for (int i = 0; i < cards.Count; i++)
-            {
-                SO_Card card = cards[i];
-                if (card != null && !into_.Contains(card)) into_.Add(card);
-            }
         }
 
         // 遗物：三池各出一件，附加过滤跳过已上架；挑不出时由 RelicRoller 降级到兜底池补位
@@ -242,7 +260,7 @@ namespace _DreamKeep.GameRun
             if (pool_ == null) return;
 
             // 附加过滤只作用于常规池；兜底池补齐由 RelicRoller 内部完成，不受"跳过已上架"影响
-            SO_Relic picked = RelicRoller.RollOne(_run.Player, new[] { pool_ }, rng_,
+            SO_Relic picked = RelicRoller.RollOne(_run, new[] { pool_ }, rng_,
                 relic => !_relics.Contains(relic));
             if (picked == null) return; // 兜底未接线时留空槽
             _relics.Add(picked);
@@ -251,21 +269,9 @@ namespace _DreamKeep.GameRun
         // 药水：两池合并去重后不放回抽取三瓶
         private void RollPotions(Rng rng_, SO_PotionPool first_, SO_PotionPool second_)
         {
-            List<SO_Potion> candidates = new();
-            CollectPotions(candidates, first_);
-            CollectPotions(candidates, second_);
+            List<SO_Potion> candidates = EncounterRewardRoller.Collect(
+                new[] { first_, second_ }, static pool_ => pool_.Potions);
             _potions.AddRange(rng_.TakeShuffled(candidates, PotionSlotCount));
-        }
-
-        private static void CollectPotions(List<SO_Potion> into_, SO_PotionPool pool_)
-        {
-            if (pool_ == null) return;
-            IReadOnlyList<SO_Potion> potions = pool_.Potions;
-            for (int i = 0; i < potions.Count; i++)
-            {
-                SO_Potion potion = potions[i];
-                if (potion != null && !into_.Contains(potion)) into_.Add(potion);
-            }
         }
     }
 }

@@ -99,7 +99,7 @@ namespace _DreamKeep.GameRun
                     if (picks.Count == 0) return false; // 兜底未接线时退化为不发放
                     await _events.PlayAsync(new EE_OptionsOffered(
                         _session.BuildRelicChoiceVMs(relicChoice, picks), false));
-                    _run.Player.AddRelic(picks[await TakeChoiceAsync()]);
+                    _session.ClaimRelicChoice(picks[await TakeChoiceAsync()]);
                     return false;
                 case EED_RewardPotions rewardPotions:
                     await _events.PlayAsync(new EE_RewardPotionsOffered(rewardPotions.PanelTitle,

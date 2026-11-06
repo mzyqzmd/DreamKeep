@@ -12,8 +12,10 @@ namespace _DreamKeep.Presentation
     /// 战斗段作为它的子 scope 从父容器取 RunState，战斗结束只销毁子 scope，整局状态与这里注册的常驻视图不受影响。</summary>
     public class RunLifetimeScope : LifetimeScope
     {
+        [Tooltip("整局随机种子：编辑器下用固定值复现调试（Inspector 可改）；构建版忽略此值，恒取运行时熵源")] [SerializeField]
+        private int _seed = 12345;
+
         [SerializeField] private SO_Player _playerConfig;
-        [SerializeField] private int _seed = 12345;
         [SerializeField] private SO_MapGenerationConfig _mapConfig;
 
         [Tooltip("兜底遗物池：常规池抽空时由 RelicRoller 降级发放，池内只放头环")] [SerializeField]
@@ -22,8 +24,13 @@ namespace _DreamKeep.Presentation
         protected override void Configure(IContainerBuilder builder_)
         {
             if (!_mapConfig) throw new InvalidOperationException("RunLifetimeScope._mapConfig 未接线，无法生成整局地图");
-            RelicRoller.Configure(_fallbackRelicPool); // 整局抽遗物的兜底池：唯一一处接线，每局重设
-            builder_.RegisterInstance(new RunState(_playerConfig, _seed, _mapConfig));
+#if UNITY_EDITOR
+            int seed = _seed; // 编辑器：固定种子复现调试，Inspector 可改
+#else
+            int seed = Environment.TickCount ^ Guid.NewGuid().GetHashCode(); // 构建版：运行时熵源，肉鸽每局不同
+#endif
+            Debug.Log($"[RunLifetimeScope] 整局随机种子 {seed}");
+            builder_.RegisterInstance(new RunState(_playerConfig, seed, _mapConfig, _fallbackRelicPool));
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
@@ -44,6 +51,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_MapView>(); // 地图编排器：装配时从 RunState 拿整章图一次性建视图
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
+            builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败/将来放弃共用，确认后回主菜单
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
             // 奖励面板由 PopPanelFactory 创建时自行注入，主菜单节点无容器依赖
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；

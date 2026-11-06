@@ -19,7 +19,7 @@ namespace _DreamKeep.Presentation
     /// [Inject] 只给"容器造不了它"的对象（场景 / 层级组件、容器外的预制体）；纯 C# 类一律构造函数注入、不加标记。</summary>
     public class BattleLifetimeScope : LifetimeScope
     {
-        [SerializeField] private SO_EncounterPool encounterPool;
+        [SerializeField] private SO_EncounterPool _encounterPool;
         [SerializeField] private SO_BackgroundPool _backgroundPool;
 
         [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")]
@@ -43,7 +43,7 @@ namespace _DreamKeep.Presentation
             };
 
             // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
-            IReadOnlyList<SO_Encounter> encounters = encounterPool.Select(kind, floor);
+            IReadOnlyList<SO_Encounter> encounters = _encounterPool.Select(kind, floor);
             SO_Encounter encounter = run.Rng.Pick(encounters);
             if (encounter == null)
                 throw new InvalidOperationException(
@@ -87,6 +87,7 @@ namespace _DreamKeep.Presentation
             // 瞄准器与本体同挂一个节点：它要上行门面现算整手牌的数值预览，无每帧入口、由目标提示驱动在下发结果时驱动
             builder_.RegisterComponentInHierarchy<UI_HandAim>();
             // 演出器与本体同挂一个节点：它订阅全部十一条事件，注册位置紧随本体，保住"手牌演出先于玩家 cast"的时序
+            // （契约的装配期断言收口在 RegisterBuildCallback）
             builder_.RegisterComponentInHierarchy<UI_HandShow>();
             // 三堆不订阅任何事件：数字由手牌视图在飞行的起飞与落地那一刻通知（谁飞谁通知），注册顺序不再承载时序契约
             builder_.RegisterComponentInHierarchy<UI_DrawPile>();
@@ -113,6 +114,10 @@ namespace _DreamKeep.Presentation
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
                 resolver_.Resolve<UI_BackgroundView>().Apply(background);
+                // 装配期断言"手牌演出先于玩家 cast"：玩家角色的施法动画在单位运行期装配时才订阅 BE_CardPlayed，
+                // 演出器的处理器必须排在其前——此刻若注册数不是 1，说明有容器期组件抢在演出器之前订了这条事件
+                Debug.Assert(dispatcher.CountHandlers<BE_CardPlayed>() == 1,
+                    "BE_CardPlayed 出现演出器之外的容器期订阅者，「手牌演出先于玩家 cast」的时序契约被打破");
                 stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>());
                 session.Open(resolver_.Resolve<BattleCommandDispatcher>(), resolver_.Resolve<BattleQueryDispatcher>(),
                     dispatcher, loop);

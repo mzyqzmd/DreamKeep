@@ -35,5 +35,15 @@ namespace _DreamKeep.Utility
 
             return list_.GetRange(0, count);
         }
+
+        /// <summary>原位全量洗牌：循环止于倒数第二位（末位自换无意义、不消耗随机流），与地图生成器既有实现逐次一致。</summary>
+        public void Shuffle<T>(List<T> list_)
+        {
+            for (int i = 0; i < list_.Count - 1; i++)
+            {
+                int j = Next(i, list_.Count);
+                (list_[i], list_[j]) = (list_[j], list_[i]);
+            }
+        }
     }
 }

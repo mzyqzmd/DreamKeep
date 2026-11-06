@@ -36,18 +36,13 @@ namespace _DreamKeep.Presentation
         {
             _events.Register<EE_EventCompleted>(completed_ => _segmentManager.CompleteSegment());
             _events.Register<EE_RemoveCardsRequested>(requested_ =>
-                OpenCardPanelAsync(_removePanel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
             _events.Register<EE_UpgradeCardsRequested>(requested_ =>
-                OpenCardPanelAsync(_upgradePanel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_upgradePanel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
             _events.Register<EE_RewardPotionsOffered>(OnRewardPotionsOffered);
             _loop.Start();
-        }
-
-        // 弹板自管选牌、删除与演出；关闭键交还 null = 取消，由命令门面原样交回域循环
-        private async UniTask OpenCardPanelAsync(UI_CardSelectPanel panel_, int count_)
-        {
-            panel_.Show(_run.Player, count_);
-            _commands.SubmitCardSelection(await panel_.WaitResultAsync());
         }
 
         private void OnRewardPotionsOffered(EE_RewardPotionsOffered offered_) =>

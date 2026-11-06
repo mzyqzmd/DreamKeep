@@ -148,7 +148,7 @@ namespace _DreamKeep.GameRun
         // 随机遗物：抽取全交给 RelicRoller，池空自动降级到兜底池
         private void AddRandomRelic(IReadOnlyList<SO_RelicPool> pools_)
         {
-            SO_Relic relic = RelicRoller.RollOne(_run.Player, pools_, _run.Rng);
+            SO_Relic relic = RelicRoller.RollOne(_run, pools_, _run.Rng);
             if (relic == null) return;
             _run.Player.AddRelic(relic);
         }

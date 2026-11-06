@@ -13,8 +13,9 @@ namespace _DreamKeep.Presentation
     /// <summary>整局卡组查看面板：网格陈列 RunState.Player.Deck 全部卡，费用/类型/默认序三种排序——点按钮切模式、
     /// 再点当前模式翻转方向（默认序不翻转），当前模式的箭头图标染高亮色；左/右键点卡打开统一卡牌详情特写
     /// （UI_ConcreteCardView，实例化在本面板名下，展示口径归特写自己的开关行、永不写回域）。卡组变更只发生在
-    /// 面板关闭的跑图段，故打开时全量重建、不订阅任何事件；战斗段同样可开（顶栏常驻），
-    /// 与战斗内三堆查看（UI_PileCardsView）互不干扰。开合能力继承自 UI_Panel，刷新逻辑落在 OnShown。</summary>
+    /// 面板关闭期间（跑图段的删牌/锻造、战斗内遗忘的结算当刻就会写进局内卡组），且面板打开时无法出牌，
+    /// 故打开时全量重建、不订阅任何事件；战斗段同样可开（顶栏常驻），与战斗内三堆查看（UI_PileCardsView）互不干扰。
+    /// 开合能力继承自 UI_Panel，刷新逻辑落在 OnShown。</summary>
     public sealed class UI_DeckPanel : UI_Panel
     {
         [Header("陈列")] [Tooltip("卡实例预制体：网格与特写共用（网格态由本面板缩到格尺寸）")] [SerializeField]

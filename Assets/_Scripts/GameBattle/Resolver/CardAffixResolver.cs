@@ -82,6 +82,9 @@ namespace _DreamKeep.GameBattle
                 case CA_GainEnergy gainEnergy:
                     actions_.Add(new BA_GainEnergy(source_, SelfTargets(source_), gainEnergy.Amount.Value));
                     break;
+                case CA_Heal heal:
+                    actions_.Add(new BA_Heal(source_, targets_, heal.Amount.Value));
+                    break;
                 case CA_LostHealth lostHealth:
                     actions_.Add(new BA_LoseHealth(source_, SelfTargets(source_), lostHealth.Amount.Value));
                     break;

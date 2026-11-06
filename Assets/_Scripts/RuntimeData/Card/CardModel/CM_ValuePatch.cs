@@ -32,6 +32,7 @@ namespace _DreamKeep.RuntimeData
             EUpgradeChannel.Block => affix_ is CA_Block block ? block.Amount : null,
             EUpgradeChannel.DrawCount => affix_ is CA_DrawCard drawCard ? drawCard.Count : null,
             EUpgradeChannel.EnergyGain => affix_ is CA_GainEnergy gainEnergy ? gainEnergy.Amount : null,
+            EUpgradeChannel.Heal => affix_ is CA_Heal heal ? heal.Amount : null,
             _ => null,
         };
 

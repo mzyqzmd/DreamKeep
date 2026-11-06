@@ -66,7 +66,7 @@ namespace _DreamKeep.GameRun
                     _run.Player.AddCard(CardModelBaker.Bake(addCard.Card).ToMutable());
                     return true;
                 case EED_RandomRelic randomRelic:
-                    SO_Relic relic = RelicRoller.RollOne(_run.Player, new[] { randomRelic.Pool }, _run.Rng);
+                    SO_Relic relic = RelicRoller.RollOne(_run, new[] { randomRelic.Pool }, _run.Rng);
                     if (relic != null) _run.Player.AddRelic(relic);
                     return true;
                 default:
@@ -76,7 +76,10 @@ namespace _DreamKeep.GameRun
 
         /// <summary>遗物 N 选一候选：抽取全交给 RelicRoller，池空自动降级到兜底池。</summary>
         public List<SO_Relic> RollRelicChoices(EED_RelicChoice effect_) =>
-            RelicRoller.Roll(_run.Player, new[] { effect_.Pool }, effect_.Count, _run.Rng);
+            RelicRoller.Roll(_run, new[] { effect_.Pool }, effect_.Count, _run.Rng);
+
+        /// <summary>遗物 N 选一领奖：流程循环裁决玩家选中的候选后交模型入列。</summary>
+        public void ClaimRelicChoice(SO_Relic relic_) => _run.Player.AddRelic(relic_);
 
         /// <summary>药水奖励清单：从池里洗牌取指定瓶数，逐条转成奖励条目。</summary>
         public List<RunReward> RollPotions(EED_RewardPotions effect_)

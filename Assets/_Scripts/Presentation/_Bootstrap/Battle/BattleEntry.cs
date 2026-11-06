@@ -24,6 +24,7 @@ namespace _DreamKeep.Presentation
         private readonly BattleSegmentCommandDispatcher _segmentCommands;
         private readonly SegmentSceneManager _segmentManager;
         private readonly PopPanelFactory _popFactory;
+        private readonly UI_ResultPanel _resultPanel;
         private readonly UI_ActorRoot _actorRoot;
         private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
@@ -32,8 +33,8 @@ namespace _DreamKeep.Presentation
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
             BattleSegmentLoop segmentLoop_, BattleSegmentEventDispatcher segmentEvents_,
             BattleSegmentCommandDispatcher segmentCommands_, SegmentSceneManager segmentManager_,
-            PopPanelFactory popFactory_, UI_ActorRoot actorRoot_, [Key("Player")] GameObject playerViewPrefab_,
-            List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
+            PopPanelFactory popFactory_, UI_ResultPanel resultPanel_, UI_ActorRoot actorRoot_,
+            [Key("Player")] GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
@@ -43,6 +44,7 @@ namespace _DreamKeep.Presentation
             _segmentCommands = segmentCommands_;
             _segmentManager = segmentManager_;
             _popFactory = popFactory_;
+            _resultPanel = resultPanel_;
             _actorRoot = actorRoot_;
             _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
@@ -53,6 +55,10 @@ namespace _DreamKeep.Presentation
         {
             _segmentEvents.Register<BAE_RewardOffered>(OnRewardOffered);
             _segmentEvents.Register<BAE_RewardClaimed>(claimed_ => _segmentManager.CompleteSegment());
+            // 整局终点弹结果面板：面板自身拦下全部输入，确认后由面板直调编排者回主菜单
+            _segmentEvents.Register<BAE_RunCleared>(cleared_ => _resultPanel.Show(EResultKind.RunVictory));
+            _segmentEvents.Register<BAE_RunDefeated>(defeated_ => _resultPanel.Show(EResultKind.RunDefeated));
+            // 无奖励胜利等开发期缺口维持立即卸段，不弹面板
             _segmentEvents.Register<BAE_BattleExited>(exited_ => _segmentManager.FinishSegment());
             SpawnPlayerView();
             SpawnEnemyViews();

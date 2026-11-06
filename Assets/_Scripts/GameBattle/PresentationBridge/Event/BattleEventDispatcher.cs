@@ -28,6 +28,10 @@ namespace _DreamKeep.GameBattle
                 return UniTask.CompletedTask;
             });
 
+        /// <summary>装配期断言用：某事件类型的处理器注册数。只读查询，不改分派行为。</summary>
+        public int CountHandlers<TEvent>() where TEvent : IBattleEvent =>
+            _handlers.TryGetValue(typeof(TEvent), out List<Func<IBattleEvent, UniTask>> handlers) ? handlers.Count : 0;
+
         /// <summary>顺序播放一批事件：逐条 await，一条事件内部的各处理器并行，未注册的事件跳过。</summary>
         public async UniTask PlayAsync(IReadOnlyList<IBattleEvent> events_)
         {

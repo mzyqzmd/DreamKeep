@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
-using _DreamKeep.GameRun;
 
 namespace _DreamKeep.GameRun
 {
@@ -37,6 +36,6 @@ namespace _DreamKeep.GameRun
 
         // 掷奖励：抽取全交给 RelicRoller，池空自动降级到兜底池
         private SO_Relic RollReward(SO_RelicPool commonPool_, SO_RelicPool rarePool_) =>
-            RelicRoller.RollOne(_run.Player, new[] { commonPool_, rarePool_ }, _run.Rng);
+            RelicRoller.RollOne(_run, new[] { commonPool_, rarePool_ }, _run.Rng);
     }
 }

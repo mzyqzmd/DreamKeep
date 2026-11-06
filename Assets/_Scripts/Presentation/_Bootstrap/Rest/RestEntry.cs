@@ -17,14 +17,13 @@ namespace _DreamKeep.Presentation
         private readonly RunState _run;
         private readonly UI_RestVFXRoot _vfxRoot;
         private readonly UI_CardUpgradePanel _panel;
-        private readonly PopPanelFactory _popPanelFactory;
+        private readonly UI_CardRemovePanel _removePanel;
         private readonly UI_RestProceedButton _proceedButton;
         private readonly SegmentSceneManager _segmentManager;
         private readonly VfxFactory _vfxFactory;
-        private UI_CardRemovePanel _removePanel; // 工厂单例跨段复用，可能随停泊画布销毁重建，Start 时领取
 
         public RestEntry(RestLoop loop_, RestEventDispatcher events_, RestCommandDispatcher commands_, RunState run_,
-            UI_RestVFXRoot vfxRoot_, UI_CardUpgradePanel panel_, PopPanelFactory popPanelFactory_,
+            UI_RestVFXRoot vfxRoot_, UI_CardUpgradePanel panel_, UI_CardRemovePanel removePanel_,
             UI_RestProceedButton proceedButton_, SegmentSceneManager segmentManager_, VfxFactory vfxFactory_)
         {
             _loop = loop_;
@@ -33,7 +32,7 @@ namespace _DreamKeep.Presentation
             _run = run_;
             _vfxRoot = vfxRoot_;
             _panel = panel_;
-            _popPanelFactory = popPanelFactory_;
+            _removePanel = removePanel_;
             _proceedButton = proceedButton_;
             _segmentManager = segmentManager_;
             _vfxFactory = vfxFactory_;
@@ -42,24 +41,17 @@ namespace _DreamKeep.Presentation
         public void Start()
         {
             _vfxRoot.Initialize(_vfxFactory); // 工厂在父容器、跨场景不可序列化，运行时交底
-            // 删牌面板由工厂懒建单例：显式停泊到本段弹层画布容器（同锻造面板的父级），随段卸载销毁、下次进段重建
-            _removePanel = _popPanelFactory.AcquireCardRemovePanel((RectTransform)_panel.transform.parent);
 
             _events.Register<REE_RestSmokeRequested>(smoke_ => _vfxRoot.PlayRestSmokeAsync());
             _events.Register<REE_UpgradeCardsRequested>(requested_ =>
-                OpenCardPanelAsync(_panel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_panel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
             _events.Register<REE_RemoveCardsRequested>(requested_ =>
-                OpenCardPanelAsync(_removePanel, requested_.Count).Forget());
+                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
+                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
             _events.Register<REE_ProceedOffered>(OnProceedOffered);
             _events.Register<REE_RestCompleted>(completed_ => _segmentManager.CompleteSegment());
             _loop.Start();
-        }
-
-        // 弹板自管选牌、升级/移除与演出；关闭键交还 null = 取消，由命令门面原样交回域循环
-        private async UniTask OpenCardPanelAsync(UI_CardSelectPanel panel_, int count_)
-        {
-            panel_.Show(_run.Player, count_);
-            _commands.SubmitCardSelection(await panel_.WaitResultAsync());
         }
 
         private void OnProceedOffered(REE_ProceedOffered offered_)

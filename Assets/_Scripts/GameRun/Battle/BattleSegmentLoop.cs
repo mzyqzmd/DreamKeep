@@ -43,14 +43,21 @@ namespace _DreamKeep.GameRun
         {
             await _battleLoop.WaitFinishedAsync();
 
-            // 战败不通过（节点保持原状），按退出收尾立即卸段
+            // 战败不通过（节点保持原状）：整局终点事实，表现侧弹结果面板，确认后回主菜单重开
             if (!_battleLoop.IsVictory)
             {
-                await _events.PlayAsync(new BAE_BattleExited());
+                await _events.PlayAsync(new BAE_RunDefeated());
                 return;
             }
 
             _run.CompleteMapNode(); // 胜利即通过：地图推进不等奖励面板的「继续」
+
+            // Boss 恒为最后一行：Boss 节点胜利即整局通关，跳过奖励链直接弹整局结果面板（确认后回主菜单重开）
+            if (_run.Map.CurrentNode.PointType == EMapPointType.Boss)
+            {
+                await _events.PlayAsync(new BAE_RunCleared());
+                return;
+            }
 
             // 掷奖励消耗整局随机流，必须在域侧掷；掷骰异常与掷空（无配置或候选全跳过）都按退出收尾
             List<RunReward> rewards;

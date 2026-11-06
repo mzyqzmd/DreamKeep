@@ -43,7 +43,7 @@ namespace _DreamKeep.GameRun
         private async UniTask RunAsync()
         {
             SO_MeatCleaver cleaver = _run.Player.Relics.OfType<SO_MeatCleaver>().FirstOrDefault();
-            List<SO_Relic> digCandidates = RelicRoller.Collect(_run.Player, new[] { _commonPool, _rarePool });
+            List<SO_Relic> digCandidates = RelicRoller.Collect(_run, new[] { _commonPool, _rarePool });
 
             while (true)
             {
@@ -54,7 +54,7 @@ namespace _DreamKeep.GameRun
 
                 if (chosen is SO_HealRestOption heal)
                 {
-                    _run.RestorePlayerHp((int)Math.Ceiling(_run.Player.Creature.MaxHp * heal.HealMaxHpRatio));
+                    _run.RestorePlayerHp(HealAmount(_run.Player.Creature.MaxHp, heal.HealMaxHpRatio));
                     await _events.PlayAsync(new REE_RestSmokeRequested());
                     _run.CompleteMapNode();
                     break;
@@ -94,7 +94,8 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 按配置列表组装选项：持有切肉刀/铲子才放行烹饪/挖掘；说明静态照抄资产、动态由这里插值
+        // 按配置列表组装选项：持有切肉刀/铲子才放行烹饪/挖掘；说明静态照抄资产，
+        // 动态选项只算数值带出（域不出富文本标记，文案组装归 UI_RestOptionGroup）
         private List<SO_RestOption> BuildOptions(SO_MeatCleaver cleaver_, List<SO_Relic> digCandidates_,
             out RestOption[] options_)
         {
@@ -109,37 +110,42 @@ namespace _DreamKeep.GameRun
                 if (option is SO_DigRestOption && !hasShovel) continue;
 
                 bool enabled;
-                string dynamicText;
+                float? healRatio = null;
+                int? healAmount = null;
+                int? removeCards = null;
+                int? hpGain = null;
                 if (option is SO_HealRestOption heal)
                 {
-                    int amount = (int)Math.Ceiling(_run.Player.Creature.MaxHp * heal.HealMaxHpRatio);
                     enabled = true;
-                    dynamicText = $"回复 <color=green>{(int)Math.Round(heal.HealMaxHpRatio * 100f)}</color>% 生命值（{amount}）";
+                    healRatio = heal.HealMaxHpRatio;
+                    healAmount = HealAmount(_run.Player.Creature.MaxHp, heal.HealMaxHpRatio);
                 }
                 else if (option is SO_ForgeRestOption)
                 {
                     enabled = _run.Player.Deck.Cards.Any(static c => c.CanUpgrade);
-                    dynamicText = null;
                 }
                 else if (option is SO_CookRestOption)
                 {
                     enabled = _run.Player.Deck.Count >= cleaver_.RemoveCards;
-                    dynamicText = $"删除 <color=yellow>{cleaver_.RemoveCards}</color> 张牌，<br>并提高 <color=green>{cleaver_.HpGain}</color> 点最大生命值";
+                    removeCards = cleaver_.RemoveCards;
+                    hpGain = cleaver_.HpGain;
                 }
                 else
                 {
                     enabled = digCandidates_.Count > 0;
-                    dynamicText = null;
                 }
 
-                opts.Add(new RestOption(option.OptionName, option.IsStaticDescription ? option.Description : dynamicText,
-                    option.Icon, enabled));
+                opts.Add(new RestOption(option.OptionName, option.IsStaticDescription ? option.Description : null,
+                    option.Icon, enabled, healRatio, healAmount, removeCards, hpGain));
                 configs.Add(option);
             }
 
             options_ = opts.ToArray();
             return configs;
         }
+
+        // 回血量：按最大生命百分比向上取整——结算（RunAsync）与文案数值（BuildOptions）共用一份换算
+        private static int HealAmount(int maxHp_, float ratio_) => (int)Math.Ceiling(maxHp_ * ratio_);
 
         private async UniTask<int> TakeChoiceAsync()
         {

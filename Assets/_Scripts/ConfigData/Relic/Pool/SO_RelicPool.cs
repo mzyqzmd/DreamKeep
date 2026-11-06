@@ -11,5 +11,16 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private List<SO_Relic> _relics = new();
 
         public IReadOnlyList<SO_Relic> Relics => _relics;
+
+#if UNITY_EDITOR
+        // 资产卫生：抽取候选按引用去重，同引用重复项不会像旧合并池那样提升掉率，在这里显式提醒配置者
+        private void OnValidate()
+        {
+            HashSet<SO_Relic> seen = new();
+            for (int i = 0; i < _relics.Count; i++)
+                if (_relics[i] != null && !seen.Add(_relics[i]))
+                    Debug.LogWarning($"[{name}] 遗物 {_relics[i].name} 在第 {i} 项重复：候选按引用去重，重复项不会提升掉率", this);
+        }
+#endif
     }
 }

@@ -64,8 +64,9 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 合并多份池成一份候选集：断引用的项跳过，同引用只收一次——同一项在两份池里不会重复出现
-        private static List<T> Collect<T, TPool>(IReadOnlyList<TPool> pools_, Func<TPool, IReadOnlyList<T>> items_)
+        // 合并多份池成一份候选集：断引用的项跳过，同引用只收一次——同一项在两份池里不会重复出现。
+        // internal 供商店货架合并同用（GameRun 内共享），不对外暴露
+        internal static List<T> Collect<T, TPool>(IReadOnlyList<TPool> pools_, Func<TPool, IReadOnlyList<T>> items_)
         {
             List<T> collected = new();
             HashSet<T> seen = new();
@@ -126,7 +127,7 @@ namespace _DreamKeep.GameRun
         private static void RollRelics(SO_EncounterReward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.RelicCount <= 0) return;
-            List<SO_Relic> taken = RelicRoller.Roll(run_.Player, config_.RelicPools, config_.RelicCount, rng_);
+            List<SO_Relic> taken = RelicRoller.Roll(run_, config_.RelicPools, config_.RelicCount, rng_);
             for (int i = 0; i < taken.Count; i++) rewards_.Add(RunReward.RelicOf(taken[i]));
         }
     }

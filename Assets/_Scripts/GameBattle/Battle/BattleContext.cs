@@ -21,11 +21,7 @@ namespace _DreamKeep.GameBattle
         /// <summary>一场战斗最多同时参与的敌人数。</summary>
         public const int MaxEnemyCount = 2;
 
-        /// <summary>本场被「遗忘」的局内卡，供战斗结束时从卡组永久移除。</summary>
-        public IReadOnlyCollection<CardModel> ErasedRunCards => _erasedRunCards;
-
         private readonly Dictionary<CardModel, CardModel> _runCardOf;
-        private readonly HashSet<CardModel> _erasedRunCards = new();
 
         #region 战斗结果
 
@@ -113,7 +109,5 @@ namespace _DreamKeep.GameBattle
             _runCardOf.TryGetValue(battleCard_, out runCard_);
 
         #endregion
-
-        public void RegisterErased(CardModel runCard_) => _erasedRunCards.Add(runCard_);
     }
 }

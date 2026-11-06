@@ -105,7 +105,17 @@ namespace _DreamKeep.Presentation
             if (!_description) return;
             RestOption opt = _options[index_];
             _description.gameObject.SetActive(true);
-            _description.text = $"<size=150%><color=yellow>{opt.Title}</color></size><br>{opt.Description}";
+            _description.text = $"<size=150%><color=yellow>{opt.Title}</color></size><br>{ComposeBody(opt)}";
+        }
+
+        // 选项说明体：静态选项照抄资产文案；动态选项由域带出的数值在此组装——染色/换行等视觉装饰归表现层
+        private static string ComposeBody(RestOption option_)
+        {
+            if (option_.HealRatio.HasValue)
+                return $"回复 <color=green>{(int)Math.Round(option_.HealRatio.Value * 100f)}</color>% 生命值（{option_.HealAmount}）";
+            if (option_.RemoveCards.HasValue)
+                return $"删除 <color=yellow>{option_.RemoveCards}</color> 张牌，<br>并提高 <color=green>{option_.HpGain}</color> 点最大生命值";
+            return option_.Description;
         }
 
         private void OnSlotUnhovered(int index_)

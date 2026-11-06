@@ -23,7 +23,7 @@ namespace _DreamKeep.GameRun
             _notifier = notifier_;
         }
 
-        public void Start() => _events.PlayAsync(new SE_ShelfUpdated(BuildSnapshot(), true)).Forget();
+        public void Start() => _events.PlayAsync(new SE_ShelfUpdated(_session.BuildSnapshot(), true)).Forget();
 
         public void OpenShop()
         {
@@ -75,49 +75,8 @@ namespace _DreamKeep.GameRun
 
         public void Proceed() => _events.PlayAsync(new SE_ShopCompleted()).Forget();
 
-        private void PublishShelf() => _events.PlayAsync(new SE_ShelfUpdated(BuildSnapshot(), false)).Forget();
+        private void PublishShelf() => _events.PlayAsync(new SE_ShelfUpdated(_session.BuildSnapshot(), false)).Forget();
 
         private void Refuse() => _events.PlayAsync(new SE_PurchaseRefused()).Forget();
-
-        // 快照从会话的公开只读面逐格生成：售出格为 null，价格记 0、半价记 false，视图按 null 收起该格
-        private ShopShelfSnapshot BuildSnapshot()
-        {
-            List<int> commonRarePrices = new();
-            List<int> superRarePrices = new();
-            List<int> relicPrices = new();
-            List<int> potionPrices = new();
-            List<bool> commonRareOnSale = new();
-            List<bool> superRareOnSale = new();
-
-            for (int i = 0; i < _session.CommonRareCards.Count; i++)
-            {
-                CardModel card = _session.CommonRareCards[i];
-                commonRarePrices.Add(card == null ? 0 : _session.PriceOfCard(card));
-                commonRareOnSale.Add(card != null && _session.IsOnSale(card));
-            }
-
-            for (int i = 0; i < _session.SuperRareCards.Count; i++)
-            {
-                CardModel card = _session.SuperRareCards[i];
-                superRarePrices.Add(card == null ? 0 : _session.PriceOfCard(card));
-                superRareOnSale.Add(card != null && _session.IsOnSale(card));
-            }
-
-            for (int i = 0; i < _session.Relics.Count; i++)
-            {
-                SO_Relic relic = _session.Relics[i];
-                relicPrices.Add(relic == null ? 0 : _session.PriceOfRelic(relic));
-            }
-
-            for (int i = 0; i < _session.Potions.Count; i++)
-            {
-                SO_Potion potion = _session.Potions[i];
-                potionPrices.Add(potion == null ? 0 : _session.PriceOfPotion(potion));
-            }
-
-            return new ShopShelfSnapshot(_session.CommonRareCards, _session.SuperRareCards, _session.Relics,
-                _session.Potions, commonRarePrices, superRarePrices, relicPrices, potionPrices,
-                commonRareOnSale, superRareOnSale, _session.Gold, _session.RemovalPrice, _session.RemovalUsed);
-        }
     }
 }

@@ -26,7 +26,6 @@ namespace _DreamKeep.Presentation
             ChestEventDispatcher events = new ChestEventDispatcher();
             ChestLoop loop = new ChestLoop(session, run, events);
 
-            builder_.RegisterInstance(session);
             builder_.RegisterInstance(events); // 供三个视图 [Inject] 注册事实处理器
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new ChestCommandDispatcher(loop)); // 供三个视图提交意图

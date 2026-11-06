@@ -10,5 +10,6 @@ namespace _DreamKeep.ConfigData
         Block,         // 格挡值（格挡词条）
         DrawCount,     // 抽牌数（抽牌词条）
         EnergyGain,    // 获得能量（获得能量词条）
+        Heal,          // 治疗量（治疗词条）
     }
 }

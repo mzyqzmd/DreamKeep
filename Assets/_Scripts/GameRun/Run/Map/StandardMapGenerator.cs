@@ -74,7 +74,7 @@ namespace _DreamKeep.GameRun
         {
             int col = node_.Coord.Col;
             List<int> candidates = new List<int>(3) { col - 1, col, col + 1 };
-            Shuffle(candidates, rng_);
+            rng_.Shuffle(candidates);
             foreach (int candidate in candidates)
             {
                 if (candidate < 0 || candidate >= width_) continue;
@@ -104,15 +104,6 @@ namespace _DreamKeep.GameRun
             return false;
         }
 
-        private static void Shuffle<T>(List<T> list_, Rng rng_)
-        {
-            for (int i = 0; i < list_.Count - 1; i++)
-            {
-                int j = rng_.Next(i, list_.Count);
-                (list_[i], list_[j]) = (list_[j], list_[i]);
-            }
-        }
-
         #endregion
 
         #region 类型分配：固定语义行 + 配额随机落点（合法性校验）+ Monster 兜底
@@ -125,11 +116,11 @@ namespace _DreamKeep.GameRun
 
             List<EMapPointType> remaining = BuildQuotaList(RollCounts(config_, rng_));
             List<MapNode> open = CollectOpenNodes(grid_, width_, rows_);
-            Shuffle(open, rng_);
+            rng_.Shuffle(open);
             foreach (MapNode node in open)
             {
                 if (remaining.Count == 0) break;
-                Shuffle(remaining, rng_);
+                rng_.Shuffle(remaining);
                 for (int i = remaining.Count - 1; i >= 0; i--)
                 {
                     EMapPointType type = remaining[i];

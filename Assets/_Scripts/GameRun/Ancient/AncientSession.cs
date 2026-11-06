@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
-using _DreamKeep.GameRun;
 
 namespace _DreamKeep.GameRun
 {
@@ -57,6 +56,6 @@ namespace _DreamKeep.GameRun
 
         // 掷候选：抽取全交给 RelicRoller，不足三件自动降级到兜底池补齐
         private void RollChoices() =>
-            _choices.AddRange(RelicRoller.Roll(_run.Player, new[] { _config.RelicPool }, ChoiceCount, _run.Rng));
+            _choices.AddRange(RelicRoller.Roll(_run, new[] { _config.RelicPool }, ChoiceCount, _run.Rng));
     }
 }

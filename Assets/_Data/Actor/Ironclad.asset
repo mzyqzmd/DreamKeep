@@ -31,24 +31,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
   _startRelics:
   - {fileID: 11400000, guid: 929c0b0c991d5874f92574451d2dca5c, type: 2}
-  - {fileID: 11400000, guid: ad6819c31d098c746a437f61e4a4ee8d, type: 2}
-  - {fileID: 11400000, guid: da20d0c87ec1ed44d9542a85655e86fa, type: 2}
-  - {fileID: 11400000, guid: b8181b9b23b833743b03f7aaf981557b, type: 2}
-  - {fileID: 11400000, guid: c3bbebd79ba56bc4da42881d50ecdcfe, type: 2}
-  - {fileID: 11400000, guid: b0fa665b0523cdb4c897b8441cb69824, type: 2}
-  - {fileID: 11400000, guid: 20e3562f1b567a94f95c7c89fce81db5, type: 2}
-  - {fileID: 11400000, guid: bf43c351008aa7b409b1d04cfd1c4720, type: 2}
-  - {fileID: 11400000, guid: 6412fdff43248544fb38031d5ae69363, type: 2}
-  - {fileID: 11400000, guid: b1964523575da634cbbbb338d3bea076, type: 2}
-  - {fileID: 11400000, guid: 324ea21403f53bc4d9eb0c7af5516eb0, type: 2}
-  - {fileID: 11400000, guid: 523f7e4ecc97c2a4ca3953d678c5c776, type: 2}
-  - {fileID: 11400000, guid: e6d0231766be5d74fb801bfe21f81bc2, type: 2}
-  _startPotions:
-  - {fileID: 11400000, guid: d44b172a3483fde469ca7859f2270547, type: 2}
-  - {fileID: 11400000, guid: f1944affcb10874429eaf085f7877eee, type: 2}
-  - {fileID: 11400000, guid: 0cacde43392efa749a5b1194edb92db1, type: 2}
-  - {fileID: 11400000, guid: 5de9f5d93fb087248b740c2cab48fb72, type: 2}
-  - {fileID: 11400000, guid: 517e2c536142baf4296fac5d42050c75, type: 2}
-  - {fileID: 11400000, guid: faabeea43399f0447aaf05fc071ffe8c, type: 2}
-  - {fileID: 11400000, guid: 0dc1b8eccccdc0742b4c88da12ad0f8f, type: 2}
-  - {fileID: 11400000, guid: 127ab0e30fe7f3c4687a57a942edf92c, type: 2}
+  _startPotions: []

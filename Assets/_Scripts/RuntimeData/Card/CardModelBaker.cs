@@ -57,6 +57,7 @@ namespace _DreamKeep.RuntimeData
                 AD_Erase erase => new CA_Erase(erase),
                 AD_Exhaust exhaust => new CA_Exhaust(exhaust),
                 AD_GainEnergy gainEnergy => new CA_GainEnergy(gainEnergy),
+                AD_Heal heal => new CA_Heal(heal),
                 AD_LostHealth lostHealth => new CA_LostHealth(lostHealth),
                 AD_MoveEnemy moveEnemy => new CA_MoveEnemy(moveEnemy),
                 AD_Retain retain => new CA_Retain(retain),

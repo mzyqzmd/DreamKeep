@@ -23,6 +23,9 @@ namespace _DreamKeep.GameRun
         /// <summary>整局唯一随机流：洗牌、随机目标、遭遇血量浮动都走它，保证同种子可复现。</summary>
         public Rng Rng { get; }
 
+        /// <summary>兜底遗物池：常规遗物池抽空时的降级来源（池内只放头环），随整局构建传入，RelicRoller 各入口经此取用。</summary>
+        public SO_RelicPool FallbackRelicPool { get; }
+
         private int _gold;
 
         /// <summary>金币：set 内抛 GoldChanged，供整局 HUD（顶栏）订阅刷新，避免每帧轮询。</summary>
@@ -163,10 +166,11 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
-        public RunState(SO_Player config_, int seed_, SO_MapGenerationConfig mapConfig_)
+        public RunState(SO_Player config_, int seed_, SO_MapGenerationConfig mapConfig_, SO_RelicPool fallbackRelicPool_)
         {
             Config = config_;
             MapConfig = mapConfig_;
+            FallbackRelicPool = fallbackRelicPool_;
             Rng = new Rng(seed_);
 
             // 地图：整局一张，从主流派生子种子生成（消耗主流一格，同种子整局仍可复现）

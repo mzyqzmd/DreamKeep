@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: UltimateDefend
+  m_EditorClassIdentifier: 
+  _name: "\u7A76\u6781\u9632\u5FA1"
+  _cost: 1
+  _icon: {fileID: 21300000, guid: e9a1da6319746394fb8f9da31f12d390, type: 3}
+  _rarity: 1
+  _type: 1
+  _targetType: 1
+  _affixes:
+  - rid: 6594183692613845009
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183692613845010
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183692613845009
+      type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 13
+    - rid: 6594183692613845010
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 3
+        _additive: 3
+        _multiplier: 1
