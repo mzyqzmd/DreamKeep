@@ -11,9 +11,9 @@ using _DreamKeep.Presentation.Root;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>休息段组合根：从父容器取整局状态，把场景里的表现组件与休息选项资产显式登记进段容器并启动段入口。
-    /// 用 FindObjectOfType(true) 自取（含未激活节点，面板与继续按钮初始是关的），漏接线装配期直接抛异常暴露；
-    /// 挖掘候选池由本组合根序列化资产后 Keyed 注入；autoRun 关、parentReference 由 SegmentSceneManager 运行时赋值。</summary>
+    /// <summary>休息段组合根：从父容器取整局状态，用选项资产与挖掘候选池装配出本段的事实广播器与流程循环，
+    /// 命令门面交给视图提交意图；autoRun 关、parentReference 由 SegmentSceneLoader 运行时赋值。
+    /// 漏接线是装配期错误，直接抛异常暴露。</summary>
     public class RestLifetimeScope : LifetimeScope
     {
         [Header("挖掘候选池")]
@@ -31,18 +31,21 @@ namespace _DreamKeep.Presentation
             RunState run = Parent.Container.Resolve<RunState>();
             ValidateOptions(run);
 
+            RestEventDispatcher events = new RestEventDispatcher();
+            RestLoop loop = new RestLoop(run, _restOptions, _commonPool, _rarePool,
+                Parent.Container.Resolve<RelicTriggerNotifier>(), events);
+
             builder_.RegisterInstance(run);
-            builder_.RegisterInstance(Require<UI_RestOptionGroup>());
+            builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器
+            builder_.RegisterInstance(loop);
+            builder_.RegisterInstance(new RestCommandDispatcher(loop)); // 供视图提交意图
+            builder_.RegisterComponentInHierarchy<UI_RestOptionGroup>(); // 注册即注入：选项组要订阅事实与拿命令门面
             builder_.RegisterInstance(Require<UI_RestVFXRoot>());
             builder_.RegisterComponentInHierarchy<UI_CardUpgradePanel>(); // 注册即注入：面板池与特效工厂走 [Inject] Construct
             builder_.RegisterInstance(Require<UI_RestProceedButton>());
-            builder_.RegisterInstance(_commonPool).Keyed("Common");
-            builder_.RegisterInstance(_rarePool).Keyed("Rare");
-            builder_.RegisterInstance(_restOptions);
             builder_.RegisterEntryPoint<RestEntry>();
 
-            // 段场景晚于整局容器加载：段内游离的气泡发起器（预摆特写卡、弹板子树等不在显式注入子树里的）在此兜底注入；
-            // 已被注入过的实例重复跑一遍 [Inject] 只是把依赖再赋值一次，无副作用
+            // 段场景晚于整局容器加载：段内游离的气泡发起器在此兜底注入；重复注入只是重赋依赖，无副作用
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);

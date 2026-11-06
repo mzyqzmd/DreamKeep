@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using VContainer;
 using _DreamKeep.EngineUtility;
+using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>休息选项组：选项按段入口传入的列表动态生成（休息 / 锻造 / 挖掘），错峰淡入，点选一次即锁；
-    /// 悬停哪槽就在说明文本显示该槽「标题\n描述」，移出隐藏。下标经 WaitChoiceAsync（继承自 UI_ButtonGroup）交给段入口。
-    /// 挖掘选项仅在玩家持有铲子时出现；锻造/挖掘在条件不满足时仍显示但置灰（悬停文案保留、点击无作用）。</summary>
+    /// <summary>休息选项组：订阅选项就位与收起事实，按列表动态生成选项条（错峰淡入、点选一次即锁），
+    /// 悬停哪槽就在说明文本显示该槽「标题\n描述」，移出隐藏；点选只经命令门面提交下标。</summary>
     public sealed class UI_RestOptionGroup : UI_ButtonGroup
     {
         [Tooltip("选项容器：运行时按列表数量在此下 Instantiate 选项预制体")]
@@ -34,6 +35,15 @@ namespace _DreamKeep.Presentation
         private readonly List<Action> _unhoveredHandlers = new();
         private readonly List<RestOption> _options = new();
         private int _hoveredIndex = -1;
+        private RestCommandDispatcher _commands;
+
+        [Inject]
+        public void Construct(RestEventDispatcher events_, RestCommandDispatcher commands_)
+        {
+            _commands = commands_;
+            events_.Register<REE_OptionsOffered>(offered_ => Show(offered_.Options));
+            events_.Register<REE_OptionsHidden>(hidden_ => Hide());
+        }
 
         #region 对外展示：选项列表 Bind 后错峰淡入，点选一次即锁
 
@@ -85,6 +95,9 @@ namespace _DreamKeep.Presentation
         #endregion
 
         protected override IReadOnlyList<UI_Button> GetButtons() => _slots;
+
+        /// <summary>点选定案：提交下标；命令会同步续跑域循环并立即收起选项，故不再有后续外观处理。</summary>
+        protected override void OnChoiceMade(int index_) => _commands.Choose(index_);
 
         private void OnSlotHovered(int index_)
         {
