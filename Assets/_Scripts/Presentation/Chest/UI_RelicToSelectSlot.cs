@@ -29,5 +29,8 @@ namespace _DreamKeep.Presentation
             Enabled = false;
             gameObject.SetActive(false);
         }
+
+        /// <summary>重开点选：领取失败时恢复可点击（Lock 关掉的是交互，Bind 不会自动解锁）。</summary>
+        public void Unlock() => Enabled = true;
     }
 }

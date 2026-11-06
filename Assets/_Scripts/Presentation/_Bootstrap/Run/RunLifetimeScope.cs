@@ -16,9 +16,13 @@ namespace _DreamKeep.Presentation
         [SerializeField] private int _seed = 12345;
         [SerializeField] private SO_MapGenerationConfig _mapConfig;
 
+        [Tooltip("兜底遗物池：常规池抽空时由 RelicRoller 降级发放，池内只放头环")] [SerializeField]
+        private SO_RelicPool _fallbackRelicPool;
+
         protected override void Configure(IContainerBuilder builder_)
         {
             if (!_mapConfig) throw new InvalidOperationException("RunLifetimeScope._mapConfig 未接线，无法生成整局地图");
+            RelicRoller.Configure(_fallbackRelicPool); // 整局抽遗物的兜底池：唯一一处接线，每局重设
             builder_.RegisterInstance(new RunState(_playerConfig, _seed, _mapConfig));
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());
@@ -29,6 +33,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<PopFactory>();
             builder_.RegisterComponentInHierarchy<PopPanelFactory>();
             builder_.RegisterComponentInHierarchy<VfxFactory>();
+            builder_.RegisterComponentInHierarchy<VfxDefaultRoot>(); // 常驻特效默认根：战斗外玩家回血在屏幕中心播一次
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
@@ -38,7 +43,7 @@ namespace _DreamKeep.Presentation
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
-            // 二者由加载器在 Start 里查找并 InjectGameObject 补注入
+            // 奖励面板由 PopPanelFactory 创建时自行注入，主菜单节点无容器依赖
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
             builder_.RegisterBuildCallback(resolver_ =>

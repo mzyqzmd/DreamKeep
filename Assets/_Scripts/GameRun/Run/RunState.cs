@@ -82,9 +82,9 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
-        #region 回滚生命快照：取消自选面板这类事务回滚用，写回已知合法值，双向可加可扣
+        #region 回滚生命快照：取消自选面板这类事务回滚用，写回已知合法值，双向可加可扣；不算回血（不播回血特效）
 
-        public void RestorePlayerHpTo(int value_) => Player.Creature.CurrentHp = value_;
+        public void RestorePlayerHpTo(int value_) => Player.Creature.RestoreHpTo(value_);
 
         #endregion
 

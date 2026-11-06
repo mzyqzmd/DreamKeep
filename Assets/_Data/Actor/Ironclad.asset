@@ -20,22 +20,15 @@ MonoBehaviour:
   _drawPerTurn: 5
   _startDeck:
   - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
-  - {fileID: 11400000, guid: 7367fd6e56e978c4697ef061ccc83b66, type: 2}
-  - {fileID: 11400000, guid: bece2c1cc257863478550d81cb053dae, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 3f3a3dc9699ebb242aad6a3de52c65fc, type: 2}
+  - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
+  - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
+  - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
   - {fileID: 11400000, guid: 0f64fe9bc1738ef49a1a22e291ae5cf3, type: 2}
   - {fileID: 11400000, guid: 480e3bc87ae73b543b254b35f312d59f, type: 2}
-  - {fileID: 11400000, guid: 66d54a173ec56fb47b3bf53e5d620b67, type: 2}
-  - {fileID: 11400000, guid: 2e0fb1bda6318394ab89ccc0c8bfe87e, type: 2}
-  - {fileID: 11400000, guid: 4bf845d60c73d6045a43bfa0817b0869, type: 2}
-  - {fileID: 11400000, guid: 0f79b89f8c445554b88eec5d001fc58c, type: 2}
-  - {fileID: 11400000, guid: 5e6edcec72357c94897fcf7ddd101888, type: 2}
-  - {fileID: 11400000, guid: b3ff74ef97844b34488a7e0ea5d26203, type: 2}
-  - {fileID: 11400000, guid: d252f075127e1e44495f28e52a858e03, type: 2}
-  - {fileID: 11400000, guid: 1a1f710852b524547b6698332804f572, type: 2}
-  - {fileID: 11400000, guid: 33b92042b2187084c942016e7e004f56, type: 2}
-  - {fileID: 11400000, guid: c9a9bf459c17ed7429cfd25e8c1d9834, type: 2}
-  - {fileID: 11400000, guid: 143026d21e2f00d4bb2e7d81274c8033, type: 2}
-  - {fileID: 11400000, guid: 4c1379d594670bc4e9c7d1346fd8e8da, type: 2}
   _startRelics:
   - {fileID: 11400000, guid: 929c0b0c991d5874f92574451d2dca5c, type: 2}
   - {fileID: 11400000, guid: ad6819c31d098c746a437f61e4a4ee8d, type: 2}

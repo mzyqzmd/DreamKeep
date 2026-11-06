@@ -9,7 +9,7 @@ namespace _DreamKeep.GameRun
     /// 一局内只会遇到一次，跨局的拜访次数记录等存档系统落地后再加。</summary>
     public sealed class AncientSession
     {
-        /// <summary>三选一：候选件数恒为三，候选不足时按实数出。</summary>
+        /// <summary>三选一：候选件数恒为三，缺口由整局兜底遗物补齐。</summary>
         private const int ChoiceCount = 3;
 
         private readonly SO_Ancient _config;
@@ -31,7 +31,7 @@ namespace _DreamKeep.GameRun
         /// <summary>本次拜访的对话页：构造时从全部页中随机掷定，未配置对话返回 null。</summary>
         public AncientDialoguePage CurrentPage => _page;
 
-        /// <summary>三选一的候选遗物：进段时掷定（跳过已持有与断引用，不足三件按实数出）。</summary>
+        /// <summary>三选一的候选遗物：进段时掷定（跳过已持有与断引用，不足三件由兜底遗物补齐）。</summary>
         public IReadOnlyList<SO_Relic> Choices => _choices;
 
         /// <summary>本段是否已领取：领取一次后整段收尾，复访会开新段重掷。</summary>
@@ -55,8 +55,8 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
-        // 掷候选：RelicRoller 收集池内未持有遗物，再局部洗牌无放回取前三
+        // 掷候选：抽取全交给 RelicRoller，不足三件自动降级到兜底池补齐
         private void RollChoices() =>
-            _choices.AddRange(_run.Rng.TakeShuffled(RelicRoller.CollectCandidates(_run.Player, new[] { _config.RelicPool }), ChoiceCount));
+            _choices.AddRange(RelicRoller.Roll(_run.Player, new[] { _config.RelicPool }, ChoiceCount, _run.Rng));
     }
 }

@@ -1,48 +1,27 @@
-using Cysharp.Threading.Tasks;
-using UnityEngine;
-using VContainer.Unity;
 using _DreamKeep.GameRun;
+using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>宝箱段入口：本段"从哪里开始"的唯一落点——开箱演出 → 中心出遗物 → 领取 → 闪光锁定 → 等继续。
-    /// 领取失败（候选已失效等装配外异常）只报错并重开点选，不吞不崩。收段归继续按钮自身（可重复点）。</summary>
+    /// <summary>宝箱段表现入口：启动域流程，并把宝箱段完成事实转成常驻编排者的收段动作。
+    /// 视图只订阅事实与提交意图，不再一路 await 面板，也不自行决定收段。</summary>
     public sealed class ChestEntry : IStartable
     {
-        private readonly ChestSession _session;
-        private readonly UI_Chest _chest;
-        private readonly UI_RelicSelectPanel _panel;
-        private readonly UI_ChestProceedButton _proceedButton;
-        private readonly RunState _run;
+        private readonly ChestEventDispatcher _events;
+        private readonly ChestLoop _loop;
+        private readonly SegmentSceneManager _segmentManager;
 
-        public ChestEntry(ChestSession session_, UI_Chest chest_, UI_RelicSelectPanel panel_, UI_ChestProceedButton proceedButton_,
-            RunState run_)
+        public ChestEntry(ChestEventDispatcher events_, ChestLoop loop_, SegmentSceneManager segmentManager_)
         {
-            _session = session_;
-            _chest = chest_;
-            _panel = panel_;
-            _proceedButton = proceedButton_;
-            _run = run_;
+            _events = events_;
+            _loop = loop_;
+            _segmentManager = segmentManager_;
         }
 
-        public void Start() => PlayAsync().Forget();
-
-        private async UniTask PlayAsync()
+        public void Start()
         {
-            await _chest.WaitOpenedAsync(); // 玩家悬停换肤、点击开箱，播到 50% 放行出遗物
-
-            _panel.ShowChoice(_session.Reward); // 候选为空只报错保持空态
-            while (true)
-            {
-                await _panel.WaitClaimAsync();
-                if (_session.Claim()) break;
-                Debug.LogError($"[{nameof(ChestEntry)}] 遗物入列失败，已重开点选");
-            }
-
-            _run.CompleteMapNode(); // 遗物领到手即通过，不等玩家点「继续」
-            await _chest.PlayShineFadeAndLockAsync(); // 宝箱闪光并锁定交互
-            _proceedButton.Show();
-            await _proceedButton.WaitProceedAsync(); // 只等首次点击收束流程，收段开地图由按钮每次点击触发
+            _events.Register<CE_ChestCompleted>(completed_ => _segmentManager.CompleteSegment());
+            _loop.Start();
         }
     }
 }

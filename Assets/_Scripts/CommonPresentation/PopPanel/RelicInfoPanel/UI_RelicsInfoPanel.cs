@@ -4,13 +4,16 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using _DreamKeep.ConfigData;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
-    /// <summary>遗物信息面板：由遗物栏懒建的单实例弹层，点击遗物槽位时写入该遗物的名称、稀有度、图标与描述，
-    /// 稀有度一行按档位着色（初始/普通白、稀有金黄、商店天蓝、远古暗红），已用尽的遗物在描述末尾补一行提示；
-    /// 点击面板外的遮罩收起，点面板框内不响应。</summary>
+    /// <summary>遗物信息面板：由 PopPanelFactory 懒建的单实例弹层，顶栏遗物槽位点击与商店遗物格右键共用，
+    /// 写入该遗物的名称、稀有度、图标与描述，稀有度一行按档位着色（初始/普通白、稀有金黄、商店天蓝、远古暗红），
+    /// 已用尽的遗物在描述末尾补一行提示；点击面板外的遮罩收起，点面板框内不响应。</summary>
     public sealed class UI_RelicsInfoPanel : MonoBehaviour, IPointerClickHandler
     {
+        // 用尽后补在说明末尾的一行：悬停气泡与信息面板共用这一句，故对外公开
+        public const string ExhaustedTip = "这个遗物的效果已经耗尽";
+
         [Tooltip("面板框：点它的矩形内不收起")] [SerializeField]
         private RectTransform _infoContainer;
 
@@ -46,7 +49,7 @@ namespace _DreamKeep.Presentation
             _relicRarity.text = text;
             _relicRarity.color = color;
             _description.text = exhausted_
-                ? relic_.Description + "\n" + UI_RelicSlot.ExhaustedTip
+                ? relic_.Description + "\n" + ExhaustedTip
                 : relic_.Description;
             gameObject.SetActive(true);
         }

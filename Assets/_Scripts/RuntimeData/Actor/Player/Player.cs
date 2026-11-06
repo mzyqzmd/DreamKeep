@@ -81,11 +81,11 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        #region 获取遗物：已持有则忽略，成功即通知遗物栏补槽
+        #region 获取遗物：不做去重（去重只在抽取层），成功即通知遗物栏补槽
 
         public bool AddRelic(SO_Relic relic_)
         {
-            if (relic_ == null || _relics.Contains(relic_)) return false;
+            if (relic_ == null) return false;
             _relics.Add(relic_);
             RelicAdded?.Invoke(relic_);
             return true;

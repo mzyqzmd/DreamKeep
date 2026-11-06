@@ -220,7 +220,7 @@ namespace _DreamKeep.Presentation
         }
 
         // 战斗中＝段在场且战斗还没打完：打完之后只等领奖，按战斗外规则处理
-        private bool InBattle => _session.IsOpen && _session.Loop != null && !_session.Loop.IsFinished;
+        private bool InBattle => _session.IsFighting;
 
         // 使用板能不能点：战斗中看玩家回合窗口；战斗外只认"随时可用"的药水
         private bool CanUse(int slotIndex_)

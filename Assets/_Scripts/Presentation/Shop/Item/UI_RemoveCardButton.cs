@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using _DreamKeep.CommonPresentation;
 using _DreamKeep.EngineUtility;
 
 namespace _DreamKeep.Presentation
@@ -11,7 +12,7 @@ namespace _DreamKeep.Presentation
     /// <summary>商店的删牌服务位：显示当前价、买不起染红，点击走子节点 Icon 上的 Button（该按钮实现了点击接口会截断冒泡）。
     /// 指针进出向上报，由地毯驱动商人手指过来——本店用尽后不再上报进入。
     /// 进场时把翻转动画冻结在首帧；玩家在删牌弹板按下确认的那一刻播一次并定格末帧——末帧的样子就是"不可用"，
-    /// 故不额外染灰。用尽后只保留说明气泡：价格隐藏、点击停止、悬停缩放停用。</summary>
+    /// 故不额外染灰。用尽后价格隐藏、点击停止、悬停缩放停用，连说明气泡也一并抑制。</summary>
     public sealed class UI_RemoveCardButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [Tooltip("子节点 Icon 上的按钮：点击由它上报")] [SerializeField]
@@ -127,13 +128,14 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 不可用态：价格收起、点击关掉、悬停缩放停用（自驱组件失活时会把缩放写回基准）
+        // 不可用态：价格收起、点击关掉、悬停缩放停用（自驱组件失活时会把缩放写回基准）、说明气泡一并抑制
         private void MarkUsed()
         {
             _used = true;
             if (_priceRoot) _priceRoot.SetActive(false);
             if (_button) _button.interactable = false;
             if (_hoverScaler) _hoverScaler.enabled = false;
+            if (TryGetComponent(out UI_HoverTip tip)) tip.SetSuppressed(true);
         }
 
         // 冻结首帧：先求值一次再关掉组件，避免默认状态一激活就自动播

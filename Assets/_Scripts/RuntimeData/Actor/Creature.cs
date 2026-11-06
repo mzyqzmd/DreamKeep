@@ -13,7 +13,7 @@ namespace _DreamKeep.RuntimeData
         public string ActorName { get; }
         private int _currentHp;
 
-        /// <summary>当前生命：set 内抛 HpChanged，供整局 HUD（顶栏）订阅刷新；
+        /// <summary>当前生命：set 内抛 HpChanged，供整局 HUD（顶栏）订阅刷新；上升时另抛 Healed；
         /// 敌我共用，敌人变更暂无订阅者亦不影响。</summary>
         public int CurrentHp
         {
@@ -21,15 +21,23 @@ namespace _DreamKeep.RuntimeData
             set
             {
                 if (_currentHp == value) return;
+                int delta = value - _currentHp;
                 _currentHp = value;
                 HpChanged?.Invoke(_currentHp);
+                if (delta >= 0) Healed?.Invoke(delta); //只要回血就播vfx,恢复0点也是回血
             }
         }
 
         /// <summary>生命变更通知。</summary>
         public event Action<int> HpChanged;
+
+        /// <summary>回血通知：CurrentHp 上升时抛回复量，覆盖战斗内直写与局外结算全部路径；
+        /// 是否播放由表现层按场景判定。敌人回血同样抛，暂无订阅者亦不影响。</summary>
+        public event Action<int> Healed;
+
         /// <summary>最大生命：构造期取配置初值，局内可经 <see cref="RaiseMaxHp"/> 增长（战斗内恒定）。</summary>
         public int MaxHp { get; private set; }
+
         public int Block { get; set; }
 
         public bool IsDead => CurrentHp <= 0;
@@ -41,6 +49,19 @@ namespace _DreamKeep.RuntimeData
             MaxHp = maxHp_;
             CurrentHp = maxHp_;
         }
+
+        #region 快照回滚：写回已知合法值并刷新 HUD，但不算回血（不抛 Healed）
+
+        /// <summary>快照回滚专用：撤销自选面板的扣血代价时写回旧值——HpChanged 照抛让 HUD 跟上，
+        /// 但不抛 Healed（玩家并未回血，不该播回血特效）。</summary>
+        public void RestoreHpTo(int value_)
+        {
+            if (_currentHp == value_) return;
+            _currentHp = value_;
+            HpChanged?.Invoke(_currentHp);
+        }
+
+        #endregion
 
         #region 提升最大生命：烹饪这类局内效果用，上限与当前生命同步加，非正数直接忽略
 

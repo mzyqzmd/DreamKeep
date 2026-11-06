@@ -12,6 +12,7 @@ namespace _DreamKeep.GameBattle
     {
         private readonly StateMachine<BaseState<BattleLoop>> _fsm = new();
         private readonly Queue<BattleCommand> _commandQueue = new();
+        private readonly UniTaskCompletionSource _finishedSource = new();
         private bool _loopRunning; // 循环独占标志：RunLoop 进入即置位、退出即清位
         private bool _finished; // 终态一次性标志：结束阶段跑完后置位，此后入队命令一律丢弃
 
@@ -21,6 +22,10 @@ namespace _DreamKeep.GameBattle
 
         /// <summary>终态已跑完（含结束阶段演出）：整局层的段启动器据此收尾结算，不另设回调。</summary>
         public bool IsFinished => _finished;
+
+        /// <summary>等待终态跑完：一次性完成信号，整局层在会话开启后 await 它，不必每帧轮询 IsFinished。
+        /// 放行点在 _finished 置位之后（结束阶段演出与清空战斗态均已完成）；迟到订阅直接返回完成态。</summary>
+        public UniTask WaitFinishedAsync() => _finished ? UniTask.CompletedTask : _finishedSource.Task;
 
         /// <summary>本场是否打赢：整局层在 IsFinished 之后据此决定要不要结算奖励。
         /// 胜负只看敌人是否全部阵亡，故战斗态被清空后照样回答得出。</summary>
@@ -119,6 +124,7 @@ namespace _DreamKeep.GameBattle
                     if (next == null)
                     {
                         _finished = true; // 终态：置位后 EnqueueCommand 一律早退，结束阶段不会被后续入队重跑
+                        _finishedSource.TrySetResult(); // 演出与 EndCombat 都已完成，此刻才放行整局收尾
                         return;
                     }
                     _fsm.ChangeState(BattleContext.IsBattleOver ? PhaseBattleFinish : next);

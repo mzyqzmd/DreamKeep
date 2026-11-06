@@ -140,7 +140,7 @@ namespace _DreamKeep.GameRun
         public EShopBuyResult TryBuyRelic(SO_Relic relic_)
         {
             int index = relic_ == null ? -1 : _relics.IndexOf(relic_);
-            if (index < 0 || _run.Player.HasRelic(relic_)) return EShopBuyResult.SoldOut;
+            if (index < 0) return EShopBuyResult.SoldOut;
 
             int price = PriceOfRelic(relic_);
             if (_run.Gold < price) return EShopBuyResult.NotEnoughGold;
@@ -229,7 +229,7 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 遗物：三池各出一件，跳过已持有与已上架；某池挑不出就空着该槽，不跨池补位
+        // 遗物：三池各出一件，附加过滤跳过已上架；挑不出时由 RelicRoller 降级到兜底池补位
         private void RollRelics(Rng rng_, SO_RelicPool common_, SO_RelicPool rare_, SO_RelicPool shop_)
         {
             AddRelicFrom(rng_, common_);
@@ -241,11 +241,11 @@ namespace _DreamKeep.GameRun
         {
             if (pool_ == null) return;
 
-            // 附加过滤跳过已上架；等权取一件与逐个 Next 同消耗一格随机流
-            List<SO_Relic> candidates = RelicRoller.CollectCandidates(_run.Player, new[] { pool_ },
+            // 附加过滤只作用于常规池；兜底池补齐由 RelicRoller 内部完成，不受"跳过已上架"影响
+            SO_Relic picked = RelicRoller.RollOne(_run.Player, new[] { pool_ }, rng_,
                 relic => !_relics.Contains(relic));
-            if (candidates.Count == 0) return;
-            _relics.Add(rng_.Pick(candidates));
+            if (picked == null) return; // 兜底未接线时留空槽
+            _relics.Add(picked);
         }
 
         // 药水：两池合并去重后不放回抽取三瓶

@@ -45,59 +45,59 @@ internal static class DevPanelCommands
 
     #endregion
 
-    #region 流程：加载首个战斗段
+    #region 流程：加载各段
 
-    /// <summary>加载首个战斗段（段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载首个战斗段（进段意图由 ESegmentKind 表达，守卫在 SegmentSceneManager 里）。</summary>
     internal static string StartFirstSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.BattleSegmentName);
+        manager.StartSegment(ESegmentKind.Battle);
         return "已请求加载首个战斗段";
     }
 
-    /// <summary>加载先古之民段（段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载先古之民段（进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartAncientSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.AncientSegmentName);
+        manager.StartSegment(ESegmentKind.Ancient);
         return "已请求加载先古之民段";
     }
 
-    /// <summary>加载休息段（段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载休息段（进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartRestSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.RestSegmentName);
+        manager.StartSegment(ESegmentKind.Rest);
         return "已请求加载休息段";
     }
 
-    /// <summary>加载宝箱段（随机双池并出 1 件遗物，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载宝箱段（随机双池并出 1 件遗物，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartChestSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.ChestSegmentName);
+        manager.StartSegment(ESegmentKind.Treasure);
         return "已请求加载宝箱段";
     }
 
-    /// <summary>加载事件段（进入后随机掷一则已实装事件，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载事件段（进入后随机掷一则已实装事件，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartEventSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.EventSegmentName);
+        manager.StartSegment(ESegmentKind.Event);
         return "已请求加载事件段";
     }
 
-    /// <summary>加载商店段（进店掷一次货架，段名与守卫都在 SegmentSceneManager 里）。</summary>
+    /// <summary>加载商店段（进店掷一次货架，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartShopSegment()
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(SegmentSceneManager.ShopSegmentName);
+        manager.StartSegment(ESegmentKind.Shop);
         return "已请求加载商店段";
     }
 
@@ -149,14 +149,14 @@ internal static class DevPanelCommands
 
     #region 物品：添加遗物与药水
 
-    /// <summary>添加遗物：已持有被 AddRelic 去重忽略；顶栏遗物栏随 RelicAdded 自动补格。
+    /// <summary>添加遗物：允许重复持有（去重只在抽取层）；顶栏遗物栏随 RelicAdded 自动补格。
     /// 战斗中已烘焙的遗物效果不随本操作增删，对下一场战斗才生效。</summary>
     internal static string AddRelic(SO_Relic relic_)
     {
         if (relic_ == null) return Fail("先在字段里拖入要添加的遗物");
         RunState run = ResolveRunState();
         if (run == null) return Fail("未找到 RunState（整局层是否已构建）");
-        if (!run.Player.AddRelic(relic_)) return Fail("已持有该遗物，忽略添加");
+        if (!run.Player.AddRelic(relic_)) return Fail("添加遗物失败");
         return $"已添加遗物「{relic_.name}」，当前 {run.Player.Relics.Count} 件";
     }
 

@@ -24,6 +24,9 @@ namespace _DreamKeep.Presentation
         /// <summary>当前是否有段在场：常驻 UI 的每个对外入口都先问它。</summary>
         public bool IsOpen => Loop != null;
 
+        /// <summary>是否处于战斗进行中：段在场且战斗循环未结束；领奖期（战斗已结束、段还在）为 false。</summary>
+        public bool IsFighting => IsOpen && !Loop.IsFinished;
+
         /// <summary>段开关时触发：常驻层借此重绑段内引用与事件订阅。</summary>
         public event Action Changed;
 

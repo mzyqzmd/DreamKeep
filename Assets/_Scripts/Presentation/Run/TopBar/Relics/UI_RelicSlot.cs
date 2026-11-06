@@ -32,10 +32,6 @@ namespace _DreamKeep.Presentation
         [Header("用尽表现")] [Tooltip("遗物用尽后图标定格的颜色")] [SerializeField]
         private Color _exhaustedColor = new(0.35f, 0.35f, 0.35f, 1f);
 
-        // 用尽后补在说明末尾的一行：Icon 变灰只能表示"看起来不对"，还得有一句话讲清它不再生效；
-        // 悬停气泡与信息面板共用这一句，故对外公开
-        public const string ExhaustedTip = "这个遗物的效果已经耗尽";
-
         [Header("触发表现")] [Tooltip("图标提亮的亮度倍率")] [SerializeField]
         private float _boostScale = 1.6f;
 
@@ -194,7 +190,7 @@ namespace _DreamKeep.Presentation
             _icon.color = exhausted_ ? _exhaustedColor : Color.white;
             if (_relic == null) return; // Awake 的复位早于 Bind，此时没有说明可写
             _hoverTip.SetContents(_relic.RelicName,
-                exhausted_ ? _relic.Description + "\n" + ExhaustedTip : _relic.Description);
+                exhausted_ ? _relic.Description + "\n" + UI_RelicsInfoPanel.ExhaustedTip : _relic.Description);
         }
 
         #region 节奏计数：右下角数字随遗物效果实时刷新

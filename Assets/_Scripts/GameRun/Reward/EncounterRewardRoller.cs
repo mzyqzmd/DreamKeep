@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
-using UnityEngine;
 
 namespace _DreamKeep.GameRun
 {
     /// <summary>遭遇奖励掷骰：把奖励配置 + 整局状态掷成一份奖励清单，是"配置 → 面板条目"的唯一入口。
-    /// 掷骰顺序固定（金币 → 卡牌各组 → 药水 → 遗物）且全部走同一条约会随机流，同种子可复现；
+    /// 掷骰顺序固定（金币 → 卡牌各组 → 药水 → 遗物）且全部走同一条整局随机流，同种子可复现；
     /// 三类奖励都支持配置多份池，掷骰前先把池列表合并成一份候选集（同引用去重）再无放回抽取，卡牌候选按配置概率直接以升级形态抽出；
-    /// 配置为空（Boss）或候选集为空时静默跳过该条，池里断引用的项也直接跳过——绝不让结算抛异常卡住流程。</summary>
+    /// 配置为空（Boss）或卡/药水候选集为空时静默跳过该条，池里断引用的项也直接跳过——绝不让结算抛异常卡住流程；
+    /// 遗物候选不足时由整局兜底遗物补齐到配置件数，绝不空手离场。
+    /// 配置缺口经调用方注入的 onWarning_ 上报，域层不直接依赖引擎日志出口。</summary>
     public static class EncounterRewardRoller
     {
         /// <summary>每组卡牌奖励的候选张数：恒为三选一，不随配置变化。</summary>
@@ -18,15 +19,15 @@ namespace _DreamKeep.GameRun
 
         #region 掷出一份奖励清单：配置为空时返回空表
 
-        public static List<RunReward> Roll(SO_EncounterReward config_, RunState run_)
+        public static List<RunReward> Roll(SO_EncounterReward config_, RunState run_, Action<string> onWarning_ = null)
         {
             List<RunReward> rewards = new();
             if (config_ == null || run_ == null) return rewards;
             Rng rng = run_.Rng;
 
             RollGold(config_, rng, rewards);
-            RollCards(config_, rng, rewards);
-            RollPotion(config_, rng, rewards);
+            RollCards(config_, rng, rewards, onWarning_);
+            RollPotion(config_, rng, rewards, onWarning_);
             RollRelics(config_, run_, rng, rewards);
 
             return rewards;
@@ -46,13 +47,13 @@ namespace _DreamKeep.GameRun
         }
 
         // 卡牌：每组独立抽三张不重复的候选；合并后的候选集不足三张时有几张给几张
-        private static void RollCards(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_)
+        private static void RollCards(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
         {
             if (config_.CardRewardCount <= 0) return;
             List<SO_Card> cards = Collect(config_.CardPools, static pool_ => pool_.Cards);
             if (cards.Count == 0)
             {
-                Debug.LogWarning($"奖励配置 {config_.name} 配了 {config_.CardRewardCount} 组卡牌奖励，但卡池列表没有有效卡，已跳过。");
+                onWarning_?.Invoke($"奖励配置 {config_.name} 配了 {config_.CardRewardCount} 组卡牌奖励，但卡池列表没有有效卡，已跳过。");
                 return;
             }
 
@@ -107,13 +108,13 @@ namespace _DreamKeep.GameRun
         }
 
         // 药水：先掷概率再抽一瓶；合并后的候选集为空视为没有药水奖励
-        private static void RollPotion(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_)
+        private static void RollPotion(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
         {
             if (config_.PotionChance <= 0f) return;
             List<SO_Potion> potions = Collect(config_.PotionPools, static pool_ => pool_.Potions);
             if (potions.Count == 0)
             {
-                Debug.LogWarning($"奖励配置 {config_.name} 配了药水概率，但药水池列表没有有效药水，已跳过。");
+                onWarning_?.Invoke($"奖励配置 {config_.name} 配了药水概率，但药水池列表没有有效药水，已跳过。");
                 return;
             }
 
@@ -121,22 +122,11 @@ namespace _DreamKeep.GameRun
             rewards_.Add(RunReward.PotionOf(potions[rng_.Next(potions.Count)]));
         }
 
-        // 遗物：RelicRoller 合并池后跳过已持有与断引用的项，再不放回抽取；不够件数时按实际数量发，并留一条警告
+        // 遗物：抽取全交给 RelicRoller（常规池跳过已持有，抽空自动降级到兜底池补齐）
         private static void RollRelics(SO_EncounterReward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.RelicCount <= 0) return;
-            List<SO_Relic> candidates = RelicRoller.CollectCandidates(run_.Player, config_.RelicPools);
-            if (candidates.Count == 0)
-            {
-                Debug.LogWarning($"奖励配置 {config_.name} 配了 {config_.RelicCount} 件遗物奖励，但遗物池列表没有可发的遗物，已跳过。");
-                return;
-            }
-
-            if (candidates.Count < config_.RelicCount)
-                Debug.LogWarning($"奖励配置 {config_.name} 要 {config_.RelicCount} 件遗物，" +
-                                 $"但池里只剩 {candidates.Count} 件未持有，按实际数量发。");
-
-            List<SO_Relic> taken = rng_.TakeShuffled(candidates, config_.RelicCount);
+            List<SO_Relic> taken = RelicRoller.Roll(run_.Player, config_.RelicPools, config_.RelicCount, rng_);
             for (int i = 0; i < taken.Count; i++) rewards_.Add(RunReward.RelicOf(taken[i]));
         }
     }

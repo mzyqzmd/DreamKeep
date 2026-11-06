@@ -8,8 +8,8 @@ using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>宝箱段组合根：从父容器取整局状态，用两个遗物池装配出本次开启的段模型并转发给表现入口。
-    /// autoRun 关、parentReference 由 SegmentSceneManager 运行时赋值（照先古段先例）；
+    /// <summary>宝箱段组合根：从父容器取整局状态，用两个遗物池装配出本段的模型、事实分发器与流程循环，
+    /// 命令门面交给视图提交意图；autoRun 关、parentReference 由 SegmentSceneLoader 运行时赋值。
     /// 漏接线是装配期错误，直接抛异常暴露。</summary>
     public class ChestLifetimeScope : LifetimeScope
     {
@@ -22,7 +22,14 @@ namespace _DreamKeep.Presentation
             if (!_rarePool) throw new InvalidOperationException($"[{nameof(ChestLifetimeScope)}] 稀有遗物池未接线");
 
             RunState run = Parent.Container.Resolve<RunState>();
-            builder_.RegisterInstance(new ChestSession(_commonPool, _rarePool, run));
+            ChestSession session = new ChestSession(_commonPool, _rarePool, run);
+            ChestEventDispatcher events = new ChestEventDispatcher();
+            ChestLoop loop = new ChestLoop(session, run, events);
+
+            builder_.RegisterInstance(session);
+            builder_.RegisterInstance(events); // 供三个视图 [Inject] 注册事实处理器
+            builder_.RegisterInstance(loop);
+            builder_.RegisterInstance(new ChestCommandDispatcher(loop)); // 供三个视图提交意图
             builder_.RegisterComponentInHierarchy<UI_Chest>();
             builder_.RegisterComponentInHierarchy<UI_RelicSelectPanel>();
             builder_.RegisterComponentInHierarchy<UI_ChestProceedButton>();

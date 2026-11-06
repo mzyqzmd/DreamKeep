@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f0a3f828fd7f7c41bae26046138ffb9, type: 3}
+  m_Name: Circlet
+  m_EditorClassIdentifier: 
+  _relicName: "\u5934\u73AF"
+  _icon: {fileID: 21300000, guid: bee3e38b3219839488e8c7c2c50d3634, type: 3}
+  _rarity: 1
+  _description: "\u8FD9\u662F\u4E00\u4E2A\u5934\u73AF\u3002<br>\u8FD9\u662F\u4E00\u4E2A\u5934\u73AF<br>\u8FD9\u662F\u4E00\u4E2A\u5934<br>\u8FD9\u662F\u4E00\u4E2A<br>\u8FD9\u662F\u4E00<br>\u8FD9\u662F<br>\u8FD9<br>"
+  _pickupHpCost: 0

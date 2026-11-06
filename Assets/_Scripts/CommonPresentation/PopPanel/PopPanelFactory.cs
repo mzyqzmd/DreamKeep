@@ -4,7 +4,7 @@ using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 
 namespace _DreamKeep.CommonPresentation
 {
-    /// <summary>全屏交互面板工厂：挂在场景 GameRoot 下，统一懒建并缓存奖励面板、卡牌三选一面板与卡牌移除面板三个常驻交互面板——
+    /// <summary>全屏交互面板工厂：挂在场景 GameRoot 下，统一懒建并缓存奖励面板、卡牌三选一面板、卡牌移除面板与遗物信息面板四个常驻交互面板——
     /// 面板由本工厂在容器外实例化后补一次注入（卡上的悬停气泡要靠 PopFactory，由容器内注册解析），并先关掉免得闪一帧；
     /// 内容与退场都归面板与调用方，本工厂只负责造、存放与停泊父级切换。
     /// 面板一律挂进画布才渲染：本工厂不在 Canvas 子树下，段场景面板由段装配显式停泊；_panelParent 只是 run 级默认停泊位
@@ -14,12 +14,14 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private UI_RewardPanel _rewardPanelPrefab;
         [SerializeField] private UI_CardOneInThreePanel _cardChoicePanelPrefab;
         [SerializeField] private UI_CardRemovePanel _cardRemovePanelPrefab;
+        [SerializeField] private UI_RelicsInfoPanel _relicInfoPanelPrefab;
         [Tooltip("run 级默认停泊位（主菜单自己的画布）：仅兜底首次创建未给父级的取用，段场景面板由段装配显式停泊")] [SerializeField]
         private RectTransform _panelParent;
 
         private UI_RewardPanel _rewardPanel;
         private UI_CardOneInThreePanel _cardChoicePanel;
         private UI_CardRemovePanel _cardRemovePanel;
+        private UI_RelicsInfoPanel _relicInfoPanel;
         private IObjectResolver _resolver;
 
         [Inject]
@@ -67,6 +69,14 @@ namespace _DreamKeep.CommonPresentation
             if (!_cardRemovePanel) _cardRemovePanel = CreatePanel(_cardRemovePanelPrefab, parent_);
             else Relocate(_cardRemovePanel.transform, parent_);
             return _cardRemovePanel;
+        }
+
+        /// <summary>取遗物信息面板单例（首次访问才实例化）：顶栏遗物槽位点击与商店遗物格右键共用，
+        /// 写入哪件遗物与是否用尽由调用方 Show 时传入；固定停泊 run 级默认画布，不随段卸载换挂。</summary>
+        public UI_RelicsInfoPanel AcquireRelicInfoPanel()
+        {
+            if (!_relicInfoPanel) _relicInfoPanel = CreatePanel(_relicInfoPanelPrefab, null);
+            return _relicInfoPanel;
         }
 
         #endregion

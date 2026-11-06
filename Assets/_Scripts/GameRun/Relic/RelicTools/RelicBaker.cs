@@ -79,6 +79,8 @@ namespace _DreamKeep.GameRun
                 SO_MeatOnTheBone data => new RE_MeatOnTheBone(data, context_, actions_, dispatcher_, notifier_),
 
                 // 纯局外效果：无战斗内行为（挖掘/烹饪资格由 RestEntry 判定，拾起时效果由先古段结算），显式登记 null 豁免
+                // 头环：兜底占位，既无战斗效果也无拾起效果
+                SO_Circlet => null,
                 SO_Shovel => null,
                 SO_MeatCleaver => null,
                 SO_GoldenPearl => null,

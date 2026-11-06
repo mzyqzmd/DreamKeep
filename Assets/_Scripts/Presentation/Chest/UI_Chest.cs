@@ -3,11 +3,13 @@ using Spine;
 using Spine.Unity;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using VContainer;
+using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>宝箱视图：悬停换 act1_stroke 皮肤、移开换回 act1；点击开箱（保持 act1 并播 animation），
-    /// 播到 50% 放行让段入口出遗物；领取后播 shine_fade 并锁定交互。指针事件由本节点统一承接。</summary>
+    /// <summary>宝箱视图：悬停换 act1_stroke 皮肤、移开换回 act1；点击只上报开箱意图。
+    /// 开箱动画与领取后的 shine_fade 锁定都由域播出的宝箱事实驱动，视图不再对外提供等待接口。</summary>
     public sealed class UI_Chest : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         private const string
@@ -20,7 +22,7 @@ namespace _DreamKeep.Presentation
         [Tooltip("开箱动画播到该比例（0~1）时放行出遗物")] [SerializeField]
         private float _openReleaseRatio = 0.5f;
 
-        private UniTaskCompletionSource _openedSource;
+        private ChestCommandDispatcher _commands;
         private bool _opened; // 已开箱：锁定悬停换肤，等待闪光
         private bool _locked; // 已领取：彻底锁死交互
         private bool _frozen; // 进场冻结只做一次的标记
@@ -40,6 +42,14 @@ namespace _DreamKeep.Presentation
             PinToFirstFrame();
         }
 
+        [Inject]
+        public void Construct(ChestEventDispatcher events_, ChestCommandDispatcher commands_)
+        {
+            _commands = commands_;
+            events_.Register<CE_ChestOpening>(PlayOpenAsync);
+            events_.Register<CE_RelicClaimed>(PlayShineFadeAndLockAsync);
+        }
+
         public void OnPointerEnter(PointerEventData eventData_)
         {
             if (_opened || _locked) return;
@@ -57,7 +67,7 @@ namespace _DreamKeep.Presentation
         public void OnPointerClick(PointerEventData eventData_)
         {
             if (_opened || _locked) return;
-            OpenAsync().Forget();
+            _commands.OpenChest();
         }
 
         // 钉在开箱动画第一帧：setup pose 是敞开的怪异形态，闭合外观只存在于 animation。进场与悬停
@@ -76,41 +86,25 @@ namespace _DreamKeep.Presentation
             state.ClearTracks();
         }
 
-        #region 对外：开箱等待与闪光锁定
-
-        /// <summary>等待玩家开箱：点击即播 animation，播到 _openReleaseRatio 比例时放行（遗物在此刻生成）。</summary>
-        public UniTask WaitOpenedAsync()
+        // 开箱：播到放行比例才返回，域 await 这条事实的演出后才出遗物
+        private async UniTask PlayOpenAsync(CE_ChestOpening opening_)
         {
-            _openedSource ??= new UniTaskCompletionSource();
-            return _openedSource.Task;
+            _opened = true;
+            ApplySkin(SkinIdle); // 开箱保持 act1，覆盖可能残留的悬停换肤
+            TrackEntry entry = _skeleton.AnimationState.SetAnimation(0, AnimOpen, false);
+            if (entry == null || entry.Animation == null) return;
+            float threshold = entry.Animation.Duration * _openReleaseRatio;
+            await UniTask.WaitUntil(() => entry.TrackTime >= threshold, cancellationToken: destroyCancellationToken);
         }
 
-        /// <summary>播放领取闪光动画并锁定交互：领取成功后由段入口调用。</summary>
-        public async UniTask PlayShineFadeAndLockAsync()
+        // 领取成功：播闪光并锁死交互（与「继续」亮出并行订阅同一条事实）
+        private async UniTask PlayShineFadeAndLockAsync(CE_RelicClaimed claimed_)
         {
             _locked = true;
             TrackEntry entry = _skeleton.AnimationState.SetAnimation(0, AnimShine, false);
             if (entry == null || entry.Animation == null) return;
             float duration = entry.Animation.Duration;
             await UniTask.WaitUntil(() => entry.TrackTime >= duration, cancellationToken: destroyCancellationToken);
-        }
-
-        #endregion
-
-        private async UniTask OpenAsync()
-        {
-            _opened = true;
-            ApplySkin(SkinIdle); // 开箱保持 act1，覆盖可能残留的悬停换肤
-            TrackEntry entry = _skeleton.AnimationState.SetAnimation(0, AnimOpen, false);
-            if (entry == null || entry.Animation == null)
-            {
-                _openedSource?.TrySetResult();
-                return;
-            }
-
-            float threshold = entry.Animation.Duration * _openReleaseRatio;
-            await UniTask.WaitUntil(() => entry.TrackTime >= threshold, cancellationToken: destroyCancellationToken);
-            _openedSource?.TrySetResult();
         }
 
         private void ApplySkin(string skinName_)

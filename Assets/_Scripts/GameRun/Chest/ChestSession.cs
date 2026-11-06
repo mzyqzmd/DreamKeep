@@ -8,7 +8,7 @@ namespace _DreamKeep.GameRun
     /// 纯 C#，不认识引擎与容器；掷骰走整局随机流，同种子可复现。一局可多次遇宝箱，每次独立重掷。</summary>
     public sealed class ChestSession
     {
-        /// <summary>本段抽中的遗物：构造时从双池合并候选里洗牌取一件；候选全空（已持有或池未配）时为 null。</summary>
+        /// <summary>本段抽中的遗物：构造时从双池合并候选里洗牌取一件；候选全空时由整局兜底遗物补上。</summary>
         public SO_Relic Reward { get; }
 
         private readonly RunState _run;
@@ -35,8 +35,8 @@ namespace _DreamKeep.GameRun
 
         #endregion
 
-        // 掷奖励：RelicRoller 合并双池候选，等权取一件；候选全空返回 null
+        // 掷奖励：抽取全交给 RelicRoller，池空自动降级到兜底池
         private SO_Relic RollReward(SO_RelicPool commonPool_, SO_RelicPool rarePool_) =>
-            _run.Rng.Pick(RelicRoller.CollectCandidates(_run.Player, new[] { commonPool_, rarePool_ }));
+            RelicRoller.RollOne(_run.Player, new[] { commonPool_, rarePool_ }, _run.Rng);
     }
 }
