@@ -5,7 +5,7 @@ namespace _DreamKeep.ConfigData
 {
     /// <summary>事件配置资产：一段跑图事件的全部内容——事件名、背景、第 1 页整段叙事与选项表。
     /// 选项携带置灰条件与 [SerializeReference] 效果清单，两页结构由"叙事（第 1 页）/每选项结果文案（第 2 页）"两个字段表达。
-    /// 本类只存数据：条件求值与效果执行统一由表现层 EventSession 分派（配置层不认识运行时）。</summary>
+    /// 本类只存数据：条件求值与效果执行统一由 GameRun/Event 的域循环分派（配置层不认识运行时）。</summary>
     public abstract class SO_Event : ScriptableObject
     {
         [SerializeField] private string _eventName; // 事件名 → 标题文本

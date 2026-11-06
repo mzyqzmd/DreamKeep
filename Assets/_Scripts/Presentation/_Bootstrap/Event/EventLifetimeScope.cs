@@ -8,9 +8,9 @@ using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>事件段组合根：从父容器取整局状态，把场景里的面板与选项组显式登记进段容器并启动段入口。
-    /// 用 FindObjectOfType(true) 自取（含未激活节点，各面板初始是关的），漏接线装配期直接抛异常暴露；
-    /// autoRun 关、parentReference 由 SegmentSceneManager 运行时赋值（照休息段先例）。</summary>
+    /// <summary>事件段组合根：从父容器取整局状态，用事件资产装配出本段的规则模型、事实广播器与流程循环，
+    /// 命令门面交给视图提交意图；autoRun 关、parentReference 由 SegmentSceneLoader 运行时赋值。
+    /// 漏接线是装配期错误，直接抛异常暴露。</summary>
     public class EventLifetimeScope : LifetimeScope
     {
         [Tooltip("本批已实装的事件资产：进入事件段时随机掷一则")]
@@ -22,23 +22,19 @@ namespace _DreamKeep.Presentation
                 throw new InvalidOperationException($"[{nameof(EventLifetimeScope)}] 事件资产列表未接线");
             Validate(_events);
 
-            UI_EventPanel panel = Require<UI_EventPanel>();
-            UI_EventOptionGroup options = Require<UI_EventOptionGroup>();
-            UI_RewardPanel rewardPanel = Require<UI_RewardPanel>();
-            UI_CardRemovePanel removePanel = Require<UI_CardRemovePanel>();
-            UI_CardUpgradePanel upgradePanel = Require<UI_CardUpgradePanel>();
-
-            // 场景件走 RegisterComponentInHierarchy：注册即注入（[Inject] 成员照常跑），
-            // RegisterInstance 不会自动注入——组的 IObjectResolver / 奖励面板的 Construct 会拿不到依赖
             RunState run = Parent.Container.Resolve<RunState>();
+            EventEventDispatcher events = new EventEventDispatcher();
+            EventLoop loop = new EventLoop(new EventSession(run, _events), run, events);
+
             builder_.RegisterInstance(run);
+            builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器
+            builder_.RegisterInstance(loop);
+            builder_.RegisterInstance(new EventCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_EventPanel>();
             builder_.RegisterComponentInHierarchy<UI_EventOptionGroup>();
             builder_.RegisterComponentInHierarchy<UI_RewardPanel>();
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>();
             builder_.RegisterComponentInHierarchy<UI_CardUpgradePanel>();
-            builder_.RegisterInstance(_events);
-            builder_.RegisterInstance(new EventSession(run, _events, panel, options, rewardPanel, removePanel, upgradePanel));
             builder_.RegisterEntryPoint<EventEntry>();
 
             // 段场景晚于整局容器加载：段内游离的气泡发起器（预摆特写卡、弹板子树等不在显式注入子树里的）在此兜底注入；
@@ -47,13 +43,6 @@ namespace _DreamKeep.Presentation
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
             });
-        }
-
-        private T Require<T>() where T : Component
-        {
-            T found = FindObjectOfType<T>(true);
-            if (found == null) throw new InvalidOperationException($"[{nameof(EventLifetimeScope)}] 场景缺少 {typeof(T).Name}");
-            return found;
         }
 
         // 装配期体检：效果里的断引用要等玩家点选才 NRE，这里提前炸出并带事件名与选项名

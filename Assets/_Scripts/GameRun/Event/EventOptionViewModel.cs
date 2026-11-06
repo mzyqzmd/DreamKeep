@@ -1,6 +1,6 @@
 using _DreamKeep.RuntimeData;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.GameRun
 {
     /// <summary>单条事件选项视图模型：标题、副标题（置灰时=原因文案）、是否可点、悬停展示卡（可空）。</summary>
     public readonly struct EventOptionViewModel
