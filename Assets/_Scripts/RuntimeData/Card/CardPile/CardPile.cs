@@ -40,15 +40,8 @@ namespace _DreamKeep.RuntimeData
         public bool Contains(CardModel card_) => _cards.Contains(card_);
         #endregion
 
-        #region 用确定性随机源做原地 Fisher-Yates 洗牌，保证同种子可复现
-        public void Shuffle(Rng rng_)
-        {
-            for (int i = _cards.Count - 1; i > 0; i--)
-            {
-                int j = rng_.Next(i + 1);
-                (_cards[i], _cards[j]) = (_cards[j], _cards[i]);
-            }
-        }
+        #region 委托确定性随机源原地洗牌，保证同种子可复现
+        public void Shuffle(Rng rng_) => rng_.Shuffle(_cards);
         #endregion
 
         #region 把本堆全部卡搬入目标堆并清空自身，用于弃牌堆洗回抽牌堆
