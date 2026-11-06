@@ -17,7 +17,7 @@ namespace _DreamKeep.Presentation
     /// 点敌人确认、右键或落空取消。可点窗口与手牌一致：玩家回合开始开、回合结束阶段关。
     /// 使用药水的投掷与落地演出也归本类编排：离槽事件自带落点，先清槽再让瓶子飞过去，瓶子落地后逐目标泼上水花，
     /// 落地特效不拖住链路——水花开播当帧就放行，效果动作立刻接上。
-    /// 战斗段每场重建，故命令 / 查询 / 瞄准中间件 / 战场 / 事件流五类引用随 BattleSession 开关重绑。
+    /// 战斗段每场重建，故命令 / 查询 / 事件流随 BattleSession 开关重绑，瞄准中间件与战场经表现侧孪生句柄 BattleStage 拿。
     /// 战斗外（段不在场，或战斗已打完只剩领奖）也能点开菜单：丢弃随时可用，
     /// 「使用」只对 SO_Potion.UsableOutsideBattle 的药水开放并就地结算，其余使用板置灰。</summary>
     public sealed class UI_PotionGroup : MonoBehaviour, IAimClient
@@ -43,6 +43,7 @@ namespace _DreamKeep.Presentation
 
         private RunState _run;
         private BattleSession _session;
+        private BattleStage _stage;
         private BattleCommandDispatcher _commandDispatcher;
         private BattleQueryDispatcher _queryDispatcher;
         private BattleTargetDirector _targetDirector;
@@ -98,10 +99,11 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(RunState run_, BattleSession session_, VfxFactory vfxFactory_)
+        public void Construct(RunState run_, BattleSession session_, BattleStage stage_, VfxFactory vfxFactory_)
         {
             _run = run_;
             _session = session_;
+            _stage = stage_;
             _vfxFactory = vfxFactory_;
             _popup.Hide();
 
@@ -124,8 +126,8 @@ namespace _DreamKeep.Presentation
 
             _commandDispatcher = _session.Command;
             _queryDispatcher = _session.Query;
-            _targetDirector = _session.TargetDirector;
-            _actorRoot = _session.ActorRoot;
+            _targetDirector = _stage.TargetDirector;
+            _actorRoot = _stage.ActorRoot;
             if (!_session.IsOpen) return;
 
             // 旧事件流随旧段一起消失，不需要注销；新段只需重新登记

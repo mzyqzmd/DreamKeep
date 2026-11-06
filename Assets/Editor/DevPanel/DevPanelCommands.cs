@@ -258,8 +258,9 @@ internal static class DevPanelCommands
         IObjectResolver container = ResolveContainer();
         if (container == null) return;
         BattleSession session = container.Resolve<BattleSession>();
-        if (session == null || !session.IsOpen || !session.ActorRoot) return;
-        if (!session.ActorRoot.TryGetView(creature_, out UI_Actor view) || !view) return;
+        BattleStage stage = container.Resolve<BattleStage>();
+        if (session == null || !session.IsOpen || stage == null || !stage.ActorRoot) return;
+        if (!stage.ActorRoot.TryGetView(creature_, out UI_Actor view) || !view) return;
         UI_HealthBar healthBar = view.GetComponentInChildren<UI_HealthBar>(true);
         if (healthBar) healthBar.SetHealth(creature_.CurrentHp);
     }

@@ -28,6 +28,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
             builder_.RegisterInstance(new BattleSession());
+            // 表现侧孪生句柄：战斗段表现锚点（单位根 / 目标裁决）随它开关，常驻药水栏经它拿每帧引用（见 BattleStage）
+            builder_.RegisterInstance(new BattleStage());
             // 弹层与特效工厂注册在整局层：池要跨段复用，段内编排者（BattlePopRoot / BattleVfxRoot）从父容器解析即可，
             // 段根 prefab 因此不必引用场景里的常驻对象
             builder_.RegisterComponentInHierarchy<PopFactory>();

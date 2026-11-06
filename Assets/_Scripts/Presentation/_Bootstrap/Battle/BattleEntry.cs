@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using _DreamKeep.CommonPresentation;
 using _DreamKeep.GameBattle;
+using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
 using VContainer;
@@ -7,8 +9,9 @@ using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战斗段表现层入口：按组合根转发的视图预制体生成玩家与敌人视图并值传递装配，再启动战斗循环，
+    /// <summary>战斗段表现层入口：按组合根转发的视图预制体生成玩家与敌人视图并值传递装配，再启动战斗与段收尾两条循环，
     /// 是"这场战斗从哪里开始"的唯一落点；视图一律运行时生成，场景里没有预摆的单位实例。
+    /// 收尾不在此裁决：订阅段收尾事实——奖励面板弹出、完成留段、退出卸段——转成整局编排者的动作与命令意图。
     /// 运行时生成的预制体进不了容器，故生成后补一次 InjectGameObject——视图上的 [Inject] 字段（如气泡宿主）由此拿到。
     /// 预制体、槽位点与视图组件三类漏接线一律报错并跳过该项：漏接线是装配期错误，不该以崩溃或"静默生成到场景根"的形式出现。</summary>
     public class BattleEntry : IStartable
@@ -16,18 +19,30 @@ namespace _DreamKeep.Presentation
         private readonly BattleLoop _loop;
         private readonly BattleContext _battleContext;
         private readonly BattleEventDispatcher _dispatcher;
+        private readonly BattleSegmentLoop _segmentLoop;
+        private readonly BattleSegmentEventDispatcher _segmentEvents;
+        private readonly BattleSegmentCommandDispatcher _segmentCommands;
+        private readonly SegmentSceneManager _segmentManager;
+        private readonly PopPanelFactory _popFactory;
         private readonly UI_ActorRoot _actorRoot;
         private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
         private readonly IObjectResolver _resolver;
 
         public BattleEntry(BattleLoop loop_, BattleContext battleContext_, BattleEventDispatcher dispatcher_,
-            UI_ActorRoot actorRoot_, [Key("Player")] GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_,
-            IObjectResolver resolver_)
+            BattleSegmentLoop segmentLoop_, BattleSegmentEventDispatcher segmentEvents_,
+            BattleSegmentCommandDispatcher segmentCommands_, SegmentSceneManager segmentManager_,
+            PopPanelFactory popFactory_, UI_ActorRoot actorRoot_, [Key("Player")] GameObject playerViewPrefab_,
+            List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
             _dispatcher = dispatcher_;
+            _segmentLoop = segmentLoop_;
+            _segmentEvents = segmentEvents_;
+            _segmentCommands = segmentCommands_;
+            _segmentManager = segmentManager_;
+            _popFactory = popFactory_;
             _actorRoot = actorRoot_;
             _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
@@ -36,9 +51,13 @@ namespace _DreamKeep.Presentation
 
         public void Start()
         {
+            _segmentEvents.Register<BAE_RewardOffered>(OnRewardOffered);
+            _segmentEvents.Register<BAE_RewardClaimed>(claimed_ => _segmentManager.CompleteSegment());
+            _segmentEvents.Register<BAE_BattleExited>(exited_ => _segmentManager.FinishSegment());
             SpawnPlayerView();
             SpawnEnemyViews();
             _loop.Start();
+            _segmentLoop.Start();
         }
 
         #region 生成玩家视图：实例化到玩家槽位，枢轴（脚底中点）钉到槽位点后值传递装配
@@ -110,5 +129,24 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
+
+        // 弹板自管领取与演出，「继续」关板并交回领完意图；弹板失败降级为跳过奖励（异常照报，不静默吞）
+        private void OnRewardOffered(BAE_RewardOffered offered_)
+        {
+            try
+            {
+                UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
+                panel.Show("战斗奖励", offered_.Rewards, () =>
+                {
+                    panel.Close();
+                    _segmentCommands.AcknowledgeReward();
+                });
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                _segmentCommands.SkipReward();
+            }
+        }
     }
 }

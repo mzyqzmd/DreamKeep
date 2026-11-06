@@ -28,8 +28,10 @@ namespace _DreamKeep.Presentation
         protected override void Configure(IContainerBuilder builder_)
         {
             RunState run = Parent.Container.Resolve<RunState>();
-            // 段会话句柄住整局容器：本段把自己的门面写进去，常驻 UI 据此响应或静默
+            // 段会话句柄住整局容器：本段把自己的门面写进去，常驻 UI 据此响应或静默；
+            // 表现锚点走表现侧孪生句柄，两个句柄成对开关（开段先 stage 后 session，关段先 session 后 stage）
             BattleSession session = Parent.Container.Resolve<BattleSession>();
+            BattleStage stage = Parent.Container.Resolve<BattleStage>();
             int floor = run.Floor;
 
             // 遭遇种类由地图节点决定：问号节点取揭示结果（揭示为精英就得进精英遭遇），其余只会是 Monster/Elite/Boss
@@ -54,6 +56,11 @@ namespace _DreamKeep.Presentation
             RelicTriggerNotifier relicNotifier = Parent.Container.Resolve<RelicTriggerNotifier>();
             BattleLoop loop = new BattleLoop(battleContext, run.Config.DrawPerTurn, dispatcher);
 
+            // 段收尾域 Loop（GameRun）：战斗终局裁决住整局域——胜利通过、掷奖励、领完或退出，经段事实驱动表现
+            BattleSegmentEventDispatcher segmentEvents = new BattleSegmentEventDispatcher();
+            BattleSegmentLoop segmentLoop = new BattleSegmentLoop(run, loop, encounter.Reward, segmentEvents,
+                static message_ => Debug.LogWarning(message_));
+
             // 遗物系统（GameRun 程序集）：遍历玩家整局持有的遗物，逐件烘焙效果并挂上本场事件流；
             // 战斗域零感知（装配反转），效果实例随本容器销毁。播报器是本段表现出口，遗物生效/用尽经它通知遗物栏
             foreach (var relic in battleContext.Player.Relics)
@@ -68,6 +75,9 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）
             builder_.RegisterInstance(new BattleQueryDispatcher(battleContext)); // 被视图的 [Inject] 要（预览查询与牌堆张数）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
+            builder_.RegisterInstance(segmentEvents); // 供入口 [Inject] 注册收尾事实处理器
+            builder_.RegisterInstance(segmentLoop); // 被命令门面与入口的构造函数要
+            builder_.RegisterInstance(new BattleSegmentCommandDispatcher(segmentLoop)); // 供入口提交领完/降级意图
             // 单位视图预制体一律来自配置资产：玩家取自整局角色配置，敌人列表与遭遇同源同序，
             // 由本组合根抽出转发，BattleEntry 无需认识配置
             builder_.RegisterInstance(run.Config.ViewPrefab).Keyed("Player");
@@ -103,9 +113,9 @@ namespace _DreamKeep.Presentation
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
                 resolver_.Resolve<UI_BackgroundView>().Apply(background);
+                stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>());
                 session.Open(resolver_.Resolve<BattleCommandDispatcher>(), resolver_.Resolve<BattleQueryDispatcher>(),
-                    dispatcher, resolver_.Resolve<BattleTargetDirector>(), resolver_.Resolve<UI_ActorRoot>(),
-                    relicNotifier, loop, encounter.Reward);
+                    dispatcher, loop);
             });
             builder_.RegisterEntryPoint<BattleEntry>();
 
