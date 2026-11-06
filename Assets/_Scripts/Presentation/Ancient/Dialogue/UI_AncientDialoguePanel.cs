@@ -3,12 +3,15 @@ using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using VContainer;
 using _DreamKeep.ConfigData;
+using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>先古对话面板编排：写名号（名字与职位两文本）、按行实例化说话人模板气泡逐条堆叠（打字机＋点击推进：揭示中点击＝补完，揭示后点击＝下一行），
-    /// 页首清空旧气泡、页尾销毁除末条外全部；点击热区为面板整面（场景接线透明 Image），选项卷轴的点选不会冒泡到这里。</summary>
+    /// <summary>先古对话面板编排：订阅名号与对话页事实，写名号（名字与职位两文本）、按行实例化说话人模板气泡逐条堆叠
+    /// （打字机＋点击推进：揭示中点击＝补完，揭示后点击＝下一行），页首清空旧气泡、页尾销毁除末条外全部；
+    /// 点击热区为面板整面（场景接线透明 Image），选项卷轴的点选不会冒泡到这里。</summary>
     public sealed class UI_AncientDialoguePanel : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private GameObject _ancientTemplate; // 先古之民的气泡模板（DialogueItem_L.prefab）
@@ -30,7 +33,15 @@ namespace _DreamKeep.Presentation
         private bool _revealing;
         private UniTaskCompletionSource _advanceClick;
 
-        public void BindNameplate(string ancientName_, string positionName_)
+        [Inject]
+        public void Construct(AncientEventDispatcher events_)
+        {
+            events_.Register<AE_NameplateBound>(bound_ => BindNameplate(bound_.AncientName, bound_.PositionName));
+            events_.Register<AE_DialoguePageOffered>(offered_ =>
+                PlayPageAsync(offered_.Page, offered_.AncientView, offered_.PlayerView));
+        }
+
+        private void BindNameplate(string ancientName_, string positionName_)
         {
             _ancientName.text = ancientName_;
             _positionName.gameObject.SetActive(!string.IsNullOrEmpty(positionName_));

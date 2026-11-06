@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
+using VContainer;
 using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
+using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>遗物三选一组：固定三槽按序 Bind 候选并错峰淡入，点选一次即锁；下标经 WaitChoiceAsync（继承自 UI_ButtonGroup）交给段入口。
-    /// 每件是否可选由调用方按拾取代价算好平行传入，置灰项仍占位显示。</summary>
+    /// <summary>遗物三选一组：订阅候选就位事实按固定三槽 Bind 并错峰淡入，点选一次即锁、只提交下标命令。
+    /// 每件是否可选由域层按拾取代价算好平行带出，置灰项仍占位显示。</summary>
     public sealed class UI_AncientOptionGroup : UI_ButtonGroup
     {
         [SerializeField] private UI_AncientOptionItem[] _slots;
@@ -14,6 +16,16 @@ namespace _DreamKeep.Presentation
         [Tooltip("相邻两件选项的淡入错峰间隔（秒）")]
         [SerializeField]
         private float _staggerInterval = 0.08f;
+
+        private AncientCommandDispatcher _commands;
+
+        [Inject]
+        public void Construct(AncientEventDispatcher events_, AncientCommandDispatcher commands_)
+        {
+            _commands = commands_;
+            events_.Register<AE_ChoicesOffered>(offered_ => Show(offered_.Choices, offered_.Claimable));
+            events_.Register<AE_ChoicesHidden>(hidden_ => Hide());
+        }
 
         #region 对外展示：Bind 候选错峰淡入，点选一次即锁
 
@@ -41,5 +53,8 @@ namespace _DreamKeep.Presentation
         #endregion
 
         protected override IReadOnlyList<UI_Button> GetButtons() => _slots;
+
+        /// <summary>点选定案：提交下标；命令会同步续跑域循环并立即收起选项。</summary>
+        protected override void OnChoiceMade(int index_) => _commands.Choose(index_);
     }
 }

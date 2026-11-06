@@ -8,9 +8,8 @@ using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>先古之民段组合根：从父容器取整局状态，用段配置装配出本次拜访的段模型并转发给表现入口。
-    /// 拾起时结算要用到升级/移除两张选牌面板，两件都以场景件登记（用 FindObjectOfType 自取，含未激活节点）；
-    /// autoRun 关、parentReference 由 SegmentSceneManager 运行时赋值（照战斗段先例）；
+    /// <summary>先古之民段组合根：从父容器取整局状态，用段配置装配出本次拜访的会话、事实广播器与流程循环，
+    /// 命令门面交给视图提交意图；autoRun 关、parentReference 由 SegmentSceneLoader 运行时赋值。
     /// 漏接线是装配期错误，直接抛异常暴露。</summary>
     public class AncientLifetimeScope : LifetimeScope
     {
@@ -22,8 +21,14 @@ namespace _DreamKeep.Presentation
             if (!_ancient.RelicPool) throw new InvalidOperationException($"[{nameof(AncientLifetimeScope)}] SO_Ancient 遗物池未接线");
 
             RunState run = Parent.Container.Resolve<RunState>();
+            AncientEventDispatcher events = new AncientEventDispatcher();
+            AncientLoop loop = new AncientLoop(new AncientSession(_ancient, run), run, events,
+                Parent.Container.Resolve<RelicTriggerNotifier>());
+
             builder_.RegisterInstance(run);
-            builder_.RegisterInstance(new AncientSession(_ancient, run));
+            builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器
+            builder_.RegisterInstance(loop);
+            builder_.RegisterInstance(new AncientCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_AncientDialoguePanel>();
             builder_.RegisterComponentInHierarchy<UI_AncientOptionGroup>();
             builder_.RegisterComponentInHierarchy<UI_AncientPopRoot>();
@@ -31,8 +36,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>();
             builder_.RegisterEntryPoint<AncientEntry>();
 
-            // 段场景晚于整局容器加载：段内游离的气泡发起器（预摆特写卡、弹板子树等不在显式注入子树里的）在此兜底注入；
-            // 已被注入过的实例重复跑一遍 [Inject] 只是把依赖再赋值一次，无副作用
+            // 段场景晚于整局容器加载：段内游离的气泡发起器在此兜底注入；重复注入只是重赋依赖，无副作用
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
