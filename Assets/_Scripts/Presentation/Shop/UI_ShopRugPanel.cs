@@ -9,14 +9,14 @@ using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>商店货摊（地毯）：货架的全部视图、买卖交互与开合动画都在这里。
     /// 槽位固定用场景里摆好的实例，不池化不实例化——四个分组按父容器收集子项，绑定时逐格填；
     /// 售出的格子保留根节点占位（只收内容），整行位置因此不会重排。
-    /// 左键交给 ShopSession 结算并当场收起该格内容（根节点留位）、整行重染价格；右键开统一卡牌特写；
-    /// 悬停让商人手移过去。删牌服务的金币校验与弹板归段入口，本类只上报点击、转发翻面演出与刷新用尽态。</summary>
+    /// 陈列数据一律由货架快照事实带出，点击只提交命令；右键特写与商人手交接仍归本类。</summary>
     public sealed class UI_ShopRugPanel : UI_Panel
     {
         [Header("货架分组")]
@@ -58,19 +58,16 @@ namespace _DreamKeep.Presentation
         private readonly List<UI_RelicShopItem> _relics = new();
         private readonly List<UI_PotionShopItem> _potions = new();
 
-        private ShopSession _session;
+        private ShopShelfSnapshot _shelf;
+        private ShopCommandDispatcher _commands;
+        private UI_ShopItem _pendingItem; // 被拒反馈只针对刚点的那一格：命令同步结算，事件同步回来
         private Component _hovered; // 商品与删牌服务共用：同一时刻只有一个悬停来源
         private Tween _slideTween;
         private bool _isClosing;
         private Vector2 _basePosition;
         private bool _baseCaptured;
         private bool _wired;
-
-        /// <summary>遗物成交：段入口据此播一次遗物涟漪（模型不碰表现）。</summary>
-        public event Action<SO_Relic> RelicBought;
-
-        /// <summary>删牌服务被点击：金币校验与弹板由段入口处理。</summary>
-        public event Action RemovalRequested;
+        private PopPanelFactory _popFactory;
 
         private void Awake()
         {
@@ -87,7 +84,27 @@ namespace _DreamKeep.Presentation
             CloseSubLayers(false);
         }
 
-        #region 对外：开合、绑货、重染价格与被拒反馈
+        [Inject]
+        public void Construct(PopPanelFactory popFactory_, ShopEventDispatcher events_, ShopCommandDispatcher commands_)
+        {
+            // 段入口会为地毯子树再补注入一次：订阅只做一次，否则同一事实会播出多遍
+            if (_commands != null) return;
+            _popFactory = popFactory_;
+            _commands = commands_;
+            events_.Register<SE_ShelfUpdated>(OnShelfUpdated);
+            events_.Register<SE_ShopOpened>(opened_ => PlayOpenAsync().Forget());
+            events_.Register<SE_PurchaseRefused>(refused_ => OnPurchaseRefused());
+            events_.Register<SE_RemovalRefused>(refused_ => PlayRemovalRefuse());
+        }
+
+        private void OnShelfUpdated(SE_ShelfUpdated updated_)
+        {
+            _shelf = updated_.Shelf;
+            if (updated_.Initial) Bind();
+            else RefreshPrices();
+        }
+
+        #region 对外：开合、重染价格与被拒反馈
 
         /// <summary>掀开货摊：从本位上方滑下来，商人手同步落下；滑动结束才返回。</summary>
         public async UniTask PlayOpenAsync()
@@ -127,32 +144,6 @@ namespace _DreamKeep.Presentation
                 });
         }
 
-        /// <summary>把货架绑到场景槽位：逐格填内容与价格，缺货的格子留位收起。</summary>
-        public void Bind(ShopSession session_)
-        {
-            _session = session_;
-            EnsureWired();
-
-            BindCards(_commonRareCards, session_.CommonRareCards);
-            BindCards(_superRareCards, session_.SuperRareCards);
-            BindRelics(session_);
-            BindPotions(session_);
-            RefreshPrices();
-        }
-
-        /// <summary>按当前金币重染整行价格：每次成交与删牌后调用一次（最多 12 格，不做每帧轮询）。</summary>
-        public void RefreshPrices()
-        {
-            if (_session == null) return;
-
-            int gold = _session.Gold;
-            RefreshCards(_commonRareCards, _session.CommonRareCards, gold);
-            RefreshCards(_superRareCards, _session.SuperRareCards, gold);
-            RefreshRelics(gold);
-            RefreshPotions(gold);
-            if (_removeCardButton) _removeCardButton.ShowPrice(_session.RemovalPrice, gold, _session.RemovalUsed);
-        }
-
         /// <summary>删牌服务被拒（金币不足）：抖动提示，不弹板。</summary>
         public void PlayRemovalRefuse()
         {
@@ -167,6 +158,30 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
+        // 首次快照：逐格填内容与价格，缺货的格子留位收起
+        private void Bind()
+        {
+            EnsureWired();
+            BindCards(_commonRareCards, _shelf.CommonRareCards);
+            BindCards(_superRareCards, _shelf.SuperRareCards);
+            BindRelics();
+            BindPotions();
+            RefreshPrices();
+        }
+
+        /// <summary>按当前快照重染整行价格：每次成交与删牌后调用一次（最多 12 格，不做每帧轮询）。</summary>
+        public void RefreshPrices()
+        {
+            if (_shelf == null) return;
+
+            int gold = _shelf.Gold;
+            RefreshCards(_commonRareCards, _shelf.CommonRareCards, gold);
+            RefreshCards(_superRareCards, _shelf.SuperRareCards, gold);
+            RefreshRelics(gold);
+            RefreshPotions(gold);
+            if (_removeCardButton) _removeCardButton.ShowPrice(_shelf.RemovalPrice, gold, _shelf.RemovalUsed);
+        }
+
         private void BindCards(List<UI_CardShop> views_, IReadOnlyList<CardModel> shelf_)
         {
             for (int i = 0; i < views_.Count; i++)
@@ -179,13 +194,13 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(card, _session.PriceOfCard(card), _session.IsOnSale(card), _session.Gold);
+                view.Bind(card, _shelf.PriceOfCard(card), _shelf.IsOnSale(card), _shelf.Gold);
             }
         }
 
-        private void BindRelics(ShopSession session_)
+        private void BindRelics()
         {
-            IReadOnlyList<SO_Relic> shelf = session_.Relics;
+            IReadOnlyList<SO_Relic> shelf = _shelf.Relics;
             for (int i = 0; i < _relics.Count; i++)
             {
                 SO_Relic relic = i < shelf.Count ? shelf[i] : null;
@@ -196,13 +211,13 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(relic, session_.PriceOfRelic(relic), session_.Gold);
+                view.Bind(relic, _shelf.PriceOfRelic(relic), _shelf.Gold);
             }
         }
 
-        private void BindPotions(ShopSession session_)
+        private void BindPotions()
         {
-            IReadOnlyList<SO_Potion> shelf = session_.Potions;
+            IReadOnlyList<SO_Potion> shelf = _shelf.Potions;
             for (int i = 0; i < _potions.Count; i++)
             {
                 SO_Potion potion = i < shelf.Count ? shelf[i] : null;
@@ -213,7 +228,7 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(potion, session_.PriceOfPotion(potion), session_.Gold);
+                view.Bind(potion, _shelf.PriceOfPotion(potion), _shelf.Gold);
             }
         }
 
@@ -228,13 +243,13 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                views_[i].ShowPrice(_session.PriceOfCard(card), gold_, _session.IsOnSale(card));
+                views_[i].ShowPrice(_shelf.PriceOfCard(card), gold_, _shelf.IsOnSale(card));
             }
         }
 
         private void RefreshRelics(int gold_)
         {
-            IReadOnlyList<SO_Relic> shelf = _session.Relics;
+            IReadOnlyList<SO_Relic> shelf = _shelf.Relics;
             for (int i = 0; i < _relics.Count; i++)
             {
                 SO_Relic relic = i < shelf.Count ? shelf[i] : null;
@@ -244,13 +259,13 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                _relics[i].ShowPrice(_session.PriceOfRelic(relic), gold_);
+                _relics[i].ShowPrice(_shelf.PriceOfRelic(relic), gold_);
             }
         }
 
         private void RefreshPotions(int gold_)
         {
-            IReadOnlyList<SO_Potion> shelf = _session.Potions;
+            IReadOnlyList<SO_Potion> shelf = _shelf.Potions;
             for (int i = 0; i < _potions.Count; i++)
             {
                 SO_Potion potion = i < shelf.Count ? shelf[i] : null;
@@ -260,48 +275,41 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                _potions[i].ShowPrice(_session.PriceOfPotion(potion), gold_);
+                _potions[i].ShowPrice(_shelf.PriceOfPotion(potion), gold_);
             }
         }
 
-        // 左键：按商品类型交给模型结算；成交或已售出即收起该格，被拒则抖一下
+        // 左键：只上报购买意图，结算与结果反馈都交回域层
         private void OnBuyRequested(UI_ShopItem item_)
         {
+            _pendingItem = item_;
             switch (item_)
             {
                 case UI_CardShop cardView:
-                    ApplyBuy(_session.TryBuyCard(cardView.Card), item_);
+                    _commands.BuyCard(cardView.Card);
                     break;
                 case UI_RelicShopItem relicView:
-                    SO_Relic relic = relicView.Relic;
-                    EShopBuyResult relicResult = _session.TryBuyRelic(relic);
-                    if (relicResult == EShopBuyResult.Success) RelicBought?.Invoke(relic);
-                    ApplyBuy(relicResult, item_);
+                    _commands.BuyRelic(relicView.Relic);
                     break;
                 case UI_PotionShopItem potionView:
-                    ApplyBuy(_session.TryBuyPotion(potionView.Potion), item_);
+                    _commands.BuyPotion(potionView.Potion);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(item_), $"{item_.GetType().Name} 不是商店商品");
             }
         }
 
-        private void ApplyBuy(EShopBuyResult result_, UI_ShopItem item_)
+        private void OnPurchaseRefused()
         {
-            if (result_ == EShopBuyResult.NotEnoughGold || result_ == EShopBuyResult.PotionSlotsFull)
-            {
-                item_.PlayRefuse();
-                return;
-            }
-
-            item_.MarkSold(); // 成交或已售出：这一格收起内容但留在原槽位
-            RefreshPrices();
+            if (_pendingItem) _pendingItem.PlayRefuse();
+            _pendingItem = null;
         }
 
-        // 右键：只有卡位有详情，交给统一特写
+        // 右键：卡位交给统一特写，遗物格交给工厂统一的遗物信息面板
         private void OnDetailRequested(UI_ShopItem item_)
         {
             if (item_ is UI_CardShop cardView && _concreteView) _concreteView.Open(cardView.Card);
+            if (item_ is UI_RelicShopItem relicView) _popFactory.AcquireRelicInfoPanel().Show(relicView.Relic, false);
         }
 
         // 悬停交接：Exit 晚于下一格的 Enter 到达时不清掉新的悬停；商品与删牌服务共用这一条通道
@@ -319,7 +327,7 @@ namespace _DreamKeep.Presentation
             if (_merchantHand) _merchantHand.ResetPoint();
         }
 
-        private void OnRemoveClicked() => RemovalRequested?.Invoke();
+        private void OnRemoveClicked() => _commands.RequestRemoval();
 
         // 特写与商人手在关摊时一并收起：动画关闭让手跟着面板滑出去，立即关闭（进店/兜底）直接收
         private void CloseSubLayers(bool animateHand_)

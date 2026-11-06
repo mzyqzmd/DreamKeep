@@ -8,8 +8,8 @@ using VContainer.Unity;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>商店段组合根：从父容器取整局状态，把八份池与价目表装配成段模型，并登记场景里的货摊、商人、
-    /// 「继续」与删牌弹板。autoRun 关、parentReference 由 SegmentSceneManager 运行时赋值（照休息/事件段先例）；
+    /// <summary>商店段组合根：从父容器取整局状态，把八份池与价目表装配成会话，再装配出本段的事实广播器、
+    /// 流程循环与命令门面；autoRun 关、parentReference 由 SegmentSceneLoader 运行时赋值。
     /// 池或价格漏接线是装配期错误，直接抛异常暴露。</summary>
     public class ShopLifetimeScope : LifetimeScope
     {
@@ -57,18 +57,22 @@ namespace _DreamKeep.Presentation
             if (!_prices) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 价目表未接线");
 
             RunState run = Parent.Container.Resolve<RunState>();
-            builder_.RegisterInstance(run);
-            builder_.RegisterInstance(new ShopSession(run, _prices, _normalCards, _rareCards, _superRareCards,
-                _commonRelics, _rareRelics, _shopRelics, _commonPotions, _rarePotions));
+            ShopSession session = new ShopSession(run, _prices, _normalCards, _rareCards, _superRareCards,
+                _commonRelics, _rareRelics, _shopRelics, _commonPotions, _rarePotions);
+            ShopEventDispatcher events = new ShopEventDispatcher();
+            ShopLoop loop = new ShopLoop(session, run, events, Parent.Container.Resolve<RelicTriggerNotifier>());
 
+            builder_.RegisterInstance(run);
+            builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器
+            builder_.RegisterInstance(loop);
+            builder_.RegisterInstance(new ShopCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_ShopRugPanel>();
             builder_.RegisterComponentInHierarchy<UI_ShopMerchant>();
             builder_.RegisterComponentInHierarchy<UI_ShopProceedItem>();
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>(); // 场景里已摆好的删牌弹板实例
             builder_.RegisterEntryPoint<ShopEntry>();
 
-            // 段场景晚于整局容器加载：段内游离的气泡发起器（预摆特写卡、弹板子树等不在显式注入子树里的）在此兜底注入；
-            // 已被注入过的实例重复跑一遍 [Inject] 只是把依赖再赋值一次，无副作用
+            // 段场景晚于整局容器加载：段内游离的气泡发起器在此兜底注入；重复注入只是重赋依赖，无副作用
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);

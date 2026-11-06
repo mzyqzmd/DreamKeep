@@ -1,26 +1,27 @@
 using _DreamKeep.EngineUtility;
+using _DreamKeep.GameRun;
 using VContainer;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>商店「继续」按钮：首次掀开地毯后亮出（场景初始是关的），
-    /// 每次点击都关会话开地图并保留本段，玩家关掉地图后可再点一次重开。</summary>
+    /// <summary>商店「继续」按钮：首次掀开地毯的事实到达后亮出（场景初始是关的），
+    /// 每次点击只提交继续意图，收段开图由商店段完成事实的订阅方完成。</summary>
     public sealed class UI_ShopProceedItem : UI_Button
     {
-        private SegmentSceneManager _segmentManager;
+        private ShopCommandDispatcher _commands;
 
         [Inject]
-        public void Construct(SegmentSceneManager segmentManager_) => _segmentManager = segmentManager_;
+        public void Construct(ShopEventDispatcher events_, ShopCommandDispatcher commands_)
+        {
+            _commands = commands_;
+            events_.Register<SE_ShopOpened>(opened_ => Show());
+        }
 
         private void Awake() => Clicked += OnClicked;
 
-        #region 对外：亮出
-
-        /// <summary>亮出按钮：段入口在玩家首次掀开地毯时调用。</summary>
+        /// <summary>亮出按钮：掀摊事实到达时调用，重复亮出无副作用。</summary>
         public void Show() => gameObject.SetActive(true);
 
-        #endregion
-
-        private void OnClicked() => _segmentManager.CompleteSegment();
+        private void OnClicked() => _commands.Proceed();
     }
 }
