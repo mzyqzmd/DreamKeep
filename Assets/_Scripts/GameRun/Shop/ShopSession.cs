@@ -237,13 +237,13 @@ namespace _DreamKeep.GameRun
         // 售价：半价卡取原价一半（整除）
         private static int SalePrice(int price_, bool onSale_) => onSale_ ? price_ / 2 : price_;
 
-        // 卡：多池合并去重后不放回抽取，不足按实数出；canonical 原型先烘焙，卖出时才克隆成局内卡
+        // 卡：多池合并按权重去重后不放回抽取，不足按实数出；canonical 原型先烘焙，卖出时才克隆成局内卡
         private void RollCards(List<CardModel> into_, Rng rng_, int count_, SO_CardPool first_, SO_CardPool second_ = null)
         {
-            List<SO_Card> candidates = EncounterRewardRoller.Collect(
-                new[] { first_, second_ }, static pool_ => pool_.Cards);
+            List<WeightedItem<SO_Card>> candidates = EncounterRewardRoller.CollectWeighted(
+                new[] { first_, second_ }, static pool_ => pool_.Cards, static pool_ => pool_.Weight);
 
-            List<SO_Card> taken = rng_.TakeShuffled(candidates, count_);
+            List<SO_Card> taken = rng_.TakeWeighted(candidates, count_);
             for (int i = 0; i < taken.Count; i++) into_.Add(CardModelBaker.Bake(taken[i]));
         }
 
@@ -266,12 +266,12 @@ namespace _DreamKeep.GameRun
             _relics.Add(picked);
         }
 
-        // 药水：两池合并去重后不放回抽取三瓶
+        // 药水：两池合并按权重去重后不放回抽取三瓶
         private void RollPotions(Rng rng_, SO_PotionPool first_, SO_PotionPool second_)
         {
-            List<SO_Potion> candidates = EncounterRewardRoller.Collect(
-                new[] { first_, second_ }, static pool_ => pool_.Potions);
-            _potions.AddRange(rng_.TakeShuffled(candidates, PotionSlotCount));
+            List<WeightedItem<SO_Potion>> candidates = EncounterRewardRoller.CollectWeighted(
+                new[] { first_, second_ }, static pool_ => pool_.Potions, static pool_ => pool_.Weight);
+            _potions.AddRange(rng_.TakeWeighted(candidates, PotionSlotCount));
         }
     }
 }

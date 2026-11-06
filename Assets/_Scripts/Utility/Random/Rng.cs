@@ -45,5 +45,45 @@ namespace _DreamKeep.Utility
                 (list_[i], list_[j]) = (list_[j], list_[i]);
             }
         }
+
+        /// <summary>加权无放回抽样：按候选件权重轮盘逐件取出，take_ 超过表长按表长截断；
+        /// 权重 ≤0 的件不会被抽中，全部权重 ≤0 时退化为等权抽取（零总和轮盘会卡死，此处对齐 TakeShuffled 口径）。</summary>
+        public List<T> TakeWeighted<T>(IReadOnlyList<WeightedItem<T>> candidates_, int take_)
+        {
+            List<WeightedItem<T>> pool = new(candidates_.Count);
+            for (int i = 0; i < candidates_.Count; i++) pool.Add(candidates_[i]);
+
+            int count = Math.Min(take_, pool.Count);
+            List<T> taken = new(count);
+            for (int i = 0; i < count; i++)
+            {
+                int picked = PickWeightedIndex(pool, i);
+                taken.Add(pool[picked].Item);
+                (pool[i], pool[picked]) = (pool[picked], pool[i]);
+            }
+
+            return taken;
+        }
+
+        // 轮盘定位：[from_, end) 区间按权重掷一次返回命中下标；跳过零权重件，区间总权重 ≤0 时等权掷
+        private int PickWeightedIndex<T>(List<WeightedItem<T>> pool_, int from_)
+        {
+            float total = 0f;
+            for (int i = from_; i < pool_.Count; i++) total += pool_[i].Weight;
+
+            if (total <= 0f) return Next(from_, pool_.Count);
+
+            float roll = Next(0f, total);
+            int lastPositive = -1;
+            for (int i = from_; i < pool_.Count; i++)
+            {
+                if (pool_[i].Weight <= 0f) continue;
+                lastPositive = i;
+                roll -= pool_[i].Weight;
+                if (roll < 0f) return i;
+            }
+
+            return lastPositive; // 浮点误差兜底：归到最后一件正权重件
+        }
     }
 }

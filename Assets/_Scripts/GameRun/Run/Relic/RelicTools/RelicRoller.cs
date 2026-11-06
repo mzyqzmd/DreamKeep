@@ -7,18 +7,18 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.GameRun
 {
     /// <summary>遗物抽取服务：整局抽遗物的唯一出口，覆盖遭遇奖励、宝箱、先古三选一、商店货架、休息挖掘、事件遗物等。
-    /// 常规池候选跳过断引用与已持有（可附加过滤）后等权取件；池空或件数不足时降级到整局兜底池，补齐到目标件数。
+    /// 常规池候选跳过断引用与已持有（可附加过滤）后按池权重取件、池内等权；池空或件数不足时降级到整局兜底池，补齐到目标件数。
     /// 兜底池随整局状态持有（RunState.FallbackRelicPool，组合根构建时传入），其成员豁免"跳过已持有"与附加过滤，故可重复发放；
     /// 补齐只做尾部追加，不额外消耗随机流，同种子可复现不变。</summary>
     public static class RelicRoller
     {
-        #region 抽取：收集候选、等权取件、缺口由兜底池补齐
+        #region 抽取：收集候选、按池权重取件、缺口由兜底池补齐
 
         /// <summary>掷 count_ 件遗物：常规池不足时由兜底池补齐到足额，返回恒定件数（兜底未接线时按实数）。</summary>
         public static List<SO_Relic> Roll(RunState run_, IReadOnlyList<SO_RelicPool> pools_, int count_, Rng rng_,
             Func<SO_Relic, bool> extraFilter_ = null)
         {
-            List<SO_Relic> taken = rng_.TakeShuffled(CollectCandidates(run_.Player, pools_, extraFilter_), count_);
+            List<SO_Relic> taken = rng_.TakeWeighted(CollectCandidates(run_.Player, pools_, extraFilter_), count_);
             FillFallback(run_.FallbackRelicPool, taken, count_);
             return taken;
         }
@@ -36,7 +36,7 @@ namespace _DreamKeep.GameRun
         public static List<SO_Relic> Collect(RunState run_, IReadOnlyList<SO_RelicPool> pools_,
             Func<SO_Relic, bool> extraFilter_ = null)
         {
-            List<SO_Relic> candidates = CollectCandidates(run_.Player, pools_, extraFilter_);
+            List<SO_Relic> candidates = ProjectItems(CollectCandidates(run_.Player, pools_, extraFilter_));
             if (candidates.Count != 0) return candidates;
             SO_Relic fallback = FirstFallbackRelic(run_.FallbackRelicPool);
             if (fallback != null) candidates.Add(fallback);
@@ -55,11 +55,12 @@ namespace _DreamKeep.GameRun
             return null;
         }
 
-        // 常规池候选：断引用、已持有、附加过滤一律跳过；同引用只收一次
-        private static List<SO_Relic> CollectCandidates(Player player_, IReadOnlyList<SO_RelicPool> pools_,
+        // 常规池候选：断引用、已持有、附加过滤一律跳过；同引用只收一次；
+        // 每件权重 = 池权重 / 本池贡献件数，单次抽取等价"按池权重轮盘选池、池内等权"
+        private static List<WeightedItem<SO_Relic>> CollectCandidates(Player player_, IReadOnlyList<SO_RelicPool> pools_,
             Func<SO_Relic, bool> extraFilter_)
         {
-            List<SO_Relic> candidates = new();
+            List<WeightedItem<SO_Relic>> candidates = new();
             if (pools_ == null) return candidates;
             HashSet<SO_Relic> seen = new();
             for (int i = 0; i < pools_.Count; i++)
@@ -67,16 +68,29 @@ namespace _DreamKeep.GameRun
                 SO_RelicPool pool = pools_[i];
                 if (pool == null) continue;
                 IReadOnlyList<SO_Relic> relics = pool.Relics;
+                List<SO_Relic> fresh = null;
                 for (int j = 0; j < relics.Count; j++)
                 {
                     SO_Relic relic = relics[j];
                     if (relic == null || player_.HasRelic(relic)) continue;
                     if (extraFilter_ != null && !extraFilter_(relic)) continue;
-                    if (seen.Add(relic)) candidates.Add(relic);
+                    if (seen.Add(relic)) (fresh ??= new()).Add(relic);
                 }
+
+                if (fresh == null) continue;
+                float perItem = pool.Weight / fresh.Count;
+                for (int j = 0; j < fresh.Count; j++) candidates.Add(new WeightedItem<SO_Relic>(fresh[j], perItem));
             }
 
             return candidates;
+        }
+
+        // 带权候选投影成裸列表：挖掘自选入口不掷骰，权重无意义
+        private static List<SO_Relic> ProjectItems(List<WeightedItem<SO_Relic>> weighted_)
+        {
+            List<SO_Relic> items = new(weighted_.Count);
+            for (int i = 0; i < weighted_.Count; i++) items.Add(weighted_[i].Item);
+            return items;
         }
 
         // 缺口补齐：尾部追加兜底遗物，不洗牌、不消耗随机流
