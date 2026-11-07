@@ -112,7 +112,7 @@ namespace _DreamKeep.GameRun
         {
             FillRow(grid_, width_, 1, EMapPointType.Monster);
             FillRow(grid_, width_, rows_ - 1, EMapPointType.Rest);
-            if (rows_ - 7 > 1) FillRow(grid_, width_, rows_ - 7, EMapPointType.Treasure);
+            if (rows_ - 7 > 1) FillRow(grid_, width_, rows_ - 7, EMapPointType.Chest);
 
             List<EMapPointType> remaining = BuildQuotaList(RollCounts(config_, rng_));
             List<MapNode> open = CollectOpenNodes(grid_, width_, rows_);
@@ -167,7 +167,7 @@ namespace _DreamKeep.GameRun
                 counts_.NumOfElites + counts_.NumOfShops + counts_.NumOfUnknowns + counts_.NumOfRests);
             for (int i = 0; i < counts_.NumOfElites; i++) list.Add(EMapPointType.Elite);
             for (int i = 0; i < counts_.NumOfShops; i++) list.Add(EMapPointType.Shop);
-            for (int i = 0; i < counts_.NumOfUnknowns; i++) list.Add(EMapPointType.Event);
+            for (int i = 0; i < counts_.NumOfUnknowns; i++) list.Add(EMapPointType.Unknown);
             for (int i = 0; i < counts_.NumOfRests; i++) list.Add(EMapPointType.Rest);
             return list;
         }
@@ -196,13 +196,13 @@ namespace _DreamKeep.GameRun
             int row = node_.Coord.Row;
             if (!IsRowLegal(type_, row, rows_, config_)) return false;
 
-            if (type_ is EMapPointType.Elite or EMapPointType.Rest or EMapPointType.Treasure or EMapPointType.Shop)
+            if (type_ is EMapPointType.Elite or EMapPointType.Rest or EMapPointType.Chest or EMapPointType.Shop)
             {
                 foreach (MapNode parent in node_.Parents) if (parent.PointType == type_) return false;
                 foreach (MapNode child in node_.Children) if (child.PointType == type_) return false;
             }
 
-            if (type_ is EMapPointType.Rest or EMapPointType.Monster or EMapPointType.Event or EMapPointType.Elite or EMapPointType.Shop)
+            if (type_ is EMapPointType.Rest or EMapPointType.Monster or EMapPointType.Unknown or EMapPointType.Elite or EMapPointType.Shop)
                 foreach (MapNode parent in node_.Parents)
                     foreach (MapNode sibling in parent.Children)
                         if (sibling != node_ && sibling.PointType == type_) return false;

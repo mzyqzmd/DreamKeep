@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6e3f204d9f56a0bc8e2711db409f536, type: 3}
   m_Name: EncounterPool_OverGrowth
   m_EditorClassIdentifier: 
+  _weakFloorLimit: 6
   _weak:
-  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
+  - {fileID: 11400000, guid: 2e72c76d88f2cad4f94222cf8ba22929, type: 2}
   _strong:
-  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
+  - {fileID: 11400000, guid: 4435524594a148148ad3ae4047711fbc, type: 2}
   _elite:
-  - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
+  - {fileID: 11400000, guid: 2e72c76d88f2cad4f94222cf8ba22929, type: 2}
   _boss:
   - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}

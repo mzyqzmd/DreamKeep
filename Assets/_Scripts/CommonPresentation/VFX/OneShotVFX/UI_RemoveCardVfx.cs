@@ -1,35 +1,31 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.UI;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.CommonPresentation
 {
     /// <summary>移除卡牌演出：根下预摆一张展示卡，复刻"从牌库永久移除一张牌"的参考时序——
-    /// 弹出（缩放 0→1，OutCubic）→ 停顿 → 竖向压扁到 0 且横向微张、同步整体渐黑 → 播完还池。
-    /// 纯 transform 与 Graphic.color 驱动，无粒子无 shader；取池/摆位/到时还池沿 UI_OneShotVfx 契约，
-    /// 动画只写展示卡子节点：根的缩放由工厂摆位写入，两者互不干扰。</summary>
+    /// 弹出（缩放 0→1，OutCubic）→ 停顿 → 竖向压扁到 0 且横向微张、同步整卡渐隐 → 播完还池。
+    /// 纯 transform 与 CanvasGroup.alpha 驱动，无粒子无 shader；取池/摆位/到时还池沿 UI_OneShotVfx 契约：
+    /// 缩放只写展示卡（根缩放由工厂摆位写入）、渐隐写根上 CanvasGroup，两者互不干扰。</summary>
     public sealed class UI_RemoveCardVfx : UI_OneShotVfx
     {
-        [Header("展示卡")] [Tooltip("内嵌的被移除卡展示：由 Bind 写入本次移除的牌，全程显示、随压扁渐黑收场")] [SerializeField]
+        [Header("展示卡")] [Tooltip("内嵌的被移除卡展示：由 Bind 写入本次移除的牌，全程显示、随压扁渐隐收场")] [SerializeField]
         private UI_CardDisplay _cardView;
+
+        [Tooltip("渐隐通道：压扁段整卡透明度落到 0")] [SerializeField] private CanvasGroup _canvasGroup;
 
         [Header("时序")] [SerializeField] private float _popDuration = 0.25f; // 弹出：缩放 0→1
         [SerializeField] private float _holdDuration = 1.5f; // 停顿：完整展示
-        [SerializeField] private float _squashDuration = 0.4f; // 压扁渐黑段时长（原版未给，可调）
+        [SerializeField] private float _squashDuration = 0.4f; // 压扁渐隐段时长（原版未给，可调）
         [SerializeField] private float _squashStretchX = 1.5f; // 压扁时横向微张的目标倍数
 
-        private Graphic[] _graphics; // 展示卡下全部图元（含 TMP 文本）：渐黑通道逐个乘色
-        private Color[] _baseColors; // 各图元的原色：渐黑与复位都以它为基准
         private Tween _sequence;
 
         protected override void Awake()
         {
             base.Awake(); // 根不挂 Graphic 时 alpha 兜底自然跳过
-            if (!_cardView) return;
-            _graphics = _cardView.GetComponentsInChildren<Graphic>(true);
-            _baseColors = new Color[_graphics.Length];
-            for (int i = 0; i < _graphics.Length; i++) _baseColors[i] = _graphics[i].color;
+            if (!_canvasGroup) _canvasGroup = GetComponent<CanvasGroup>();
         }
 
         protected override float Duration => _popDuration + _holdDuration + _squashDuration;
@@ -42,8 +38,8 @@ namespace _DreamKeep.CommonPresentation
             sequence.AppendInterval(_holdDuration);
             sequence.Append(_cardView.transform.DOScale(new Vector3(_squashStretchX, 0f, 1f), _squashDuration)
                 .SetEase(Ease.Linear));
-            // 渐黑与压扁同步：起点取自 getter（恒 0），只乘 rgb 保 alpha——Color.Lerp 会连 alpha 一起拉向 0
-            sequence.Join(DOTween.To(() => 0f, WriteBlack, 1f, _squashDuration).SetEase(Ease.Linear));
+            // 渐隐与压扁同步
+            if (_canvasGroup) sequence.Join(_canvasGroup.DOFade(0f, _squashDuration).SetEase(Ease.Linear));
             _sequence = sequence;
         }
 
@@ -63,7 +59,7 @@ namespace _DreamKeep.CommonPresentation
 
         private void ResetVisual()
         {
-            RestoreColors();
+            if (_canvasGroup) _canvasGroup.alpha = 1f;
             _cardView.transform.localScale = Vector3.zero;
         }
 
@@ -71,26 +67,8 @@ namespace _DreamKeep.CommonPresentation
         private void Abort()
         {
             _sequence?.Kill();
-            RestoreColors();
+            if (_canvasGroup) _canvasGroup.alpha = 1f;
             _cardView.transform.localScale = Vector3.one;
-        }
-
-        private void WriteBlack(float progress_)
-        {
-            float k = 1f - progress_;
-            for (int i = 0; i < _graphics.Length; i++)
-            {
-                Color color = _baseColors[i];
-                color.r *= k;
-                color.g *= k;
-                color.b *= k;
-                _graphics[i].color = color;
-            }
-        }
-
-        private void RestoreColors()
-        {
-            for (int i = 0; i < _graphics.Length; i++) _graphics[i].color = _baseColors[i];
         }
     }
 }

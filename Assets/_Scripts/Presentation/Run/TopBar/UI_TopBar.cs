@@ -10,7 +10,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.Presentation
 {
     /// <summary>整局顶部状态栏：run 装配完成后自动显示（主菜单兼作 run 基地）。
-    /// 订阅整局数据变更（HP / 金币 / 层数）刷新对应文本，而非每帧轮询；已用时长用轻量计时器显示。
+    /// 订阅整局数据变更（HP / 金币 / 层数）刷新对应文本，而非每帧轮询；已用时长由每帧喂增量给 RunState 后读值展示。
     /// 地图与卡组按钮已接到各自面板的开合；菜单仍是占位（仅打印日志）。</summary>
     public sealed class UI_TopBar : MonoBehaviour
     {
@@ -31,10 +31,9 @@ namespace _DreamKeep.Presentation
         private UI_MapPanel _mapPanel;
 
         [SerializeField] private UI_DeckPanel _deckPanel;
-        [SerializeField] private UI_MenuPanel _menuPanel;
+        [SerializeField] private UI_PausePanel pausePanel;
 
         private RunState _run;
-        private float _runStart;
         private int _lastShownSeconds = -1;
         private Tween _goldTween;
         private int _shownGold;
@@ -48,7 +47,7 @@ namespace _DreamKeep.Presentation
             // 初值：装配完成时直接读一次，后续靠事件增量刷新
             RefreshHp();
             RefreshGold();
-            if (_layerBar) _layerBar.SetFloor(_run.Floor);
+            if (_layerBar) _layerBar.SetFloor(_run.Floor, _run.Map.CurrentNode);
 
             // 订阅整局数据变更（事件驱动，避免每帧轮询）
             _run.Player.Creature.HpChanged += OnHpChanged;
@@ -58,8 +57,7 @@ namespace _DreamKeep.Presentation
             if (_mapPanel) _mapPanel.HideImmediate(); // 装配时立即收起，不起收起动画、不留透明激活层
             WireButtons();
 
-            // 计时起点 = run 装配完成这一刻；停表钩子待存档系统落地后接入
-            _runStart = Time.realtimeSinceStartup;
+            // 计时累计在 RunState（构造即从 0 起），这里只把展示缓存归零后写一次初值
             _lastShownSeconds = -1;
             UpdateTime();
         }
@@ -80,7 +78,7 @@ namespace _DreamKeep.Presentation
 
         private void OnFloorChanged(int floor_)
         {
-            if (_layerBar) _layerBar.SetFloor(floor_);
+            if (_layerBar) _layerBar.SetFloor(floor_, _run.Map.CurrentNode);
         }
 
         private void RefreshHp()
@@ -171,18 +169,19 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 轻量计时：仅整秒跳变时重建字符串
+        #region 计时展示：每帧喂增量给整局状态（泵），仅整秒跳变时重建字符串
 
         private void Update()
         {
             if (_run == null) return;
+            _run.TickTime(Time.unscaledDeltaTime); // 真实时间口径：不受 timeScale 影响，与原秒表语义一致
             UpdateTime();
         }
 
         private void UpdateTime()
         {
             if (_timeText == null) return;
-            int seconds = (int)(Time.realtimeSinceStartup - _runStart);
+            int seconds = (int)_run.ElapsedSeconds;
             if (seconds == _lastShownSeconds) return;
             _lastShownSeconds = seconds;
             _timeText.text = $"{seconds / 60:00}:{seconds % 60:00}";

@@ -48,8 +48,11 @@ namespace _DreamKeep.Presentation
         [Tooltip("同层错落幅度（像素，仅该层有 2 个以上节点时生效）")] [SerializeField]
         private Vector2 _staggerPx = new(20f, 16f);
 
-        /// <summary>可走节点被点击：流程层据此切段。</summary>
+        /// <summary>可走节点被点击：编排层据域节点切段。</summary>
         public event Action<MapNode> NodeClicked;
+
+        /// <summary>地图全量重建（Build 尾声，空图路径同样广播）：限本局的内容（如玩家墨迹）据此清空。</summary>
+        public event Action MapRebuilt;
 
         private MapGraph _graph;
         private Coroutine _selectRoutine;
@@ -74,6 +77,7 @@ namespace _DreamKeep.Presentation
         {
             _graph = graph_;
             ClearAll();
+            MapRebuilt?.Invoke(); // 换局重建即换一局：墨迹等"限本局"内容据此清空
             if (_graph == null) return;
 
             _rowCounts = new int[_graph.Rows];
@@ -307,6 +311,17 @@ namespace _DreamKeep.Presentation
             // 当前节点摆在视口正中，顶/底越界时钳住——开局自然就贴到地图最下面
             float offsetFromTop = Mathf.Clamp(pos.y - _scroll.viewport.rect.height * 0.5f, 0f, scrollable);
             _scroll.verticalNormalizedPosition = 1f - offsetFromTop / scrollable;
+        }
+
+        #endregion
+
+        #region 图例悬停高亮：按节点展示类型全量点亮/还原
+
+        /// <summary>按展示类型切换高亮："？"节点只归"事件"图例、已揭示的按揭示后类型归队（口径见 UI_MapNode.ShownType）。</summary>
+        public void HighlightType(EMapPointType type_, bool on_)
+        {
+            foreach (KeyValuePair<MapNode, UI_MapNode> pair in _views)
+                if (pair.Value.ShownType == type_) pair.Value.SetHighlighted(on_);
         }
 
         #endregion

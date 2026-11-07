@@ -149,7 +149,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _selfDriven: 0
-  _scaleFactor: 1.2
   _hoverScale: 1.05
   _duration: 0.12
   _ease: 6
@@ -452,6 +451,18 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -498,6 +509,10 @@ PrefabInstance:
     - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3566639564091202687, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4086349335703879808, guid: 9d0ad59291755664ca247a10b46cad6e, type: 3}
       propertyPath: m_fontSize

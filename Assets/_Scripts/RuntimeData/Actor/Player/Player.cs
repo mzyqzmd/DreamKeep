@@ -6,7 +6,6 @@ namespace _DreamKeep.RuntimeData
 {
     /// <summary>玩家：全场唯一的我方单位。持有生物数据、遗物、药水槽、局内卡组与战斗态（战斗态随战斗新建与清空，其余跨战斗保留）。
     /// 金币不属于战斗单位，住整局状态 RunState。
-    /// TODO（系统未落地，先记名不落字段）：法球槽位数 BaseOrbSlotCount、
     /// 扩展字段 ExtraFields、开局难度等级；遗物抽取袋 RelicGrabBag 随遗物获取流程一起做。</summary>
     public class Player
     {
@@ -32,6 +31,9 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>局内完整卡组：跨战斗保留，元素为局内卡（战斗卡由它逐张克隆而来）。</summary>
         public CardPile Deck { get; } = new();
+
+        /// <summary>卡牌入组通知：获得卡演出订阅，领到新卡当场播「展示后飞入牌库」。</summary>
+        public event Action<CardModel> CardAdded;
 
         /// <summary>当前战斗态；不在战斗内时为 null。</summary>
         public PlayerCombatState CombatState { get; private set; }
@@ -99,7 +101,9 @@ namespace _DreamKeep.RuntimeData
 
         public void AddCard(CardModel runCard_)
         {
-            if (runCard_ != null) Deck.Add(runCard_);
+            if (runCard_ == null) return;
+            Deck.Add(runCard_);
+            CardAdded?.Invoke(runCard_);
         }
 
         #endregion

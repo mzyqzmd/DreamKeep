@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 304322232adb41ad99a309341d380707, type: 3}
-  m_Name: TwigSlime
+  m_Name: TwigSlime_Weak
   m_EditorClassIdentifier: 
   _name: "\u6811\u679D\u53F2\u83B1\u59C6"
-  _maxHP: 24
+  _maxHP: 18
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841580618121217
@@ -42,7 +42,7 @@ MonoBehaviour:
     - rid: 8162841580618121217
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 5
+        _amount: 3
     - rid: 8162841984668532746
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -53,7 +53,7 @@ MonoBehaviour:
     - rid: 8162841984668532747
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _damage: 4
+        _damage: 3
         _times: 3
     - rid: 8162841984668532748
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}

@@ -10,8 +10,8 @@ namespace _DreamKeep.ConfigData
         Elite = 3,      // 精英战斗
         Shop = 4,       // 商店
         Rest = 5,       // 休息
-        Treasure = 6,   // 宝箱
-        Event = 7,      // 未知（"?"，进入才揭晓——即文档的 Unknown）
+        Chest = 6,   // 宝箱
+        Unknown = 7,      // 未知（"?"，进入才揭晓——即文档的 Unknown）
         Boss = 8,       // 首领
     }
 }

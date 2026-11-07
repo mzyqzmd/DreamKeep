@@ -252,7 +252,7 @@ namespace _DreamKeep.Presentation
             _hovered = true;
             KillMotion();
             _hoverOffset.Play(worldPosition_, worldRotation_);
-            _hoverScaler.PlayHoverScale();
+            _hoverScaler.PlayScaleRelative(_hoverScaler.HoverScale);
         }
 
         // 退出：同样先交接再还原——按区域给的槽位世界姿态一次还原位置、朝向与缩放三项，与进入时的瞬时状态无关，

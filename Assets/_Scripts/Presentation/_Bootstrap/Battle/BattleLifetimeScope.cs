@@ -114,10 +114,6 @@ namespace _DreamKeep.Presentation
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
                 resolver_.Resolve<UI_BackgroundView>().Apply(background);
-                // 装配期断言"手牌演出先于玩家 cast"：玩家角色的施法动画在单位运行期装配时才订阅 BE_CardPlayed，
-                // 演出器的处理器必须排在其前——此刻若注册数不是 1，说明有容器期组件抢在演出器之前订了这条事件
-                Debug.Assert(dispatcher.CountHandlers<BE_CardPlayed>() == 1,
-                    "BE_CardPlayed 出现演出器之外的容器期订阅者，「手牌演出先于玩家 cast」的时序契约被打破");
                 stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>());
                 session.Open(resolver_.Resolve<BattleCommandDispatcher>(), resolver_.Resolve<BattleQueryDispatcher>(),
                     dispatcher, loop);

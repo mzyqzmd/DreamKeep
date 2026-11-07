@@ -18,6 +18,7 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private UI_OneShotVfx _restSmokeVfxPrefab;
         [SerializeField] private UI_OneShotVfx _smithForgeVfxPrefab;
         [SerializeField] private UI_RemoveCardVfx _removeCardVfxPrefab;
+        [SerializeField] private UI_GainCardVfx _gainCardVfxPrefab;
 
         private MonoObjectPool<UI_OneShotVfx> _vfxPool;
 
@@ -78,6 +79,20 @@ namespace _DreamKeep.CommonPresentation
             PlayWithCallback(_removeCardVfxPrefab, parent_, worldPosition_, scale_, onFinished_, vfx_ =>
             {
                 if (vfx_ is UI_RemoveCardVfx removeVfx) removeVfx.Bind(card_);
+            });
+        }
+
+        /// <summary>获得卡牌演出：满尺寸展示一拍后整卡缩小渐隐飞向落点；槽位空则立刻回调（等待方不会挂死）。</summary>
+        public void PlayGainCard(Transform parent_, Vector3 worldPosition_, float scale_,
+            Vector3 targetWorldPosition_, CardModel card_, Action onFinished_)
+        {
+            PlayWithCallback(_gainCardVfxPrefab, parent_, worldPosition_, scale_, onFinished_, vfx_ =>
+            {
+                if (vfx_ is UI_GainCardVfx gainVfx)
+                {
+                    gainVfx.SetTarget(targetWorldPosition_);
+                    gainVfx.Bind(card_);
+                }
             });
         }
 

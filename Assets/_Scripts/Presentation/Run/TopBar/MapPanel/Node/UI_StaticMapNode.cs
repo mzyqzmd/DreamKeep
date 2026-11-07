@@ -24,11 +24,7 @@ namespace _DreamKeep.Presentation
         {
             if (_rect == null) _rect = (RectTransform)transform;
             EMapPointType shown = node_.PointType;
-            Sprite icon = null;
-            Sprite outline = null;
-            bool hasVariant = node_.RevealedType != EMapPointType.None &&
-                              _visual.TryGetVariant(shown, node_.RevealedType, out icon, out outline);
-            if (!hasVariant && !_visual.TryGetVisual(shown, out icon, out outline))
+            if (!_visual.TryGetDisplayVisual(shown, node_.RevealedType, out Sprite icon, out Sprite outline))
             {
                 Debug.LogError($"地图节点视觉缺 {shown} 条目", this);
                 return;

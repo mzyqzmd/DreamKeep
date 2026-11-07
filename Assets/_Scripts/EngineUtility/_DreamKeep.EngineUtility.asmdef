@@ -3,7 +3,8 @@
     "rootNamespace": "_DreamKeep.EngineUtility",
     "references": [
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "NaughtyAttributes.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

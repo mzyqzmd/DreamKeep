@@ -25,6 +25,8 @@ namespace _DreamKeep.Presentation
         private UI_HoverScaler _hoverScaler;
         private UI_HoverBreath _breath;
         private bool _clickable;
+        private bool _highlighted;
+        private float _stateAlpha = 1f; // 当前状态对应明度：高亮撤除时按它还原
 
         // 面板 inactive 下实例化的节点不跑 Awake：悬停器/呼吸器都惰性取，避免 SetState 拿到空
         private UI_HoverScaler HoverScaler =>
@@ -47,7 +49,8 @@ namespace _DreamKeep.Presentation
             bool ancient = IsAncient();
             bool travelable = state_ == EMapNodeState.Travelable && !ancient;
             _clickable = travelable;
-            WriteDim(state_ == EMapNodeState.Untravelable ? _dimAlpha : 1f);
+            _stateAlpha = state_ == EMapNodeState.Untravelable ? _dimAlpha : 1f;
+            WriteDim(_highlighted ? 1f : _stateAlpha); // 高亮期间重绑：保持全亮不被状态压回
             HoverScaler.enabled = travelable; // 不可点时停用：不放大也不吃指针
             Breath.SetBreath(travelable); // 呼吸只给可走节点
 
@@ -56,18 +59,43 @@ namespace _DreamKeep.Presentation
 
         public void OnPointerClick(PointerEventData eventData_)
         {
+            if (eventData_.button != PointerEventData.InputButton.Left) return; // 右/中键属地图标注输入，不当成切段点击
             if (IsClickable()) Clicked?.Invoke(Node);
         }
 
+        #region 图例悬停高亮：明度强制全亮 + 相对基准微放大，移开按状态还原
+
+        /// <summary>节点当前展示类型："？"未揭示取 Event、已揭示取 RevealedType，其余取 PointType，与视觉换装口径一致。</summary>
+        public EMapPointType ShownType => Node == null
+            ? EMapPointType.None
+            : Node.PointType == EMapPointType.Unknown && Node.RevealedType != EMapPointType.None
+                ? Node.RevealedType
+                : Node.PointType;
+
+        /// <summary>图例悬停高亮：开＝明度提到 1 并微放大，关＝还原状态明度与基准缩放。</summary>
+        public void SetHighlighted(bool on_)
+        {
+            if (_highlighted == on_) return;
+            _highlighted = on_;
+            WriteDim(on_ ? 1f : _stateAlpha);
+            HoverScaler.PlayScaleRelative(on_ ? HoverScaler.HoverScale : 1f);
+        }
+
+        #endregion
+
         /// <summary>状态铺完后的扩展点：静态节点据此开关描边，Boss 据此换描边皮肤。</summary>
-        protected virtual void OnStateChanged(EMapNodeState state_, bool travelable_, bool ancient_) { }
+        protected virtual void OnStateChanged(EMapNodeState state_, bool travelable_, bool ancient_)
+        {
+        }
 
-        protected bool IsAncient() => Node != null && Node.PointType == EMapPointType.Ancient;
+        protected bool IsAncient() => Node is { PointType: EMapPointType.Ancient };
 
-        private bool IsClickable() => Node != null && Node.State == EMapNodeState.Travelable && _clickable;
+        private bool IsClickable() => Node is { State: EMapNodeState.Travelable } && _clickable;
 
         /// <summary>子类换装：按节点类型写图标（Unknown 揭示后写变体），由 Bind 调用。</summary>
-        protected virtual void OnBind(MapNode node_) { }
+        protected virtual void OnBind(MapNode node_)
+        {
+        }
 
         /// <summary>明度呈现：不可走压暗、其余全亮，子类按自己的渲染载体实现。</summary>
         protected abstract void WriteDim(float alpha_);

@@ -16,37 +16,64 @@ MonoBehaviour:
   - _type: 1
     _icon: {fileID: 21300000, guid: 63432b83dce6bbc4388c449a06e90c2a, type: 3}
     _outline: {fileID: 21300000, guid: b80472f5b34a6294c8aa52d5eb259267, type: 3}
+    _name: "\u5148\u53E4\u4E4B\u6C11"
+    _description: "\u5148\u53E4\u4E4B\u6C11\u5C45\u4F4F\u5728\u8FD9\u4E9B\u623F\u95F4\u4E2D\u3002<br>\u4ED6\u4EEC\u4F1A\u8D50\u4E88\u4F60\u60CA\u4EBA\u7684\u5956\u52B1\u3001\u8D22\u5B9D\u4E0E\u77E5\u8BC6\u3002"
   - _type: 2
     _icon: {fileID: 21300000, guid: 77946416575caf140b313cb607ffdb2b, type: 3}
     _outline: {fileID: 21300000, guid: 097218d55df36c84093db5a4c872665b, type: 3}
+    _name: "\u654C\u4EBA"
+    _description: "\u8FD9\u4E9B\u623F\u95F4\u91CC\u6709\u597D\u6218\u7684\u654C\u4EBA\u4EEC\u3002"
   - _type: 3
     _icon: {fileID: 21300000, guid: ee59239bcae92db40b90b88233621a13, type: 3}
     _outline: {fileID: 21300000, guid: c2cb2f305564e334db98c3b3a7b89965, type: 3}
+    _name: "\u7CBE\u82F1"
+    _description: "\u8FD9\u4E9B\u623F\u95F4\u4F4F\u7740\u8F83\u4E3A\u5F3A\u5927\u7684\u654C\u4EBA\uFF0C\u51FB\u8D25\u4ED6\u4EEC\u4F1A\u83B7\u5F97\u989D\u5916\u7684\u5956\u52B1\u3002"
   - _type: 4
     _icon: {fileID: 21300000, guid: acc8a171b86a6d546903661d4b8fc35f, type: 3}
     _outline: {fileID: 21300000, guid: 50e5e7ea60b192d47bf169a20ca0c0cd, type: 3}
+    _name: "\u5546\u5E97"
+    _description: "\u795E\u79D8\u7684\u5546\u4EBA\u4F1A\u5728\u8FD9\u4E9B\u623F\u95F4\u4E2D\u51FA\u552E\u4ED6\u7684\u8D27\u7269\u3002<br>\u8F9B\u82E6\u8D5A\u5230\u7684
+      <color=yellow>\u91D1\u5E01</color> \u5C31\u7528\u5728\u8FD9\u91CC\u5427\uFF01"
   - _type: 5
     _icon: {fileID: 21300000, guid: 61ae5769a876aba4fbb4c79e5d5e11c1, type: 3}
     _outline: {fileID: 21300000, guid: d9c25113a88828d4e99f030fd706c919, type: 3}
+    _name: "\u4F11\u606F\u5904"
+    _description: "\u5728\u8FD9\u4E9B\u623F\u95F4\u53EF\u4EE5 <color=green>\u56DE\u590D</color>
+      \u4E00\u4E9B\u751F\u547D\u6216\u662F <color=yellow>\u5347\u7EA7</color> \u4E00\u5F20\u5361\u724C\u3002"
   - _type: 6
     _icon: {fileID: 21300000, guid: 0a5082efcbdb1614790bbd65c24e03fb, type: 3}
     _outline: {fileID: 21300000, guid: b6991cdd801008a49940841066dfa9a5, type: 3}
+    _name: "\u5B9D\u7BB1\u623F"
+    _description: "\u8FD9\u4E9B\u623F\u95F4\u4E2D\u6709\u7740\u4F17\u4EBA\u89CA\u89CE\u7684
+      <color=yellow>\u9057\u7269</color> \u3002"
   - _type: 7
     _icon: {fileID: 21300000, guid: 92db6b6de100267448d1df1dd1309f88, type: 3}
     _outline: {fileID: 21300000, guid: 81703b0798e19444a8d337b637cb0130, type: 3}
+    _name: "\u4E8B\u4EF6"
+    _description: "\u8FD9\u4E9B\u623F\u95F4\u91CC\u4F1A\u53D1\u751F\u4E0D\u540C\u5BFB\u5E38\u7684\u4E8B\u60C5\u2026\u2026"
   - _type: 8
     _icon: {fileID: 21300000, guid: 02d74f662e8451d42a2843300bd56394, type: 3}
     _outline: {fileID: 21300000, guid: ab702e71b423f814eb72fc7050c14b52, type: 3}
+    _name: Boss
+    _description: "\u6574\u4E2A\u5730\u533A\u6700\u5F3A\u5927\u7684\u654C\u4EBA\u3002"
   _unknownVariants:
   - _type: 2
     _icon: {fileID: 21300000, guid: 5b48b27103d1b194886c2d4623e2c929, type: 3}
     _outline: {fileID: 21300000, guid: e4578e3c7e956db46a48ef2bc87f1764, type: 3}
+    _name: 
+    _description: 
   - _type: 3
     _icon: {fileID: 21300000, guid: babd770f695097643ac00714aa510564, type: 3}
     _outline: {fileID: 21300000, guid: 9b042dd5d8cedf84b9f2578394f05e8b, type: 3}
+    _name: 
+    _description: 
   - _type: 4
     _icon: {fileID: 21300000, guid: d20a9051ce9978a42b34e36b22480670, type: 3}
     _outline: {fileID: 21300000, guid: bafd80244f6649e4686adf7e74e96437, type: 3}
+    _name: 
+    _description: 
   - _type: 6
     _icon: {fileID: 21300000, guid: 4b3f067e029faab488ae640f80a8f131, type: 3}
     _outline: {fileID: 21300000, guid: 75eb08c335079f245a190f25013bc8cd, type: 3}
+    _name: 
+    _description: 

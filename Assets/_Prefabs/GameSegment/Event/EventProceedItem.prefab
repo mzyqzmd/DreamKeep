@@ -317,8 +317,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _selfDriven: 1
-  _scaleFactor: 1.1
-  _hoverScale: 1.05
+  _hoverScale: 1.2
   _duration: 0.12
   _ease: 6
   _targetToScale: {fileID: 0}

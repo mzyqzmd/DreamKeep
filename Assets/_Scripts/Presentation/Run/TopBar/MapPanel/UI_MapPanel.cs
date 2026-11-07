@@ -1,17 +1,21 @@
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 using _DreamKeep.EngineUtility;
 
 namespace _DreamKeep.Presentation
 {
     /// <summary>地图面板：地图视图从上方整屏滑入的开关动画（收起反向，播完才失活）。
-    /// 开合动画期间再点忽略；点遮罩不关闭，顶栏按钮是唯一收起通道。另持全地图共享的连线点池（UI_MapLine 借还点实例）。</summary>
+    /// 开合动画期间再点忽略；点面板背景（左键）收起，顶栏按钮等效。另持全地图共享的连线点池（UI_MapLine 借还点实例）。</summary>
     public class UI_MapPanel : MonoBehaviour
     {
         private const int DotPoolCapacity = 256; // 共享池缓存上限：超限的归还按池契约直接销毁，上限随地图规模调整
 
         [Header("开合动画")] [Tooltip("地图视图（滑入滑出）")] [SerializeField]
         private RectTransform _mapView;
+
+        [Tooltip("背景关闭钮（面板直属的全屏透明叶子，首序位；纸面等点击不会冒泡到它，Button 只认左键）")] [SerializeField]
+        private Button _backdropButton;
 
         [Tooltip("视图滑入时长（秒）")] [SerializeField]
         private float _slideDuration = 0.35f;
@@ -35,7 +39,11 @@ namespace _DreamKeep.Presentation
             }
         }
 
-        private void Awake() => EnsureRefs();
+        private void Awake()
+        {
+            EnsureRefs();
+            if (_backdropButton) _backdropButton.onClick.AddListener(Hide); // 点背景左键收起：与顶栏按钮等效，动画中 Hide 自身会忽略
+        }
 
         // 容器 Build 可能早于 Awake（装配期面板 inactive）：引用与停靠位一律懒取，避免 HideImmediate 用默认值污染布局
         private void EnsureRefs()

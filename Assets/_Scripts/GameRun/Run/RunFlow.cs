@@ -17,8 +17,8 @@ namespace _DreamKeep.GameRun
             EMapPointType.Ancient => ESegmentKind.Ancient,
             EMapPointType.Shop => ESegmentKind.Shop,
             EMapPointType.Rest => ESegmentKind.Rest,
-            EMapPointType.Treasure => ESegmentKind.Treasure,
-            EMapPointType.Event => ESegmentKind.Event,
+            EMapPointType.Chest => ESegmentKind.Treasure,
+            EMapPointType.Unknown => ESegmentKind.Event,
             _ => throw new ArgumentOutOfRangeException(nameof(type_), type_, "节点类型没有对应段种类")
         };
 

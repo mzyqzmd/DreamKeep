@@ -123,11 +123,22 @@ namespace _DreamKeep.GameRun
 
         public void EnterMapNode(MapNode node_)
         {
-            if (node_.PointType == EMapPointType.Event && node_.RevealedType == EMapPointType.None)
+            if (node_.PointType == EMapPointType.Unknown && node_.RevealedType == EMapPointType.None)
                 node_.RevealedType = RollUnknownReveal(node_.Coord.Row); // 进入即揭示：切段、遭遇与图标都按真实内容走
             Map.EnterNode(node_);
             Floor = node_.Coord.Row + 1;
         }
+
+        #endregion
+
+        #region 整局计时：外部每帧喂增量累计已用时长（保持纯 C# 不直读引擎时钟；停表钩子待存档系统落地）
+
+        private double _elapsedSeconds;
+
+        /// <summary>整局已用秒数：顶栏读它展示，将来存档随 RunState 序列化。</summary>
+        public double ElapsedSeconds => _elapsedSeconds;
+
+        public void TickTime(double seconds_) => _elapsedSeconds += seconds_;
 
         #endregion
 
@@ -153,8 +164,8 @@ namespace _DreamKeep.GameRun
             AddToPool(EMapPointType.Monster, MapConfig.RevealMonster);
             AddToPool(EMapPointType.Elite, MapConfig.RevealElite);
             AddToPool(EMapPointType.Shop, MapConfig.RevealShop);
-            AddToPool(EMapPointType.Treasure, MapConfig.RevealTreasure);
-            AddToPool(EMapPointType.Event, MapConfig.RevealEvent);
+            AddToPool(EMapPointType.Chest, MapConfig.RevealTreasure);
+            AddToPool(EMapPointType.Unknown, MapConfig.RevealEvent);
             return pool.Count == 0 ? EMapPointType.Monster : Rng.Pick(pool);
 
             void AddToPool(EMapPointType type_, int weight_)

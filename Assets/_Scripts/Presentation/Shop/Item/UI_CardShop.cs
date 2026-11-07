@@ -58,7 +58,7 @@ namespace _DreamKeep.Presentation
         {
             UI_HoverScaler face = CurrentFaceScaler();
             if (!face) return;
-            if (hovered_) face.PlayHoverScale();
+            if (hovered_) face.PlayScaleRelative(face.HoverScale);
             else face.PlayScale(1f);
         }
 

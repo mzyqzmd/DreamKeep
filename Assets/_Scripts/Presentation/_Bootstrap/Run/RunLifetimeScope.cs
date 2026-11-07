@@ -4,6 +4,7 @@ using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
@@ -43,12 +44,14 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<PopPanelFactory>();
             builder_.RegisterComponentInHierarchy<VfxFactory>();
             builder_.RegisterComponentInHierarchy<VfxDefaultRoot>(); // 常驻特效默认根：战斗外玩家回血在屏幕中心播一次
+            builder_.RegisterComponentInHierarchy<AudioRoot>(); // 2D 音频根：固定槽位池+优先级抢占，消费者注入直呼四方法
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
             builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
             builder_.RegisterComponentInHierarchy<UI_DeckPanel>(); // 卡组查看：整副局内卡组的陈列，跑图/战斗段都随顶栏开关
             builder_.RegisterComponentInHierarchy<UI_MapView>(); // 地图编排器：装配时从 RunState 拿整章图一次性建视图
+            builder_.RegisterComponentInHierarchy<UI_MapInk>(); // 墨迹控制器：注入视图以订阅 MapRebuilt，换局重建即清空本局笔迹
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
             builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败/将来放弃共用，确认后回主菜单
