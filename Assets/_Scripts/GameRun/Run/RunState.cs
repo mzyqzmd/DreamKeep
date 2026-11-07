@@ -196,5 +196,22 @@ namespace _DreamKeep.GameRun
             for (int i = 0; i < deck.Count; i++)
                 Player.Deck.Add(CardModelBaker.Bake(deck[i]).ToMutable());
         }
+
+        /// <summary>读档重建：整图、玩家与随机流都由快照转换器先建好，这里只接住并按快照写回私有标量，
+        /// 不重新生成地图、不从配置烘焙起始卡组，也不在构造期抛整局事件。</summary>
+        internal RunState(SO_Player config_, SO_MapGenerationConfig mapConfig_, SO_RelicPool fallbackRelicPool_,
+            MapGraph map_, Player player_, Rng rng_, SaveRun snapshot_)
+        {
+            Config = config_;
+            MapConfig = mapConfig_;
+            FallbackRelicPool = fallbackRelicPool_;
+            Map = map_;
+            Player = player_;
+            Rng = rng_;
+            _gold = snapshot_.Gold;
+            _floor = snapshot_.Floor;
+            _cardRemovalsUsed = snapshot_.CardRemovalsUsed;
+            _elapsedSeconds = snapshot_.ElapsedSeconds;
+        }
     }
 }

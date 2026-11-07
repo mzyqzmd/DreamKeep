@@ -62,7 +62,7 @@ namespace ToolBoxHub.AssetRenamer
         #endregion
 
         // 菜单栏入口
-        [MenuItem("ToolBoxHub/批量重命名")]
+        [MenuItem("Tools/ToolBoxHub/批量重命名")]
         private static void RenameMenu() => AssetRenamerWindow.Open();
     }
 }

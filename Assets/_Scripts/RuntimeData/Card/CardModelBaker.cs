@@ -15,6 +15,7 @@ namespace _DreamKeep.RuntimeData
         {
             CM_Static staticData = new(config_.Icon, config_.Type, config_.Rarity, config_.TargetType,
                 config_.CanUpdate && config_.Upgrades.Count > 0);
+            staticData.Source = config_; // 存档身份：运行时卡只留这一份配置引用，数值仍全在烘焙结果里
             CM_Runtime runtime = new(config_.Name, config_.Cost, true);
             CardModel card = new(staticData, runtime);
             // 原型回填进共享静态配置：任何副本（含已升级卡）都能经 BaseVersion 回看未升级基础形态

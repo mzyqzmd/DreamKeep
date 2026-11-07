@@ -11,7 +11,7 @@ namespace ToolBoxHub.HierarchyIcons
         private Vector2 _scroll;
 
         #region 菜单栏入口
-        [MenuItem("ToolBoxHub/层级图标")]
+        [MenuItem("Tools/ToolBoxHub/层级图标")]
         public static void Open() => GetWindow<HierarchyIconsWindow>("层级图标");
         #endregion
 

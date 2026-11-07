@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _prefix: 
   _suffix: 
-  _find: 
-  _replace: 
+  _find: Encounter
+  _replace: Weak
   _useNumbering: 0
   _startNumber: 1
   _caseMode: 0

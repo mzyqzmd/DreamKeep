@@ -6,9 +6,9 @@ using _DreamKeep.EngineUtility;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>整局结果面板（Scene_MainMenu 的 Canvas_System 常驻，System 层盖过一切 UI）：整局终点共用——
-    /// 通关 / 战败 / 将来主菜单「放弃」，全屏遮罩拦下全部输入，弹出后玩家唯一可点的是返回主菜单；
-    /// 确认经 Confirmed 交回编排者收尾（ReturnToMenu）。文案在 Inspector 按终点配置，
+    /// <summary>整局结果面板（Scene_Run 的 Canvas_System 常驻，System 层盖过一切 UI）：整局终点共用——
+    /// 通关 / 战败，全屏遮罩拦下全部输入，弹出后玩家唯一可点的是返回主菜单；
+    /// 确认经 RequestReturnToMainMenu 上报常驻主菜单编排者收尾（黑屏清理并卸载 Scene_Run）。文案在 Inspector 按终点配置，
     /// 战败额外显示原因行，通关与无原因终点隐藏。</summary>
     public sealed class UI_ResultPanel : UI_Panel
     {
@@ -74,6 +74,6 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        private void OnReturnClicked() => _segmentManager.ReturnToMenu();
+        private void OnReturnClicked() => _segmentManager.RequestReturnToMainMenu();
     }
 }

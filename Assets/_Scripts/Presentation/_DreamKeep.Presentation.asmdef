@@ -15,7 +15,8 @@
         "_DreamKeep.EngineUtility",
         "_DreamKeep.CommonPresentation",
         "_DreamKeep.GameRun",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "Unity.Newtonsoft.Json"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

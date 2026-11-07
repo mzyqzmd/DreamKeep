@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
+using _DreamKeep.ConfigData.Boss;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.Utility;
 
@@ -59,12 +60,21 @@ namespace _DreamKeep.GameBattle
                 int maxHp = RollMaxHp(config.MaxHp, encounter_.HpVariance, rng_);
                 Enemy enemy = new(config.Name, maxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
                     IntentBaker.Bake(config.FrontSlotIntent));
+                LoadPhaseTwo(enemy, config);
                 ApplyStartPerks(enemy, config);
 
                 enemies.Add(enemy);
             }
 
             return enemies;
+        }
+
+        /// <summary>双阶段敌人装配期装载二阶段意图：普通敌人没有该配置直接跳过。</summary>
+        private static void LoadPhaseTwo(Enemy enemy_, SO_Enemy config_)
+        {
+            if (config_ is not SO_CeremonialBeast beast) return;
+            enemy_.LoadPhaseTwo(IntentBaker.Bake(beast.PhaseTwoIntents),
+                IntentBaker.Bake(beast.PhaseTwoFrontSlotIntent));
         }
 
         /// <summary>按配置施加初始状态：克隆模板配层数后走标准施加链。</summary>

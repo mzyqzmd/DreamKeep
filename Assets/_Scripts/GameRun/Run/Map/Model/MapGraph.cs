@@ -16,6 +16,9 @@ namespace _DreamKeep.GameRun
         private readonly MapNode[,] _grid;
         private readonly HashSet<MapNode> _cleared = new();
 
+        /// <summary>已通过节点集合：写档拍平用，运行时可达判定仍只走 MapGraph 内部。</summary>
+        internal IEnumerable<MapNode> ClearedNodes => _cleared;
+
         public MapGraph(int width_, int rows_, MapNode[,] grid_, MapNode startNode_, MapNode bossNode_)
         {
             Width = width_;
@@ -25,6 +28,19 @@ namespace _DreamKeep.GameRun
             BossNode = bossNode_;
             _cleared.Add(startNode_); // 起点预置已通过：先古段只有开发面板入口，玩家从它的下一行开始
             RecalculateTravelability(); // 构造完即自洽，不把"首帧状态"挂到外部的 EnterNode 上
+        }
+
+        /// <summary>读档重建：节点与边已按存档下标建好，这里恢复已通过集合、当前节点与段挂起态后重算可达性。</summary>
+        internal static MapGraph Restore(int width_, int rows_, MapNode[,] grid_, MapNode startNode_,
+            MapNode bossNode_, IEnumerable<MapNode> cleared_, MapNode currentNode_, bool segmentPending_)
+        {
+            MapGraph graph = new(width_, rows_, grid_, startNode_, bossNode_);
+            graph._cleared.Clear();
+            foreach (MapNode node in cleared_) graph._cleared.Add(node);
+            graph.CurrentNode = currentNode_;
+            graph.SegmentPending = segmentPending_;
+            graph.RecalculateTravelability();
+            return graph;
         }
 
         /// <summary>取网格节点：越界或空位返回 null。</summary>

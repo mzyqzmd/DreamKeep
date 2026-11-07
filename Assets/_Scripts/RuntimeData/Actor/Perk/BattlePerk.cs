@@ -26,6 +26,16 @@ namespace _DreamKeep.RuntimeData
 
         public void AddLayers(int amount_) => Layers += amount_;
 
+        /// <summary>出牌响应：每张牌结算完成后由链尾动作广播，默认不参与；覆写方在此自行增减层数。</summary>
+        public virtual void OnCardPlayed() { }
+
+        /// <summary>回合边界结算：返回本次结算后是否应从宿主移除；默认递减一层、归零即移除。</summary>
+        public virtual bool Settle()
+        {
+            AddLayers(-1);
+            return Layers <= 0;
+        }
+
         public abstract string GetDescription();
 
         #region 深拷贝一份独立实例，层数一并带走，供施加到生物与卡牌克隆使用

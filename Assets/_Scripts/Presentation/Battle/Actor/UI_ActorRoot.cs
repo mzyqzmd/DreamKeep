@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>战场单位区：持有纵深阵型四个槽位点（0 号为玩家、1~3 号为敌人，1 最靠前、3 最靠后），是单位出生摆位与
+    /// <summary>战场单位区：持有纵深阵型四个槽位点（0 号为玩家、1~4 号为敌人，1 最靠前、4 最靠后），是单位出生摆位与
     /// 移动补间的唯一坐标来源；同时内嵌"生物 → 单位视图"登记表（单位装配时自登记、销毁时注销），供目标提示按生物反查
     /// 视图。指针悬停不在它这里裁决——由单位自己的 UI_ActorHoverBox 按指针事件接管。</summary>
     public sealed class UI_ActorRoot : MonoBehaviour
@@ -13,6 +13,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Transform _slot1;
         [SerializeField] private Transform _slot2;
         [SerializeField] private Transform _slot3;
+        [SerializeField] private Transform _slot4;
 
         private readonly Dictionary<Creature, UI_Actor> _views = new();
 
@@ -24,6 +25,7 @@ namespace _DreamKeep.Presentation
             1 => _slot1,
             2 => _slot2,
             3 => _slot3,
+            4 => _slot4,
             _ => null,
         };
 

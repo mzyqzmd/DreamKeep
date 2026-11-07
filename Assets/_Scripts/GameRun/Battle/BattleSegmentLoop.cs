@@ -10,7 +10,7 @@ namespace _DreamKeep.GameRun
     /// 胜利当帧标记节点通过（不等奖励面板的「继续」），有配置且掷出奖励才弹面板等待领取，
     /// 战败 / 无配置 / 掷空 / 表现弹板失败一律按退出收尾。等待点由命令门面放行，玩法事实经段分发器播出；
     /// 纯 C#，配置缺口经注入的 onWarning_ 上报，不直接依赖引擎日志出口。
-    /// 本 Loop 随段 scope 生灭，段被切走时等待链悬空待 GC，不残留跨段信号。</summary>
+    /// 读档恢复时由 RestoreRewards 直接给定已冻结的奖励清单，跳过战斗循环与掷骰。</summary>
     public sealed class BattleSegmentLoop
     {
         private readonly RunState _run;
@@ -19,6 +19,7 @@ namespace _DreamKeep.GameRun
         private readonly BattleSegmentEventDispatcher _events;
         private readonly Action<string> _onWarning;
         private UniTaskCompletionSource<bool> _rewardDone = new();
+        private IReadOnlyList<RunReward> _restoreRewards;
 
         public BattleSegmentLoop(RunState run_, BattleLoop battleLoop_, SO_EncounterReward reward_,
             BattleSegmentEventDispatcher events_, Action<string> onWarning_)
@@ -30,7 +31,14 @@ namespace _DreamKeep.GameRun
             _onWarning = onWarning_;
         }
 
-        public void Start() => RunAsync().Forget();
+        public void Start()
+        {
+            if (_restoreRewards != null) RestoreAsync().Forget();
+            else RunAsync().Forget();
+        }
+
+        /// <summary>读档恢复：奖励清单来自存档，不再掷骰、不重复消耗整局随机流。</summary>
+        public void RestoreRewards(IReadOnlyList<RunReward> rewards_) => _restoreRewards = rewards_;
 
         /// <summary>奖励面板「继续」已点：领完放行，段按完成收尾。</summary>
         public void AcknowledgeReward() => _rewardDone.TrySetResult(true);
@@ -78,7 +86,24 @@ namespace _DreamKeep.GameRun
                 return;
             }
 
-            await _events.PlayAsync(new BAE_RewardOffered(rewards));
+            await OfferRewardsAsync(rewards);
+        }
+
+        private async UniTask RestoreAsync()
+        {
+            if (_restoreRewards.Count == 0)
+            {
+                await _events.PlayAsync(new BAE_BattleExited());
+                return;
+            }
+
+            await OfferRewardsAsync(_restoreRewards);
+        }
+
+        // 新战斗与读档恢复共用同一条领奖等待链：播出清单 → 等「继续」→ 完成或退出
+        private async UniTask OfferRewardsAsync(IReadOnlyList<RunReward> rewards_)
+        {
+            await _events.PlayAsync(new BAE_RewardOffered(rewards_));
             bool claimed = await _rewardDone.Task;
             _rewardDone = new UniTaskCompletionSource<bool>();
             await _events.PlayAsync(claimed ? new BAE_RewardClaimed() : new BAE_BattleExited());

@@ -9,8 +9,10 @@ using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>整局组合根：一局游戏期间常驻，持有跨战斗延续的整局状态，以及只与整局有关的服务与 UI。
-    /// 战斗段作为它的子 scope 从父容器取 RunState，战斗结束只销毁子 scope，整局状态与这里注册的常驻视图不受影响。</summary>
+    /// <summary>整局组合根（住 Scene_Run，随局生灭）：一局游戏期间 additive 常驻，持有跨战斗延续的整局状态，
+    /// 以及只与整局有关的服务与 UI；战斗段作为它的子 scope 从父容器取 RunState，战斗结束只销毁子 scope。
+    /// autoRun 关闭：Scene_Run 由常驻主菜单编排者黑屏加载后手动 Build，容器建完才允许进先古段；
+    /// 每次进局即新容器新种子，重开一把=本 scope 随场景卸载重建，无跨局残留。</summary>
     public class RunLifetimeScope : LifetimeScope
     {
         [Tooltip("整局随机种子：编辑器下用固定值复现调试（Inspector 可改）；构建版忽略此值，恒取运行时熵源")] [SerializeField]
@@ -54,15 +56,26 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_MapInk>(); // 墨迹控制器：注入视图以订阅 MapRebuilt，换局重建即清空本局笔迹
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
-            builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败/将来放弃共用，确认后回主菜单
-            // 主菜单 / 奖励面板不在此注册：RegisterComponentInHierarchy 要求组件必须存在于场景，缺节点会让容器构建失败；
-            // 奖励面板由 PopPanelFactory 创建时自行注入，主菜单节点无容器依赖
+            builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败共用，确认后上报回主菜单
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                BindMainMenuFlow(resolver_);
             });
+        }
+
+        // 容器建好后把段编排者的两个入口交给常驻主菜单编排者：
+        // MainMenuFlow 不在 Presentation 程序集、不认识 SegmentSceneManager，只拿委托保持依赖方向
+        private static void BindMainMenuFlow(IObjectResolver resolver_)
+        {
+            MainMenuFlow flow = FindFirstObjectByType<MainMenuFlow>();
+            if (!flow) return; // DevPanel 等旁路直进 Scene_Run 时没有主菜单编排者：段流程照常，仅无回主菜单出口
+            SegmentSceneManager manager = resolver_.Resolve<SegmentSceneManager>();
+            flow.BindRunHandlers(manager.StartSegment, manager.PrepareReturnToMenuAsync);
+            manager.BindCamera(flow.MainCamera);
+            manager.BindReturnHandler(flow.RequestReturnToMainMenu);
         }
     }
 }

@@ -61,6 +61,15 @@ namespace _DreamKeep.RuntimeData
             HpChanged?.Invoke(_currentHp);
         }
 
+        /// <summary>读档重建：同时写回上限与当前生命，只抛 HpChanged 刷新 HUD，不抛 Healed（不算回血）。</summary>
+        public void RestoreVitals(int currentHp_, int maxHp_)
+        {
+            MaxHp = maxHp_;
+            if (_currentHp == currentHp_) return;
+            _currentHp = currentHp_;
+            HpChanged?.Invoke(_currentHp);
+        }
+
         #endregion
 
         #region 提升最大生命：烹饪这类局内效果用，上限与当前生命同步加，非正数直接忽略
@@ -91,12 +100,26 @@ namespace _DreamKeep.RuntimeData
             return mounted;
         }
 
+        /// <summary>移除单个状态：按运行时类型在列表中匹配，移除并返回该实例供动作侧发事件，找不到返回 null。</summary>
+        public BattlePerk RemovePerk(BattlePerk perk_)
+        {
+            for (int i = 0; i < _perks.Count; i++)
+            {
+                if (_perks[i].GetType() != perk_.GetType()) continue;
+                BattlePerk removed = _perks[i];
+                _perks.RemoveAt(i);
+                return removed;
+            }
+
+            return null;
+        }
+
         /// <summary>清空身上全部状态：战斗收尾调用，perk 只在本场有效，不带进下一场。</summary>
         public void ClearPerks() => _perks.Clear();
 
         #endregion
 
-        #region 回合边界：结算指定时机的状态层数（递减一层），归零项移除并逐个带回，供动作侧发移除事件
+        #region 回合边界：按状态自身规则结算指定时机的层数，要求移除的项逐个带回，供动作侧发移除事件
 
         public List<BattlePerk> SettlePerks(EPerkSettleTiming timing_)
         {
@@ -104,8 +127,7 @@ namespace _DreamKeep.RuntimeData
             for (int i = _perks.Count - 1; i >= 0; i--)
             {
                 if (_perks[i].SettleTiming != timing_) continue;
-                _perks[i].AddLayers(-1);
-                if (_perks[i].Layers > 0) continue;
+                if (!_perks[i].Settle()) continue;
                 removed.Add(_perks[i]);
                 _perks.RemoveAt(i);
             }

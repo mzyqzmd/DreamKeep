@@ -26,6 +26,9 @@ namespace _DreamKeep.GameBattle
             List<Creature> self = new List<Creature> { player.Creature };
             ActionSystem actions = _owner.ActionSystem;
 
+            // 本回合出牌计数清零：昏眩的「只能打出 1 张」按自然回合计（直接写，同回合计数先例）
+            player.CombatState.CardsPlayedThisTurn = 0;
+
             // 先清盾再结算：回合开始获得的格挡不会被本阶段清掉，上回合残留的格挡也不跨回合保留
             actions.Enqueue(new BA_ClearBlock(player.Creature, self));
             actions.Enqueue(new BA_SettlePerk(player.Creature, self, EPerkSettleTiming.TurnStart));

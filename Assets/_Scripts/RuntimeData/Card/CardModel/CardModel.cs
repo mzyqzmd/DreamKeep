@@ -14,6 +14,8 @@ namespace _DreamKeep.RuntimeData
         private readonly CM_Runtime _runtime;
 
         public string Name => _runtime.Name;
+        /// <summary>烘焙这份卡的配置来源：存档拍平时靠它换算成稳定 GUID，逻辑侧不回读配置数值。</summary>
+        public SO_Card Source => _static.Source;
         public Sprite Icon => _static.Icon;
         public ECardType Type => _static.Type;
         public ECardRarity Rarity => _static.Rarity;

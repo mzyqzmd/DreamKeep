@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TwigSlime_Weak
   m_EditorClassIdentifier: 
   _name: "\u6811\u679D\u53F2\u83B1\u59C6"
-  _maxHP: 18
+  _maxHP: 14
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _enemyIntents:
   - rid: 8162841580618121217

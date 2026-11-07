@@ -43,7 +43,13 @@ namespace _DreamKeep.GameBattle
 
                 events.Add(new BE_DamageDealt(Source, target, amount, absorbed));
                 if (target.IsDead)
+                {
                     events.Add(new BE_ActorDied(target, Source));
+                    continue;
+                }
+
+                // 实际掉血后询问横冲直撞：命中阈值即在本次结算内嵌套执行打断，事件并入本动作
+                if (hpLoss > 0) HpDropHook.Check(battleContext_, target, events);
             }
 
             return events;

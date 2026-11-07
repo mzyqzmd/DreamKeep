@@ -35,7 +35,7 @@ namespace ToolBoxHub.DependencyGraph
         #endregion
 
         // 菜单栏入口
-        [MenuItem("ToolBoxHub/查找引用依赖")]
+        [MenuItem("Tools/ToolBoxHub/查找引用依赖")]
         private static void FindMenu() => DependencyGraphWindow.Open();
     }
 }

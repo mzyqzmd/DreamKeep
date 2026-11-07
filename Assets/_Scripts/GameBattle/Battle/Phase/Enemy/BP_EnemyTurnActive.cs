@@ -23,10 +23,11 @@ namespace _DreamKeep.GameBattle
 
             foreach (Enemy enemy in context.GetAliveEnemies())
             {
-                // 击晕：整回合跳过，执行完清除击晕即恢复原本意图（不推进意图序列）
+                // 击晕：整回合跳过，执行完清除击晕即恢复原本意图（不推进意图序列）；醒来事件先行供表现层播 wake_up
                 if (enemy.IsStunned)
                 {
                     enemy.ConsumeStun();
+                    await PlayEvent(new BE_EnemyStunEnded(enemy));
                     await PlayEvent(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
                     continue;
                 }

@@ -17,7 +17,7 @@ namespace _DreamKeep.Presentation
         [Header("槽位移动")] [SerializeField] private float _moveDuration = 0.3f;
         [SerializeField] private Ease _moveEase = Ease.OutQuad;
 
-        private Enemy _boundEnemy;
+        protected Enemy _boundEnemy;
         private BattleQueryDispatcher _queryDispatcher;
 
         private Tween _moveTween;
@@ -49,6 +49,7 @@ namespace _DreamKeep.Presentation
             base.Bind(eventDispatcher_, enemy_.Creature);
             eventDispatcher_.Register<BE_EnemyIntentChanged>(OnIntentChanged);
             eventDispatcher_.Register<BE_EnemyMoved>(OnEnemyMovedAsync);
+            OnEnemyBound(eventDispatcher_); // 子类装配钩子：校验专属动画名并订阅本单位专属事件
             _intentGroup.Show(_boundEnemy.PreviewIntent);
             RefreshIntentPreviews(); // 新图标立即带修正值，不闪基础值
 
@@ -67,6 +68,9 @@ namespace _DreamKeep.Presentation
             _intentGroup.Show(null); // 死亡即刻收起头顶意图，再交给基类播死亡演出
             return base.OnActorDiedAsync(died_);
         }
+
+        /// <summary>敌人专属装配钩子：共享装配收尾时调用一次，子类在此校验本单位专属动画名并订阅专属事件。</summary>
+        protected virtual void OnEnemyBound(BattleEventDispatcher eventDispatcher_) { }
 
         #endregion
 

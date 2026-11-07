@@ -8,7 +8,7 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>玩家回合进行阶段：唯一的等待型阶段，只接受命令，不自动推进。
     /// 进入本阶段即"玩家操作窗口开启"，但等待型阶段不被主循环驱动 RunAsync，故该信号由上一阶段 BP_PlayerTurnStart 在抽牌演出收尾处广播 BE_PlayerTurnActiveStarted。
-    /// 打不出的命令（能量不足、牌不在手牌、带「不能被打出」词条）不静默丢弃，一律广播拒绝事件交由视图退牌。</summary>
+    /// 打不出的命令（能量不足、牌不在手牌、带「不能被打出」词条、昏眩下本回合已打满 1 张）不静默丢弃，一律广播拒绝事件交由视图退牌。</summary>
     public sealed class BP_PlayerTurnActive : BattlePhase, IBattleCommandReceiver
     {
         public BP_PlayerTurnActive(BattleLoop owner_) : base(owner_)
@@ -60,16 +60,17 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
-        #region 打出一张卡：校验手牌、能量与「不能被打出」词条后建队并异步等待演出
+        #region 打出一张卡：校验手牌、能量、「不能被打出」词条与昏眩限牌后建队并异步等待演出
 
         private async UniTask PlayCardAsync(CardModel card_, int aimSlot_)
         {
             BattleContext context = _owner.BattleContext;
             PlayerCombatState state = context.Player.CombatState;
 
-            // 三种打不出的情形一律广播拒绝，让视图把牌从出牌区退回手牌原槽位：
-            // 卡可能已在更早的队列里离手、能量不足、带「不能被打出」词条
-            if (!state.Hand.Contains(card_) || state.CurrentEnergy < card_.Cost.Value || card_.IsUnableToPlay)
+            // 四种打不出的情形一律广播拒绝，让视图把牌从出牌区退回手牌原槽位：
+            // 卡可能已在更早的队列里离手、能量不足、带「不能被打出」词条、昏眩下本回合已打满 1 张
+            if (!state.Hand.Contains(card_) || state.CurrentEnergy < card_.Cost.Value || card_.IsUnableToPlay
+                || IsDizzy(context) && state.CardsPlayedThisTurn >= 1)
             {
                 await PlayEvent(new BE_CardPlayRejected(card_));
                 return;
@@ -84,7 +85,19 @@ namespace _DreamKeep.GameBattle
                 _owner.ActionSystem.Enqueue(action);
             // 消耗与遗忘已在队列内让卡离场，弃置动作取不到卡会自动跳过
             _owner.ActionSystem.Enqueue(new BA_DiscardSingle(context.Player.Creature, self, card_, state.PlayPile));
+            // 链尾才广播出牌：本张牌的词条已按旧层数结算，卡面预览与实扣一致
+            _owner.ActionSystem.Enqueue(new BA_TickCardPlayed(context.Player.Creature));
             await _owner.ActionSystem.PerformAllAsync();
+        }
+
+        // 宿主身上是否挂着昏眩：只在出牌校验时查一次，不缓存
+        private static bool IsDizzy(BattleContext context_)
+        {
+            IReadOnlyList<BattlePerk> perks = context_.Player.Creature.Perks;
+            for (int i = 0; i < perks.Count; i++)
+                if (perks[i] is BP_Dizzy) return true;
+
+            return false;
         }
 
         #endregion

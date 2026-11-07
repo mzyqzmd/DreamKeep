@@ -24,6 +24,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Scene_Rest.unity
     guid: 9c234a6d5408f4842933cdfa220a8b3e
   - enabled: 1
+    path: Assets/Scenes/Scene_Run.unity
+    guid: 41678f2be4d2bde4988abcb72d13a14b
+  - enabled: 1
     path: Assets/Scenes/Scene_Shop.unity
     guid: da0ec9140a752fd46b18e3cef950d536
   m_configObjects: {}

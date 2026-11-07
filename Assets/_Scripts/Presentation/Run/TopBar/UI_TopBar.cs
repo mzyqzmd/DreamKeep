@@ -11,7 +11,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>整局顶部状态栏：run 装配完成后自动显示（主菜单兼作 run 基地）。
     /// 订阅整局数据变更（HP / 金币 / 层数）刷新对应文本，而非每帧轮询；已用时长由每帧喂增量给 RunState 后读值展示。
-    /// 地图与卡组按钮已接到各自面板的开合；菜单仍是占位（仅打印日志）。</summary>
+    /// 地图与卡组按钮已接到各自面板的开合；菜单按钮开合暂停面板。</summary>
     public sealed class UI_TopBar : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI _hpText;
@@ -164,8 +164,11 @@ namespace _DreamKeep.Presentation
             _deckPanel.Toggle();
         }
 
-        // 菜单仍是占位：面板尚未摆进场景时引用为空，点击仅作空监听
-        private void TogglePanel() => Debug.Log("占位按钮");
+        // 菜单按钮开合暂停面板：面板预摆可能失活，引用为空时维持空监听
+        private void TogglePanel()
+        {
+            if (pausePanel) pausePanel.Toggle();
+        }
 
         #endregion
 

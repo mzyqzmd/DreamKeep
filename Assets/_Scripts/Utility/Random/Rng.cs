@@ -3,24 +3,50 @@ using System.Collections.Generic;
 
 namespace _DreamKeep.Utility
 {
-    /// <summary>确定性随机源：以种子驱动，保证同一局的无头模拟与存档回放可复现。</summary>
+    /// <summary>确定性随机源：以种子驱动，state 可导入导出，保证同一局的无头模拟与存档回放可复现。
+    /// 存档拍平与还原都只改 state，不替换 Rng 实例（整局多处持有它的引用）。</summary>
     public class Rng
     {
-        private readonly Random _random;
+        // xorshift32 的 state 恒不能为 0，否则序列卡死；构造与导入都兜到这个非零常量
+        private const uint FallbackState = 0x9E3779B9u;
 
-        public Rng(int seed_) => _random = new Random(seed_);
+        private uint _state;
+
+        public Rng(int seed_) => _state = seed_ == 0 ? FallbackState : unchecked((uint)seed_);
+
+        /// <summary>随机流当前状态：写档时读出、读档时就地写回。</summary>
+        public uint State
+        {
+            get => _state;
+            set => _state = value == 0 ? FallbackState : value;
+        }
+
         /// <summary>返回 [0, maxExclusive_) 区间内的随机整数。</summary>
-        public int Next(int maxExclusive_) => _random.Next(maxExclusive_);
+        public int Next(int maxExclusive_) => maxExclusive_ <= 0 ? 0 : (int)(NextDouble() * maxExclusive_);
 
         /// <summary>返回 [minInclusive_, maxExclusive_) 区间内的随机整数。</summary>
-        public int Next(int minInclusive_, int maxExclusive_) => _random.Next(minInclusive_, maxExclusive_);
+        public int Next(int minInclusive_, int maxExclusive_) =>
+            maxExclusive_ <= minInclusive_ ? minInclusive_ : minInclusive_ + (int)(NextDouble() * (maxExclusive_ - minInclusive_));
 
         /// <summary>返回 [minInclusive_, maxExclusive_) 区间内的随机浮点数。</summary>
         public float Next(float minInclusive_, float maxExclusive_) =>
-            (float)(_random.NextDouble() * (maxExclusive_ - minInclusive_) + minInclusive_);
+            (float)(NextDouble() * (maxExclusive_ - minInclusive_) + minInclusive_);
 
         /// <summary>从序列中随机取一个元素，序列为空时返回默认值。</summary>
-        public T Pick<T>(IReadOnlyList<T> items_) => items_.Count == 0 ? default : items_[_random.Next(items_.Count)];
+        public T Pick<T>(IReadOnlyList<T> items_) => items_.Count == 0 ? default : items_[Next(items_.Count)];
+
+        // 每次推进一格状态；所有 Next / Pick 都只经它取数，随机流消耗次数对存档可复现
+        private uint NextUInt()
+        {
+            uint x = _state;
+            x ^= x << 13;
+            x ^= x >> 17;
+            x ^= x << 5;
+            _state = x;
+            return x;
+        }
+
+        private double NextDouble() => NextUInt() / 4294967296.0;
 
         /// <summary>原位局部洗牌并取前 take_ 个：换牌循环与奖励掷骰处既有的"逐位换牌"逐次一致，随机流推进序列不变；
         /// take_ 超过表长按表长截断。</summary>

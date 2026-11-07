@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2b11320d8a243a5b0342ffe778aad92, type: 3}
+  m_Name: CeremonialBeast
+  m_EditorClassIdentifier: 
+  _name: "\u4EEA\u5F0F\u517D"
+  _maxHP: 240
+  _viewPrefab: {fileID: 6187196625302473479, guid: c8890a9ad8b419948aa5a9353820273a, type: 3}
+  _enemyIntents:
+  - rid: 6594183710656167969
+  - rid: 6594183710656167953
+  _frontSlotIntent:
+    rid: 6594183710656167943
+  _startPerks:
+  - _perk: {fileID: 11400000, guid: b0e828920d631e34992d3afc07e99620, type: 2}
+    _layers: 150
+  _phaseTwoIntents:
+  - rid: 6594183710656167990
+  - rid: 6594183710656167989
+  - rid: 6594183710656167958
+  _phaseTwoFrontSlotIntent:
+    rid: 6594183710656167966
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183710656167943
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167944
+        _intent2:
+          rid: 6594183710656167945
+    - rid: 6594183710656167944
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 10
+        _times: 2
+    - rid: 6594183710656167945
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+        _layers: 2
+        _isSelf: 1
+    - rid: 6594183710656167953
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167974
+        _intent2:
+          rid: 6594183710656167973
+    - rid: 6594183710656167958
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167987
+        _intent2:
+          rid: 6594183710656167988
+    - rid: 6594183710656167966
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167981
+        _intent2:
+          rid: 6594183710656167982
+    - rid: 6594183710656167969
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167970
+        _intent2:
+          rid: 6594183710656167971
+    - rid: 6594183710656167970
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183710656167971
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+        _layers: 1
+        _isSelf: 1
+    - rid: 6594183710656167973
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+        _layers: 1
+        _isSelf: 1
+    - rid: 6594183710656167974
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183710656167976
+        _intent2:
+          rid: 6594183710656167977
+    - rid: 6594183710656167976
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183710656167977
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 18
+        _times: 1
+    - rid: 6594183710656167981
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: e6480533ad1aece4a9e6d8208914c0b1, type: 2}
+        _layers: 1
+        _isSelf: 0
+    - rid: 6594183710656167982
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183710656167987
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 10
+        _times: 2
+    - rid: 6594183710656167988
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+        _layers: 3
+        _isSelf: 1
+    - rid: 6594183710656167989
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 15
+        _times: 1
+    - rid: 6594183710656167990
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: e6480533ad1aece4a9e6d8208914c0b1, type: 2}
+        _layers: 1
+        _isSelf: 0

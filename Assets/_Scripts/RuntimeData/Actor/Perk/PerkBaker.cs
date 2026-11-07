@@ -14,6 +14,9 @@ namespace _DreamKeep.RuntimeData
             SO_Strength strength => new BP_Strength(strength),
             SO_Dexterity dexterity => new BP_Dexterity(dexterity),
             SO_Regen regen => new BP_Regen(regen),
+            SO_Slow slow => new BP_Slow(slow),
+            SO_Rampage rampage => new BP_Rampage(rampage),
+            SO_Dizzy dizzy => new BP_Dizzy(dizzy),
             _ => null,
         };
 

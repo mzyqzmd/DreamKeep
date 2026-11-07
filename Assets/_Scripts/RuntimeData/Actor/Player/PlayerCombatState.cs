@@ -16,6 +16,9 @@ namespace _DreamKeep.RuntimeData
         public int CurrentEnergy { get; set; }
         public int MaxEnergy { get; }
 
+        /// <summary>本回合已打出的牌数：BA_ToPlayPile 入打出堆时自增，玩家回合开始清零；昏眩的「只能打出 1 张」以它判定。</summary>
+        public int CardsPlayedThisTurn { get; set; }
+
         /// <summary>手牌上限：手牌达到该张数后抽到的牌不入手牌、直接进弃牌堆（洗回与抽牌堆消耗照常发生）。数值取自设计稿《04-完整单人卡牌组-守梦人》的基础参数，属待校准项。</summary>
         public const int MaxHandSize = 10;
 

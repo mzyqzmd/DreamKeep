@@ -17,12 +17,13 @@ MonoBehaviour:
   _viewPrefab: {fileID: 6187196625302473479, guid: c7b6cc10f71540c4580509b7c60f3174, type: 3}
   _enemyIntents:
   - rid: 6594183710656167936
-  - rid: 6594183710656167939
   _frontSlotIntent:
     rid: 6594183710656167943
   _startPerks:
   - _perk: {fileID: 11400000, guid: 635652384785c3e40afdbaba0e9f7795, type: 2}
     _layers: 2
+  - _perk: {fileID: 11400000, guid: d18fdd06c5e596b48a4664a6bd931830, type: 2}
+    _layers: 0
   references:
     version: 2
     RefIds:
@@ -37,22 +38,6 @@ MonoBehaviour:
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
     - rid: 6594183710656167938
-      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _layers: 5
-        _isSelf: 1
-    - rid: 6594183710656167939
-      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _intent1:
-          rid: 6594183710656167940
-        _intent2:
-          rid: 6594183710656167942
-    - rid: 6594183710656167940
-      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
-    - rid: 6594183710656167942
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}

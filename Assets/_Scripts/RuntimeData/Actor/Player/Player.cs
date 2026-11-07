@@ -128,6 +128,9 @@ namespace _DreamKeep.RuntimeData
 
         private readonly Dictionary<SO_Relic, int> _relicCounters = new();
 
+        /// <summary>全部跨节点遗物计数：写档拍平用，key 为遗物配置资产。</summary>
+        public IReadOnlyDictionary<SO_Relic, int> RelicCounters => _relicCounters;
+
         /// <summary>读取跨节点遗物当前计数，未记录即 0。</summary>
         public int RelicCounterOf(SO_Relic relic_) => _relicCounters.TryGetValue(relic_, out int count) ? count : 0;
 
@@ -141,6 +144,21 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>计数归零。</summary>
         public void ResetRelicCounter(SO_Relic relic_) => _relicCounters[relic_] = 0;
+
+        /// <summary>读档重建：按原下标写回药水槽，空槽传 null；只刷该格，不播获取演出。</summary>
+        public void RestorePotionSlot(int slotIndex_, SO_Potion potion_)
+        {
+            if (slotIndex_ < 0 || slotIndex_ >= _potionSlots.Count) return;
+            _potionSlots[slotIndex_] = potion_;
+            PotionSlotChanged?.Invoke(slotIndex_);
+        }
+
+        /// <summary>读档重建：写回跨节点遗物计数的已知合法值。</summary>
+        public void RestoreRelicCounter(SO_Relic relic_, int count_)
+        {
+            if (relic_ == null) return;
+            _relicCounters[relic_] = count_;
+        }
 
         #endregion
     }

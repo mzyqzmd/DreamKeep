@@ -18,6 +18,7 @@ namespace _DreamKeep.GameBattle
             if (!state.Hand.Remove(Card)) return events;
 
             state.PlayPile.Add(Card);
+            state.CardsPlayedThisTurn++; // 本回合出牌计数：昏眩限牌的唯一依据
             events.Add(new BE_CardPlayed(Card));
             return events;
         }
