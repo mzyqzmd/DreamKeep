@@ -1,6 +1,6 @@
 using _DreamKeep.GameRun;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
     /// <summary>本次启动的读档恢复上下文：由 RunLifetimeScope 构造一次，段装配与战斗入口据此走奖励结算恢复分支。
     /// 恢复分支消费完即清空，避免之后新开的段被误判成恢复态。</summary>

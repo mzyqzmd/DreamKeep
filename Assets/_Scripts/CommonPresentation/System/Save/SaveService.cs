@@ -5,7 +5,7 @@ using UnityEngine;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
     /// <summary>存档门面：把整局状态拍成 DTO 落盘、按版本号读回，并持有配置目录供 GUID 反查。
     /// 由 RunLifetimeScope 注册为容器实例，业务侧不碰文件与 JSON；单档位只在 slotId 上预留参数。</summary>

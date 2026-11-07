@@ -72,7 +72,7 @@ Shader "Spine/SkeletonGraphic Tint Black"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#include "../CGIncludes/Spine-SkeletonGraphic-TintBlack-NormalPass.cginc"
+			#include "./CGIncludes/Spine-SkeletonGraphic-TintBlack-NormalPass.cginc"
 		ENDCG
 		}
 	}

@@ -9,7 +9,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>整局段编排者（住 Scene_Run）：订阅地图选点，进段意图交 RunFlow 映射，
     /// 战斗收尾经段域 Loop 的完成/退出事实驱动（各段入口同形态），场景装卸交给 SegmentSceneLoader，自己只管转场闸门与段关闭；
-    /// 换段/卸段全程包在 UI_FadeScreen 黑屏过渡内（幕布节点同场景拖引用，缺失时退化直跑）。
+    /// 换段/卸段全程包在常驻黑屏过渡内（幕布唯一实例住 Scene_MainMenu，进局时经 BindFadeScreen 注入，缺失时退化直跑）。
     /// 回主菜单只上报事实：本类不认识常驻主菜单编排者，终点确认经注入的委托出口上报，
     /// 本侧仅负责收尾清理（归位挂起态、关会话、收结果面板、卸段），卸载 Scene_Run 由常驻方执行。</summary>
     public sealed class SegmentSceneManager : MonoBehaviour
@@ -28,8 +28,13 @@ namespace _DreamKeep.Presentation
         [Tooltip("整局结果面板：面板不自己关，回主菜单清理时在清理链内收起（同场景，Inspector 拖引用）")] [SerializeField]
         private UI_ResultPanel _resultPanel;
 
-        [Tooltip("黑屏过渡幕：换段/卸段时盖住画面（同场景，Inspector 拖引用，缺失退化直跑）")] [SerializeField]
-        private UI_FadeScreen _fadeScreen;
+        private UI_FadeScreen _fadeScreen; // 黑屏过渡幕（住 Scene_MainMenu）：跨场景引用不可序列化，进局时经 BindFadeScreen 注入
+
+        [Tooltip("暂停面板：顶栏菜单按钮开合，四条出口在此接线（同场景，Inspector 拖引用）")] [SerializeField]
+        private UI_PausePanel _pausePanel;
+
+        [Tooltip("放弃本局时结算面板的原因行")] [SerializeField, TextArea(2, 4)]
+        private string _abandonReason = "你放弃了本局";
 
         /// <summary>战斗段场景名：按段种类映射到构建列表中的场景名。</summary>
         public const string BattleSegmentName = "Scene_Battle";
@@ -56,6 +61,8 @@ namespace _DreamKeep.Presentation
         private SegmentSceneLoader _loader;
         private bool _switching; // 段装卸中：卸旧段 + 装新段
         private Action _returnToMainMenu; // 回主菜单请求出口：常驻主菜单编排者经 BindReturnHandler 注入
+        private Action _showSetting; // App 层设置面板开合：住 Scene_MainMenu，跨场景引用不可序列化
+        private Action<Action> _showGiveUp; // App 层放弃确认（形参是「确认放弃」的语义），同上
 
         [Inject]
         public void Construct(BattleSession session_, BattleStage stage_, RunState run_, PopPanelFactory popFactory_)
@@ -66,9 +73,11 @@ namespace _DreamKeep.Presentation
             _popFactory = popFactory_;
             _loader = new SegmentSceneLoader(_camera, _runScope);
             if (_mapView) _mapView.NodeClicked += OnMapNodeClicked;
+            // 暂停面板常常预摆失活：接线挂在本类（随整局容器装配必跑），不依赖面板自身 Awake
+            if (_pausePanel) _pausePanel.Wire(ClosePausePanel, OnSettingClicked, OnGiveUpClicked, OnSaveAndQuitClicked);
         }
 
-        #region 对外：回主菜单通道（常驻方注入出口与本侧清理）
+        #region 对外：常驻方运行时注入（相机/幕布/回主菜单出口）与回主菜单清理
 
         /// <summary>注入常驻主相机并据此重建段装卸器：常驻相机跨场景不可序列化，进局时由容器回调转交。</summary>
         public void BindCamera(Camera camera_)
@@ -77,18 +86,29 @@ namespace _DreamKeep.Presentation
             _loader = new SegmentSceneLoader(_camera, _runScope);
         }
 
+        /// <summary>注入常驻黑屏过渡幕：幕布住 Scene_MainMenu、本类随 Scene_Run 生灭，只能运行时转交。</summary>
+        public void BindFadeScreen(UI_FadeScreen fadeScreen_) => _fadeScreen = fadeScreen_;
+
         /// <summary>注入回主菜单请求出口：终点确认只上报事实，本类不认识常驻编排者。</summary>
         public void BindReturnHandler(Action handler_) => _returnToMainMenu = handler_;
+
+        /// <summary>注入 App 层常驻面板入口（设置开合、带确认语义的放弃确认）：面板住 Scene_MainMenu，只能运行时转交。</summary>
+        public void BindAppPanels(Action showSetting_, Action<Action> showGiveUp_)
+        {
+            _showSetting = showSetting_;
+            _showGiveUp = showGiveUp_;
+        }
 
         /// <summary>整局终点（通关/战败）确认后的请求上报：常驻方黑屏收尾并卸载本场景。</summary>
         public void RequestReturnToMainMenu() => _returnToMainMenu?.Invoke();
 
-        /// <summary>回主菜单前的本侧清理：归位挂起态、关会话、收结果面板与地图、卸掉残段（不揭幕）；
+        /// <summary>回主菜单前的本侧清理：归位挂起态、关会话、收结果面板/地图/暂停面板、卸掉残段（不揭幕）；
         /// 返回即清理完毕，此后本场景可被调用方卸载。</summary>
         public async UniTask PrepareReturnToMenuAsync()
         {
             _run.SetSegmentPending(false);
             CloseBattleSession();
+            ClosePausePanel();
             if (_resultPanel) _resultPanel.Hide();
             await _loader.UnloadCurrentSegmentAsync();
             if (_topBar) _topBar.CloseMap();
@@ -97,12 +117,41 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
+        #region 暂停面板四条出口：继续 / 设置 / 放弃 / 保存并退出
+
+        private void ClosePausePanel()
+        {
+            if (_pausePanel) _pausePanel.Hide();
+        }
+
+        // 设置面板住常驻主菜单画布（层级在整局之上），本类只转发开合
+        private void OnSettingClicked() => _showSetting?.Invoke();
+
+        // 放弃先过二次确认（面板同样住常驻画布），确认后才真的结束本局
+        private void OnGiveUpClicked() => _showGiveUp?.Invoke(ConfirmGiveUp);
+
+        // 确认放弃：删档占位 → 收面板与地图 → 关战斗会话（战斗停下，免得继续推进覆盖结算文案）→ 弹战败结算
+        private void ConfirmGiveUp()
+        {
+            Debug.Log("[存档未接入] 放弃本局：删除当前存档");
+            _run.SetSegmentPending(false);
+            ClosePausePanel();
+            if (_topBar) _topBar.CloseMap();
+            CloseBattleSession();
+            if (_resultPanel) _resultPanel.Show(EResultKind.RunDefeated, _abandonReason);
+        }
+
+        // 保存并退出：存档未接入，只占位；不退出、不回菜单，避免玩家以为存上了
+        private void OnSaveAndQuitClicked() => Debug.Log("[存档未接入] 保存并退出：写入存档并回主菜单");
+
+        #endregion
+
         // 问号节点在 RunState.EnterMapNode 内进入即揭示真实类型，这里按 ResolvedType 分派段种类
         private void OnMapNodeClicked(MapNode node_)
         {
             if (_switching) return; // 换段期间忽略二次点击：不能让域推进了而段没切
             _run.EnterMapNode(node_);
-            StartSegment(RunFlow.SegmentKindOf(node_.ResolvedType));
+            StartSegmentAsync(RunFlow.SegmentKindOf(node_.ResolvedType)).Forget();
         }
 
         private static string SegmentNameOf(ESegmentKind kind_) => kind_ switch
@@ -116,19 +165,20 @@ namespace _DreamKeep.Presentation
             _ => throw new ArgumentOutOfRangeException(nameof(kind_), kind_, "段种类没有对应段场景")
         };
 
-        /// <summary>按段种类开启一段（"选定下一个节点"）：收起地图与奖励面板、关旧会话、卸掉旧段后再加载新段。</summary>
-        public void StartSegment(ESegmentKind kind_)
+        /// <summary>按段种类开启一段（"选定下一个节点"）：收起地图与奖励面板、关旧会话、卸掉旧段后再加载新段。
+        /// 返回的任务在段装配完成（含黑幕揭开）后结束：常驻方据此把黑幕一直盖到首段就绪。</summary>
+        public async UniTask StartSegmentAsync(ESegmentKind kind_)
         {
             if (_switching) return;
             _switching = true;
             _run.SetSegmentPending(true); // 进段即挂起整图可走态：内容没完成前一个节点都点不了、也不会有呼吸
-            SwitchSegmentAsync(SegmentNameOf(kind_)).Forget();
+            await SwitchSegmentAsync(SegmentNameOf(kind_));
         }
 
         #region 段收尾：继续只关会话与开地图，卸载推迟到加载下一个段
 
         /// <summary>段完成（各段入口订阅段私有完成事实后调用）：关掉战斗会话（若开着）、打开地图，
-        /// 段场景留在场上，直到 <see cref="StartSegment"/> 装载下一个段时才卸载。</summary>
+        /// 段场景留在场上，直到 <see cref="StartSegmentAsync"/> 装载下一个段时才卸载。</summary>
         public void CompleteSegment()
         {
             if (_switching) return;
@@ -157,7 +207,7 @@ namespace _DreamKeep.Presentation
             _stage.Close();
         }
 
-        // 过渡分发：幕布拖引用缺失时退化为直跑（不黑屏不挡功能）
+        // 过渡分发：常驻幕布未注入时退化为直跑（不黑屏不挡功能）
         private UniTask CoverRunAsync(Func<UniTask> work_) => _fadeScreen ? _fadeScreen.CoverAsync(work_) : work_();
 
         private async UniTask EndSegmentAsync()

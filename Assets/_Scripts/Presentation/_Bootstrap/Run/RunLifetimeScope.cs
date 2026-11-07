@@ -46,7 +46,10 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<PopPanelFactory>();
             builder_.RegisterComponentInHierarchy<VfxFactory>();
             builder_.RegisterComponentInHierarchy<VfxDefaultRoot>(); // 常驻特效默认根：战斗外玩家回血在屏幕中心播一次
-            builder_.RegisterComponentInHierarchy<AudioRoot>(); // 2D 音频根：固定槽位池+优先级抢占，消费者注入直呼四方法
+            // 2D 音频根：固定槽位池+优先级抢占，消费者注入直呼四方法
+            // 该组件住常驻的 Scene_MainMenu（Scene_Run 里没有），按本场景注册会抛 VContainerException，故全局查找后按实例注册
+            AudioRoot audioRoot = FindFirstObjectByType<AudioRoot>();
+            if (audioRoot) builder_.RegisterInstance(audioRoot);
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
@@ -66,16 +69,19 @@ namespace _DreamKeep.Presentation
             });
         }
 
-        // 容器建好后把段编排者的两个入口交给常驻主菜单编排者：
+        // 容器建好后把段编排者的入口与常驻黑幕交给主菜单编排者：
         // MainMenuFlow 不在 Presentation 程序集、不认识 SegmentSceneManager，只拿委托保持依赖方向
         private static void BindMainMenuFlow(IObjectResolver resolver_)
         {
             MainMenuFlow flow = FindFirstObjectByType<MainMenuFlow>();
-            if (!flow) return; // DevPanel 等旁路直进 Scene_Run 时没有主菜单编排者：段流程照常，仅无回主菜单出口
+            if (!flow) return; // DevPanel 等旁路直进 Scene_Run 时没有主菜单编排者：段流程照常，仅无黑幕与回主菜单出口
             SegmentSceneManager manager = resolver_.Resolve<SegmentSceneManager>();
-            flow.BindRunHandlers(manager.StartSegment, manager.PrepareReturnToMenuAsync);
+            flow.BindRunHandlers(manager.StartSegmentAsync, manager.PrepareReturnToMenuAsync);
             manager.BindCamera(flow.MainCamera);
+            manager.BindFadeScreen(flow.FadeScreen); // 黑屏唯一实例住 Scene_MainMenu：换段/卸段共用同一份幕布
             manager.BindReturnHandler(flow.RequestReturnToMainMenu);
+            // 暂停面板的「设置」「放弃」也接常驻画布上的同一份面板（跨场景引用不可序列化，只能运行时转交）
+            manager.BindAppPanels(flow.ShowSettingPanel, flow.ShowGiveUpPanel);
         }
     }
 }

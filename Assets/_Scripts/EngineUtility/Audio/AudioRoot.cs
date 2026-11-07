@@ -1,14 +1,22 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace _DreamKeep.EngineUtility
 {
     /// <summary>2D 通用音频播放器：固定槽位池 + 优先级抢占 + 双渐变。槽位即池——Awake 建满 AudioSource，
     /// 播放占用、到期自动腾出；槽满时抢「优先级最低且开播最早」的槽，同优先级不互抢、抢不到静默丢弃。
-    /// 只服务 2D 音频（spatialBlend 恒 1），不认识任何业务类型；注册与注入由 Presentation 侧组合根承担。</summary>
+    /// 只服务 2D 音频（spatialBlend 恒 1），不认识任何业务类型；注册与注入由 Presentation 侧组合根承担。
+    /// 频道音量只认两个静态系数，由表现层设置面板写入。</summary>
     public sealed class AudioRoot : MonoBehaviour
     {
         [Tooltip("并发槽位数：2D 卡牌游戏 12 绰绰有余")]
         [SerializeField] private int _slotCount = 12;
+
+        /// <summary>BGM 频道系数（0~1）：表现层设置面板写入，本类不认识设置服务。</summary>
+        public static float BgmVolume { get; set; } = 1f;
+
+        /// <summary>音效频道系数（0~1）：同上。</summary>
+        public static float SfxVolume { get; set; } = 1f;
 
         private AudioVoice[] _voices;
 
@@ -40,7 +48,7 @@ namespace _DreamKeep.EngineUtility
             if (!clip) return;
             if (!TryAcquireSlot(cue_.Priority, out int index)) return;
             float pitch = cue_.GetPitch();
-            float volume = cue_.GetVolume(); // 本次播放唯一采样：淡入终点、常态音量、恢复淡回共用
+            float volume = cue_.GetVolume() * ChannelScale(cue_.MixerGroup); // 本次播放唯一采样：淡入终点、常态音量、恢复淡回共用
 
             ref AudioVoice voice = ref _voices[index];
             AudioSource source = voice.Source;
@@ -148,6 +156,14 @@ namespace _DreamKeep.EngineUtility
         }
 
         #endregion
+
+        // 频道归类：按 cue 所挂 mixer 资产名判定 BGM，其余（含未挂 mixer）一律走音效系数；
+        // 两个 mixer 未暴露参数，故不走 SetFloat。若 mixer 改名会静默降级为音效系数
+        private static float ChannelScale(AudioMixerGroup group_)
+        {
+            AudioMixer mixer = group_ ? group_.audioMixer : null;
+            return mixer && mixer.name.ToUpperInvariant().Contains("BGM") ? BgmVolume : SfxVolume;
+        }
 
         // 单遍扫一个槽：先确定性到期释放（淡出没走完也直接收），再推进渐变，淡完按去向落锤
         private void TickVoice(ref AudioVoice voice_, float now_)

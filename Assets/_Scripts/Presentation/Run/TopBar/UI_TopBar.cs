@@ -119,7 +119,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 占位按钮：切占位面板显示，面板逻辑以后做
+        #region 顶栏按钮：地图 / 卡组 / 暂停三方互斥开合
 
         private void WireButtons()
         {
@@ -149,10 +149,11 @@ namespace _DreamKeep.Presentation
                 return;
             }
             if (_deckPanel && _deckPanel.gameObject.activeSelf) _deckPanel.Hide(); // 面板互斥：开图关卡组
+            ClosePause();
             _mapPanel.Toggle();
         }
 
-        // 卡组面板开关：与地图互斥（开组关图）；面板尚未摆进场景时引用为空，点击仅作空监听
+        // 卡组面板开关：与地图、暂停互斥（开组关图与菜单）；面板尚未摆进场景时引用为空，点击仅作空监听
         private void ToggleDeck()
         {
             if (_deckPanel == null)
@@ -161,13 +162,30 @@ namespace _DreamKeep.Presentation
                 return;
             }
             if (_mapPanel && _mapPanel.gameObject.activeSelf) _mapPanel.Hide();
+            ClosePause();
             _deckPanel.Toggle();
         }
 
-        // 菜单按钮开合暂停面板：面板预摆可能失活，引用为空时维持空监听
+        // 菜单按钮开合暂停面板：开面板前先收地图与卡组，三层全屏遮罩不同时叠
         private void TogglePanel()
         {
-            if (pausePanel) pausePanel.Toggle();
+            if (pausePanel == null)
+            {
+                Debug.Log("暂停面板未接线");
+                return;
+            }
+            if (!pausePanel.gameObject.activeSelf)
+            {
+                if (_mapPanel && _mapPanel.gameObject.activeSelf) _mapPanel.Hide();
+                if (_deckPanel && _deckPanel.gameObject.activeSelf) _deckPanel.Hide();
+            }
+            pausePanel.Toggle();
+        }
+
+        /// <summary>收起暂停面板：放弃/设置链与回主菜单清理前调用，避免遮罩叠层。</summary>
+        public void ClosePause()
+        {
+            if (pausePanel && pausePanel.gameObject.activeSelf) pausePanel.Hide();
         }
 
         #endregion

@@ -27,7 +27,7 @@ namespace _DreamKeep.RuntimeData
 
         public static EnemyIntent Bake(IntentData data_)
         {
-            return data_ switch
+            EnemyIntent intent = data_ switch
             {
                 DamageIntentData damage => new EI_Damage(damage.Damage, damage.Times),
                 BlockIntentData block => new EI_Block(block.Amount),
@@ -38,6 +38,9 @@ namespace _DreamKeep.RuntimeData
                 HealIntentData heal => new EI_Heal(heal.Amount),
                 _ => null,
             };
+            // 台词挂在最外层意图上：复合意图拆出的子意图不单独执行，故不会重复开口
+            if (intent != null) intent.SpeechLine = data_.SpeechLine;
+            return intent;
         }
 
         #endregion

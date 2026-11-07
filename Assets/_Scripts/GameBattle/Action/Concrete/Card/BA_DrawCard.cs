@@ -37,6 +37,7 @@ namespace _DreamKeep.GameBattle
             {
                 state.DiscardPile.Add(drawn);
                 events.Add(new BE_CardDiscarded(drawn));
+                events.Add(new BE_HandOverflowed()); // 溢出的独立事实：弃牌计数仍由上面那条负责
                 return events;
             }
 

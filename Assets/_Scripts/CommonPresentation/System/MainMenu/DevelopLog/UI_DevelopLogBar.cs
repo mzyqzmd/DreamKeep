@@ -1,20 +1,26 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
-    public sealed class UI_DevelopLogBar : MonoBehaviour
+    /// <summary>开发日志条（左栏目录项）：标题与正文只认 Inspector 填的两个字段，目录项自身不显示正文。
+    /// 整条直接吃点击（不依赖 Button，场景免加组件），点击把本条上报给面板切换右栏标题与正文。</summary>
+    public sealed class UI_DevelopLogBar : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private TextMeshProUGUI _descriptionText;
+        [SerializeField] private string _title; //目录项标题：右栏标题取这里
 
-        [SerializeField] private string _title; //未显式输入标题就按照设置内容时的输入的内容来
         [SerializeField, TextArea(3, 10)] private string _description;
 
-        public void SetContent(string title_, string description_)
-        {
-            _titleText.text = string.IsNullOrEmpty(title_) ? title_ : _title;
-            _descriptionText.text = description_;
-        }
+        /// <summary>点击上报：面板据此切换右栏正文。</summary>
+        public event Action<UI_DevelopLogBar> Clicked;
+
+        public string Title => string.IsNullOrEmpty(_titleText.text) ? _title : _titleText.text;
+        public string Description => _description;
+
+        void IPointerClickHandler.OnPointerClick(PointerEventData eventData_) =>
+            Clicked?.Invoke(this);
     }
 }

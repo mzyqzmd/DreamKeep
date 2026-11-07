@@ -3,7 +3,7 @@ using _DreamKeep.EngineUtility;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
     /// <summary>放弃二次确认面板：关闭与确认都交回整局编排者，本面板不认识存档服务。</summary>
     public sealed class UI_GiveUpPanel : UI_Panel

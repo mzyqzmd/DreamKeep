@@ -607,6 +607,8 @@ MonoBehaviour:
   _liftPx: 130
   _jitterPx: 18
   _turnBannerParent: {fileID: 2057050349337935963}
+  _playerSpeechLines: {fileID: 11400000, guid: 5b98dc978e3c6484e9c86e0f9c4e10cb, type: 2}
+  _speechLiftPx: 24
 --- !u!1 &252599708169006155
 GameObject:
   m_ObjectHideFlags: 0

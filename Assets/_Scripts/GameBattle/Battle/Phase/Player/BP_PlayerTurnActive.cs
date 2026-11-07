@@ -72,7 +72,7 @@ namespace _DreamKeep.GameBattle
             if (!state.Hand.Contains(card_) || state.CurrentEnergy < card_.Cost.Value || card_.IsUnableToPlay
                 || IsDizzy(context) && state.CardsPlayedThisTurn >= 1)
             {
-                await PlayEvent(new BE_CardPlayRejected(card_));
+                await PlayEvent(new BE_CardPlayRejected(card_, ReasonOf(state, card_)));
                 return;
             }
 
@@ -88,6 +88,15 @@ namespace _DreamKeep.GameBattle
             // 链尾才广播出牌：本张牌的词条已按旧层数结算，卡面预览与实扣一致
             _owner.ActionSystem.Enqueue(new BA_TickCardPlayed(context.Player.Creature));
             await _owner.ActionSystem.PerformAllAsync();
+        }
+
+        // 拒绝原因回填：调用前四种条件必居其一，故前三条都不中时只可能是昏眩限牌
+        private static ECardPlayRejectReason ReasonOf(PlayerCombatState state_, CardModel card_)
+        {
+            if (!state_.Hand.Contains(card_)) return ECardPlayRejectReason.NotInHand;
+            if (state_.CurrentEnergy < card_.Cost.Value) return ECardPlayRejectReason.NotEnoughEnergy;
+            if (card_.IsUnableToPlay) return ECardPlayRejectReason.Unplayable;
+            return ECardPlayRejectReason.DizzyLimited;
         }
 
         // 宿主身上是否挂着昏眩：只在出牌校验时查一次，不缓存

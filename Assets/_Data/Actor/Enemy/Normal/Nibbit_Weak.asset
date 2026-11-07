@@ -28,6 +28,7 @@ MonoBehaviour:
     - rid: 6594183710656167946
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: "\u545C\u2014\u2014\uFF01"
         _intent1:
           rid: 6594183710656167947
         _intent2:
@@ -35,20 +36,24 @@ MonoBehaviour:
     - rid: 6594183710656167947
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: 
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
         _layers: 2
         _isSelf: 1
     - rid: 6594183710656167948
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
+      data:
+        _speechLine: 
     - rid: 8162841984668532736
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: "\u54AC\u4F60\uFF01"
         _damage: 6
         _times: 1
     - rid: 8162841984668532737
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: "\u55F7\uFF01"
         _intent1:
           rid: 8162841984668532738
         _intent2:
@@ -56,24 +61,29 @@ MonoBehaviour:
     - rid: 8162841984668532738
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: 
         _damage: 4
         _times: 1
     - rid: 8162841984668532739
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: 
         _amount: 4
     - rid: 8162841984668532743
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: "\u6EDA\u5F00\uFF01"
         _intent1:
           rid: 8162841984668532745
         _intent2:
           rid: 8162841984668532744
     - rid: 8162841984668532744
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
+      data:
+        _speechLine: 
     - rid: 8162841984668532745
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
+        _speechLine: 
         _damage: 5
         _times: 2

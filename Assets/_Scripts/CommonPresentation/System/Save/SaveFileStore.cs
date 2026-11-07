@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-namespace _DreamKeep.Presentation
+namespace _DreamKeep.CommonPresentation
 {
     /// <summary>存档物理层：按 slotId 拼 persistentDataPath 路径，同步读写一份 JSON。
     /// 写档先落 .tmp 再原子替换并留一份 .backup；主档读失败回落备份；只认识字符串，不认识任何 DTO。</summary>

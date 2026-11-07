@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -52,7 +53,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Battle);
+        manager.StartSegmentAsync(ESegmentKind.Battle).Forget();
         return "已请求加载首个战斗段";
     }
 
@@ -61,7 +62,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Ancient);
+        manager.StartSegmentAsync(ESegmentKind.Ancient).Forget();
         return "已请求加载先古之民段";
     }
 
@@ -70,7 +71,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Rest);
+        manager.StartSegmentAsync(ESegmentKind.Rest).Forget();
         return "已请求加载休息段";
     }
 
@@ -79,7 +80,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Treasure);
+        manager.StartSegmentAsync(ESegmentKind.Treasure).Forget();
         return "已请求加载宝箱段";
     }
 
@@ -88,7 +89,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Event);
+        manager.StartSegmentAsync(ESegmentKind.Event).Forget();
         return "已请求加载事件段";
     }
 
@@ -97,7 +98,7 @@ internal static class DevPanelCommands
     {
         SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
-        manager.StartSegment(ESegmentKind.Shop);
+        manager.StartSegmentAsync(ESegmentKind.Shop).Forget();
         return "已请求加载商店段";
     }
 

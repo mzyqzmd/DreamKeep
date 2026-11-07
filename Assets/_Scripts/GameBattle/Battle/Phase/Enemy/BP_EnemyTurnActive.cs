@@ -35,6 +35,8 @@ namespace _DreamKeep.GameBattle
                 EnemyIntent intent = enemy.PreviewIntent;
                 if (intent != null)
                 {
+                    if (!string.IsNullOrEmpty(intent.SpeechLine))
+                        await PlayEvent(new BE_EnemySpoke(enemy, intent.SpeechLine));
                     foreach (BattleAction action in EnemyIntentResolver.Build(context, enemy, intent))
                         actions.Enqueue(action);
                     await actions.PerformAllAsync();

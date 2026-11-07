@@ -12,13 +12,13 @@ namespace _DreamKeep.Presentation
     /// 开箱动画与领取后的 shine_fade 锁定都由域播出的宝箱事实驱动，视图不再对外提供等待接口。</summary>
     public sealed class UI_Chest : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
-        private const string
-            SkinIdle = "act1",
-            SkinHover = "act1_stroke",
-            AnimOpen = "animation",
-            AnimShine = "shine_fade";
+        private const string SkinIdle = "act1";
+        private const string SkinHover = "act1_stroke";
+        private const string AnimOpen = "animation";
+        private const string AnimShine = "shine_fade";
 
         [SerializeField] private SkeletonGraphic _skeleton;
+
         [Tooltip("开箱动画播到该比例（0~1）时放行出遗物")] [SerializeField]
         private float _openReleaseRatio = 0.5f;
 

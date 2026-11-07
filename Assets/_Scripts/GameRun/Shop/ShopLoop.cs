@@ -6,7 +6,7 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.GameRun
 {
     /// <summary>商店段流程：货架快照经商店段分发器播出，购买与删牌意图由命令门面同步结算后回播新快照。
-    /// 首次掀开摊子即标记节点通过（幂等）；成交失败只播被拒事实，不改货架；删牌取消不扣款。
+    /// 首次掀开摊子即标记节点通过（幂等）；成交播成功事实（供商人道谢），失败只播带原因的拒绝事实、不改货架；删牌取消不扣款。
     /// 纯 C#，不认识场景与视图；多次往返交易不需要等待点。</summary>
     public sealed class ShopLoop
     {
@@ -33,24 +33,27 @@ namespace _DreamKeep.GameRun
 
         public void BuyCard(CardModel card_)
         {
-            if (_session.TryBuyCard(card_) != EShopBuyResult.Success) Refuse();
-            else PublishShelf();
+            EShopBuyResult result = _session.TryBuyCard(card_);
+            if (result != EShopBuyResult.Success) Refuse(result);
+            else Succeed();
         }
 
         public void BuyRelic(SO_Relic relic_)
         {
-            if (_session.TryBuyRelic(relic_) != EShopBuyResult.Success) Refuse();
+            EShopBuyResult result = _session.TryBuyRelic(relic_);
+            if (result != EShopBuyResult.Success) Refuse(result);
             else
             {
                 _notifier.NotifyTriggered(relic_); // 只播涟漪，不触发遗物效果
-                PublishShelf();
+                Succeed();
             }
         }
 
         public void BuyPotion(SO_Potion potion_)
         {
-            if (_session.TryBuyPotion(potion_) != EShopBuyResult.Success) Refuse();
-            else PublishShelf();
+            EShopBuyResult result = _session.TryBuyPotion(potion_);
+            if (result != EShopBuyResult.Success) Refuse(result);
+            else Succeed();
         }
 
         public void RequestRemoval()
@@ -75,8 +78,15 @@ namespace _DreamKeep.GameRun
 
         public void Proceed() => _events.PlayAsync(new SE_ShopCompleted()).Forget();
 
+        // 成交：先播成功事实（商人道谢），再刷新货架
+        private void Succeed()
+        {
+            _events.PlayAsync(new SE_PurchaseSucceeded()).Forget();
+            PublishShelf();
+        }
+
         private void PublishShelf() => _events.PlayAsync(new SE_ShelfUpdated(_session.BuildSnapshot(), false)).Forget();
 
-        private void Refuse() => _events.PlayAsync(new SE_PurchaseRefused()).Forget();
+        private void Refuse(EShopBuyResult result_) => _events.PlayAsync(new SE_PurchaseRefused(result_)).Forget();
     }
 }
