@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b92b81150caf1e24791998dfeebd0965, type: 3}
+  m_Name: Sfx_Block
+  m_EditorClassIdentifier: 
+  _clips:
+  - {fileID: 8300000, guid: b081967b159f58442baf7025c231f09b, type: 3}
+  _mixerGroup: {fileID: 24300002, guid: b35ed5373a90f5a4a81f976d0940261c, type: 2}
+  _volumeRange: {x: 1, y: 1}
+  _pitchRange: {x: 0.9, y: 1.1}
+  _priority: 0
+  _loop: 0
+  _fadeInSeconds: 0
+  _fadeOutSeconds: 0

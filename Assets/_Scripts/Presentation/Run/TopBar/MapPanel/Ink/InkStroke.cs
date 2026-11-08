@@ -17,26 +17,34 @@ namespace _DreamKeep.Presentation
         /// <summary>不足两点即无可视线段。</summary>
         public bool IsEmpty => _points.Count < 2;
 
-        /// <summary>采样门限追加点；变化才重建网格，首次取用摆好视图矩形与样式。</summary>
-        public void AddPoint(Vector2 localPos_, Transform parent_, MonoObjectPool<UI_MapInkLine> pool_,
+        /// <summary>采样点列只读口：写档拍平与总点数统计共用。</summary>
+        public IReadOnlyList<Vector2> Points => _points;
+
+        /// <summary>采样门限追加点；变化才重建网格，首次取用摆好视图矩形与样式。返回是否真的新增一个点。</summary>
+        public bool AddPoint(Vector2 localPos_, Transform parent_, MonoObjectPool<UI_MapInkLine> pool_,
             UI_MapInkLine prefab_, SO_MapInkVisual visual_)
         {
-            if (_points.Count >= MaxPoints) return;
+            if (_points.Count >= MaxPoints) return false;
             if (_points.Count > 0 &&
                 (localPos_ - _points[_points.Count - 1]).sqrMagnitude <
-                visual_.SampleSpacingPx * visual_.SampleSpacingPx) return;
+                visual_.SampleSpacingPx * visual_.SampleSpacingPx) return false;
             _points.Add(localPos_);
             if (_line == null) _line = PrepareLine(parent_, pool_, prefab_);
             _line.SetPoints(_points, visual_.LineWidthPx, visual_.InkColor);
+            return true;
         }
 
-        /// <summary>从既有连续点列重建一段（擦除切段后使用）。</summary>
-        public static InkStroke FromPoints(IReadOnlyList<Vector2> points_, Transform parent_,
+        /// <summary>从既有连续点列原样灌入重建一段（读档与擦除切段共用）。
+        /// 不经采样门限：入参本就是已采样点，且一次 SetPoints 出网格，避免逐点追加的重复重建。</summary>
+        public static InkStroke FromExactPoints(IReadOnlyList<Vector2> points_, Transform parent_,
             MonoObjectPool<UI_MapInkLine> pool_, UI_MapInkLine prefab_, SO_MapInkVisual visual_)
         {
             InkStroke stroke = new();
-            for (int i = 0; i < points_.Count; i++)
-                stroke.AddPoint(points_[i], parent_, pool_, prefab_, visual_);
+            for (int i = 0; i < points_.Count && stroke._points.Count < MaxPoints; i++)
+                stroke._points.Add(points_[i]);
+            if (stroke._points.Count == 0) return stroke;
+            stroke._line = PrepareLine(parent_, pool_, prefab_);
+            stroke._line.SetPoints(stroke._points, visual_.LineWidthPx, visual_.InkColor);
             return stroke;
         }
 

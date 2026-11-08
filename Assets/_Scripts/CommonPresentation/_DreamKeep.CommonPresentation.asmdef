@@ -11,6 +11,7 @@
         "VContainer",
         "NaughtyAttributes.Core",
         "Unity.TextMeshPro",
+        "Unity.InputSystem",
         "_DreamKeep.GameBattle",
         "_DreamKeep.GameRun"
     ],

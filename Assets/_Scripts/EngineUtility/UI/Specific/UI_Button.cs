@@ -16,6 +16,9 @@ namespace _DreamKeep.EngineUtility
         /// 悬停由具体子类自行广播，文案照常显示——「置灰但悬停可看、点击无作用」走这里。</summary>
         protected bool Enabled { get; set; } = true;
 
+        /// <summary>可点击态对外出口：点击音拦截器据此判断该不该响，不改变本类的吞点击语义。</summary>
+        public bool Interactable => Enabled;
+
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData_)
         {
             if (!Enabled) return;

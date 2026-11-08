@@ -245,10 +245,10 @@ internal static class DevPanelCommands
             : $"玩家血量 {clamped}/{creature_.MaxHp}（输入 {target_} 已钳到边界）";
     }
 
-    // 金币公共段：钳到 >= 0 后直写（顶栏随 GoldChanged 自动刷）；越界输入附钳制说明
+    // 金币公共段：钳到 >= 0 后经受控写入入口写回（顶栏随 GoldChanged 自动刷）；越界输入附钳制说明
     private static string WriteGold(RunState run_, int target_)
     {
-        run_.Gold = Mathf.Max(0, target_);
+        run_.RestoreGoldTo(Mathf.Max(0, target_));
         return run_.Gold == target_ ? $"金币 {run_.Gold}" : $"金币 {run_.Gold}（输入 {target_} 已钳到 0）";
     }
 

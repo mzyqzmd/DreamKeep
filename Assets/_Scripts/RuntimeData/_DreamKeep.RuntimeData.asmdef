@@ -3,7 +3,8 @@
     "rootNamespace": "_DreamKeep.RuntimeData",
     "references": [
         "GUID:743064110a38ee743a411dd0c576ab58",
-        "GUID:f0eed43b2f881644db6e48bd15c2f7c0"
+        "GUID:f0eed43b2f881644db6e48bd15c2f7c0",
+        "_DreamKeep.EngineUtility"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

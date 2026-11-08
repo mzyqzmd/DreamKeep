@@ -40,6 +40,7 @@ namespace _DreamKeep.CommonPresentation
 
         private IObjectResolver _resolver;
         private VfxFactory _vfxFactory;
+        private AudioRoot _audio;
         private MonoObjectPool<UI_CardInDeck> _pool;
         private readonly List<UI_CardInDeck> _activeItems = new();
         private readonly List<UI_CardInDeck> _selected = new(); // FIFO 真源：先选中的先被替换
@@ -56,6 +57,7 @@ namespace _DreamKeep.CommonPresentation
         protected IReadOnlyList<UI_CardInDeck> Selected => _selected;
         protected UI_CardInDeck CardPrefab => _cardPrefab;
         protected VfxFactory VfxFactory => _vfxFactory;
+        protected AudioRoot Audio => _audio;
 
         private void Awake()
         {
@@ -82,6 +84,7 @@ namespace _DreamKeep.CommonPresentation
         {
             _resolver = resolver_;
             _vfxFactory = _resolver.Resolve<VfxFactory>();
+            _audio = _resolver.Resolve<AudioRoot>();
             _pool = CreateCardPool(_scrollContent);
             OnConstructed();
         }

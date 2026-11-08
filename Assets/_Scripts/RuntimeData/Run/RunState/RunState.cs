@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility; // 只为存档接口 ISaveable/ISaveWriter/ISaveReader：RuntimeData 是全项目唯一反向引用引擎桥接层的域程序集，别再扩大这条边
 using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
@@ -8,7 +9,7 @@ namespace _DreamKeep.RuntimeData
     /// <summary>整局状态：一局游戏里跨战斗延续的全部数据，战斗段只读它。
     /// 卡组在构造时从角色配置烘焙一次，之后升级、增删都作用在这份局内卡组上，不再被战斗重置。
     /// 纯 C# 类，不认识容器与引擎——组合根负责创建与持有。</summary>
-    public class RunState
+    public class RunState : ISaveable
     {
         public SO_Player Config { get; }
         public Player Player { get; }
@@ -25,13 +26,19 @@ namespace _DreamKeep.RuntimeData
         /// <summary>兜底遗物池：常规遗物池抽空时的降级来源（池内只放头环），随整局构建传入，RelicRoller 各入口经此取用。</summary>
         public SO_RelicPool FallbackRelicPool { get; }
 
+        /// <summary>最近一次奖励掷骰前的随机流状态：仅「领奖中」读档重掷用，null 表示本局尚未掷过奖励。</summary>
+        private uint? _rewardRngState;
+
+        /// <summary>奖励掷骰前随机流：领奖中写盘据此复原同一份奖励；新开局为 null。</summary>
+        public uint? RewardRngState => _rewardRngState;
+
         private int _gold;
 
-        /// <summary>金币：set 内抛 GoldChanged，供整局 HUD（顶栏）订阅刷新，避免每帧轮询。</summary>
+        /// <summary>金币：只经 GainGold/SpendGold 两个受控入口改动；set 内抛 GoldChanged，供整局 HUD（顶栏）订阅刷新，避免每帧轮询。</summary>
         public int Gold
         {
             get => _gold;
-            set
+            private set
             {
                 if (_gold == value) return;
                 _gold = value;
@@ -101,11 +108,11 @@ namespace _DreamKeep.RuntimeData
 
         private int _floor = 1;
 
-        /// <summary>当前层数，从 1 开始；由跑图流程推进。set 内抛 FloorChanged。</summary>
+        /// <summary>当前层数，从 1 开始；只由跑图推进（EnterMapNode）改动。set 内抛 FloorChanged。</summary>
         public int Floor
         {
             get => _floor;
-            set
+            private set
             {
                 if (_floor == value) return;
                 _floor = value;
@@ -128,13 +135,15 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        #region 整局计时：外部每帧喂增量累计已用时长（保持纯 C# 不直读引擎时钟；停表钩子待存档系统落地）
+        #region 整局计时：外部每帧喂增量累计已用时长（保持纯 C# 不直读引擎时钟）
 
         private double _elapsedSeconds;
 
-        /// <summary>整局已用秒数：顶栏读它展示，将来存档随 RunState 序列化。</summary>
+        /// <summary>整局已用秒数：顶栏读它展示，并随存档写盘（RunStateRestore 的 elapsed）。</summary>
         public double ElapsedSeconds => _elapsedSeconds;
 
+        /// <summary>喂一次增量：唯一调用点是 UI_TopBar.Update（真实时间口径），
+        /// 因此「顶栏在场 = 计时在跑」；顶栏唯一的失活点是回主菜单清理，那一停表正是想要的口径。</summary>
         public void TickTime(double seconds_) => _elapsedSeconds += seconds_;
 
         #endregion
@@ -174,7 +183,8 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        public RunState(SO_Player config_, int seed_, SO_MapGenerationConfig mapConfig_, SO_RelicPool fallbackRelicPool_)
+        public RunState(SO_Player config_, int seed_, SO_MapGenerationConfig mapConfig_,
+            SO_RelicPool fallbackRelicPool_)
         {
             Config = config_;
             MapConfig = mapConfig_;
@@ -206,5 +216,24 @@ namespace _DreamKeep.RuntimeData
             Player = player_;
             Rng = rng_;
         }
+
+        #region 存档接入：拍平与标量回写都委托给转换器，本类只暴露回写入口
+
+        public void Capture(ISaveWriter writer_) => RunStateRestore.Capture(this, writer_);
+
+        public void Restore(ISaveReader reader_) => RunStateRestore.ApplyScalars(this, reader_);
+
+        internal void RestoreScalars(int gold_, int floor_, int removals_, double elapsed_, uint rngState_)
+        {
+            _gold = gold_;
+            _floor = floor_;
+            CardRemovalsUsed = removals_;
+            _elapsedSeconds = elapsed_;
+            Rng.State = rngState_;
+        }
+
+        internal void SetRewardRngState(uint? state_) => _rewardRngState = state_;
+
+        #endregion
     }
 }

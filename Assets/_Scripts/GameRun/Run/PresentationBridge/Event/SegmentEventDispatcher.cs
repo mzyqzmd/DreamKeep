@@ -8,7 +8,9 @@ namespace _DreamKeep.GameRun
     /// 同一类型可被多处订阅、同条事件内并行 await（一处演出同时开播、等到最长的那个），未注册的事件静默忽略。
     /// 订阅者只能读事件，不许改事件已表达的结算结果。实例随段 scope 创建与销毁，不与其它段共享，段卸载后订阅不会残留。
     /// 各段以一行子类固化事件契约（如 ShopEventDispatcher : SegmentEventDispatcher&lt;IShopEvent&gt;），
-    /// 六段共享的只是这份机械分派模板，不是跨段流程抽象。</summary>
+    /// 六段共享的只是这份机械分派模板，不是跨段流程抽象。
+    /// 与 GameBattle 的 BattleEventDispatcher 是同构实现（Register 两个重载 + DispatchAsync 逐字相同），
+    /// 差异只在事件基类型是泛型参数、且没有批量播放；两份刻意不合并（GameBattle 不能反引 GameRun），改一处必改另一处。</summary>
     public abstract class SegmentEventDispatcher<TEvent>
     {
         private readonly Dictionary<Type, List<Func<TEvent, UniTask>>> _handlers = new();

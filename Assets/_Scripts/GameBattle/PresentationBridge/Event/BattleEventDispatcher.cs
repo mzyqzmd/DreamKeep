@@ -6,7 +6,9 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>战斗事实广播器：表现层与域内反应方（遗物等）共同订阅的下行出口，持有类型→处理器列表字典，按事件类型查表分派；
     /// 各订阅者初始化时自注册关心的处理器，同一类型可被多处订阅、同条事件内并行 await（一波演出同时开播、等到最长的那个），
-    /// 未注册的事件静默忽略。订阅者只能读事件、不许改事件已表达的结算结果。</summary>
+    /// 未注册的事件静默忽略。订阅者只能读事件、不许改事件已表达的结算结果。
+    /// 与 GameRun 的 SegmentEventDispatcher 是同构实现（Register 两个重载 + DispatchAsync 逐字相同），
+    /// 差异只在基类型用 IBattleEvent、且有批量播放与注册数查询；两份刻意不合并（GameBattle 不能反引 GameRun），改一处必改另一处。</summary>
     public class BattleEventDispatcher
     {
         private readonly Dictionary<Type, List<Func<IBattleEvent, UniTask>>> _handlers = new();

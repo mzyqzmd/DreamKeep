@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.CommonPresentation
@@ -49,6 +50,7 @@ namespace _DreamKeep.CommonPresentation
         private bool _switching; // 进出过渡闸门：黑屏期间不接新入口
         private bool _inRun; // 是否处于整局内：决定进局/回主菜单各自是否可用
         private bool _quitting; // 退出闸门：确认后黑幕淡入期间不接二次点击
+        private AudioRoot _audio; // 常驻音频根：住本对象下的 SFXRoot，不进容器，Awake 自愈
 
         /// <summary>常驻主相机：Run 内 Screen Space-Camera 画布与段装卸器共用。</summary>
         public Camera MainCamera => _camera;
@@ -76,10 +78,19 @@ namespace _DreamKeep.CommonPresentation
             // 本组件挂 GameRoot（常驻激活）：面板默认失活也不影响绑定，序列化引用不依赖面板 Awake；
             // 偏好恢复先于一切：音量系数写回工具层，分辨率与全屏按落盘值应用一次
             GameSettings.ApplyOnBoot();
+            _audio = GetComponentInChildren<AudioRoot>(true);
+            if (_audio) _audio.PlayBgm(_audio.Cues.BgmMainMenu);
+            // 全局点击音：常驻 EventSystem 上的唯一拦截器，音频根在此转交（主菜单阶段整局容器尚未构建）
+            UI_ClickSfx clickSfx = GetComponentInChildren<UI_ClickSfx>(true);
+            if (clickSfx) clickSfx.Bind(_audio);
 
             if (_mainMenuPanel)
-                _mainMenuPanel.Wire(OnNewGameClicked, OnContinueClicked, OnGiveUpSaveClicked, ShowSettingPanel,
-                    ShowDevelopLogPanel, ShowQuitGamePanel);
+            {
+                _mainMenuPanel.Wire(OnNewGameClicked, OnContinueClicked, OnGiveUpSaveClicked,
+                    ShowSettingPanel, ShowDevelopLogPanel, ShowQuitGamePanel);
+                _mainMenuPanel.SetHasSave(SaveService.HasSave); // 启动时按磁盘上的单档切两态
+            }
+
             // 放弃确认：关闭即收起，确认即转发开面板时给的那份语义
             if (_giveUpPanel) _giveUpPanel.Wire(OnGiveUpClosed, OnGiveUpConfirmed);
             if (_quitGamePanel) _quitGamePanel.Wire(OnQuitClosed, OnQuitConfirmed);
@@ -93,20 +104,36 @@ namespace _DreamKeep.CommonPresentation
             _giveUpConfirm = null;
         }
 
-        #region 主菜单按钮出口：存档相关一律占位日志，坐实接线点
+        #region 主菜单按钮出口：新建 / 继续 / 放弃存档
 
         private void OnNewGameClicked()
         {
             if (_switching || _inRun) return;
+            SaveService.ClearRestoreIntent(); // 新局一律走常规构造，不接任何残留的待读快照
             _switching = true;
             EnterRunAsync().Forget();
         }
 
-        private void OnContinueClicked() => Debug.Log("[存档未接入] 继续游戏：从存档还原整局");
+        // 继续：先把单档读进静态待读快照，再走同一条黑屏进局链；坏档按无档处理并切回两态
+        private void OnContinueClicked()
+        {
+            if (_switching || _inRun) return;
+            if (!SaveService.Load())
+            {
+                if (_mainMenuPanel) _mainMenuPanel.SetHasSave(false);
+                return;
+            }
 
-        // 主菜单的放弃＝删档：确认后留在主菜单，两态待存档接好再由 SetHasSave 切回无档
-        private void OnGiveUpSaveClicked() =>
-            ShowGiveUpPanel(() => Debug.Log("[存档未接入] 放弃存档：删除当前存档并切回无档态"));
+            _switching = true;
+            EnterRunAsync().Forget();
+        }
+
+        // 主菜单的放弃＝删档：确认后留在主菜单并切回无档态
+        private void OnGiveUpSaveClicked() => ShowGiveUpPanel(() =>
+        {
+            SaveService.Delete();
+            if (_mainMenuPanel) _mainMenuPanel.SetHasSave(false);
+        });
 
         private void ShowDevelopLogPanel()
         {
@@ -219,13 +246,17 @@ namespace _DreamKeep.CommonPresentation
             BuildRunScope();
             if (_mainMenuPanel) _mainMenuPanel.Hide();
             _inRun = true;
-            // 先古之民是每一把游戏的起点，段收尾自动开地图；等它装配完成后外层才揭幕，黑屏不提前露出空的整局场景
+            if (_audio) _audio.PlayBgm(_audio.Cues.BgmRun);
+            // 新局以先古之民起手；读档按存档当前节点类型重进该段，段装配完成后外层才揭幕
+            int restoredKind = SaveService.ConsumeRestoreSegmentKind();
+            ESegmentKind first = restoredKind >= 0 ? (ESegmentKind)restoredKind : ESegmentKind.Ancient;
             if (_startSegment == null) Debug.LogError($"[{nameof(MainMenuFlow)}] 整局容器未注入进段入口，首段不会加载");
-            else await _startSegment(ESegmentKind.Ancient);
+            else await _startSegment(first);
         }
 
         // 仿 SegmentSceneLoader 范式：待激活态加载 → 临时接管输入 → 关 Run 内相机/EventSystem/AudioListener、
-        // 画布补常驻相机 → 找 autoRun 关闭的整局 scope（不 Build，交给调用方在委托注入后手动 Build）
+        // 画布补常驻相机 → 找 autoRun 关闭的整局 scope（不 Build，交给调用方在委托注入后手动 Build）。
+        // 与 SegmentSceneLoader.LoadSegmentAsync 是同构片段（差别只在 EventSystem 的 try/finally 与 scope 构建时机），改一处必看另一处。
         private async UniTask<bool> LoadRunSceneAsync()
         {
             AsyncOperation load = SceneManager.LoadSceneAsync(_runSceneName, LoadSceneMode.Additive);
@@ -324,9 +355,16 @@ namespace _DreamKeep.CommonPresentation
         {
             if (_prepareReturnToMenu != null) await _prepareReturnToMenu();
             await UnloadRunSceneAsync();
+            SaveService.Unbind(); // 整局场景已卸载，静态门面不再持有随场景销毁的对象集合
             HideOverlays(); // 整局内开过的常驻弹层（设置/放弃）随回菜单一并收起
-            if (_mainMenuPanel) _mainMenuPanel.Show();
+            if (_mainMenuPanel)
+            {
+                _mainMenuPanel.Show();
+                _mainMenuPanel.SetHasSave(SaveService.HasSave); // 保存并退出留档、终点与放弃删档，两态按磁盘真值刷新
+            }
+
             _inRun = false;
+            if (_audio) _audio.PlayBgm(_audio.Cues.BgmMainMenu);
         }
 
         // 卸载整局场景：句柄可能已失效（外部卸载），此时 UnloadSceneAsync 返回 null，直接跳过

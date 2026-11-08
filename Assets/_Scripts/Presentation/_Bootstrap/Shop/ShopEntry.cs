@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 
@@ -10,6 +11,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>商店段表现入口：启动域流程，把删牌请求接上段内弹板并把结果交回命令门面，
     /// 再把段完成事实转成整局编排者的收段动作；成交与支付失败事实在这里经次数台账翻成商人的一句台词。
+    /// 六条商人音效也在此按商店事实落点：掀摊招呼、成交道谢、被拒失望、删牌哼声、进店常态。
     /// 视图只订阅事实与提交意图，不再持有会话或直调编排者。</summary>
     public sealed class ShopEntry : IStartable
     {
@@ -25,11 +27,13 @@ namespace _DreamKeep.Presentation
         private readonly SpeechLineTracker _speechTracker;
         private readonly SegmentSceneManager _segmentManager;
         private readonly IObjectResolver _resolver;
+        private readonly AudioRoot _audio;
 
         public ShopEntry(ShopLoop loop_, ShopEventDispatcher events_, ShopCommandDispatcher commands_, RunState run_,
             UI_ShopRugPanel rug_, UI_ShopMerchant merchant_, UI_CardRemovePanel removePanel_,
             UI_MerchantSpeech merchantSpeech_, SO_MerchantSpeechLines merchantSpeechLines_,
-            SpeechLineTracker speechTracker_, SegmentSceneManager segmentManager_, IObjectResolver resolver_)
+            SpeechLineTracker speechTracker_, SegmentSceneManager segmentManager_, IObjectResolver resolver_,
+            AudioRoot audioRoot_)
         {
             _loop = loop_;
             _events = events_;
@@ -43,6 +47,7 @@ namespace _DreamKeep.Presentation
             _speechTracker = speechTracker_;
             _segmentManager = segmentManager_;
             _resolver = resolver_;
+            _audio = audioRoot_;
         }
 
         public void Start()
@@ -51,14 +56,22 @@ namespace _DreamKeep.Presentation
             _resolver.InjectGameObject(_rug.gameObject);
 
             _events.Register<SE_RemovalPanelRequested>(requested_ =>
+            {
+                if (_audio) _audio.Play(_audio.Cues.MerchantHum);
                 CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
+                    cards_ => _commands.SubmitCardSelection(cards_)).Forget();
+            });
             _events.Register<SE_ShopCompleted>(_ => _segmentManager.CompleteSegment());
-            _events.Register<SE_PurchaseSucceeded>(_ => SpeakMerchant(_merchantSpeechLines.PurchaseSuccess));
-            _events.Register<SE_PurchaseRefused>(refused_ => SpeakMerchant(PickRefusalGroup(refused_.Reason)));
-            _events.Register<SE_RemovalRefused>(_ => SpeakMerchant(_merchantSpeechLines.FailureGold));
+            _events.Register<SE_ShopOpened>(_ => { if (_audio) _audio.Play(_audio.Cues.MerchantWelcome); });
+            _events.Register<SE_PurchaseSucceeded>(_ => SpeakMerchant(_merchantSpeechLines.PurchaseSuccess,
+                _audio ? _audio.Cues.MerchantThanks : null));
+            _events.Register<SE_PurchaseRefused>(refused_ => SpeakMerchant(PickRefusalGroup(refused_.Reason),
+                _audio ? _audio.Cues.MerchantDisappoint : null));
+            _events.Register<SE_RemovalRefused>(_ => SpeakMerchant(_merchantSpeechLines.FailureGold,
+                _audio ? _audio.Cues.MerchantDisappoint : null));
             _loop.Start();
             _rug.Hide(); // 进店先收摊：玩家点商人再掀开
+            if (_audio) _audio.Play(_audio.Cues.MerchantPassive);
 
             _merchant.Clicked += OnMerchantClicked;
             // 删牌弹板随本段场景装配；先摘再挂是幂等守卫——注入若因补注入重跑一次，不累积订阅
@@ -83,12 +96,19 @@ namespace _DreamKeep.Presentation
             _ => null,
         };
 
-        // 取词 → 播放 → 没真正播出就退回本次计数：未播仍耗次数会让商人永久沉默，与战斗侧口径不一致
-        private void SpeakMerchant(SpeechLineGroup group_)
+        // 取词 → 播放 → 没真正播出就退回本次计数：未播仍耗次数会让商人永久沉默，与战斗侧口径不一致；
+        // cue 只在台词真播出后响，避免空台词或无气泡时白出声
+        private void SpeakMerchant(SpeechLineGroup group_, SO_AudioCue cue_)
         {
             string line = _speechTracker.TryPick(_merchantSpeechLines, group_);
             if (string.IsNullOrEmpty(line)) return;
-            if (!_merchantSpeech.Play(line)) _speechTracker.Rollback(_merchantSpeechLines, group_);
+            if (!_merchantSpeech.Play(line))
+            {
+                _speechTracker.Rollback(_merchantSpeechLines, group_);
+                return;
+            }
+
+            if (_audio && cue_) _audio.Play(cue_);
         }
     }
 }

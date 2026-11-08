@@ -11,7 +11,8 @@ namespace _DreamKeep.Presentation
     /// 可交互窗口只有玩家回合进行阶段——进入该阶段才恢复本色可点击，点击瞬间立即置灰；
     /// 回合开始（抽牌）、回合结束（结算与弃牌）、敌方回合与战斗结束后，底图与文本一律乘同一灰调且不发光不响应点击，
     /// 否则命令会排在队列里等下一个玩家回合开头立即生效，把回合吞掉。
-    /// 指针交互走 UGUI 指针事件（场景 EventSystem + Canvas 上的 Graphic Raycaster），不逐帧轮询。</summary>
+    /// 指针交互走 UGUI 指针事件（场景 EventSystem + Canvas 上的 Graphic Raycaster），不逐帧轮询。
+    /// 回合开合音效归 UI_BattleAudioRoot，本类不认识音频。</summary>
     public sealed class UI_EndTurnButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         [SerializeField] private Image _background;

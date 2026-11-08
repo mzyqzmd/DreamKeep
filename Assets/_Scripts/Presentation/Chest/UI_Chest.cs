@@ -4,6 +4,7 @@ using Spine.Unity;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using VContainer;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameRun;
 
 namespace _DreamKeep.Presentation
@@ -23,6 +24,7 @@ namespace _DreamKeep.Presentation
         private float _openReleaseRatio = 0.5f;
 
         private ChestCommandDispatcher _commands;
+        private AudioRoot _audio;
         private bool _opened; // 已开箱：锁定悬停换肤，等待闪光
         private bool _locked; // 已领取：彻底锁死交互
         private bool _frozen; // 进场冻结只做一次的标记
@@ -43,9 +45,10 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(ChestEventDispatcher events_, ChestCommandDispatcher commands_)
+        public void Construct(ChestEventDispatcher events_, ChestCommandDispatcher commands_, AudioRoot audioRoot_)
         {
             _commands = commands_;
+            _audio = audioRoot_;
             events_.Register<CE_ChestOpening>(PlayOpenAsync);
             events_.Register<CE_RelicClaimed>(PlayShineFadeAndLockAsync);
         }
@@ -90,6 +93,7 @@ namespace _DreamKeep.Presentation
         private async UniTask PlayOpenAsync(CE_ChestOpening opening_)
         {
             _opened = true;
+            if (_audio) _audio.Play(_audio.Cues.Chest);
             ApplySkin(SkinIdle); // 开箱保持 act1，覆盖可能残留的悬停换肤
             TrackEntry entry = _skeleton.AnimationState.SetAnimation(0, AnimOpen, false);
             if (entry == null || entry.Animation == null) return;

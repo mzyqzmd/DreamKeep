@@ -26,11 +26,10 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Button _menuButton;
 
 
-        [Header("占位面板：尚未实现，仅接引用")] [SerializeField]
-        private UI_MapPanel _mapPanel;
+        [SerializeField] private UI_MapPanel _mapPanel;
 
         [SerializeField] private UI_DeckPanel _deckPanel;
-        [SerializeField] private UI_PausePanel pausePanel;
+        [SerializeField] private UI_PausePanel _pausePanel;
 
         private RunState _run;
         private int _lastShownSeconds = -1;
@@ -168,29 +167,31 @@ namespace _DreamKeep.Presentation
         // 菜单按钮开合暂停面板：开面板前先收地图与卡组，三层全屏遮罩不同时叠
         private void TogglePanel()
         {
-            if (pausePanel == null)
+            if (_pausePanel == null)
             {
                 Debug.Log("暂停面板未接线");
                 return;
             }
-            if (!pausePanel.gameObject.activeSelf)
+            if (!_pausePanel.gameObject.activeSelf)
             {
                 if (_mapPanel && _mapPanel.gameObject.activeSelf) _mapPanel.Hide();
                 if (_deckPanel && _deckPanel.gameObject.activeSelf) _deckPanel.Hide();
             }
-            pausePanel.Toggle();
+            _pausePanel.Toggle();
         }
 
         /// <summary>收起暂停面板：放弃/设置链与回主菜单清理前调用，避免遮罩叠层。</summary>
         public void ClosePause()
         {
-            if (pausePanel && pausePanel.gameObject.activeSelf) pausePanel.Hide();
+            if (_pausePanel && _pausePanel.gameObject.activeSelf) _pausePanel.Hide();
         }
 
         #endregion
 
-        #region 计时展示：每帧喂增量给整局状态（泵），仅整秒跳变时重建字符串
+        #region 计时展示：本类兼任整局计时的泵，仅整秒跳变时重建字符串
 
+        // 计时口径：顶栏在场 = 整局计时在跑。全库只有 SegmentSceneManager.PrepareReturnToMenuAsync
+        // 会让顶栏失活，那一刻本局已结束、正回主菜单，停表符合预期；换段与开地图期间顶栏保持激活，照常累计。
         private void Update()
         {
             if (_run == null) return;

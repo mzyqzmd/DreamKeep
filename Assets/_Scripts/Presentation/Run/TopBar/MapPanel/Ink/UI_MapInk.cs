@@ -14,9 +14,12 @@ namespace _DreamKeep.Presentation
     /// 快捷键恒可用；GlowIcon 由 ActiveTool 单一真源裁决（手势优先、全局只亮一个）；画笔/橡皮模式互斥，
     /// 进入后左键接管绘制/擦除（拦截层吃掉拖拽、地图不滚），右键/中键快捷键手势结束回空模式、模式内左键可连续操作。
     /// 墨迹限本局：订阅 MapRebuilt，地图重建即全清。</summary>
-    public sealed class UI_MapInk : MonoBehaviour
+    public sealed class UI_MapInk : MonoBehaviour, ISaveable
     {
         private const int LinePoolCapacity = 1024; // 折线视图池缓存上限：超限归还按池契约直接销毁
+        private const int TotalPointCap = 20000; // 笔迹总点数硬上限：存档体积与写盘耗时的护栏
+        private const string KeyPoints = "ink.points";
+        private const string KeyLengths = "ink.lengths";
 
         [Tooltip("墨迹视觉配置（颜色/线宽/采样间距/橡皮半径）")] [SerializeField]
         private SO_MapInkVisual _visual;
@@ -59,6 +62,10 @@ namespace _DreamKeep.Presentation
         private InkStroke _drawing; // 进行中的一笔：null 即未在画
         private bool _erasing;
         private bool _drawEndsPenMode; // 本笔由右键起笔：松开时回空模式（模式内左键起笔不退）
+        private int _totalPoints;
+        private float[] _restorePoints; // 读档待建点列：保留供 MapRebuilt 重建，换局时随本对象销毁
+        private int[] _restoreLengths;
+        private bool _restoreApplied; // 防止同一份待建点列被重复叠笔
 
         // 池出生父级为墨层：视图矩形与点列由笔画自己摆
         private MonoObjectPool<UI_MapInkLine> LinePool =>
@@ -78,12 +85,19 @@ namespace _DreamKeep.Presentation
         public void Construct(UI_MapView view_)
         {
             _view = view_;
-            _view.MapRebuilt += ClearAllStrokes; // 注入必先于一切交互：换局重建地图即清墨
+            _view.MapRebuilt += OnMapRebuilt; // 换局重建即清墨；读档待建点列在清空后幂等重建
         }
 
         private void OnDestroy()
         {
-            if (_view != null) _view.MapRebuilt -= ClearAllStrokes;
+            if (_view != null) _view.MapRebuilt -= OnMapRebuilt;
+        }
+
+        private void OnMapRebuilt()
+        {
+            ClearAllStrokes();
+            _restoreApplied = false; // 视图已清空，允许按同一份待建点列重建
+            ApplyRestoredStrokes();
         }
 
         // 面板收起兜底：按键的 Up 不会来，收掉进行中手势并回空模式（事件同步刷 GlowIcon）
@@ -151,6 +165,70 @@ namespace _DreamKeep.Presentation
             AbortActiveGesture();
             for (int i = 0; i < _strokes.Count; i++) _strokes[i].Clear(LinePool);
             _strokes.Clear();
+            _totalPoints = 0;
+        }
+
+        #endregion
+
+        #region 存档接入：笔迹点列拍平成平行表，读档经 MapRebuilt 订阅链幂等重建
+
+        public void Capture(ISaveWriter writer_)
+        {
+            List<float> points = new(_totalPoints * 2);
+            int[] lengths = new int[_strokes.Count];
+            for (int i = 0; i < _strokes.Count; i++)
+            {
+                IReadOnlyList<Vector2> line = _strokes[i].Points;
+                lengths[i] = line.Count;
+                for (int p = 0; p < line.Count; p++)
+                {
+                    points.Add(line[p].x);
+                    points.Add(line[p].y);
+                }
+            }
+
+            writer_.Write(KeyPoints, points.ToArray());
+            writer_.Write(KeyLengths, lengths);
+        }
+
+        public void Restore(ISaveReader reader_)
+        {
+            _restorePoints = reader_.Read<float[]>(KeyPoints, Array.Empty<float>());
+            _restoreLengths = reader_.Read<int[]>(KeyLengths, Array.Empty<int>());
+            _restoreApplied = false;
+            ApplyRestoredStrokes(); // 装配期 MapRebuilt 若已早于 Restore 触发，此处直接补建
+        }
+
+        // 幂等标记保证同一份待建点列只叠一次；点列本身保留，供晚到的 MapRebuilt 重建
+        private void ApplyRestoredStrokes()
+        {
+            if (_restorePoints == null || _restoreApplied) return;
+            _restoreApplied = true;
+            float[] points = _restorePoints;
+            int[] lengths = _restoreLengths ?? Array.Empty<int>();
+
+            int cursor = 0;
+            foreach (int length in lengths)
+            {
+                int floats = Mathf.Max(0, length) * 2;
+                if (cursor + floats > points.Length) break;
+                List<Vector2> line = new(length);
+                for (int p = 0; p < floats; p += 2)
+                    line.Add(new Vector2(points[cursor + p], points[cursor + p + 1]));
+                cursor += floats;
+                if (line.Count < 2 || _totalPoints + line.Count > TotalPointCap) continue;
+                _strokes.Add(InkStroke.FromExactPoints(line, _inkLayer, LinePool, _linePrefab, _visual));
+            }
+
+            RecountPoints();
+        }
+
+        // 结构变化（擦除切段、收笔、作废手势、读档重建）后重算，避免增量统计与切段结果脱节
+        private void RecountPoints()
+        {
+            int total = _drawing == null ? 0 : _drawing.Points.Count;
+            for (int i = 0; i < _strokes.Count; i++) total += _strokes[i].Points.Count;
+            _totalPoints = total;
         }
 
         #endregion
@@ -159,9 +237,9 @@ namespace _DreamKeep.Presentation
         private void BeginDraw(Vector2 mousePos_, bool inside_, bool endsMode_)
         {
             if (_drawing != null) AbortActiveGesture(); // 异常输入（上一笔没收到 Up）兜底：先回收，避免残留孤儿视图
-            if (!inside_ || !TryToInkLayer(mousePos_, out Vector2 pos)) return;
+            if (!inside_ || _totalPoints >= TotalPointCap || !TryToInkLayer(mousePos_, out Vector2 pos)) return;
             _drawing = new InkStroke();
-            _drawing.AddPoint(pos, _inkLayer, LinePool, _linePrefab, _visual);
+            if (_drawing.AddPoint(pos, _inkLayer, LinePool, _linePrefab, _visual)) _totalPoints++;
             _drawEndsPenMode = endsMode_;
             NotifyStateChanged(); // 手势开始：点亮画笔 GlowIcon
         }
@@ -169,8 +247,8 @@ namespace _DreamKeep.Presentation
         // 行笔：拖出视口即停采样（留缺口），拖回继续
         private void ExtendDraw(Vector2 mousePos_, bool inside_)
         {
-            if (!inside_ || !TryToInkLayer(mousePos_, out Vector2 pos)) return;
-            _drawing.AddPoint(pos, _inkLayer, LinePool, _linePrefab, _visual);
+            if (!inside_ || _totalPoints >= TotalPointCap || !TryToInkLayer(mousePos_, out Vector2 pos)) return;
+            if (_drawing.AddPoint(pos, _inkLayer, LinePool, _linePrefab, _visual)) _totalPoints++;
         }
 
         // 收笔：够两点的并入笔迹列表（供橡皮擦），单点空笔还池丢弃；右键起笔的手势结束回空模式
@@ -180,6 +258,7 @@ namespace _DreamKeep.Presentation
             if (_drawing.IsEmpty) _drawing.Clear(LinePool);
             else _strokes.Add(_drawing);
             _drawing = null;
+            RecountPoints();
             bool endsMode = _drawEndsPenMode;
             _drawEndsPenMode = false;
             NotifyStateChanged(); // 手势结束：熄灭画笔 GlowIcon
@@ -206,7 +285,8 @@ namespace _DreamKeep.Presentation
                 if (segments == null) continue; // 没擦到点：原段保持不动
                 _strokes.RemoveAt(i);
                 for (int s = 0; s < segments.Count; s++)
-                    _strokes.Add(InkStroke.FromPoints(segments[s], _inkLayer, LinePool, _linePrefab, _visual));
+                    _strokes.Add(InkStroke.FromExactPoints(segments[s], _inkLayer, LinePool, _linePrefab, _visual));
+                RecountPoints();
             }
         }
 
@@ -221,6 +301,7 @@ namespace _DreamKeep.Presentation
 
             _erasing = false;
             _drawEndsPenMode = false;
+            RecountPoints();
             NotifyStateChanged();
         }
 

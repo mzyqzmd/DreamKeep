@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -34,7 +35,23 @@ namespace _DreamKeep.Presentation
             int seed = Environment.TickCount ^ Guid.NewGuid().GetHashCode(); // 构建版：运行时熵源，肉鸽每局不同
 #endif
             Debug.Log($"[RunLifetimeScope] 整局随机种子 {seed}");
-            builder_.RegisterInstance(new RunState(_playerConfig, seed, _mapConfig, _fallbackRelicPool));
+            // 读档分支：快照静态暂存跨过场景加载，容器 Build 之前先按存档重建整局状态，避免常规构造器重新生成地图与卡组
+            ISaveReader pending = SaveService.HasPendingRestore
+                ? SaveService.PendingReaderOf(typeof(RunState).FullName)
+                : null;
+            RunState run = new(_playerConfig, seed, _mapConfig, _fallbackRelicPool);
+            if (pending != null)
+            {
+                try { run = RunStateRestore.Build(pending, _playerConfig, _mapConfig, _fallbackRelicPool); }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[RunLifetimeScope] 整局状态重建失败，删档并退回新局：{e.Message}");
+                    SaveService.Delete();
+                    SaveService.ClearRestoreIntent();
+                }
+            }
+
+            builder_.RegisterInstance(run).AsSelf().As<ISaveable>();
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
@@ -59,9 +76,10 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_TopBar>(); // 装配完即自激活显示
             builder_.RegisterComponentInHierarchy<UI_DeckPanel>(); // 卡组查看：整副局内卡组的陈列，跑图/战斗段都随顶栏开关
             builder_.RegisterComponentInHierarchy<UI_MapView>(); // 地图编排器：装配时从 RunState 拿整章图一次性建视图
-            builder_.RegisterComponentInHierarchy<UI_MapInk>(); // 墨迹控制器：注入视图以订阅 MapRebuilt，换局重建即清空本局笔迹
+            // 墨迹控制器：注入视图以订阅 MapRebuilt，换局重建即清空本局笔迹；同时进存档集合
+            builder_.RegisterComponentInHierarchy<UI_MapInk>().AsSelf().As<ISaveable>();
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
-            builder_.RegisterComponentInHierarchy<SegmentSceneManager>();
+            builder_.RegisterComponentInHierarchy<SegmentSceneManager>().AsSelf().As<ISaveable>();
             builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败共用，确认后上报回主菜单
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
@@ -69,6 +87,9 @@ namespace _DreamKeep.Presentation
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
                 BindMainMenuFlow(resolver_);
+                // 容器装配完成后一次性交接存档集合：读档快照此时统一下发，笔迹经 MapRebuilt 订阅链幂等重建
+                SaveService.Bind(resolver_.Resolve<IReadOnlyList<ISaveable>>());
+                if (SaveService.HasPendingRestore) SaveService.ApplyRestore();
             });
         }
 

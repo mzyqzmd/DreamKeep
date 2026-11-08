@@ -9,7 +9,8 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>战斗特效编排：挂在场景 VFX 节点上，只决定"谁在什么时候播什么、摆在哪"——
     /// 订阅受击（真掉血）、回血（含零回复）、格挡获得与状态施加事件，算出目标单位视图与骨架锚点后交给通用特效工厂
-    /// VfxFactory；特效预制体、实例池、通道识别与时长都归工厂/播放器。处理器一律不阻塞事件链。</summary>
+    /// VfxFactory；特效预制体、实例池、通道识别与时长都归工厂/播放器。处理器一律不阻塞事件链。
+    /// 音效回执另归 UI_BattleAudioRoot，本类不认识音频。</summary>
     public sealed class UI_BattleVfxRoot : MonoBehaviour
     {
         [Header("尺寸倍率：挂单位根，不继承骨架自身缩放")] [SerializeField]

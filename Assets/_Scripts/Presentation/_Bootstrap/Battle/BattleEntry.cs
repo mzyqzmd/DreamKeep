@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using Object = UnityEngine.Object;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
@@ -62,7 +65,7 @@ namespace _DreamKeep.Presentation
             _segmentEvents.Register<BAE_BattleExited>(exited_ => _segmentManager.FinishSegment());
             SpawnPlayerView();
             SpawnEnemyViews();
-            _loop.Start();
+            if (!_segmentLoop.IsRewardRestore) _loop.Start(); // 领奖中读档：跳过战斗循环，只重领奖励
             _segmentLoop.Start();
         }
 
@@ -139,6 +142,7 @@ namespace _DreamKeep.Presentation
         // 弹板自管领取与演出，「继续」关板并交回领完意图；弹板失败降级为跳过奖励（异常照报，不静默吞）
         private void OnRewardOffered(BAE_RewardOffered offered_)
         {
+            _segmentManager.SetPhase(ESavePhase.AwaitingReward); // 领奖中写盘据此重领，不重打战斗
             try
             {
                 UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
@@ -148,7 +152,7 @@ namespace _DreamKeep.Presentation
                     _segmentCommands.AcknowledgeReward();
                 });
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogException(e);
                 _segmentCommands.SkipReward();

@@ -23,6 +23,7 @@ namespace _DreamKeep.RuntimeData
             List<RunReward> rewards = new();
             if (config_ == null || run_ == null) return rewards;
             Rng rng = run_.Rng;
+            run_.SetRewardRngState(rng.State); // 领奖中写盘据此把流设回掷骰前重掷，保证退出前后奖励一致
 
             RollGold(config_, rng, rewards);
             RollCards(config_, rng, rewards, onWarning_);

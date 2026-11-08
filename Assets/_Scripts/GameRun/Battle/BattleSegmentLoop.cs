@@ -21,6 +21,7 @@ namespace _DreamKeep.GameRun
         private readonly Action<string> _onWarning;
         private UniTaskCompletionSource<bool> _rewardDone = new();
         private IReadOnlyList<RunReward> _restoreRewards;
+        private uint? _rewardRngState;
 
         public BattleSegmentLoop(RunState run_, BattleLoop battleLoop_, SO_EncounterReward reward_,
             BattleSegmentEventDispatcher events_, Action<string> onWarning_)
@@ -32,14 +33,29 @@ namespace _DreamKeep.GameRun
             _onWarning = onWarning_;
         }
 
+        /// <summary>是否领奖恢复：表现入口据此跳过战斗循环，只走领奖等待链。</summary>
+        public bool IsRewardRestore => _restoreRewards != null || _rewardRngState.HasValue;
+
         public void Start()
         {
+            if (_rewardRngState.HasValue) ApplyRewardRng();
             if (_restoreRewards != null) RestoreAsync().Forget();
             else RunAsync().Forget();
         }
 
         /// <summary>读档恢复：奖励清单来自存档，不再掷骰、不重复消耗整局随机流。</summary>
         public void RestoreRewards(IReadOnlyList<RunReward> rewards_) => _restoreRewards = rewards_;
+
+        /// <summary>领奖中读档：记下掷骰前流状态，待 Start 时设回并重掷，保证退出前后奖励一致。</summary>
+        public void RestoreRewardsAt(uint rngState_) => _rewardRngState = rngState_;
+
+        // 重掷必须晚于段组合根的遭遇抽取与洗牌，否则那些消耗会与掷骰前状态互相覆盖
+        private void ApplyRewardRng()
+        {
+            _run.Rng.State = _rewardRngState.Value;
+            _rewardRngState = null;
+            _restoreRewards = EncounterRewardRoller.Roll(_reward, _run, _onWarning);
+        }
 
         /// <summary>奖励面板「继续」已点：领完放行，段按完成收尾。</summary>
         public void AcknowledgeReward() => _rewardDone.TrySetResult(true);

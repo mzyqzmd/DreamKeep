@@ -80,7 +80,11 @@ namespace _DreamKeep.CommonPresentation
         protected override void OnConfirm() => OpenPreview();
 
         protected override void PlayVfx(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
-            Action onFinished_) => VfxFactory.PlaySmithForge(parent_, worldPosition_, scale_, card_, onFinished_);
+            Action onFinished_)
+        {
+            if (Audio) Audio.Play(Audio.Cues.Forge);
+            VfxFactory.PlaySmithForge(parent_, worldPosition_, scale_, card_, onFinished_);
+        }
 
         // 对照页：按选中顺序生成两排卡——上排当前形态、下排升级副本（一次性预览，不写回域）
         private void OpenPreview()

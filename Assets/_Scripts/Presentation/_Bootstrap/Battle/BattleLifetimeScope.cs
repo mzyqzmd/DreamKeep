@@ -4,6 +4,7 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
@@ -61,6 +62,9 @@ namespace _DreamKeep.Presentation
             BattleSegmentEventDispatcher segmentEvents = new BattleSegmentEventDispatcher();
             BattleSegmentLoop segmentLoop = new BattleSegmentLoop(run, loop, encounter.Reward, segmentEvents,
                 static message_ => Debug.LogWarning(message_));
+            // 领奖中读档：取走掷骰前流状态，由段 Loop 在 Start 时设回并重掷同一份奖励
+            uint? rewardRng = SaveService.ConsumeRestoreRewardRng();
+            if (rewardRng.HasValue) segmentLoop.RestoreRewardsAt(rewardRng.Value);
 
             // 遗物系统（GameRun 程序集）：遍历玩家整局持有的遗物，逐件烘焙效果并挂上本场事件流；
             // 战斗域零感知（装配反转），效果实例随本容器销毁。播报器是本段表现出口，遗物生效/用尽经它通知遗物栏
@@ -105,6 +109,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_BattlePopRoot>(); // 战斗弹层编排：订伤害/回血/回合开始，决定弹什么、弹在哪
             // 战斗特效编排：订伤害/回血，决定播什么、摆在哪；与弹层编排各自独立订阅同一事件
             builder_.RegisterComponentInHierarchy<UI_BattleVfxRoot>();
+            builder_.RegisterComponentInHierarchy<UI_BattleAudioRoot>(); // 战斗音频编排：订全部战斗事件统一播音效回执，与特效/弹层各自独立订阅
             builder_.RegisterComponentInHierarchy<BattleTargetDirector>(); // 瞄准中间件：持唯一的目标箭头与当前瞄准客户端，按玩法层预览点亮目标单位
             builder_.RegisterComponentInHierarchy<UI_TargetArrow>(); // 目标箭头：战斗通用视图，住 Canvas_HUD/TargetingLayer，由瞄准中间件独占驱动
             builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场单位区：槽位点坐标来源（出生摆位与移动补间）+ 单位视图登记表（目标提示按生物查视图）

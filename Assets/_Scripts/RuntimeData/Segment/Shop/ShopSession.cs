@@ -65,14 +65,14 @@ namespace _DreamKeep.RuntimeData
 
             RollCards(_commonRareCards, rng, CommonRareSlotCount, normalCards_, rareCards_);
             _commonRareSaleIndex = RollSaleIndex(rng, _commonRareCards.Count);
-            RollPrices(_commonRarePrices, rng, _commonRareCards, card => _prices.CardPrice(card.Rarity, rng.Next(-1f, 1f)));
+            RollPrices(_commonRarePrices, _commonRareCards, card => _prices.CardPrice(card.Rarity, rng.Next(-1f, 1f)));
             RollCards(_superRareCards, rng, SuperRareSlotCount, superRareCards_);
             _superRareSaleIndex = RollSaleIndex(rng, _superRareCards.Count);
-            RollPrices(_superRarePrices, rng, _superRareCards, card => _prices.CardPrice(card.Rarity, rng.Next(-1f, 1f)));
+            RollPrices(_superRarePrices, _superRareCards, card => _prices.CardPrice(card.Rarity, rng.Next(-1f, 1f)));
             RollRelics(rng, commonRelics_, rareRelics_, shopRelics_);
-            RollPrices(_relicPrices, rng, _relics, relic => _prices.RelicPrice(relic.Rarity, rng.Next(-1f, 1f)));
+            RollPrices(_relicPrices, _relics, relic => _prices.RelicPrice(relic.Rarity, rng.Next(-1f, 1f)));
             RollPotions(rng, commonPotions_, rarePotions_);
-            RollPrices(_potionPrices, rng, _potions, potion => _prices.PotionPrice(potion.Rarity, rng.Next(-1f, 1f)));
+            RollPrices(_potionPrices, _potions, potion => _prices.PotionPrice(potion.Rarity, rng.Next(-1f, 1f)));
         }
 
         #region 报价：视图只用这里拿数字，进店浮动价与半价不外泄换算
@@ -225,7 +225,7 @@ namespace _DreamKeep.RuntimeData
         private static int RollSaleIndex(Rng rng_, int count_) => count_ == 0 ? -1 : rng_.Next(count_);
 
         // 每件货掷一次售价：偏移 [-1,1) 乘该类浮动幅度，进店即定死，整店期间不跳价
-        private void RollPrices<T>(List<int> into_, Rng rng_, IReadOnlyList<T> items_, Func<T, int> priceOf_)
+        private void RollPrices<T>(List<int> into_, IReadOnlyList<T> items_, Func<T, int> priceOf_)
         {
             for (int i = 0; i < items_.Count; i++) into_.Add(priceOf_(items_[i]));
         }

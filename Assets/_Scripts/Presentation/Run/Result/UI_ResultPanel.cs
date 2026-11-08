@@ -39,9 +39,14 @@ namespace _DreamKeep.Presentation
         private string _defeatedReason;
 
         private SegmentSceneManager _segmentManager; // 常驻编排者：确认后直接收尾，不经段入口转发
+        private AudioRoot _audio;
 
         [Inject]
-        public void Construct(SegmentSceneManager segmentManager_) => _segmentManager = segmentManager_;
+        public void Construct(SegmentSceneManager segmentManager_, AudioRoot audioRoot_)
+        {
+            _segmentManager = segmentManager_;
+            _audio = audioRoot_;
+        }
 
         private void Awake()
         {
@@ -67,6 +72,12 @@ namespace _DreamKeep.Presentation
                 bool showReason = !win && !string.IsNullOrEmpty(reason);
                 _reasonText.gameObject.SetActive(showReason);
                 if (showReason) _reasonText.text = reason;
+            }
+
+            if (_audio)
+            {
+                _audio.StopBgm();
+                _audio.Play(win ? _audio.Cues.Victory : _audio.Cues.Defeat);
             }
 
             base.Show();

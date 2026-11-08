@@ -4,7 +4,8 @@ namespace _DreamKeep.CommonPresentation
 {
     /// <summary>全屏抖动驱动：挂在常驻主相机上，受伤瞬间短暂接管 OnRenderImage 做全屏 UV 扭曲与轻色差，
     /// 强度在时长内线性衰减，归零即关闭自身——未播放时 OnRenderImage 不被调用，常态零开销。
-    /// 由 VfxDefaultRoot 在整局容器装配时挂到常驻相机，随它销毁一并移除。</summary>
+    /// 预摆并序列化在 Scene_MainMenu 的常驻主相机上，全程存活；RunLifetimeScope 装配时按实例注册，
+    /// VfxDefaultRoot 注入使用，整局结束不销毁。</summary>
     public sealed class ScreenShakeDriver : MonoBehaviour
     {
         [SerializeField]private Shader _shader;

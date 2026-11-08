@@ -24,6 +24,10 @@ namespace _DreamKeep.CommonPresentation
         }
 
         protected override void PlayVfx(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
-            Action onFinished_) => VfxFactory.PlayRemoveCard(parent_, worldPosition_, scale_, card_, onFinished_);
+            Action onFinished_)
+        {
+            if (Audio) Audio.Play(Audio.Cues.RemoveCard);
+            VfxFactory.PlayRemoveCard(parent_, worldPosition_, scale_, card_, onFinished_);
+        }
     }
 }

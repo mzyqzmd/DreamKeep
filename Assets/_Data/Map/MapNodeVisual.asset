@@ -52,7 +52,7 @@ MonoBehaviour:
     _name: "\u4E8B\u4EF6"
     _description: "\u8FD9\u4E9B\u623F\u95F4\u91CC\u4F1A\u53D1\u751F\u4E0D\u540C\u5BFB\u5E38\u7684\u4E8B\u60C5\u2026\u2026"
   - _type: 8
-    _icon: {fileID: 21300000, guid: 02d74f662e8451d42a2843300bd56394, type: 3}
+    _icon: {fileID: 21300000, guid: 15cd63be70c075244a3c39fa1d8291a5, type: 3}
     _outline: {fileID: 21300000, guid: ab702e71b423f814eb72fc7050c14b52, type: 3}
     _name: Boss
     _description: "\u6574\u4E2A\u5730\u533A\u6700\u5F3A\u5927\u7684\u654C\u4EBA\u3002"
