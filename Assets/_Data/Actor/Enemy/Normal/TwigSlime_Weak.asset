@@ -23,34 +23,30 @@ MonoBehaviour:
   _startPerks:
   - _perk: {fileID: 11400000, guid: af07ad84149d61b4caef0182aa0a53b9, type: 2}
     _layers: 1
+  _speechLines: {fileID: 11400000, guid: 9fce707d7ba93d04e82bb29d1cca6fff, type: 2}
   references:
     version: 2
     RefIds:
     - rid: 8162841560953389058
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _speechLine: "\u6C99\u6C99\u2014\u2014\uFF01"
         _intent1:
           rid: 8162841984668532746
         _intent2:
           rid: 8162841560953389062
     - rid: 8162841560953389062
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _speechLine: 
+      data: 
     - rid: 8162841580618121216
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _speechLine: 
+      data: 
     - rid: 8162841580618121217
       type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _speechLine: "\u5495\u561F\u2026\u2026"
         _amount: 3
     - rid: 8162841984668532746
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _speechLine: 
         _intent1:
           rid: 8162841984668532747
         _intent2:
@@ -58,13 +54,11 @@ MonoBehaviour:
     - rid: 8162841984668532747
       type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _speechLine: 
         _damage: 3
         _times: 3
     - rid: 8162841984668532748
       type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _speechLine: 
         _perk: {fileID: 11400000, guid: 139c551b474963d449f421596cfc1e31, type: 2}
         _layers: 1
         _isSelf: 0

@@ -23,6 +23,9 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private List<SO_Relic> _startRelics = new();
         [SerializeField] private List<SO_Potion> _startPotions = new();
 
+        [Header("台词")] [Tooltip("留空则玩家全程不说话")] [SerializeField]
+        private SO_PlayerSpeechLines _speechLines;
+
         public string Name => _name;
         public int MaxHp => _maxHP;
         public GameObject ViewPrefab => _viewPrefab;
@@ -32,5 +35,6 @@ namespace _DreamKeep.ConfigData
         public List<SO_Card> StartDeck => _startDeck;
         public List<SO_Relic> StartRelics => _startRelics;
         public List<SO_Potion> StartPotions => _startPotions;
+        public SO_PlayerSpeechLines SpeechLines => _speechLines;
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
@@ -19,11 +20,17 @@ namespace _DreamKeep.RuntimeData
         public Creature Creature { get; }
         public int Slot { get; private set; }
 
+        /// <summary>本场战斗的台词分组：装配期由敌人配置写入，null 表示全程不说话。</summary>
+        public SO_EnemySpeechLines SpeechLines { get; private set; }
+
         /// <summary>是否处于击晕：本回合意图被替换为击晕，执行时跳过行动且不推进意图。</summary>
         public bool IsStunned { get; private set; }
 
         /// <summary>是否处于阶段二：仅双阶段敌人经 SwitchToPhaseTwo 进入，普通敌人恒为阶段一。</summary>
         public bool IsPhaseTwo => _isPhaseTwo;
+
+        /// <summary>本次将要执行的意图序号：表现层据此查台词目录，须在 AdvanceIntent() 之前读出。</summary>
+        public int IntentIndex => _intentIndex;
 
         // 当前生效的意图表与前槽替换意图：阶段二未装载时回退阶段一，切换不至于把敌人变哑
         private List<EnemyIntent> ActiveIntents => _isPhaseTwo && _phaseTwoIntents != null ? _phaseTwoIntents : _intents;
@@ -87,5 +94,8 @@ namespace _DreamKeep.RuntimeData
         #region 变更所在槽位，由移动动作调用
         public void SetSlot(int slot_) => Slot = slot_;
         #endregion
+
+        /// <summary>装配期写入台词分组；留空即全程沉默。</summary>
+        public void SetSpeechLines(SO_EnemySpeechLines lines_) => SpeechLines = lines_;
     }
 }

@@ -11753,7 +11753,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _root: {fileID: 401056685}
   _healScale: 1
-  _flyTarget: {fileID: 401056685}
+  _flyTarget: {fileID: 1867627898}
   _gainCardScale: 1
 --- !u!114 &2091153481
 MonoBehaviour:

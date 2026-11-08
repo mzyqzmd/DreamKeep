@@ -607,8 +607,8 @@ MonoBehaviour:
   _liftPx: 130
   _jitterPx: 18
   _turnBannerParent: {fileID: 2057050349337935963}
-  _playerSpeechLines: {fileID: 11400000, guid: 5b98dc978e3c6484e9c86e0f9c4e10cb, type: 2}
-  _speechLiftPx: 24
+  _playerBubbleOffsetPx: {x: 24, y: 15}
+  _enemyOffsetPx: {x: -15, y: 15}
 --- !u!1 &252599708169006155
 GameObject:
   m_ObjectHideFlags: 0
@@ -1107,7 +1107,7 @@ MonoBehaviour:
     TypeName: _DreamKeep.Presentation.RunLifetimeScope
   autoRun: 0
   autoInjectGameObjects: []
-  _encounterPool: {fileID: 11400000, guid: 3d5a697be06cd1723f59d88e2b706cad, type: 2}
+  _encounterPool: {fileID: 11400000, guid: 13d8d9b505f4c344e98ceaf65d469687, type: 2}
   _backgroundPool: {fileID: 11400000, guid: 5f7c8b9da82ef3945b7bfa004d928ecf, type: 2}
   _rewardPanelParent: {fileID: 2057050349337935963}
 --- !u!1 &977987626911269203

@@ -70,6 +70,7 @@ namespace _DreamKeep.Presentation
             SO_Background background = run.Rng.Pick(_backgroundPool.Select(kind));
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
+            builder_.RegisterInstance(new SpeechLineTracker());
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
             builder_.RegisterInstance(relicNotifier); // 供遗物栏 [Inject] 订阅遗物播报
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）

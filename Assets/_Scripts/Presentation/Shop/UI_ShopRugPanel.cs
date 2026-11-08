@@ -170,7 +170,7 @@ namespace _DreamKeep.Presentation
         }
 
         /// <summary>按当前快照重染整行价格：每次成交与删牌后调用一次（最多 12 格，不做每帧轮询）。</summary>
-        public void RefreshPrices()
+        private void RefreshPrices()
         {
             if (_shelf == null) return;
 

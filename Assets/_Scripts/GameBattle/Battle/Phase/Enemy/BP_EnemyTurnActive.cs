@@ -5,7 +5,8 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.GameBattle
 {
     /// <summary>敌人回合进行阶段：按槽位从左到右逐个敌人执行其展示意图（击晕优先、其次站最前槽位自动替换为最前槽位意图），
-    /// 执行完推进到下一条并广播，供表现层预告；被击晕的敌人整回合跳过且不推进意图。</summary>
+    /// 执行完推进到下一条并广播，供表现层预告；被击晕的敌人整回合跳过且不推进意图。
+    /// 台词宣告已前移到 BP_EnemyTurnStart（回合开始即宣告本回合准备行动），本阶段只管动作。</summary>
     public sealed class BP_EnemyTurnActive : BattlePhase
     {
         public BP_EnemyTurnActive(BattleLoop owner_) : base(owner_)
@@ -35,8 +36,6 @@ namespace _DreamKeep.GameBattle
                 EnemyIntent intent = enemy.PreviewIntent;
                 if (intent != null)
                 {
-                    if (!string.IsNullOrEmpty(intent.SpeechLine))
-                        await PlayEvent(new BE_EnemySpoke(enemy, intent.SpeechLine));
                     foreach (BattleAction action in EnemyIntentResolver.Build(context, enemy, intent))
                         actions.Enqueue(action);
                     await actions.PerformAllAsync();

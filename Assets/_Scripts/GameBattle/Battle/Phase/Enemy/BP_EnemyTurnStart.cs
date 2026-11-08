@@ -20,6 +20,18 @@ namespace _DreamKeep.GameBattle
         public override async UniTask RunAsync()
         {
             await PlayEvent(new BE_TurnStarted(_owner.BattleContext.TurnCount, false));
+
+            // 回合开始即宣告本回合意图：台词由表现层按纯机制事实取词，宣告先于动作结算；
+            // 按槽位从左到右，与执行阶段同序；被击晕整回合不行动的敌人不开口
+            foreach (Enemy enemy in _owner.BattleContext.GetAliveEnemies())
+            {
+                if (enemy.IsStunned) continue;
+                EnemyIntent intent = enemy.PreviewIntent;
+                if (intent == null) continue;
+                await PlayEvent(new BE_EnemyIntentAnnounced(enemy, enemy.IntentIndex,
+                    intent != enemy.CurrentIntent, enemy.IsPhaseTwo));
+            }
+
             ActionSystem actions = _owner.ActionSystem;
 
             foreach (Enemy enemy in _owner.BattleContext.Enemies)

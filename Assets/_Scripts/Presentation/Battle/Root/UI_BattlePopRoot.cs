@@ -1,6 +1,7 @@
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
+using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.Utility;
@@ -10,9 +11,10 @@ using VContainer;
 namespace _DreamKeep.Presentation
 {
     /// <summary>战斗弹层编排：挂在场景 GameRoot 上，只决定"谁在什么时候弹什么、弹在哪"——
-    /// 订阅伤害/回血/回合开始与出牌被拒/手牌溢出/敌人出招，按语义选文本、颜色与形态，算出挂点后交给通用弹层工厂 PopFactory；
+    /// 订阅伤害/回血/回合开始与出牌被拒/手牌溢出/敌人回合开始宣告，按语义选文本、颜色与形态，算出挂点后交给通用弹层工厂 PopFactory；
     /// 说明气泡的实例取还与列守卫、数字飘字的池、对话气泡的左右池、通用横幅公告都归 PopFactory。
-    /// 弹层一律挂到"所属对象"之下（数字与台词气泡→单位视图），只有横幅由本组件指定挂载父级后交工厂触发。</summary>
+    /// 玩家台词从 RunState.Config 取、敌人台词从装配期烘进 Enemy 的分组取，均经次数台账取词；
+    /// 配置留空即全程沉默，气泡的打断与二维生成偏移按触发点在此分别指定。</summary>
     public sealed class UI_BattlePopRoot : MonoBehaviour
     {
         [Header("数字飘字")] [SerializeField] private Color _damageColor = new(1f, 0.28f, 0.22f);
@@ -23,7 +25,7 @@ namespace _DreamKeep.Presentation
         [SerializeField] private Color _healColor = new(0.35f, 0.92f, 0.45f);
         [SerializeField] private Color _blockColor = new(0.55f, 0.82f, 1f);
 
-        [Tooltip("相对骨架顶沿的抬升（画布像素）")] [SerializeField]
+        [Tooltip("相对骨架中心的抬升（画布像素）")] [SerializeField]
         private float _liftPx = 20f;
 
         [Tooltip("数字起点的横向随机抖动（画布像素）：多段伤害同时出现时错开")] [SerializeField]
@@ -32,32 +34,37 @@ namespace _DreamKeep.Presentation
         [Header("回合横幅")] [Tooltip("回合横幅的挂载父级：它没有所属对象，只能在这里指定")] [SerializeField]
         private Transform _turnBannerParent;
 
-        [Header("对话气泡")] [Tooltip("台词表：玩家出牌被拒与手牌溢出时说的话")] [SerializeField]
-        private SO_PlayerSpeechLines _playerSpeechLines;
+        [Header("对话气泡")]
+        [Tooltip("说话气泡的生成偏移（画布像素，沿宿主轴向）")] [SerializeField]
+        private Vector2 _playerBubbleOffsetPx = new(24f, 24f);
 
-        [Tooltip("气泡锚点相对骨架顶沿的抬升（画布像素）")] [SerializeField]
-        private float _speechLiftPx = 24f;
+        [Tooltip("敌人意图气泡的生成偏移（画布像素，沿宿主轴向）")] [SerializeField]
+        private Vector2 _enemyOffsetPx = new(-15f, 24f);
 
         private UI_ActorRoot _actorRoot;
         private BattleContext _battleContext;
         private PopFactory _popFactory;
+        private SpeechLineTracker _speechTracker;
+        private SO_PlayerSpeechLines _playerSpeechLines;
 
         #region 装配：注入事件门面、单位视图登记表与通用弹层工厂
 
         [Inject]
         public void Construct(BattleEventDispatcher dispatcher_, UI_ActorRoot actorRoot_, PopFactory popFactory_,
-            BattleContext battleContext_)
+            BattleContext battleContext_, SpeechLineTracker speechTracker_, RunState run_)
         {
             _actorRoot = actorRoot_;
             _popFactory = popFactory_;
             _battleContext = battleContext_;
+            _speechTracker = speechTracker_;
+            _playerSpeechLines = run_.Config.SpeechLines; // 台词归玩家配置，留空即全程沉默
             dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
             dispatcher_.Register<BE_HealthLost>(OnHealthLost);
             dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
             dispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
             dispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejected);
             dispatcher_.Register<BE_HandOverflowed>(OnHandOverflowed);
-            dispatcher_.Register<BE_EnemySpoke>(OnEnemySpoke);
+            dispatcher_.Register<BE_EnemyIntentAnnounced>(OnEnemyIntentAnnounced);
         }
 
         #endregion
@@ -94,7 +101,7 @@ namespace _DreamKeep.Presentation
         private Vector3 AnchorOf(UI_Actor view_)
         {
             RectTransform body = (RectTransform)view_.Skeleton.transform;
-            float jitter = UnityEngine.Random.Range(-_jitterPx, _jitterPx);
+            float jitter = Random.Range(-_jitterPx, _jitterPx);
             return UiGeometry.AnchorPoint(body, EUiAnchor.MiddleCenter) +
                    body.up * (_liftPx * body.lossyScale.y) +
                    body.right * (jitter * body.lossyScale.x);
@@ -107,42 +114,58 @@ namespace _DreamKeep.Presentation
                 started_.IsPlayerTurn ? $"第 {started_.TurnCount} 回合" : "");
         }
 
-        // 出牌被拒：只有能量不足/不能打出/昏眩限牌让玩家开口；牌已离手属时序竞争，保持沉默
+        // 出牌被拒：只有能量不足/不能打出/昏眩限牌让玩家开口；牌已离手属时序竞争，保持沉默。允许被新台词打断
         private void OnCardPlayRejected(BE_CardPlayRejected rejected_)
         {
-            string line = rejected_.Reason switch
+            if (_playerSpeechLines == null) return;
+            SpeechLineGroup group = rejected_.Reason switch
             {
-                ECardPlayRejectReason.NotEnoughEnergy => _playerSpeechLines.PickNotEnoughEnergy(),
-                ECardPlayRejectReason.Unplayable => _playerSpeechLines.PickUnplayable(),
-                ECardPlayRejectReason.DizzyLimited => _playerSpeechLines.PickDizzyLimited(),
+                ECardPlayRejectReason.NotEnoughEnergy => _playerSpeechLines.NotEnoughEnergy,
+                ECardPlayRejectReason.Unplayable => _playerSpeechLines.Unplayable,
+                ECardPlayRejectReason.DizzyLimited => _playerSpeechLines.DizzyLimited,
                 _ => null,
             };
-            SpeakPlayer(line);
+            string line = _speechTracker.TryPick(_playerSpeechLines, group);
+            if (!SpeakPlayer(line, _playerBubbleOffsetPx, true)) _speechTracker.Rollback(_playerSpeechLines, group);
         }
 
-        // 手牌溢出：抽到的牌直接进弃牌堆，玩家说一句；同侧气泡在播时由工厂丢弃
-        private void OnHandOverflowed(BE_HandOverflowed _) => SpeakPlayer(_playerSpeechLines.PickHandOverflow());
-
-        // 敌人出招：意图执行前弹 R 气泡，挂到敌人视图下随其移动与销毁
-        private void OnEnemySpoke(BE_EnemySpoke spoke_) =>
-            Speak(spoke_.Enemy.Creature, ESpeechBubbleSide.Right, spoke_.Line);
-
-        private void SpeakPlayer(string line_) => Speak(_battleContext.Player.Creature, ESpeechBubbleSide.Left, line_);
-
-        private void Speak(Creature speaker_, ESpeechBubbleSide side_, string line_)
+        // 手牌溢出：抽到的牌直接进弃牌堆，玩家说一句；这条气泡不可被打断
+        private void OnHandOverflowed(BE_HandOverflowed _)
         {
-            if (string.IsNullOrEmpty(line_)) return;
-            if (!_actorRoot.TryGetView(speaker_, out UI_Actor view)) return;
-            _popFactory.Speak(side_, view.transform, SpeechAnchorOf(view), line_);
+            if (_playerSpeechLines == null) return;
+            SpeechLineGroup group = _playerSpeechLines.HandOverflow;
+            string line = _speechTracker.TryPick(_playerSpeechLines, group);
+            if (!SpeakPlayer(line, _playerBubbleOffsetPx, false)) _speechTracker.Rollback(_playerSpeechLines, group);
         }
 
-        // 气泡锚点：骨架中心往上抬身高的三成（近似头部）再按 Inspector 微调；
+        // 敌人回合开始宣告：分组由装配期烘进运行时 Enemy，按本回合意图序号/前槽/阶段取；不可打断，同一分组受次数上限约束
+        private void OnEnemyIntentAnnounced(BE_EnemyIntentAnnounced announced_)
+        {
+            SpeechLineGroup group = announced_.Enemy.SpeechLines?.PickGroup(
+                announced_.IntentIndex, announced_.IsFrontSlot, announced_.IsPhaseTwo);
+            string line = _speechTracker.TryPick(announced_.Enemy, group);
+            if (!Speak(announced_.Enemy.Creature, ESpeechBubbleSide.Right, line, _enemyOffsetPx, false))
+                _speechTracker.Rollback(announced_.Enemy, group);
+        }
+
+        private bool SpeakPlayer(string line_, Vector2 offsetPx_, bool allowInterrupt_) =>
+            Speak(_battleContext.Player.Creature, ESpeechBubbleSide.Left, line_, offsetPx_, allowInterrupt_);
+
+        private bool Speak(Creature speaker_, ESpeechBubbleSide side_, string line_,
+            Vector2 offsetPx_, bool allowInterrupt_)
+        {
+            if (string.IsNullOrEmpty(line_)) return false;
+            if (!_actorRoot.TryGetView(speaker_, out UI_Actor view)) return false;
+            return _popFactory.Speak(side_, view.transform, SpeechAnchorOf(view), offsetPx_, line_, allowInterrupt_);
+        }
+
+        // 气泡锚点：骨架中心往上抬身高的三成（近似头部）；二维偏移由工厂在生成时沿宿主轴向叠加，
         // 不取矩形顶沿——长武器与角会把顶沿抬到离头很远的位置
         private Vector3 SpeechAnchorOf(UI_Actor view_)
         {
             RectTransform body = (RectTransform)view_.Skeleton.transform;
             return UiGeometry.AnchorPoint(body, EUiAnchor.MiddleCenter) +
-                   body.up * ((body.rect.height * 0.3f + _speechLiftPx) * body.lossyScale.y);
+                   body.up * (body.rect.height * 0.3f * body.lossyScale.y);
         }
     }
 }

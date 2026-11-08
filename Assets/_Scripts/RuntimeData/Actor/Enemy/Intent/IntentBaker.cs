@@ -25,23 +25,17 @@ namespace _DreamKeep.RuntimeData
 
         #region 烘焙单条配置意图：复合意图递归展开为独立运行时实例
 
-        public static EnemyIntent Bake(IntentData data_)
+        public static EnemyIntent Bake(IntentData data_) => data_ switch
         {
-            EnemyIntent intent = data_ switch
-            {
-                DamageIntentData damage => new EI_Damage(damage.Damage, damage.Times),
-                BlockIntentData block => new EI_Block(block.Amount),
-                ApplyPerkIntentData applyPerk => ToApplyPerk(applyPerk),
-                MixedIntentData mixed => new EI_Mixed(Bake(mixed.Intent1), Bake(mixed.Intent2)),
-                MoveIntentData => new EI_Move(),
-                StunIntentData => new EI_Stun(),
-                HealIntentData heal => new EI_Heal(heal.Amount),
-                _ => null,
-            };
-            // 台词挂在最外层意图上：复合意图拆出的子意图不单独执行，故不会重复开口
-            if (intent != null) intent.SpeechLine = data_.SpeechLine;
-            return intent;
-        }
+            DamageIntentData damage => new EI_Damage(damage.Damage, damage.Times),
+            BlockIntentData block => new EI_Block(block.Amount),
+            ApplyPerkIntentData applyPerk => ToApplyPerk(applyPerk),
+            MixedIntentData mixed => new EI_Mixed(Bake(mixed.Intent1), Bake(mixed.Intent2)),
+            MoveIntentData => new EI_Move(),
+            StunIntentData => new EI_Stun(),
+            HealIntentData heal => new EI_Heal(heal.Amount),
+            _ => null,
+        };
 
         #endregion
 

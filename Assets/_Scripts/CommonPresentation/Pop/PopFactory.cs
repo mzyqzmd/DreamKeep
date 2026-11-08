@@ -7,7 +7,8 @@ namespace _DreamKeep.CommonPresentation
     /// <summary>通用临时弹层工厂：挂在场景 GameRoot 下，统一持有说明气泡、数字飘字与对话气泡的实例池，以及横幅公告——
     /// 说明气泡的"实例取还与唯一列守卫"归此处（同一时刻只许一列、谁的归还只收自己那列），叠列定位由消费方 UI_HoverTip 接管；
     /// 数字飘字的父节点与世界坐标由调用方（如战斗弹层编排）算好传入，本类不认识 Creature / UI_ActorRoot / 任何玩法事件；
-    /// 对话气泡按朝向分左右两池，同侧播放中直接丢弃新请求（不排队、不叠播），父节点与锚点同样由调用方给；
+    /// 对话气泡按朝向分左右两池，同侧不可打断的气泡播放中丢弃新请求、可打断的复用同一实例重播（不排队、不叠播），
+    /// 父节点、锚点与生成时的二维像素偏移都由调用方给；
     /// 横幅公告同理只由本类造与缓存单例（懒建、重播由横幅自身负责），播完即走、无交互。
     /// 全屏交互面板（奖励面板 / 卡牌三选一面板）已拆到 PopPanelFactory。
     /// 弹层一律挂到"所属对象"之下；归还只失活、不归位父级——下次取出再改挂（归还常发生在宿主失活回调里，此时改层级是非法的）。</summary>
@@ -80,32 +81,35 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
-        #region 对话气泡：按朝向分池，同侧播放中直接丢弃新请求
+        #region 对话气泡：按朝向分池，不可打断的气泡播放中丢弃新请求
 
-        /// <summary>在指定父节点下、以给定世界坐标播放一句台词；同侧已有气泡在播时返回 false 且不排队。
+        /// <summary>在指定父节点下、以「世界坐标 + 沿宿主轴向的画布像素偏移」播放一句台词；
+        /// 同侧已有气泡在播且不允许被打断时返回 false 且不排队；允许打断则复用同一实例重播。
         /// 空台词直接丢弃，实例播完自动还池。</summary>
-        public bool Speak(ESpeechBubbleSide side_, Transform parent_, Vector3 worldPosition_, string text_)
+        public bool Speak(ESpeechBubbleSide side_, Transform parent_, Vector3 worldPosition_,
+            Vector2 offsetPx_, string line_, bool allowInterrupt_)
         {
-            if (string.IsNullOrEmpty(text_)) return false;
+            if (string.IsNullOrEmpty(line_)) return false;
             UI_SpeechBubble current = side_ == ESpeechBubbleSide.Left ? _speechLeft : _speechRight;
-            if (current != null && current.IsPlaying) return false;
+            if (current && current.IsPlaying && !current.CanBeInterrupted) return false;
 
             MonoObjectPool<UI_SpeechBubble> pool = side_ == ESpeechBubbleSide.Left ? _speechLeftPool : _speechRightPool;
             UI_SpeechBubble prefab = side_ == ESpeechBubbleSide.Left ? _speechBubbleLeftPrefab : _speechBubbleRightPrefab;
-            UI_SpeechBubble bubble = pool.Get(prefab);
+            // 打断时复用在用实例：池的在用登记表还挂着它，另取新实例会让旧完成回调与池台账错乱
+            UI_SpeechBubble bubble = current && current.IsPlaying ? current : pool.Get(prefab);
             bubble.transform.SetParent(parent_, false);
             bubble.transform.SetAsLastSibling();
-            ((RectTransform)bubble.transform).position = worldPosition_;
+            ((RectTransform)bubble.transform).position =
+                worldPosition_ + parent_.TransformVector(new Vector3(offsetPx_.x, offsetPx_.y, 0f));
             if (side_ == ESpeechBubbleSide.Left) _speechLeft = bubble;
             else _speechRight = bubble;
 
-            bubble.Play(text_, () =>
+            return bubble.Play(line_, allowInterrupt_, () =>
             {
                 if (side_ == ESpeechBubbleSide.Left) _speechLeft = null;
                 else _speechRight = null;
                 pool.Release(bubble);
             });
-            return true;
         }
 
         #endregion

@@ -32,3 +32,4 @@ MonoBehaviour:
   _startRelics:
   - {fileID: 11400000, guid: 929c0b0c991d5874f92574451d2dca5c, type: 2}
   _startPotions: []
+  _speechLines: {fileID: 11400000, guid: 5b98dc978e3c6484e9c86e0f9c4e10cb, type: 2}

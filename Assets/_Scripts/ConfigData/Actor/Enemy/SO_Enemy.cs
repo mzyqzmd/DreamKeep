@@ -18,11 +18,15 @@ namespace _DreamKeep.ConfigData
 
         [Header("初始状态")] [SerializeField] private List<PerkEntry> _startPerks = new();
 
+        [Header("台词")] [Tooltip("留空则该敌人全程不说话；同种强度变体可共用一份")] [SerializeField]
+        private SO_EnemySpeechLines _speechLines;
+
         public string Name => _name;
         public int MaxHp => _maxHP;
         public GameObject ViewPrefab => _viewPrefab;
         public List<IntentData> EnemyIntents => _enemyIntents;
         public MixedIntentData FrontSlotIntent => _frontSlotIntent;
         public List<PerkEntry> StartPerks => _startPerks;
+        public SO_EnemySpeechLines SpeechLines => _speechLines;
     }
 }

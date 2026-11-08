@@ -44,8 +44,8 @@ namespace _DreamKeep.Presentation
         [Tooltip("各档位基础价与删牌涨价步进：半价与涨价由段模型按这里换算")] [SerializeField]
         private SO_ShopPrices _prices;
 
-        [Header("商人台词")] [Tooltip("场景里预摆的商人气泡实例（Canvas_HUD 下，初始失活）")] [SerializeField]
-        private UI_SpeechBubble _merchantSpeech;
+        [Header("商人台词")] [Tooltip("双气泡挑选器：持 Canvas_HUD 下两个预摆气泡（初始失活）")] [SerializeField]
+        private UI_MerchantSpeech _merchantSpeech;
 
         [Tooltip("商人成交/支付失败台词表")] [SerializeField]
         private SO_MerchantSpeechLines _merchantSpeechLines;
@@ -61,7 +61,7 @@ namespace _DreamKeep.Presentation
             if (!_commonPotions) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 普通药水池未接线");
             if (!_rarePotions) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 稀有药水池未接线");
             if (!_prices) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 价目表未接线");
-            if (!_merchantSpeech) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 商人气泡未接线");
+            if (!_merchantSpeech) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 商人气泡挑选器未接线");
             if (!_merchantSpeechLines) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 商人台词表未接线");
 
             RunState run = Parent.Container.Resolve<RunState>();
@@ -72,8 +72,9 @@ namespace _DreamKeep.Presentation
 
             builder_.RegisterInstance(run);
             builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器
-            builder_.RegisterInstance(_merchantSpeech); // 场景预摆的商人气泡：段入口按成交/失败事实直接播
+            builder_.RegisterInstance(_merchantSpeech); // 场景预摆的双气泡挑选器：段入口按成交/失败事实播
             builder_.RegisterInstance(_merchantSpeechLines); // 商人台词表
+            builder_.RegisterInstance(new SpeechLineTracker()); // 段级次数台账：段卸载即清零
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new ShopCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_ShopRugPanel>();

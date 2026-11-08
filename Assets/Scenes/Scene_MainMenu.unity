@@ -687,51 +687,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &90040968
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 90040969}
-  - component: {fileID: 90040970}
-  m_Layer: 0
-  m_Name: AudioRoot
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &90040969
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 90040968}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2091153468}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &90040970
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 90040968}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af0b155cefdfd2943bb7f1c0bcc6aa70, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _slotCount: 12
 --- !u!1 &106486222
 GameObject:
   m_ObjectHideFlags: 0
@@ -8310,7 +8265,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: -578186585
-  m_SortingOrder: 0
+  m_SortingOrder: 64
   m_TargetDisplay: 0
 --- !u!1 &1442141734
 GameObject:
@@ -11705,6 +11660,7 @@ GameObject:
   - component: {fileID: 2091153468}
   - component: {fileID: 2091153477}
   - component: {fileID: 2091153478}
+  - component: {fileID: 2091153479}
   m_Layer: 0
   m_Name: GameRoot
   m_TagString: Untagged
@@ -11725,7 +11681,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 90040969}
   - {fileID: 519420032}
   - {fileID: 1455862202}
   - {fileID: 1424670775}
@@ -11763,6 +11718,19 @@ MonoBehaviour:
   _developLogPanel: {fileID: 130143740}
   _quitGamePanel: {fileID: 1712738079}
   _runSceneName: Scene_Run
+--- !u!114 &2091153479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2091153467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af0b155cefdfd2943bb7f1c0bcc6aa70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _slotCount: 12
 --- !u!1 &2118129206
 GameObject:
   m_ObjectHideFlags: 0
