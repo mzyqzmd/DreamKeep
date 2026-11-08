@@ -1,6 +1,7 @@
 using System;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameRun
 {

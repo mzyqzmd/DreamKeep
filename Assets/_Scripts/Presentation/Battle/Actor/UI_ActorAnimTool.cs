@@ -1,7 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Spine;
-using Spine.Unity;
 using UnityEngine;
 
 namespace _DreamKeep.Presentation

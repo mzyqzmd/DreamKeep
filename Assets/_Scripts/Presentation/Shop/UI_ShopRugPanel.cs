@@ -16,7 +16,8 @@ namespace _DreamKeep.Presentation
     /// <summary>商店货摊（地毯）：货架的全部视图、买卖交互与开合动画都在这里。
     /// 槽位固定用场景里摆好的实例，不池化不实例化——四个分组按父容器收集子项，绑定时逐格填；
     /// 售出的格子保留根节点占位（只收内容），整行位置因此不会重排。
-    /// 陈列数据一律由货架快照事实带出，点击只提交命令；右键特写与商人手交接仍归本类。</summary>
+    /// 陈列数据一律由货架快照事实带出，点击只提交命令；金币不随快照，染色实时读 RunState.Gold 并订阅其变更；
+    /// 右键特写与商人手交接仍归本类。</summary>
     public sealed class UI_ShopRugPanel : UI_Panel
     {
         [Header("货架分组")]
@@ -60,6 +61,7 @@ namespace _DreamKeep.Presentation
 
         private ShopShelfSnapshot _shelf;
         private ShopCommandDispatcher _commands;
+        private RunState _run;
         private UI_ShopItem _pendingItem; // 被拒反馈只针对刚点的那一格：命令同步结算，事件同步回来
         private Component _hovered; // 商品与删牌服务共用：同一时刻只有一个悬停来源
         private Tween _slideTween;
@@ -77,6 +79,11 @@ namespace _DreamKeep.Presentation
 
         private void OnDisable() => _slideTween?.Kill();
 
+        private void OnDestroy()
+        {
+            if (_run != null) _run.GoldChanged -= OnGoldChanged;
+        }
+
         protected override void OnHidden()
         {
             _slideTween?.Kill();
@@ -85,12 +92,14 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(PopPanelFactory popFactory_, ShopEventDispatcher events_, ShopCommandDispatcher commands_)
+        public void Construct(PopPanelFactory popFactory_, ShopEventDispatcher events_, ShopCommandDispatcher commands_, RunState run_)
         {
             // 段入口会为地毯子树再补注入一次：订阅只做一次，否则同一事实会播出多遍
             if (_commands != null) return;
             _popFactory = popFactory_;
             _commands = commands_;
+            _run = run_;
+            _run.GoldChanged += OnGoldChanged;
             events_.Register<SE_ShelfUpdated>(OnShelfUpdated);
             events_.Register<SE_ShopOpened>(opened_ => PlayOpenAsync().Forget());
             events_.Register<SE_PurchaseRefused>(refused_ => OnPurchaseRefused());
@@ -101,8 +110,10 @@ namespace _DreamKeep.Presentation
         {
             _shelf = updated_.Shelf;
             if (updated_.Initial) Bind();
-            else RefreshPrices();
+            else RefreshPrices(_run.Gold);
         }
+
+        private void OnGoldChanged(int gold_) => RefreshPrices(gold_);
 
         #region 对外：开合、重染价格与被拒反馈
 
@@ -162,27 +173,27 @@ namespace _DreamKeep.Presentation
         private void Bind()
         {
             EnsureWired();
-            BindCards(_commonRareCards, _shelf.CommonRareCards);
-            BindCards(_superRareCards, _shelf.SuperRareCards);
-            BindRelics();
-            BindPotions();
-            RefreshPrices();
+            int gold = _run.Gold;
+            BindCards(_commonRareCards, _shelf.CommonRareCards, gold);
+            BindCards(_superRareCards, _shelf.SuperRareCards, gold);
+            BindRelics(gold);
+            BindPotions(gold);
+            RefreshPrices(gold);
         }
 
-        /// <summary>按当前快照重染整行价格：每次成交与删牌后调用一次（最多 12 格，不做每帧轮询）。</summary>
-        private void RefreshPrices()
+        /// <summary>按当前金币重染整行价格：成交、删牌与金币变更各调用一次（最多 12 格，不做每帧轮询）。</summary>
+        private void RefreshPrices(int gold_)
         {
             if (_shelf == null) return;
 
-            int gold = _shelf.Gold;
-            RefreshCards(_commonRareCards, _shelf.CommonRareCards, gold);
-            RefreshCards(_superRareCards, _shelf.SuperRareCards, gold);
-            RefreshRelics(gold);
-            RefreshPotions(gold);
-            if (_removeCardButton) _removeCardButton.ShowPrice(_shelf.RemovalPrice, gold, _shelf.RemovalUsed);
+            RefreshCards(_commonRareCards, _shelf.CommonRareCards, gold_);
+            RefreshCards(_superRareCards, _shelf.SuperRareCards, gold_);
+            RefreshRelics(gold_);
+            RefreshPotions(gold_);
+            if (_removeCardButton) _removeCardButton.ShowPrice(_shelf.RemovalPrice, gold_, _shelf.RemovalUsed);
         }
 
-        private void BindCards(List<UI_CardShop> views_, IReadOnlyList<CardModel> shelf_)
+        private void BindCards(List<UI_CardShop> views_, IReadOnlyList<CardModel> shelf_, int gold_)
         {
             for (int i = 0; i < views_.Count; i++)
             {
@@ -194,11 +205,11 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(card, _shelf.PriceOfCard(card), _shelf.IsOnSale(card), _shelf.Gold);
+                view.Bind(card, _shelf.PriceOfCard(card), _shelf.IsOnSale(card), gold_);
             }
         }
 
-        private void BindRelics()
+        private void BindRelics(int gold_)
         {
             IReadOnlyList<SO_Relic> shelf = _shelf.Relics;
             for (int i = 0; i < _relics.Count; i++)
@@ -211,11 +222,11 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(relic, _shelf.PriceOfRelic(relic), _shelf.Gold);
+                view.Bind(relic, _shelf.PriceOfRelic(relic), gold_);
             }
         }
 
-        private void BindPotions()
+        private void BindPotions(int gold_)
         {
             IReadOnlyList<SO_Potion> shelf = _shelf.Potions;
             for (int i = 0; i < _potions.Count; i++)
@@ -228,7 +239,7 @@ namespace _DreamKeep.Presentation
                     continue;
                 }
 
-                view.Bind(potion, _shelf.PriceOfPotion(potion), _shelf.Gold);
+                view.Bind(potion, _shelf.PriceOfPotion(potion), gold_);
             }
         }
 

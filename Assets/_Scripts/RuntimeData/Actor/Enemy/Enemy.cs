@@ -12,6 +12,7 @@ namespace _DreamKeep.RuntimeData
 
         private readonly List<EnemyIntent> _intents;
         private readonly EnemyIntent _frontSlotIntent;
+        private readonly SO_EnemySpeechLines _speechLines;
         private List<EnemyIntent> _phaseTwoIntents;
         private EnemyIntent _phaseTwoFrontSlotIntent;
         private bool _isPhaseTwo;
@@ -20,8 +21,8 @@ namespace _DreamKeep.RuntimeData
         public Creature Creature { get; }
         public int Slot { get; private set; }
 
-        /// <summary>本场战斗的台词分组：装配期由敌人配置写入，null 表示全程不说话。</summary>
-        public SO_EnemySpeechLines SpeechLines { get; private set; }
+        /// <summary>本场战斗的台词分组：装配期一次写入，null 表示全程不说话。</summary>
+        public SO_EnemySpeechLines SpeechLines => _speechLines;
 
         /// <summary>是否处于击晕：本回合意图被替换为击晕，执行时跳过行动且不推进意图。</summary>
         public bool IsStunned { get; private set; }
@@ -45,12 +46,14 @@ namespace _DreamKeep.RuntimeData
             : Slot == BattleSlots.FrontEnemy && ActiveFrontSlotIntent != null ? ActiveFrontSlotIntent
             : CurrentIntent;
 
-        public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent frontSlotIntent_)
+        public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent frontSlotIntent_,
+            SO_EnemySpeechLines speechLines_)
         {
             Creature = new Creature(name_, maxHp_);
             Slot = slot_;
             _intents = intents_ ?? new List<EnemyIntent>();
             _frontSlotIntent = frontSlotIntent_;
+            _speechLines = speechLines_;
         }
 
         #region 击晕：由位移撞击施加，敌人回合执行一次后清除
@@ -94,8 +97,5 @@ namespace _DreamKeep.RuntimeData
         #region 变更所在槽位，由移动动作调用
         public void SetSlot(int slot_) => Slot = slot_;
         #endregion
-
-        /// <summary>装配期写入台词分组；留空即全程沉默。</summary>
-        public void SetSpeechLines(SO_EnemySpeechLines lines_) => SpeechLines = lines_;
     }
 }

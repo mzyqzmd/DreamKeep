@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEditor;
@@ -51,7 +52,7 @@ internal static class DevPanelCommands
     /// <summary>加载首个战斗段（进段意图由 ESegmentKind 表达，守卫在 SegmentSceneManager 里）。</summary>
     internal static string StartFirstSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Battle).Forget();
         return "已请求加载首个战斗段";
@@ -60,7 +61,7 @@ internal static class DevPanelCommands
     /// <summary>加载先古之民段（进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartAncientSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Ancient).Forget();
         return "已请求加载先古之民段";
@@ -69,7 +70,7 @@ internal static class DevPanelCommands
     /// <summary>加载休息段（进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartRestSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Rest).Forget();
         return "已请求加载休息段";
@@ -78,7 +79,7 @@ internal static class DevPanelCommands
     /// <summary>加载宝箱段（随机双池并出 1 件遗物，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartChestSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Treasure).Forget();
         return "已请求加载宝箱段";
@@ -87,7 +88,7 @@ internal static class DevPanelCommands
     /// <summary>加载事件段（进入后随机掷一则已实装事件，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartEventSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Event).Forget();
         return "已请求加载事件段";
@@ -96,7 +97,7 @@ internal static class DevPanelCommands
     /// <summary>加载商店段（进店掷一次货架，进段意图由 ESegmentKind 表达）。</summary>
     internal static string StartShopSegment()
     {
-        SegmentSceneManager manager = Object.FindObjectOfType<SegmentSceneManager>();
+        SegmentSceneManager manager = UnityEngine.Object.FindObjectOfType<SegmentSceneManager>();
         if (!manager) return Fail("场景里没有 SegmentSceneManager（请从场景 Scene_MainMenu 进 Play）");
         manager.StartSegmentAsync(ESegmentKind.Shop).Forget();
         return "已请求加载商店段";
@@ -173,7 +174,7 @@ internal static class DevPanelCommands
 
     #endregion
 
-    #region 战斗：往手牌加卡
+    #region 战斗：能量与手牌
 
     /// <summary>是否处于战斗中：窗口据此把战斗小节置灰；战斗态由 StartCombat / EndCombat 开合。</summary>
     internal static bool IsInBattle()
@@ -181,6 +182,12 @@ internal static class DevPanelCommands
         RunState run = ResolveRunState();
         return run != null && run.Player.CombatState != null;
     }
+
+    /// <summary>把玩家当前能量设为指定值：只钳下限 0，可超过回合上限。</summary>
+    internal static string SetPlayerEnergy(int value_) => WriteEnergy(_ => value_);
+
+    /// <summary>按增量增减玩家当前能量：只钳下限 0，可超过回合上限。</summary>
+    internal static string ChangePlayerEnergy(int delta_) => WriteEnergy(current_ => current_ + delta_);
 
     /// <summary>把指定配置卡现烤成战斗临时卡加入手牌：勾升级形态则先升级（无升级数据按基础形态加入）；
     /// 手牌满 10 张拒绝；该卡无局内卡映射，战斗结束自动消失、不污染局内卡组。</summary>
@@ -245,6 +252,27 @@ internal static class DevPanelCommands
         return run_.Gold == target_ ? $"金币 {run_.Gold}" : $"金币 {run_.Gold}（输入 {target_} 已钳到 0）";
     }
 
+    // 能量公共段：现查战斗态、钳到 >= 0 后直写；HUD 不读战斗态，补发一次能量事件才刷新
+    private static string WriteEnergy(Func<int, int> targetOf_)
+    {
+        IObjectResolver container = ResolveContainer();
+        if (container == null) return Fail("未找到 RunState（整局层是否已构建）");
+
+        BattleSession session = container.Resolve<BattleSession>();
+        RunState run = container.Resolve<RunState>();
+        if (session == null || !session.IsOpen || run.Player.CombatState == null)
+            return Fail("不在战斗中，先进入战斗段");
+
+        PlayerCombatState combat = run.Player.CombatState;
+        int target = targetOf_(combat.CurrentEnergy);
+        int clamped = Mathf.Max(0, target);
+        combat.CurrentEnergy = clamped;
+        session.Events.PlayAsync(new BE_EnergyChanged(clamped, combat.MaxEnergy));
+        return clamped == target
+            ? $"能量 {clamped}/{combat.MaxEnergy}"
+            : $"能量 {clamped}/{combat.MaxEnergy}（输入 {target} 已钳到 0）";
+    }
+
     // 药水落格下标：TryAddPotion 成功后调用，理论上必命中，-1 仅防御异常路径
     private static int PotionSlotOf(Player player_, SO_Potion potion_)
     {
@@ -269,7 +297,7 @@ internal static class DevPanelCommands
     // 整局层容器：Build 之前 Container 为空
     private static IObjectResolver ResolveContainer()
     {
-        RunLifetimeScope scope = Object.FindObjectOfType<RunLifetimeScope>();
+        RunLifetimeScope scope = UnityEngine.Object.FindObjectOfType<RunLifetimeScope>();
         return scope ? scope.Container : null;
     }
 

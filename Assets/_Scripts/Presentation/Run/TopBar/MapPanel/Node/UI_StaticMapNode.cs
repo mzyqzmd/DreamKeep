@@ -1,7 +1,7 @@
 using UnityEngine;
 using _DreamKeep.ConfigData;
-using _DreamKeep.GameRun;
 using UnityEngine.UI;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {

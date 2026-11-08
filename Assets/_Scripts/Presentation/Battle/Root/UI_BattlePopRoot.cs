@@ -1,10 +1,8 @@
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
-using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.Utility;
 using UnityEngine;
 using VContainer;
 
@@ -13,7 +11,7 @@ namespace _DreamKeep.Presentation
     /// <summary>战斗弹层编排：挂在场景 GameRoot 上，只决定"谁在什么时候弹什么、弹在哪"——
     /// 订阅伤害/回血/回合开始与出牌被拒/手牌溢出/敌人回合开始宣告，按语义选文本、颜色与形态，算出挂点后交给通用弹层工厂 PopFactory；
     /// 说明气泡的实例取还与列守卫、数字飘字的池、对话气泡的左右池、通用横幅公告都归 PopFactory。
-    /// 玩家台词从 RunState.Config 取、敌人台词从装配期烘进 Enemy 的分组取，均经次数台账取词；
+    /// 玩家台词由组合根注入的角色配置读、敌人台词从装配期烘进 Enemy 的分组取，均经次数台账取词；
     /// 配置留空即全程沉默，气泡的打断与二维生成偏移按触发点在此分别指定。</summary>
     public sealed class UI_BattlePopRoot : MonoBehaviour
     {
@@ -51,13 +49,13 @@ namespace _DreamKeep.Presentation
 
         [Inject]
         public void Construct(BattleEventDispatcher dispatcher_, UI_ActorRoot actorRoot_, PopFactory popFactory_,
-            BattleContext battleContext_, SpeechLineTracker speechTracker_, RunState run_)
+            BattleContext battleContext_, SpeechLineTracker speechTracker_, SO_Player playerConfig_)
         {
             _actorRoot = actorRoot_;
             _popFactory = popFactory_;
             _battleContext = battleContext_;
             _speechTracker = speechTracker_;
-            _playerSpeechLines = run_.Config.SpeechLines; // 台词归玩家配置，留空即全程沉默
+            _playerSpeechLines = playerConfig_.SpeechLines; // 台词归玩家配置，留空即全程沉默
             dispatcher_.Register<BE_DamageDealt>(OnDamageDealt);
             dispatcher_.Register<BE_HealthLost>(OnHealthLost);
             dispatcher_.Register<BE_HealthRestored>(OnHealthRestored);
@@ -117,7 +115,7 @@ namespace _DreamKeep.Presentation
         // 出牌被拒：只有能量不足/不能打出/昏眩限牌让玩家开口；牌已离手属时序竞争，保持沉默。允许被新台词打断
         private void OnCardPlayRejected(BE_CardPlayRejected rejected_)
         {
-            if (_playerSpeechLines == null) return;
+            if (!_playerSpeechLines) return;
             SpeechLineGroup group = rejected_.Reason switch
             {
                 ECardPlayRejectReason.NotEnoughEnergy => _playerSpeechLines.NotEnoughEnergy,
@@ -132,7 +130,7 @@ namespace _DreamKeep.Presentation
         // 手牌溢出：抽到的牌直接进弃牌堆，玩家说一句；这条气泡不可被打断
         private void OnHandOverflowed(BE_HandOverflowed _)
         {
-            if (_playerSpeechLines == null) return;
+            if (!_playerSpeechLines) return;
             SpeechLineGroup group = _playerSpeechLines.HandOverflow;
             string line = _speechTracker.TryPick(_playerSpeechLines, group);
             if (!SpeakPlayer(line, _playerBubbleOffsetPx, false)) _speechTracker.Rollback(_playerSpeechLines, group);
@@ -141,7 +139,9 @@ namespace _DreamKeep.Presentation
         // 敌人回合开始宣告：分组由装配期烘进运行时 Enemy，按本回合意图序号/前槽/阶段取；不可打断，同一分组受次数上限约束
         private void OnEnemyIntentAnnounced(BE_EnemyIntentAnnounced announced_)
         {
-            SpeechLineGroup group = announced_.Enemy.SpeechLines?.PickGroup(
+            SO_EnemySpeechLines lines = announced_.Enemy.SpeechLines;
+            if (!lines) return;
+            SpeechLineGroup group = lines.PickGroup(
                 announced_.IntentIndex, announced_.IsFrontSlot, announced_.IsPhaseTwo);
             string line = _speechTracker.TryPick(announced_.Enemy, group);
             if (!Speak(announced_.Enemy.Creature, ESpeechBubbleSide.Right, line, _enemyOffsetPx, false))

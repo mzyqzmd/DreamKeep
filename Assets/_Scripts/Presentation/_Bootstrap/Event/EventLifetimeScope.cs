@@ -5,6 +5,7 @@ using VContainer.Unity;
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {

@@ -44,7 +44,8 @@ namespace _DreamKeep.GameBattle
             return runCardOf;
         }
 
-        /// <summary>敌人按遭遇列表顺序装配：从最靠后槽位向前排（1 只站 3 号、2 只站 2/3 号），并烘焙最前槽位替换意图。</summary>
+        /// <summary>敌人按遭遇列表顺序装配：从最靠后槽位向前排（1 只站 3 号、2 只站 2/3 号），并烘焙最前槽位替换意图；
+        /// 台词表在构造时一次写入，留空即全程沉默。</summary>
         private static List<Enemy> BuildEnemies(SO_Encounter encounter_, Rng rng_)
         {
             IReadOnlyList<SO_Enemy> configs = encounter_.Enemies;
@@ -59,8 +60,7 @@ namespace _DreamKeep.GameBattle
                 SO_Enemy config = configs[i];
                 int maxHp = RollMaxHp(config.MaxHp, encounter_.HpVariance, rng_);
                 Enemy enemy = new(config.Name, maxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
-                    IntentBaker.Bake(config.FrontSlotIntent));
-                enemy.SetSpeechLines(config.SpeechLines); // 台词分组随配置进战斗态；留空即全程沉默
+                    IntentBaker.Bake(config.FrontSlotIntent), config.SpeechLines);
                 LoadPhaseTwo(enemy, config);
                 ApplyStartPerks(enemy, config);
 

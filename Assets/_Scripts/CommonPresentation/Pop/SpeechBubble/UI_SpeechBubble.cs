@@ -26,14 +26,14 @@ namespace _DreamKeep.CommonPresentation
         private Sequence _timeline;
         private Action _onFinished;
 
+        // 父级失活/池回收时兜底收尾：完成回调只放行一次，避免池二次归还
+        private void OnDisable() => Finish();
+
         /// <summary>是否正在播放：调用方据此判定同侧是否已有气泡。</summary>
         public bool IsPlaying => _isPlaying;
 
         /// <summary>当前这条气泡是否允许被新台词顶掉：只有播放中且本次播放标记为可打断才为真。</summary>
         public bool CanBeInterrupted => _isPlaying && _allowInterrupt;
-
-        // 父级失活/池回收时兜底收尾：完成回调只放行一次，避免池二次归还
-        private void OnDisable() => Finish();
 
         #region 对外入口：播放一句台词与还池复位
 
@@ -71,17 +71,13 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
-        // 收尾只放行一次：OnComplete 与 OnDisable 都会走到这里
+        // 收尾只放行一次：OnComplete 与 OnDisable 都会走到这里；先存回调，ResetView 会清掉它
         private void Finish()
         {
             if (!_isPlaying) return;
 
-            _isPlaying = false;
-            _allowInterrupt = false;
-            _timeline?.Kill();
-            _timeline = null;
             Action finished = _onFinished;
-            _onFinished = null;
+            ResetView();
             if (gameObject.activeSelf) gameObject.SetActive(false);
             finished?.Invoke();
         }

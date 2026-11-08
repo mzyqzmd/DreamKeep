@@ -1,4 +1,3 @@
-using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {

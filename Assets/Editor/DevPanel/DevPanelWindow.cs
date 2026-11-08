@@ -2,13 +2,15 @@ using UnityEditor;
 using UnityEngine;
 using _DreamKeep.ConfigData;
 
-/// <summary>开发面板：上区「运行时」集中 Play 期测试操作（卡牌 / 流程 / 整局 / 物品 / 战斗五小节，非 Play 整区置灰），
+/// <summary>开发面板：上区「运行时」按调试时序集中 Play 期测试操作（流程 / 战斗 / 整局 / 物品 / 卡牌五小节，非 Play 整区置灰），
 /// 下区「启动场景」设 Play 默认启动场景（始终可用）；底部一行显示最近一次操作结果。</summary>
 internal sealed class DevPanelWindow : EditorWindow
 {
+    private const int DefaultEnergyAmount = 1;
     private const int DefaultGoldAmount = 100;
     private const int DefaultHpAmount = 10;
 
+    private int _energyAmount = DefaultEnergyAmount;
     private int _goldAmount = DefaultGoldAmount;
     private int _hpAmount = DefaultHpAmount;
     private SO_Relic _relicToAdd;
@@ -21,7 +23,7 @@ internal sealed class DevPanelWindow : EditorWindow
     internal static void ShowWindow()
     {
         DevPanelWindow window = GetWindow<DevPanelWindow>("开发面板");
-        window.minSize = new Vector2(380f, 560f);
+        window.minSize = new Vector2(380f, 600f);
     }
 
     private void OnEnable() => _bootScene = SO_DevPanelConfig.Instance.BootScene;
@@ -43,11 +45,6 @@ internal sealed class DevPanelWindow : EditorWindow
 
         using (new EditorGUI.DisabledScope(!playing))
         {
-            EditorGUILayout.LabelField("卡牌", EditorStyles.miniBoldLabel);
-            EditorGUILayout.HelpBox("先在 Hierarchy 里选中卡牌对象；未绑定卡牌的脸（同一张卡下的另外三张）会被跳过。", MessageType.None);
-            if (GUILayout.Button("升级选中的卡面")) _lastResult = DevPanelCommands.UpgradeSelectedCardFaces();
-
-            EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("流程", EditorStyles.miniBoldLabel);
             if (GUILayout.Button("开始首个战斗段")) _lastResult = DevPanelCommands.StartFirstSegment();
             if (GUILayout.Button("进入先古之民")) _lastResult = DevPanelCommands.StartAncientSegment();
@@ -55,6 +52,10 @@ internal sealed class DevPanelWindow : EditorWindow
             if (GUILayout.Button("进入宝箱段")) _lastResult = DevPanelCommands.StartChestSegment();
             if (GUILayout.Button("进入事件段")) _lastResult = DevPanelCommands.StartEventSegment();
             if (GUILayout.Button("进入商店段")) _lastResult = DevPanelCommands.StartShopSegment();
+
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField("战斗", EditorStyles.miniBoldLabel);
+            DrawBattleSection();
 
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField("整局", EditorStyles.miniBoldLabel);
@@ -67,8 +68,9 @@ internal sealed class DevPanelWindow : EditorWindow
             DrawItemsSection();
 
             EditorGUILayout.Space(6);
-            EditorGUILayout.LabelField("战斗", EditorStyles.miniBoldLabel);
-            DrawAddCardSection();
+            EditorGUILayout.LabelField("卡牌", EditorStyles.miniBoldLabel);
+            EditorGUILayout.HelpBox("先在 Hierarchy 里选中卡牌对象；未绑定卡牌的脸（同一张卡下的另外三张）会被跳过。", MessageType.None);
+            if (GUILayout.Button("升级选中的卡面")) _lastResult = DevPanelCommands.UpgradeSelectedCardFaces();
         }
     }
 
@@ -105,18 +107,37 @@ internal sealed class DevPanelWindow : EditorWindow
         if (GUILayout.Button("添加药水")) _lastResult = DevPanelCommands.AddPotion(_potionToAdd);
     }
 
-    // 战斗小节：非战斗置灰；加入的卡是战斗临时卡，战斗结束自动消失
-    private void DrawAddCardSection()
+    // 战斗小节：非战斗整节置灰；能量行在上、加卡行在下
+    private void DrawBattleSection()
     {
         // 先短路 playing 再查战斗态：编辑态不必每次 OnGUI 全场找 RunLifetimeScope
         bool inBattle = EditorApplication.isPlaying && DevPanelCommands.IsInBattle();
         using (new EditorGUI.DisabledScope(!inBattle))
         {
-            EditorGUILayout.HelpBox("加入的卡是战斗临时卡：战斗结束自动消失，不写回局内卡组；手牌满 10 张拒绝。", MessageType.None);
-            _cardToAdd = (SO_Card)EditorGUILayout.ObjectField("卡牌", _cardToAdd, typeof(SO_Card), false);
-            _cardUpgraded = EditorGUILayout.Toggle("升级形态", _cardUpgraded);
-            if (GUILayout.Button("加入手牌")) _lastResult = DevPanelCommands.AddCardToHand(_cardToAdd, _cardUpgraded);
+            DrawPlayerEnergyRow();
+            DrawAddCardSection();
         }
+    }
+
+    // 能量行：同款双入口；只钳下限 0，上限不封顶
+    private void DrawPlayerEnergyRow()
+    {
+        EditorGUILayout.HelpBox("能量只钳下限 0，可超过回合上限；改动即时刷新战斗 HUD。", MessageType.None);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PrefixLabel("能量值");
+        _energyAmount = EditorGUILayout.IntField(_energyAmount);
+        if (GUILayout.Button("设为", GUILayout.Width(44f))) _lastResult = DevPanelCommands.SetPlayerEnergy(_energyAmount);
+        if (GUILayout.Button("增加", GUILayout.Width(44f))) _lastResult = DevPanelCommands.ChangePlayerEnergy(_energyAmount);
+        EditorGUILayout.EndHorizontal();
+    }
+
+    // 加卡：加入的卡是战斗临时卡，战斗结束自动消失
+    private void DrawAddCardSection()
+    {
+        EditorGUILayout.HelpBox("加入的卡是战斗临时卡：战斗结束自动消失，不写回局内卡组；手牌满 10 张拒绝。", MessageType.None);
+        _cardToAdd = (SO_Card)EditorGUILayout.ObjectField("卡牌", _cardToAdd, typeof(SO_Card), false);
+        _cardUpgraded = EditorGUILayout.Toggle("升级形态", _cardUpgraded);
+        if (GUILayout.Button("加入手牌")) _lastResult = DevPanelCommands.AddCardToHand(_cardToAdd, _cardUpgraded);
     }
 
     private void DrawBootSceneSection()

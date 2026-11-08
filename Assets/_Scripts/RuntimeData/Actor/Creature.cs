@@ -25,6 +25,7 @@ namespace _DreamKeep.RuntimeData
                 _currentHp = value;
                 HpChanged?.Invoke(_currentHp);
                 if (delta >= 0) Healed?.Invoke(delta); //只要回血就播vfx,恢复0点也是回血
+                else HpLost?.Invoke(-delta);
             }
         }
 
@@ -34,6 +35,10 @@ namespace _DreamKeep.RuntimeData
         /// <summary>回血通知：CurrentHp 上升时抛回复量，覆盖战斗内直写与局外结算全部路径；
         /// 是否播放由表现层按场景判定。敌人回血同样抛，暂无订阅者亦不影响。</summary>
         public event Action<int> Healed;
+
+        /// <summary>失去生命通知：CurrentHp 下降时抛实际损失量（保底留 1 之后的真实差值），与 <see cref="Healed"/> 对称；
+        /// 是否播放由表现层按场景判定。快照回滚走 RestoreHpTo 不经过 setter，不会触发。</summary>
+        public event Action<int> HpLost;
 
         /// <summary>最大生命：构造期取配置初值，局内可经 <see cref="RaiseMaxHp"/> 增长（战斗内恒定）。</summary>
         public int MaxHp { get; private set; }

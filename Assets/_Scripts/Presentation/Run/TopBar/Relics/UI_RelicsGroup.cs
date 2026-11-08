@@ -5,7 +5,7 @@ using VContainer.Unity; // InjectGameObject 扩展方法住在这里
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.GameRun;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {

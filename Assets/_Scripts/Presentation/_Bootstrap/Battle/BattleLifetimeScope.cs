@@ -7,6 +7,7 @@ using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {
@@ -71,6 +72,8 @@ namespace _DreamKeep.Presentation
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(new SpeechLineTracker());
+            // 组合根是唯一认识配置资产的层：弹层只读玩家台词表，不再穿透整局状态
+            builder_.RegisterInstance(run.Config);
             builder_.RegisterInstance(dispatcher); // 供视图 [Inject] 注册事件处理器（Register<TEvent>）
             builder_.RegisterInstance(relicNotifier); // 供遗物栏 [Inject] 订阅遗物播报
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）

@@ -12,13 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4c877253466a4a4c9cbcb4850cc5669, type: 3}
   m_Name: Reward_Normal
   m_EditorClassIdentifier: 
-  _goldMin: 15
-  _goldMax: 25
+  _goldMin: 10
+  _goldMax: 20
   _cardRewardCount: 1
   _cardPools:
   - {fileID: 11400000, guid: 243ad49d51066e443978561f50725df9, type: 2}
   - {fileID: 11400000, guid: 05d6b0974a12f784c8ca2d5a20769bc8, type: 2}
   - {fileID: 11400000, guid: 0936f29f954d70449a3727f80ee80544, type: 2}
+  _cardUpgradeChance: 0.05
   _potionChance: 0.3
   _potionPools:
   - {fileID: 11400000, guid: b10f622058f379141bae684b6a23083b, type: 2}

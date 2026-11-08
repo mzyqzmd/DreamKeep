@@ -4,6 +4,7 @@ using _DreamKeep.GameRun;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {
@@ -32,9 +33,6 @@ namespace _DreamKeep.Presentation
 
         [Tooltip("暂停面板：顶栏菜单按钮开合，四条出口在此接线（同场景，Inspector 拖引用）")] [SerializeField]
         private UI_PausePanel _pausePanel;
-
-        [Tooltip("放弃本局时结算面板的原因行")] [SerializeField, TextArea(2, 4)]
-        private string _abandonReason = "你放弃了本局";
 
         /// <summary>战斗段场景名：按段种类映射到构建列表中的场景名。</summary>
         public const string BattleSegmentName = "Scene_Battle";
@@ -138,7 +136,7 @@ namespace _DreamKeep.Presentation
             ClosePausePanel();
             if (_topBar) _topBar.CloseMap();
             CloseBattleSession();
-            if (_resultPanel) _resultPanel.Show(EResultKind.RunDefeated, _abandonReason);
+            if (_resultPanel) _resultPanel.Show(EResultKind.RunDefeated);
         }
 
         // 保存并退出：存档未接入，只占位；不退出、不回菜单，避免玩家以为存上了

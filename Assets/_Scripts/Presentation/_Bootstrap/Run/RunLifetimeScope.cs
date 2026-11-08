@@ -6,6 +6,7 @@ using _DreamKeep.ConfigData;
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.GameRun;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {
@@ -50,6 +51,8 @@ namespace _DreamKeep.Presentation
             // 该组件住常驻的 Scene_MainMenu（Scene_Run 里没有），按本场景注册会抛 VContainerException，故全局查找后按实例注册
             AudioRoot audioRoot = FindFirstObjectByType<AudioRoot>();
             if (audioRoot) builder_.RegisterInstance(audioRoot);
+            ScreenShakeDriver shakeDriver = FindFirstObjectByType<ScreenShakeDriver>();
+            if (shakeDriver) builder_.RegisterInstance(shakeDriver);
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();

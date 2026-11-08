@@ -11,7 +11,6 @@
         "VContainer",
         "NaughtyAttributes.Core",
         "Unity.TextMeshPro",
-        "Unity.Newtonsoft.Json",
         "_DreamKeep.GameBattle",
         "_DreamKeep.GameRun"
     ],

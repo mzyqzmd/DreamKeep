@@ -4,6 +4,7 @@ using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameRun;
+using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {
@@ -53,12 +54,9 @@ namespace _DreamKeep.Presentation
                 CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
                     cards_ => _commands.SubmitCardSelection(cards_)).Forget());
             _events.Register<SE_ShopCompleted>(_ => _segmentManager.CompleteSegment());
-            _events.Register<SE_PurchaseSucceeded>(_ => SpeakMerchant(
-                _speechTracker.TryPick(_merchantSpeechLines, _merchantSpeechLines.PurchaseSuccess)));
-            _events.Register<SE_PurchaseRefused>(refused_ => SpeakMerchant(
-                _speechTracker.TryPick(_merchantSpeechLines, PickRefusalGroup(refused_.Reason))));
-            _events.Register<SE_RemovalRefused>(_ => SpeakMerchant(
-                _speechTracker.TryPick(_merchantSpeechLines, _merchantSpeechLines.FailureGold)));
+            _events.Register<SE_PurchaseSucceeded>(_ => SpeakMerchant(_merchantSpeechLines.PurchaseSuccess));
+            _events.Register<SE_PurchaseRefused>(refused_ => SpeakMerchant(PickRefusalGroup(refused_.Reason)));
+            _events.Register<SE_RemovalRefused>(_ => SpeakMerchant(_merchantSpeechLines.FailureGold));
             _loop.Start();
             _rug.Hide(); // 进店先收摊：玩家点商人再掀开
 
@@ -85,6 +83,12 @@ namespace _DreamKeep.Presentation
             _ => null,
         };
 
-        private void SpeakMerchant(string line_) => _merchantSpeech.Play(line_);
+        // 取词 → 播放 → 没真正播出就退回本次计数：未播仍耗次数会让商人永久沉默，与战斗侧口径不一致
+        private void SpeakMerchant(SpeechLineGroup group_)
+        {
+            string line = _speechTracker.TryPick(_merchantSpeechLines, group_);
+            if (string.IsNullOrEmpty(line)) return;
+            if (!_merchantSpeech.Play(line)) _speechTracker.Rollback(_merchantSpeechLines, group_);
+        }
     }
 }

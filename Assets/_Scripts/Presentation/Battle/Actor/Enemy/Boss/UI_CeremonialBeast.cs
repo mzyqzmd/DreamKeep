@@ -1,7 +1,6 @@
 using _DreamKeep.ConfigData;
 using _DreamKeep.GameBattle;
 using Cysharp.Threading.Tasks;
-using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
@@ -39,8 +38,9 @@ namespace _DreamKeep.Presentation
             }
 
             // plow 播完接 plow_end，两段都自然播完才回待机；期间被受击接棒则整体作废（票号保证）
-            await _animTool.PlayOnceAsync(PlowAnim, onFinished_: () =>
-                _animTool.PlayOnceAsync(PlowEndAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim)).Forget());
+            await _animTool.PlayOnceAsync(PlowAnim, 1f,
+                () => _animTool.PlayOnceAsync(PlowEndAnim, 1f,
+                    () => _animTool.PlayLoop(IdleLoopAnim)).Forget());
         }
 
         // 我挨打：击晕期间被打，hurt 播完回击晕循环而不是待机；其余沿用基类
@@ -53,8 +53,8 @@ namespace _DreamKeep.Presentation
             }
 
             UniTask wait = _animTool.PlayOnceAsync(HitAnim, onFinished_: () => _animTool.PlayLoop(StunLoopAnim));
-            if (_blockView != null) _blockView.SetBlock(dealt_.Target.Block);
-            if (_healthBar != null) _healthBar.SetHealth(dealt_.Target.CurrentHp);
+            if (_blockView) _blockView.SetBlock(dealt_.Target.Block);
+            if (_healthBar) _healthBar.SetHealth(dealt_.Target.CurrentHp);
             await wait;
         }
 
@@ -62,7 +62,8 @@ namespace _DreamKeep.Presentation
         protected override async UniTask OnPerkApplied(BE_PerkApplied applied_)
         {
             await base.OnPerkApplied(applied_);
-            if (_boundCreature.IsDead || applied_.Target != _boundCreature || applied_.Perk.Polarity != EPerkPolarity.Buff)
+            if (_boundCreature.IsDead || applied_.Target != _boundCreature ||
+                applied_.Perk.Polarity != EPerkPolarity.Buff)
                 return;
             await _animTool.PlayOnceAsync(ShrillAnim, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
         }
@@ -80,7 +81,8 @@ namespace _DreamKeep.Presentation
         private async UniTask OnStunEndedAsync(BE_EnemyStunEnded ended_)
         {
             if (ended_.Enemy != _boundEnemy || _boundCreature.IsDead) return;
-            await _animTool.PlayOnceAsync(WakeUpAnim, playRatio_: 1f, onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
+            await _animTool.PlayOnceAsync(WakeUpAnim, playRatio_: 1f,
+                onFinished_: () => _animTool.PlayLoop(IdleLoopAnim));
         }
 
         #endregion

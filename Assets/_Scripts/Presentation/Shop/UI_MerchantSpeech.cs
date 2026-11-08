@@ -18,7 +18,7 @@ namespace _DreamKeep.Presentation
         /// <summary>播一句商人台词：空台词或空列表直接丢弃；返回选中气泡的播放结果。</summary>
         public bool Play(string line_)
         {
-            if (string.IsNullOrEmpty(line_) || _bubbles == null || _bubbles.Count == 0) return false;
+            if (string.IsNullOrEmpty(line_) || _bubbles.Count == 0) return false;
             HideAll();
             UI_SpeechBubble picked = _bubbles[Random.Range(0, _bubbles.Count)];
             return picked && picked.Play(line_, true);
@@ -28,7 +28,6 @@ namespace _DreamKeep.Presentation
 
         private void HideAll()
         {
-            if (_bubbles == null) return;
             for (int i = 0; i < _bubbles.Count; i++)
             {
                 if (!_bubbles[i]) continue;
