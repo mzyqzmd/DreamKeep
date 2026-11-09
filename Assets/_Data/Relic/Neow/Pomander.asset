@@ -15,7 +15,7 @@ MonoBehaviour:
   _relicName: "\u6A59\u578B\u9999\u76D2"
   _icon: {fileID: 21300000, guid: db964bffdb5a7534bb94f903db38cef7, type: 3}
   _rarity: 4
-  _description: "\u62FE\u8D77\u65F6\uFF0C\u5931\u53BB <color=red>5</color> \u70B9\u751F\u547D\u503C\uFF0C\u7136\u540E\u5347\u7EA7
+  _description: "\u62FE\u8D77\u65F6\uFF0C\u5931\u53BB <color=red>9</color> \u70B9\u751F\u547D\u503C\uFF0C\u7136\u540E\u5347\u7EA7
     <color=green>2</color> \u5F20\u724C\u3002"
-  _pickupHpCost: 5
+  _pickupHpCost: 9
   _cardCount: 2
