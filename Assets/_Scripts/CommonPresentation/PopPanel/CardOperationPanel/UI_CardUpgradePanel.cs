@@ -71,12 +71,15 @@ namespace _DreamKeep.CommonPresentation
             if (!_tipText) return;
             _tipText.text = Target > 0
                 ? $"选择 {Target} 张卡牌进行升级（选满自动进入对照，右键查看详情）"
-                : "没有可升级的卡牌，点击确认继续";
+                : "没有可升级的卡牌，即将继续";
         }
 
         protected override void OnResetVisual() => ClosePreview();
 
-        // 满选直接翻对照页：选满后再点未选卡不替换，玩家要改选得先取消一张
+        // 第一层不放确认键：选满即跳对照页，第二层确认才落升级
+        protected override bool UseConfirmButton => false;
+
+        // 满选直接翻对照页：选满后再点未选卡不替换，玩家要改选得先返回重选
         protected override bool ReplaceOldestWhenFull => false;
 
         protected override void OnSelectionChanged()
@@ -84,7 +87,7 @@ namespace _DreamKeep.CommonPresentation
             if (Target > 0 && Selected.Count == Target) OpenPreview();
         }
 
-        // 第一层确认：只翻到对照页、不动域
+        // 第一层确认动作保留给基类契约：没有确认键后不会被触发，实际入口是选满自动跳转
         protected override void OnConfirm() => OpenPreview();
 
         protected override void PlayVfx(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
@@ -115,12 +118,13 @@ namespace _DreamKeep.CommonPresentation
             BindPreviewRow(_upgradedPool, _upgradedViews, upgraded);
         }
 
-        // 对照页退出（关闭键与黑底空白都走这里）：只回第一层，选中与涟漪原地保留
+        // 对照页退出（关闭键与黑底空白都走这里）：回第一层并清空本轮选中，让玩家从头重选
         private void ClosePreview()
         {
             if (_previewRoot) _previewRoot.SetActive(false);
             ReleasePreview(_unupgradePool, _unupgradeViews);
             ReleasePreview(_upgradedPool, _upgradedViews);
+            ClearSelection();
         }
 
         // 对照页确认：逐张升级真卡，随后由基类关板、横向均布锻造演出并交付

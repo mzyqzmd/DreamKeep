@@ -4,7 +4,6 @@ using _DreamKeep.RuntimeData;
 using _DreamKeep.EngineUtility;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 using VContainer;
 using VContainer.Unity; // InjectGameObject 扩展方法住在这里
@@ -402,14 +401,12 @@ namespace _DreamKeep.Presentation
 
         #region 指针：坐标换算
 
-        // 指针在画布平面上的世界坐标：拖拽跟随、箭头指向与落点判定共用。画布是 ScreenSpaceCamera，换算必须传画布相机
-        public Vector3 PointerWorldPosition()
-        {
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(_fanCenterPoint,
-                Pointer.current.position.ReadValue(),
-                _canvasCamera, out Vector3 world);
-            return world;
-        }
+        // 指针在画布平面上的世界坐标：拖拽跟随、箭头指向与落点判定共用。画布是 ScreenSpaceCamera，换算必须传画布相机；
+        // 取不到指针（无设备 / 热插拔）时退回手牌区自身位置，不把换算失败留下的零向量当结果用
+        public Vector3 PointerWorldPosition() =>
+            PointerInput.TryGetScreenPosition(out Vector2 screen)
+                ? UiGeometry.ScreenToPlaneWorld(_fanCenterPoint, screen, _canvasCamera)
+                : _fanCenterPoint.position;
 
         // 指针锚点位：让"卡锚点（下沿中点）上方 AnchorLiftPx 的点"与指针重合时，卡应处的世界位置——拖拽跟手专用，
         // 悬停抬起不读指针（按手牌区的点换算，与卡自身缩放无关，故拖动起始无跳变）

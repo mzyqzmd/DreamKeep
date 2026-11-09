@@ -40,7 +40,7 @@ namespace _DreamKeep.Presentation
 
             // 领奖中读档：本段只作背景，不抽遭遇、不洗牌、不建敌人、不烘焙遗物——随机流一格都不许动，
             // 否则读档后的跑图随机序列会与退出前分叉。判定只认「有待领奖励清单」，正常战斗该字段为空。
-            bool restoring = run.PendingRewards is { Count: > 0 };
+            bool restoring = run.HasPendingRewards;
 
             // 遭遇种类由地图节点决定：问号节点取揭示结果（揭示为精英就得进精英遭遇），其余只会是 Monster/Elite/Boss
             EEncounterKind kind = run.Map.CurrentNode.ResolvedType switch

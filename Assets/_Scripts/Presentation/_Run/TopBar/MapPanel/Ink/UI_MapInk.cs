@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using VContainer;
 using _DreamKeep.ConfigData;
@@ -109,29 +108,27 @@ namespace _DreamKeep.Presentation
 
         private void Update()
         {
-            Mouse mouse = Mouse.current;
-            if (mouse == null) return;
-            Vector2 mousePos = mouse.position.ReadValue();
-            bool inside = RectTransformUtility.RectangleContainsScreenPoint(_inkLayer, mousePos, CastCamera);
-            bool leftDown = mouse.leftButton.wasPressedThisFrame;
-            bool leftUp = mouse.leftButton.wasReleasedThisFrame;
+            if (!PointerInput.TryGetScreenPosition(out Vector2 pointerScreen)) return;
+            bool inside = RectTransformUtility.RectangleContainsScreenPoint(_inkLayer, pointerScreen, CastCamera);
+            bool leftDown = PointerInput.LeftPressedThisFrame;
+            bool leftUp = PointerInput.LeftReleasedThisFrame;
 
             // 画笔：右键恒为快捷键；画笔模式下左键接管（松左键不退模式，仍可连续画）
-            if (mouse.rightButton.wasPressedThisFrame) BeginDraw(mousePos, inside, true);
-            else if (PenMode && leftDown) BeginDraw(mousePos, inside, false);
-            else if (_drawing != null && (mouse.rightButton.isPressed || (PenMode && mouse.leftButton.isPressed)))
-                ExtendDraw(mousePos, inside);
-            if (mouse.rightButton.wasReleasedThisFrame || (PenMode && leftUp)) EndDraw();
+            if (PointerInput.RightPressedThisFrame) BeginDraw(pointerScreen, inside, true);
+            else if (PenMode && leftDown) BeginDraw(pointerScreen, inside, false);
+            else if (_drawing != null && (PointerInput.RightHeld || (PenMode && PointerInput.LeftHeld)))
+                ExtendDraw(pointerScreen, inside);
+            if (PointerInput.RightReleasedThisFrame || (PenMode && leftUp)) EndDraw();
 
             // 橡皮：中键恒为快捷键；橡皮模式下左键接管
-            if ((mouse.middleButton.wasPressedThisFrame || (EraserMode && leftDown)) && inside)
+            if ((PointerInput.MiddlePressedThisFrame || (EraserMode && leftDown)) && inside)
             {
                 _erasing = true;
                 NotifyStateChanged();
             }
-            if (_erasing && (mouse.middleButton.isPressed || (EraserMode && mouse.leftButton.isPressed)) && inside)
-                EraseAt(mousePos);
-            if (mouse.middleButton.wasReleasedThisFrame) EndErase(true);
+            if (_erasing && (PointerInput.MiddleHeld || (EraserMode && PointerInput.LeftHeld)) && inside)
+                EraseAt(pointerScreen);
+            if (PointerInput.MiddleReleasedThisFrame) EndErase(true);
             else if (EraserMode && leftUp) EndErase(false);
         }
 

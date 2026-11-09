@@ -26,6 +26,17 @@ namespace _DreamKeep.Presentation
         [Tooltip("兜底遗物池：常规池抽空时由 RelicRoller 降级发放，池内只放头环")] [SerializeField]
         private SO_RelicPool _fallbackRelicPool;
 
+        // 常驻服务：住 Scene_MainMenu，本场景取不到，只能由常驻编排者在本容器 Build 之前转交
+        private AudioRoot _audioRoot;
+        private ScreenShakeDriver _shakeDriver;
+
+        /// <summary>转交常驻服务：由常驻编排者在 Build 之前直调，Configure 里按实例注册给下游注入。</summary>
+        public void BindPersistentServices(AudioRoot audioRoot_, ScreenShakeDriver shakeDriver_)
+        {
+            _audioRoot = audioRoot_;
+            _shakeDriver = shakeDriver_;
+        }
+
         protected override void Configure(IContainerBuilder builder_)
         {
             if (!_mapConfig) throw new InvalidOperationException("RunLifetimeScope._mapConfig 未接线，无法生成整局地图");
@@ -65,11 +76,13 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<VfxFactory>();
             builder_.RegisterComponentInHierarchy<VfxDefaultRoot>(); // 常驻特效默认根：战斗外玩家回血在屏幕中心播一次
             // 2D 音频根：固定槽位池+优先级抢占，消费者注入直呼四方法
-            // 该组件住常驻的 Scene_MainMenu（Scene_Run 里没有），按本场景注册会抛 VContainerException，故全局查找后按实例注册
-            AudioRoot audioRoot = FindFirstObjectByType<AudioRoot>();
-            if (audioRoot) builder_.RegisterInstance(audioRoot);
-            ScreenShakeDriver shakeDriver = FindFirstObjectByType<ScreenShakeDriver>();
-            if (shakeDriver) builder_.RegisterInstance(shakeDriver);
+            // 该组件住常驻的 Scene_MainMenu（Scene_Run 里没有），按本场景注册会抛 VContainerException，
+            // 故由常驻编排者在 Build 之前经 BindPersistentServices 转交；缺失即装配错误，不做静默降级
+            if (!_audioRoot || !_shakeDriver)
+                throw new InvalidOperationException(
+                    $"[{nameof(RunLifetimeScope)}] 常驻服务未转交（AudioRoot / ScreenShakeDriver），整局容器不构建");
+            builder_.RegisterInstance(_audioRoot);
+            builder_.RegisterInstance(_shakeDriver);
             // 整局 UI：跟随这一整局，进战斗后才有响应，段不在场时静默
             builder_.RegisterComponentInHierarchy<UI_RelicsGroup>();
             builder_.RegisterComponentInHierarchy<UI_PotionGroup>();
@@ -95,7 +108,7 @@ namespace _DreamKeep.Presentation
         }
 
         // 容器建好后把段编排者的入口与常驻黑幕交给主菜单编排者：
-        // MainMenuFlow 不在 Presentation 程序集、不认识 SegmentSceneManager，只拿委托保持依赖方向
+        // MainMenuFlow 住常驻的 Scene_MainMenu、段编排者住 Scene_Run，跨场景引用不可序列化，故只拿委托
         private static void BindMainMenuFlow(IObjectResolver resolver_)
         {
             MainMenuFlow flow = FindFirstObjectByType<MainMenuFlow>();

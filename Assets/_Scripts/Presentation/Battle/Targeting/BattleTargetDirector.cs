@@ -3,7 +3,6 @@ using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using VContainer;
 
 namespace _DreamKeep.Presentation
@@ -109,13 +108,10 @@ namespace _DreamKeep.Presentation
 
         // 指针在画布平面上的世界坐标：取箭头所在矩形与画布相机换算（同一画布平面上的任意矩形结果一致），
         // 无指针设备的极端情况下退回箭头自身位置
-        private Vector3 PointerWorld()
-        {
-            Pointer pointer = Pointer.current;
-            return pointer == null
-                ? _pointerPlane.position
-                : UiGeometry.ScreenToPlaneWorld(_pointerPlane, pointer.position.ReadValue(), _canvasCamera);
-        }
+        private Vector3 PointerWorld() =>
+            PointerInput.TryGetScreenPosition(out Vector2 screen)
+                ? UiGeometry.ScreenToPlaneWorld(_pointerPlane, screen, _canvasCamera)
+                : _pointerPlane.position;
 
         // 收尾：箭头显示过才收（Hide 内含脉冲复位），高亮按差分熄灭
         private void ClearAim()

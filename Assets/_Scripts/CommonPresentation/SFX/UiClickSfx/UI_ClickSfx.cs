@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using _DreamKeep.EngineUtility;
 
@@ -29,10 +28,10 @@ namespace _DreamKeep.CommonPresentation
         private void Update()
         {
             if (!_audio) return;
-            Pointer pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame) return;
+            if (!PointerInput.LeftPressedThisFrame) return;
+            if (!PointerInput.TryGetScreenPosition(out Vector2 pointerScreen)) return;
 
-            _pointerData.position = pointer.position.ReadValue();
+            _pointerData.position = pointerScreen;
             _hits.Clear();
             _eventSystem.RaycastAll(_pointerData, _hits);
             if (_hits.Count == 0) return;

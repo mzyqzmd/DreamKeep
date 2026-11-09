@@ -7,7 +7,6 @@ using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using VContainer;
 
 namespace _DreamKeep.Presentation
@@ -141,17 +140,16 @@ namespace _DreamKeep.Presentation
         // 每帧：菜单开着时看指针是否已离开；待选时右键取消、左键落在敌人身上即使用，落空取消。其余时刻零开销
         private void Update()
         {
-            Mouse mouse = Mouse.current;
-            if (mouse == null) return;
-            if (_popupSlot != NoPopupSlot) TickPopupDismiss(mouse.position.ReadValue());
+            if (!PointerInput.TryGetScreenPosition(out Vector2 pointerScreen)) return;
+            if (_popupSlot != NoPopupSlot) TickPopupDismiss(pointerScreen);
             if (!IsAiming) return;
-            if (mouse.rightButton.wasPressedThisFrame)
+            if (PointerInput.RightPressedThisFrame)
             {
                 CancelAim();
                 return;
             }
 
-            if (!mouse.leftButton.wasPressedThisFrame) return;
+            if (!PointerInput.LeftPressedThisFrame) return;
             // 启动待选的那次左键与这里读的是同一次按下（菜单项经 EventSystem 派发，与 Update 的先后不保证）：
             // 不跳过就会在箭头还没画的同一帧把它取消掉，表现为"点使用没反应"
             if (Time.frameCount == _aimStartedFrame) return;

@@ -3,7 +3,7 @@ using UnityEngine;
 using _DreamKeep.CommonPresentation;
 using _DreamKeep.EngineUtility;
 
-namespace _DreamKeep.Presentation.Root
+namespace _DreamKeep.Presentation
 {
     /// <summary>休息段特效编排根：只决定"何时播、摆在哪"，实例池/预制体/时长归 VfxFactory 与 UI_OneShotVfx。
     /// 落点取锚点矩形中心（与 pivot 无关）：锻造默认画布中心，休息默认营火高亮；两者都无需在场景里重新接线。

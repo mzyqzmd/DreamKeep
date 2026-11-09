@@ -10,14 +10,12 @@ namespace _DreamKeep.CommonPresentation
     public sealed class UI_DevelopLogBar : MonoBehaviour, IPointerClickHandler
     {
         [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private string _title; //目录项标题：右栏标题取这里
-
-        [SerializeField, TextArea(3, 10)] private string _description;
+        [SerializeField, TextArea(5, 20)] private string _description;
 
         /// <summary>点击上报：面板据此切换右栏正文。</summary>
         public event Action<UI_DevelopLogBar> Clicked;
 
-        public string Title => string.IsNullOrEmpty(_titleText.text) ? _title : _titleText.text;
+        public string Title => _titleText.text;
         public string Description => _description;
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData_) =>

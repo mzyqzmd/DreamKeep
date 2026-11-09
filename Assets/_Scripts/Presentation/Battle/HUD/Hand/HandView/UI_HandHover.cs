@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using _DreamKeep.EngineUtility;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 
 namespace _DreamKeep.Presentation
 {
@@ -137,7 +136,8 @@ namespace _DreamKeep.Presentation
                 _pointerData = new PointerEventData(eventSystem);
             }
 
-            _pointerData.position = Pointer.current.position.ReadValue();
+            if (!PointerInput.TryGetScreenPosition(out Vector2 pointerScreen)) return null;
+            _pointerData.position = pointerScreen;
             _raycastResults.Clear();
             eventSystem.RaycastAll(_pointerData, _raycastResults);
             if (_raycastResults.Count == 0) return null;

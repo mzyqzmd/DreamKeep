@@ -33,6 +33,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>待领奖励清单：与存档同源，领奖中读档恢复面板用；null/空表示不在领奖阶段。</summary>
         public IReadOnlyList<RunReward> PendingRewards => _pendingRewards;
 
+        /// <summary>是否处于领奖阶段：清单非空的唯一判据，段组合根、战斗入口与读档降级三处共用，别再各自比 Count。</summary>
+        public bool HasPendingRewards => _pendingRewards is { Count: > 0 };
+
         private int _gold;
 
         /// <summary>金币：只经 GainGold/SpendGold 两个受控入口改动；set 内抛 GoldChanged，供整局 HUD（顶栏）订阅刷新，避免每帧轮询。</summary>

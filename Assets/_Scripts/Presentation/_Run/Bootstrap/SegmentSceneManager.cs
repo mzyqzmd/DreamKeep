@@ -126,7 +126,7 @@ namespace _DreamKeep.Presentation
         {
             _phase = (ESavePhase)reader_.Read(KeyPhase, (int)ESavePhase.OnMap);
             // 旧档降级：领奖阶段却没有奖励清单，按战斗中重打本场，避免读档后无面板可恢复而卡在空段
-            if (_phase == ESavePhase.AwaitingReward && (_run.PendingRewards == null || _run.PendingRewards.Count == 0))
+            if (_phase == ESavePhase.AwaitingReward && !_run.HasPendingRewards)
                 _phase = ESavePhase.InBattle;
             int segmentKind = (int)RunFlow.SegmentKindOf(_run.Map.CurrentNode.ResolvedType);
             SaveService.MarkRestoreIntent(segmentKind);
@@ -138,7 +138,7 @@ namespace _DreamKeep.Presentation
         /// 返回即清理完毕，此后本场景可被调用方卸载。</summary>
         public async UniTask PrepareReturnToMenuAsync()
         {
-            _run.SetSegmentPending(false);
+            LeaveSegment();
             CloseBattleSession();
             ClosePausePanel();
             if (_resultPanel) _resultPanel.Hide();
@@ -164,7 +164,7 @@ namespace _DreamKeep.Presentation
         private void ConfirmGiveUp()
         {
             SaveService.Delete();
-            _run.SetSegmentPending(false);
+            LeaveSegment();
             ClosePausePanel();
             if (_topBar) _topBar.CloseMap();
             CloseBattleSession();
@@ -205,9 +205,16 @@ namespace _DreamKeep.Presentation
         {
             if (_switching) return;
             _switching = true;
-            _run.SetSegmentPending(true); // 进段即挂起整图可走态：内容没完成前一个节点都点不了、也不会有呼吸
+            EnterSegment();
             SwitchBgmOf(kind_);
-            await SwitchSegmentAsync(SegmentNameOf(kind_));
+            try
+            {
+                await CoverRunAsync(() => SwitchSegmentCoreAsync(SegmentNameOf(kind_)));
+            }
+            finally
+            {
+                _switching = false; // 揭幕后再放行：黑屏淡出期间不接新入口
+            }
         }
 
         // 切歌：战斗段按当前地图节点判 Boss，其余段与地图共用跑图曲；同曲请求由 AudioRoot 守卫不重启
@@ -227,7 +234,7 @@ namespace _DreamKeep.Presentation
         public void CompleteSegment()
         {
             if (_switching) return;
-            _run.SetSegmentPending(false); // 内容已通过时本就解除了，这里兜住异常收尾
+            LeaveSegment(); // 内容已通过时本就解除了，这里兜住异常收尾
             _run.ClearPendingRewards(); // 领奖链结束：清内存待领清单，下一场不再误判为恢复
             SetPhase(ESavePhase.OnMap);
             // 段内不写盘：段收益要到「在地图上选中下一个节点」才随提交点固化
@@ -243,10 +250,23 @@ namespace _DreamKeep.Presentation
         {
             if (_switching) return;
             _switching = true;
-            _run.SetSegmentPending(false);
+            LeaveSegment();
             _run.ClearPendingRewards(); // 无奖励退出：清单不会再用，清掉免得下次读档误判
             CloseBattleSession();
-            EndSegmentAsync().Forget();
+            UnloadCoveredAsync().Forget();
+
+            // 黑幕内卸段：揭幕后才放行下一次进段
+            async UniTask UnloadCoveredAsync()
+            {
+                try
+                {
+                    await CoverRunAsync(() => _loader.UnloadCurrentSegmentAsync());
+                }
+                finally
+                {
+                    _switching = false;
+                }
+            }
         }
 
         // 会话与表现句柄成对关：先 session（常驻药水栏借旧表现引用注销瞄准，此时旧中间件还活着）后 stage
@@ -260,29 +280,10 @@ namespace _DreamKeep.Presentation
         // 过渡分发：常驻幕布未注入时退化为直跑（不黑屏不挡功能）
         private UniTask CoverRunAsync(Func<UniTask> work_) => _fadeScreen ? _fadeScreen.CoverAsync(work_) : work_();
 
-        private async UniTask EndSegmentAsync()
-        {
-            try
-            {
-                await CoverRunAsync(() => _loader.UnloadCurrentSegmentAsync());
-            }
-            finally
-            {
-                _switching = false; // 揭幕后再放行：黑屏淡出期间不接新入口
-            }
-        }
+        // 整图可走态：进段即挂起（内容没完成前一个节点都点不了、也不会有呼吸），内容通过或异常收尾即解除
+        private void EnterSegment() => _run.SetSegmentPending(true);
 
-        private async UniTask SwitchSegmentAsync(string name_)
-        {
-            try
-            {
-                await CoverRunAsync(() => SwitchSegmentCoreAsync(name_));
-            }
-            finally
-            {
-                _switching = false; // 揭幕后再放行：黑屏淡出期间不接新入口
-            }
-        }
+        private void LeaveSegment() => _run.SetSegmentPending(false);
 
         // 黑屏内的换段链：先卸旧段再装新段的顺序与加载失败的「本局作废」日志口径不变
         private async UniTask SwitchSegmentCoreAsync(string name_)

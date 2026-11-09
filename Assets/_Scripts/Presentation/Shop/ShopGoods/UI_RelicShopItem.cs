@@ -30,10 +30,10 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 引用自愈：格子可能在隐藏的地毯里被绑定（Awake 未跑），按类型补取一次
+        // 引用自愈：格子可能在隐藏的地毯里被绑定（Awake 未跑），气泡按同节点补取一次；
+        // 图标是序列化引用（_icon），不再按类型猜第一个 Image——猜错会写到槽位底板
         private void EnsureRefs()
         {
-            if (!_icon) _icon = GetComponentInChildren<Image>(true);
             if (!_hoverTip) _hoverTip = GetComponent<UI_HoverTip>();
         }
     }

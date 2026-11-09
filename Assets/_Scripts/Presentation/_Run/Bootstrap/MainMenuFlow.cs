@@ -1,22 +1,24 @@
 using System;
+using _DreamKeep.CommonPresentation;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.RuntimeData;
 
-namespace _DreamKeep.CommonPresentation
+namespace _DreamKeep.Presentation
 {
     /// <summary>常驻主菜单编排者（住 Scene_MainMenu 的 GameRoot）：App 侧唯一进出入口，同时是四个常驻弹层面板的唯一编排者。
-    /// 进局＝黑屏 → additive 加载 Scene_Run → 关 Run 内相机/EventSystem/AudioListener、画布补常驻相机 →
-    /// 手动 Build 整局容器（autoRun 关；Build 回调把段编排者入口经 BindRunHandlers 注入本类）→
+    /// 进局＝黑屏 → additive 加载 Scene_Run（装载与场景修补统一走 SceneLoadUtil）→
+    /// 手动 Build 整局容器（autoRun 关；Build 前把常驻音频根与抖动驱动转交给整局组合根，
+    /// Build 回调再把段编排者入口经 BindRunHandlers 注入本类）→
     /// 藏主菜单 → 经委托进先古之民段（每把起点）并等它装配完成 → 揭幕：黑屏一直盖到段就绪，不会露出空的 Scene_Run；
     /// 回主菜单＝黑屏 → 经委托触发 Run 侧清理（关会话+卸段）→ 卸载 Scene_Run（段编排者随场景自毁）→ 亮出主菜单 → 揭幕。
     /// 主菜单四面板（设置/放弃/开发日志/退出）住本场景 Canvas_System，整局内也常驻在场，
     /// 因此暂停面板的「设置」「放弃」也经本类开，跨场景引用不落序列化。
-    /// 本类在 CommonPresentation 程序集，不认识 SegmentSceneManager/RunLifetimeScope 具体类型，只拿委托。</summary>
+    /// 本类与整局组合根同住 Presentation：组合根由本类直接转交常驻服务；
+    /// 段编排者仍只拿委托——它住 Scene_Run，跨场景引用不可序列化。</summary>
     public sealed class MainMenuFlow : MonoBehaviour
     {
         [Tooltip("黑屏过渡幕：进局/回主菜单全程盖住画面（同场景常驻，Inspector 拖引用）")] [SerializeField]
@@ -52,6 +54,8 @@ namespace _DreamKeep.CommonPresentation
         private bool _quitting; // 退出闸门：确认后黑幕淡入期间不接二次点击
         private AudioRoot _audio; // 常驻音频根：住本对象下的 SFXRoot，不进容器，Awake 自愈
 
+        private ScreenShakeDriver _shakeDriver; // 常驻抖动驱动：挂在主相机上，Build 整局容器前转交
+
         /// <summary>常驻主相机：Run 内 Screen Space-Camera 画布与段装卸器共用。</summary>
         public Camera MainCamera => _camera;
 
@@ -80,6 +84,8 @@ namespace _DreamKeep.CommonPresentation
             GameSettings.ApplyOnBoot();
             _audio = GetComponentInChildren<AudioRoot>(true);
             if (_audio) _audio.PlayBgm(_audio.Cues.BgmMainMenu);
+            // 抖动驱动挂在常驻主相机上，不在本对象子节点里，只能按相机取
+            _shakeDriver = _camera ? _camera.GetComponent<ScreenShakeDriver>() : null;
             // 全局点击音：常驻 EventSystem 上的唯一拦截器，音频根在此转交（主菜单阶段整局容器尚未构建）
             UI_ClickSfx clickSfx = GetComponentInChildren<UI_ClickSfx>(true);
             if (clickSfx) clickSfx.Bind(_audio);
@@ -254,60 +260,18 @@ namespace _DreamKeep.CommonPresentation
             else await _startSegment(first);
         }
 
-        // 仿 SegmentSceneLoader 范式：待激活态加载 → 临时接管输入 → 关 Run 内相机/EventSystem/AudioListener、
-        // 画布补常驻相机 → 找 autoRun 关闭的整局 scope（不 Build，交给调用方在委托注入后手动 Build）。
-        // 与 SegmentSceneLoader.LoadSegmentAsync 是同构片段（差别只在 EventSystem 的 try/finally 与 scope 构建时机），改一处必看另一处。
+        // 装载与场景修补统一走 SceneLoadUtil（与段装载同一条序列）；本类只判"整局 scope 是否在场"，
+        // scope 的 Build 仍留在调用方——Build 回调要把段编排者入口注入本类，顺序不能反。
         private async UniTask<bool> LoadRunSceneAsync()
         {
-            AsyncOperation load = SceneManager.LoadSceneAsync(_runSceneName, LoadSceneMode.Additive);
-            if (load == null)
+            _runScene = await SceneLoadUtil.LoadPreparedAsync(_runSceneName, _camera, destroyCancellationToken);
+            if (!_runScene.IsValid())
             {
-                Debug.LogError($"[{nameof(MainMenuFlow)}] 场景 {_runSceneName} 不在构建列表，无法进局");
+                Debug.LogError($"[{nameof(MainMenuFlow)}] 场景 {_runSceneName} 加载失败（不在构建列表或激活后取不到句柄），无法进局");
                 return false;
             }
 
-            load.allowSceneActivation = false;
-            await UniTask.WaitUntil(() => load.progress >= 0.9f);
-
-            // 激活前临时关常驻 EventSystem（此刻全局列表为空），激活后再关 Run 内的、最后恢复常驻：
-            // 全程至多一个 active EventSystem，从根上避免 "There can be only one active Event System"
-            EventSystem resident = EventSystem.current;
-            if (resident) resident.enabled = false;
-
-            try
-            {
-                load.allowSceneActivation = true;
-                await load.ToUniTask();
-
-                Scene newScene = SceneManager.GetSceneByName(_runSceneName);
-                if (!newScene.IsValid())
-                {
-                    Debug.LogError($"[{nameof(MainMenuFlow)}] 场景 {_runSceneName} 激活后取不到句柄");
-                    return false;
-                }
-
-                _runScene = newScene;
-
-                // 关掉 Run 自带相机 / EventSystem / AudioListener（组件级，资产仍保留供编辑查看）
-                foreach (GameObject root in newScene.GetRootGameObjects())
-                {
-                    foreach (Camera cam in root.GetComponentsInChildren<Camera>(true)) cam.enabled = false;
-                    foreach (EventSystem es in root.GetComponentsInChildren<EventSystem>(true)) es.enabled = false;
-                    foreach (AudioListener al in root.GetComponentsInChildren<AudioListener>(true)) al.enabled = false;
-                }
-
-                // Run 内画布先补常驻相机（必须在 Build 之前：装配期实例会缓存 canvas.worldCamera）
-                foreach (GameObject root in newScene.GetRootGameObjects())
-                foreach (Canvas canvas in root.GetComponentsInChildren<Canvas>(true))
-                    canvas.worldCamera = _camera;
-
-                return FindRunScope(newScene) != null;
-            }
-            finally
-            {
-                // 常驻 EventSystem 只在这里恢复：早退与异常都不许让主菜单失去输入
-                if (resident) resident.enabled = true;
-            }
+            return FindRunScope(_runScene) != null;
         }
 
         // Run 场景里唯一 autoRun 关闭的整局 scope：就地手动 Build，Build 回调负责把段编排者入口注入本类
@@ -320,6 +284,9 @@ namespace _DreamKeep.CommonPresentation
                 return;
             }
 
+            // 常驻服务必须在 Build 之前转交：整局容器装配期就会解析音频根与抖动驱动
+            if (runScope is RunLifetimeScope scope) scope.BindPersistentServices(_audio, _shakeDriver);
+            else Debug.LogError($"[{nameof(MainMenuFlow)}] 整局 scope 不是 {nameof(RunLifetimeScope)}，常驻服务无法转交");
             runScope.Build();
         }
 

@@ -7,29 +7,22 @@ using _DreamKeep.Utility;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>整局状态读档重建转换器：把读写袋里的平行表还原成 MapGraph、Player 与 Rng，
-    /// 再经 internal 读档构造器造出 RunState。卡组只按「配置 GUID + 是否升级」重建，词条与数值补丁由烘焙期决定。</summary>
+    /// 再经 internal 读档构造器造出 RunState。卡组只按「配置 GUID + 是否升级」重建，词条与数值补丁由烘焙期决定。
+    /// 键名一律取 <see cref="RunStateSaveKeys"/>：写读两侧共用同一组常量，不在本类出现字面量。</summary>
     public static class RunStateRestore
     {
-        private const string KeyGold = "gold";
-        private const string KeyFloor = "floor";
-        private const string KeyRemovals = "removals";
-        private const string KeyElapsed = "elapsed";
-        private const string KeyRng = "rng";
-        private const string KeyStart = "start";
-        private const string KeyCleared = "cleared";
-
         #region 拍平整局：标量、三份配置、地图平行表与玩家清单
 
         public static void Capture(RunState run_, ISaveWriter writer_)
         {
-            writer_.Write(KeyGold, run_.Gold);
-            writer_.Write(KeyFloor, run_.Floor);
-            writer_.Write(KeyRemovals, run_.CardRemovalsUsed);
-            writer_.Write(KeyElapsed, run_.ElapsedSeconds);
-            writer_.Write(KeyRng, run_.Rng.State);
-            writer_.Write("playerConfig", GuidOf(run_.Config));
-            writer_.Write("mapConfig", GuidOf(run_.MapConfig));
-            writer_.Write("fallbackPool", GuidOf(run_.FallbackRelicPool));
+            writer_.Write(RunStateSaveKeys.Gold, run_.Gold);
+            writer_.Write(RunStateSaveKeys.Floor, run_.Floor);
+            writer_.Write(RunStateSaveKeys.Removals, run_.CardRemovalsUsed);
+            writer_.Write(RunStateSaveKeys.Elapsed, run_.ElapsedSeconds);
+            writer_.Write(RunStateSaveKeys.Rng, run_.Rng.State);
+            writer_.Write(RunStateSaveKeys.PlayerConfig, GuidOf(run_.Config));
+            writer_.Write(RunStateSaveKeys.MapConfig, GuidOf(run_.MapConfig));
+            writer_.Write(RunStateSaveKeys.FallbackPool, GuidOf(run_.FallbackRelicPool));
             CaptureMap(run_.Map, writer_);
             CapturePlayer(run_.Player, writer_);
             CapturePendingRewards(run_.PendingRewards, writer_);
@@ -41,9 +34,9 @@ namespace _DreamKeep.RuntimeData
 
         public static void ApplyScalars(RunState run_, ISaveReader reader_)
         {
-            run_.RestoreScalars(reader_.Read(KeyGold, 0), reader_.Read(KeyFloor, 1),
-                reader_.Read(KeyRemovals, 0), reader_.Read(KeyElapsed, 0d),
-                reader_.Read<uint>(KeyRng, 0u));
+            run_.RestoreScalars(reader_.Read(RunStateSaveKeys.Gold, 0), reader_.Read(RunStateSaveKeys.Floor, 1),
+                reader_.Read(RunStateSaveKeys.Removals, 0), reader_.Read(RunStateSaveKeys.Elapsed, 0d),
+                reader_.Read<uint>(RunStateSaveKeys.Rng, 0u));
             run_.SetPendingRewards(BuildPendingRewards(reader_, SaveService.Catalog));
         }
 
@@ -55,9 +48,10 @@ namespace _DreamKeep.RuntimeData
             SO_RelicPool fallbackPool_)
         {
             SO_SaveCatalog catalog = SaveService.Catalog;
-            SO_Player config = Resolve(reader_.Read<string>("playerConfig", null), catalog, playerConfig_);
-            SO_MapGenerationConfig mapConfig = Resolve(reader_.Read<string>("mapConfig", null), catalog, mapConfig_);
-            SO_RelicPool fallback = Resolve(reader_.Read<string>("fallbackPool", null), catalog, fallbackPool_);
+            SO_Player config = Resolve(reader_.Read<string>(RunStateSaveKeys.PlayerConfig, null), catalog, playerConfig_);
+            SO_MapGenerationConfig mapConfig =
+                Resolve(reader_.Read<string>(RunStateSaveKeys.MapConfig, null), catalog, mapConfig_);
+            SO_RelicPool fallback = Resolve(reader_.Read<string>(RunStateSaveKeys.FallbackPool, null), catalog, fallbackPool_);
 
             MapGraph map = BuildMap(reader_);
             Player player = BuildPlayer(reader_, catalog);
@@ -106,19 +100,19 @@ namespace _DreamKeep.RuntimeData
             foreach (MapNode node in graph_.ClearedNodes)
                 if (index.TryGetValue(node, out int at)) cleared.Add(at);
 
-            writer_.Write("map.width", graph_.Width);
-            writer_.Write("map.rows", graph_.Rows);
-            writer_.Write("map.cols", cols);
-            writer_.Write("map.rowsData", rows);
-            writer_.Write("map.types", types);
-            writer_.Write("map.revealed", revealed);
-            writer_.Write("map.modifiable", modifiable);
-            writer_.Write("map.edges", edges.ToArray());
-            writer_.Write(KeyStart, IndexOf(index, graph_.StartNode));
-            writer_.Write("map.boss", IndexOf(index, graph_.BossNode));
-            writer_.Write("map.current", IndexOf(index, graph_.CurrentNode));
-            writer_.Write(KeyCleared, cleared.ToArray());
-            writer_.Write("map.pending", graph_.SegmentPending);
+            writer_.Write(RunStateSaveKeys.MapWidth, graph_.Width);
+            writer_.Write(RunStateSaveKeys.MapRows, graph_.Rows);
+            writer_.Write(RunStateSaveKeys.MapCols, cols);
+            writer_.Write(RunStateSaveKeys.MapRowsData, rows);
+            writer_.Write(RunStateSaveKeys.MapTypes, types);
+            writer_.Write(RunStateSaveKeys.MapRevealed, revealed);
+            writer_.Write(RunStateSaveKeys.MapModifiable, modifiable);
+            writer_.Write(RunStateSaveKeys.MapEdges, edges.ToArray());
+            writer_.Write(RunStateSaveKeys.MapStart, IndexOf(index, graph_.StartNode));
+            writer_.Write(RunStateSaveKeys.MapBoss, IndexOf(index, graph_.BossNode));
+            writer_.Write(RunStateSaveKeys.MapCurrent, IndexOf(index, graph_.CurrentNode));
+            writer_.Write(RunStateSaveKeys.MapCleared, cleared.ToArray());
+            writer_.Write(RunStateSaveKeys.MapPending, graph_.SegmentPending);
 
             void AddNode(MapNode node_)
             {
@@ -134,19 +128,19 @@ namespace _DreamKeep.RuntimeData
 
         private static MapGraph BuildMap(ISaveReader reader_)
         {
-            int width = reader_.Read("map.width", 0);
-            int rows = reader_.Read("map.rows", 0);
-            int[] cols = reader_.Read<int[]>("map.cols", Array.Empty<int>());
-            int[] nodeRows = reader_.Read<int[]>("map.rowsData", Array.Empty<int>());
-            int[] types = reader_.Read<int[]>("map.types", Array.Empty<int>());
-            int[] revealed = reader_.Read<int[]>("map.revealed", Array.Empty<int>());
-            bool[] modifiable = reader_.Read<bool[]>("map.modifiable", Array.Empty<bool>());
-            int[] edges = reader_.Read<int[]>("map.edges", Array.Empty<int>());
-            int startIndex = reader_.Read(KeyStart, -1);
-            int bossIndex = reader_.Read("map.boss", -1);
-            int currentIndex = reader_.Read("map.current", -1);
-            int[] clearedIndexes = reader_.Read<int[]>(KeyCleared, Array.Empty<int>());
-            bool pending = reader_.Read("map.pending", false);
+            int width = reader_.Read(RunStateSaveKeys.MapWidth, 0);
+            int rows = reader_.Read(RunStateSaveKeys.MapRows, 0);
+            int[] cols = reader_.Read<int[]>(RunStateSaveKeys.MapCols, Array.Empty<int>());
+            int[] nodeRows = reader_.Read<int[]>(RunStateSaveKeys.MapRowsData, Array.Empty<int>());
+            int[] types = reader_.Read<int[]>(RunStateSaveKeys.MapTypes, Array.Empty<int>());
+            int[] revealed = reader_.Read<int[]>(RunStateSaveKeys.MapRevealed, Array.Empty<int>());
+            bool[] modifiable = reader_.Read<bool[]>(RunStateSaveKeys.MapModifiable, Array.Empty<bool>());
+            int[] edges = reader_.Read<int[]>(RunStateSaveKeys.MapEdges, Array.Empty<int>());
+            int startIndex = reader_.Read(RunStateSaveKeys.MapStart, -1);
+            int bossIndex = reader_.Read(RunStateSaveKeys.MapBoss, -1);
+            int currentIndex = reader_.Read(RunStateSaveKeys.MapCurrent, -1);
+            int[] clearedIndexes = reader_.Read<int[]>(RunStateSaveKeys.MapCleared, Array.Empty<int>());
+            bool pending = reader_.Read(RunStateSaveKeys.MapPending, false);
             if (width <= 0 || rows <= 0 || cols.Length == 0 || startIndex < 0 || bossIndex < 0)
                 throw new InvalidOperationException("[RunStateRestore] 地图存档数据不完整，无法重建");
 
@@ -178,11 +172,11 @@ namespace _DreamKeep.RuntimeData
 
         private static void CapturePlayer(Player player_, ISaveWriter writer_)
         {
-            writer_.Write("player.name", player_.Creature.ActorName);
-            writer_.Write("player.hp", player_.Creature.CurrentHp);
-            writer_.Write("player.maxHp", player_.Creature.MaxHp);
-            writer_.Write("player.relics", GuidsOf(player_.Relics));
-            writer_.Write("player.potions", GuidsOf(player_.PotionSlots));
+            writer_.Write(RunStateSaveKeys.PlayerName, player_.Creature.ActorName);
+            writer_.Write(RunStateSaveKeys.PlayerHp, player_.Creature.CurrentHp);
+            writer_.Write(RunStateSaveKeys.PlayerMaxHp, player_.Creature.MaxHp);
+            writer_.Write(RunStateSaveKeys.PlayerRelics, GuidsOf(player_.Relics));
+            writer_.Write(RunStateSaveKeys.PlayerPotions, GuidsOf(player_.PotionSlots));
 
             List<string> deck = new(player_.Deck.Count);
             List<bool> upgraded = new(player_.Deck.Count);
@@ -192,8 +186,8 @@ namespace _DreamKeep.RuntimeData
                 upgraded.Add(card.IsUpgraded);
             }
 
-            writer_.Write("player.deck", deck.ToArray());
-            writer_.Write("player.deckUpgraded", upgraded.ToArray());
+            writer_.Write(RunStateSaveKeys.PlayerDeck, deck.ToArray());
+            writer_.Write(RunStateSaveKeys.PlayerDeckUpgraded, upgraded.ToArray());
             List<string> keys = new();
             List<int> values = new();
             foreach (KeyValuePair<SO_Relic, int> pair in player_.RelicCounters)
@@ -204,8 +198,8 @@ namespace _DreamKeep.RuntimeData
                 values.Add(pair.Value);
             }
 
-            writer_.Write("player.counterKeys", keys.ToArray());
-            writer_.Write("player.counterValues", values.ToArray());
+            writer_.Write(RunStateSaveKeys.PlayerCounterKeys, keys.ToArray());
+            writer_.Write(RunStateSaveKeys.PlayerCounterValues, values.ToArray());
         }
 
         #endregion
@@ -214,23 +208,23 @@ namespace _DreamKeep.RuntimeData
 
         private static Player BuildPlayer(ISaveReader reader_, SO_SaveCatalog catalog_)
         {
-            string name = reader_.Read("player.name", string.Empty);
-            int maxHp = reader_.Read("player.maxHp", 1);
+            string name = reader_.Read(RunStateSaveKeys.PlayerName, string.Empty);
+            int maxHp = reader_.Read(RunStateSaveKeys.PlayerMaxHp, 1);
             Player player = new(name, maxHp, Array.Empty<SO_Relic>(), Array.Empty<SO_Potion>());
-            player.Creature.RestoreVitals(reader_.Read("player.hp", maxHp), maxHp);
+            player.Creature.RestoreVitals(reader_.Read(RunStateSaveKeys.PlayerHp, maxHp), maxHp);
 
-            foreach (string guid in reader_.Read<string[]>("player.relics", Array.Empty<string>()))
+            foreach (string guid in reader_.Read<string[]>(RunStateSaveKeys.PlayerRelics, Array.Empty<string>()))
             {
                 SO_Relic relic = catalog_?.Find<SO_Relic>(guid);
                 if (relic != null) player.AddRelic(relic);
             }
 
-            string[] potions = reader_.Read<string[]>("player.potions", Array.Empty<string>());
+            string[] potions = reader_.Read<string[]>(RunStateSaveKeys.PlayerPotions, Array.Empty<string>());
             for (int i = 0; i < potions.Length; i++)
                 player.RestorePotionSlot(i, catalog_?.Find<SO_Potion>(potions[i]));
 
-            string[] deck = reader_.Read<string[]>("player.deck", Array.Empty<string>());
-            bool[] upgraded = reader_.Read<bool[]>("player.deckUpgraded", Array.Empty<bool>());
+            string[] deck = reader_.Read<string[]>(RunStateSaveKeys.PlayerDeck, Array.Empty<string>());
+            bool[] upgraded = reader_.Read<bool[]>(RunStateSaveKeys.PlayerDeckUpgraded, Array.Empty<bool>());
             for (int i = 0; i < deck.Length; i++)
             {
                 SO_Card source = catalog_?.Find<SO_Card>(deck[i]);
@@ -240,8 +234,8 @@ namespace _DreamKeep.RuntimeData
                 player.AddCard(card);
             }
 
-            string[] counterKeys = reader_.Read<string[]>("player.counterKeys", Array.Empty<string>());
-            int[] counterValues = reader_.Read<int[]>("player.counterValues", Array.Empty<int>());
+            string[] counterKeys = reader_.Read<string[]>(RunStateSaveKeys.PlayerCounterKeys, Array.Empty<string>());
+            int[] counterValues = reader_.Read<int[]>(RunStateSaveKeys.PlayerCounterValues, Array.Empty<int>());
             for (int i = 0; i < counterKeys.Length && i < counterValues.Length; i++)
             {
                 SO_Relic relic = catalog_?.Find<SO_Relic>(counterKeys[i]);
@@ -282,13 +276,13 @@ namespace _DreamKeep.RuntimeData
                 }
             }
 
-            writer_.Write("reward.kinds", kinds);
-            writer_.Write("reward.gold", gold);
-            writer_.Write("reward.potions", potions);
-            writer_.Write("reward.relics", relics);
-            writer_.Write("reward.cardGroup", cardGroups.ToArray());
-            writer_.Write("reward.cardSource", cardSources.ToArray());
-            writer_.Write("reward.cardUpgraded", cardUpgraded.ToArray());
+            writer_.Write(RunStateSaveKeys.RewardKinds, kinds);
+            writer_.Write(RunStateSaveKeys.RewardGold, gold);
+            writer_.Write(RunStateSaveKeys.RewardPotions, potions);
+            writer_.Write(RunStateSaveKeys.RewardRelics, relics);
+            writer_.Write(RunStateSaveKeys.RewardCardGroup, cardGroups.ToArray());
+            writer_.Write(RunStateSaveKeys.RewardCardSource, cardSources.ToArray());
+            writer_.Write(RunStateSaveKeys.RewardCardUpgraded, cardUpgraded.ToArray());
         }
 
         #endregion
@@ -297,14 +291,14 @@ namespace _DreamKeep.RuntimeData
 
         private static IReadOnlyList<RunReward> BuildPendingRewards(ISaveReader reader_, SO_SaveCatalog catalog_)
         {
-            int[] kinds = reader_.Read<int[]>("reward.kinds", Array.Empty<int>());
+            int[] kinds = reader_.Read<int[]>(RunStateSaveKeys.RewardKinds, Array.Empty<int>());
             if (kinds.Length == 0) return null;
-            int[] gold = reader_.Read<int[]>("reward.gold", Array.Empty<int>());
-            string[] potions = reader_.Read<string[]>("reward.potions", Array.Empty<string>());
-            string[] relics = reader_.Read<string[]>("reward.relics", Array.Empty<string>());
-            int[] cardGroups = reader_.Read<int[]>("reward.cardGroup", Array.Empty<int>());
-            string[] cardSources = reader_.Read<string[]>("reward.cardSource", Array.Empty<string>());
-            bool[] cardUpgraded = reader_.Read<bool[]>("reward.cardUpgraded", Array.Empty<bool>());
+            int[] gold = reader_.Read<int[]>(RunStateSaveKeys.RewardGold, Array.Empty<int>());
+            string[] potions = reader_.Read<string[]>(RunStateSaveKeys.RewardPotions, Array.Empty<string>());
+            string[] relics = reader_.Read<string[]>(RunStateSaveKeys.RewardRelics, Array.Empty<string>());
+            int[] cardGroups = reader_.Read<int[]>(RunStateSaveKeys.RewardCardGroup, Array.Empty<int>());
+            string[] cardSources = reader_.Read<string[]>(RunStateSaveKeys.RewardCardSource, Array.Empty<string>());
+            bool[] cardUpgraded = reader_.Read<bool[]>(RunStateSaveKeys.RewardCardUpgraded, Array.Empty<bool>());
 
             List<RunReward> rewards = new(kinds.Length);
             for (int i = 0; i < kinds.Length; i++)

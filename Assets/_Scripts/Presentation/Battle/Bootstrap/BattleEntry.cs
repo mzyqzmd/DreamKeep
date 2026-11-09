@@ -70,7 +70,7 @@ namespace _DreamKeep.Presentation
             _segmentEvents.Register<BAE_BattleExited>(exited_ => _segmentManager.FinishSegment());
 
             // 领奖中读档：本段只作背景，不生成单位、不跑战斗循环，直接复原同一批奖励
-            if (_run.PendingRewards is { Count: > 0 })
+            if (_run.HasPendingRewards)
             {
                 _stage.HideHud();
                 ShowRestoreRewards();

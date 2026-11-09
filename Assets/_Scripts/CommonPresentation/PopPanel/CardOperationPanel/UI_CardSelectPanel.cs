@@ -61,7 +61,7 @@ namespace _DreamKeep.CommonPresentation
 
         private void Awake()
         {
-            _confirmButton.onClick.AddListener(OnConfirmClicked);
+            if (UseConfirmButton && _confirmButton) _confirmButton.onClick.AddListener(OnConfirmClicked);
             _closeButton.onClick.AddListener(OnPanelClose);
             OnAwake();
         }
@@ -71,7 +71,7 @@ namespace _DreamKeep.CommonPresentation
 
         private void OnDestroy()
         {
-            _confirmButton.onClick.RemoveListener(OnConfirmClicked);
+            if (UseConfirmButton && _confirmButton) _confirmButton.onClick.RemoveListener(OnConfirmClicked);
             _closeButton.onClick.RemoveListener(OnPanelClose);
             _confirmTween?.Kill();
             OnDestroyed();
@@ -103,9 +103,16 @@ namespace _DreamKeep.CommonPresentation
             Show(); // 交由 UI_Panel.Show 触发 OnShown 构建列表
         }
 
-        /// <summary>等玩家做完：null = 关闭取消；空列表 = 完成但一张都没选。</summary>
+        /// <summary>等玩家做完：null = 关闭取消；空列表 = 完成但一张都没选。
+        /// 无第一层确认键的板型遇到「没有可选项」时直接完成，别把流程挂在没有人能点的键上。</summary>
         public async UniTask<IReadOnlyList<CardModel>> WaitResultAsync()
         {
+            if (!UseConfirmButton && _target == 0)
+            {
+                Hide();
+                return Array.Empty<CardModel>();
+            }
+
             _result = new UniTaskCompletionSource<IReadOnlyList<CardModel>>();
             return await _result.Task;
         }
@@ -136,7 +143,7 @@ namespace _DreamKeep.CommonPresentation
             }
 
             OnShownExtra();
-            ShowConfirm(_selected.Count == _target); // 目标为 0 即开板就算「选满」
+            if (UseConfirmButton) ShowConfirm(_selected.Count == _target); // 目标为 0 即开板就算「选满」
         }
 
         #region 子类钩子：只回答「选哪些卡、确认后做什么、演出播哪个」
@@ -170,6 +177,9 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>每次清场时回调：收起子类特有层（如第二层对照预览）。</summary>
         protected virtual void OnResetVisual() { }
 
+        /// <summary>是否需要第一层确认键：删牌面板需要；升级面板选满即跳对照页、第二层确认即升级完成，第一层不再放确认键。</summary>
+        protected virtual bool UseConfirmButton => true;
+
         /// <summary>满选后再点未选卡是否踢掉最早选中：删牌面板沿用 FIFO，升级面板关闭后改为忽略。</summary>
         protected virtual bool ReplaceOldestWhenFull => true;
 
@@ -187,6 +197,15 @@ namespace _DreamKeep.CommonPresentation
             for (int i = 0; i < _selected.Count; i++) cards.Add(_selected[i].Card);
             _selected.Clear();
             return cards;
+        }
+
+        /// <summary>清空当前选中并熄灭涟漪：升级对照页返回时让玩家从头重选。</summary>
+        protected void ClearSelection()
+        {
+            for (int i = 0; i < _selected.Count; i++) _selected[i].SetRippleVisible(false);
+            _selected.Clear();
+            if (UseConfirmButton) ShowConfirm(false);
+            OnSelectionChanged();
         }
 
         /// <summary>收场并交付：关板 → 横向均布演出一遍 → 交还结果；演出异常也交付，调用方不会永久挂住。</summary>
@@ -238,7 +257,7 @@ namespace _DreamKeep.CommonPresentation
                 return; // 满选且子类关闭替换：忽略这次点击
             }
 
-            ShowConfirm(_selected.Count == _target);
+            if (UseConfirmButton) ShowConfirm(_selected.Count == _target);
             OnSelectionChanged();
         }
 
@@ -275,9 +294,10 @@ namespace _DreamKeep.CommonPresentation
         private void WriteConfirmScale(float value_) =>
             _confirmButton.transform.localScale = new Vector3(value_, value_, 1f);
 
-        // 复位到隐藏态：杀补间、缩放归零并失活（开板与失活兜底共用）
+        // 复位到隐藏态：杀补间、缩放归零并失活（开板与失活兜底共用）；不需要确认键的板型直接跳过
         private void ResetConfirm()
         {
+            if (!UseConfirmButton) return;
             _confirmTween?.Kill();
             _confirmShown = false;
             WriteConfirmScale(0f);

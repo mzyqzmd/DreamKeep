@@ -8,7 +8,7 @@ namespace _DreamKeep.GameBattle
     /// 各订阅者初始化时自注册关心的处理器，同一类型可被多处订阅、同条事件内并行 await（一波演出同时开播、等到最长的那个），
     /// 未注册的事件静默忽略。订阅者只能读事件、不许改事件已表达的结算结果。
     /// 与 GameRun 的 SegmentEventDispatcher 是同构实现（Register 两个重载 + DispatchAsync 逐字相同），
-    /// 差异只在基类型用 IBattleEvent、且有批量播放与注册数查询；两份刻意不合并（GameBattle 不能反引 GameRun），改一处必改另一处。</summary>
+    /// 差异只在基类型用 IBattleEvent、且有批量播放；两份刻意不合并（GameBattle 不能反引 GameRun），改一处必改另一处。</summary>
     public class BattleEventDispatcher
     {
         private readonly Dictionary<Type, List<Func<IBattleEvent, UniTask>>> _handlers = new();
@@ -29,10 +29,6 @@ namespace _DreamKeep.GameBattle
                 handler_(e);
                 return UniTask.CompletedTask;
             });
-
-        /// <summary>装配期断言用：某事件类型的处理器注册数。只读查询，不改分派行为。</summary>
-        public int CountHandlers<TEvent>() where TEvent : IBattleEvent =>
-            _handlers.TryGetValue(typeof(TEvent), out List<Func<IBattleEvent, UniTask>> handlers) ? handlers.Count : 0;
 
         /// <summary>顺序播放一批事件：逐条 await，一条事件内部的各处理器并行，未注册的事件跳过。</summary>
         public async UniTask PlayAsync(IReadOnlyList<IBattleEvent> events_)
