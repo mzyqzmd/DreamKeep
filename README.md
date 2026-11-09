@@ -34,9 +34,9 @@
 
 ## 架构概览
 
-一句话总纲：**八个程序集、一张无环依赖 DAG、双层四通道解耦（战斗级 + 场景段级）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处；六个场景阶段（先古之民 / 休息 / 战斗 / 宝箱 / 商店 / 事件）的运行时逻辑全部归位 `GameRun` 域，每段配 `PresentationBridge`（事实下行 + 命令门面上行），表现层只做编排、不持业务规则；整局进度由 `RunState` 持有，地图节点（`StandardMapGenerator`）驱动阶段叠加编排。**
+一句话总纲：**八个程序集、一张无环依赖 DAG、双层四通道解耦（战斗级 + 场景段级）；配置只读一次即烘焙为运行时对象，规则与状态只存在一处；六个场景阶段（先古之民 / 休息 / 战斗 / 宝箱 / 商店 / 事件）的运行时逻辑全部归位 `GameRun` 域，每段配 `PresentationBridge`（事实下行 + 命令门面上行），表现层只做编排、不持业务规则；整局进度由 `RunState` 持有，地图节点（`StandardMapGenerator`）驱动阶段叠加编排；存档收敛为三处检查点写入、键经 `RunStateSaveKeys` 集中管理；引擎级机制（输入 / 场景装载 / 音频 / 存档）收拢至 `EngineUtility/_GameSystem`。**
 
-> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **96 / 100（A）**）。
+> 详细逐文件评审见 [Doc/架构分析报告.md](Doc/架构分析报告.md)（综合评分 **95 / 100（A）**）。
 
 ### 程序集与依赖（asmdef 强制，已用 GUID 反解核验无环）
 
@@ -61,13 +61,13 @@
 | 程序集                    | 职责                        | 关键内容                                                                                                  |
 | ---------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
 | **Utility**            | 纯 C# 通用件（零业务、零引擎依赖）       | 状态机 `StateMachine<T>`、确定性随机 `Rng`、可修正数值引擎 `ModifiableStat`、纯 C# 对象池 `ObjectPool<T>`                  |
-| **EngineUtility**      | 引擎级通用件（依赖 UnityEngine，不含业务） | 组件池 `MonoObjectPool<T>`、贝塞尔 `Curve`、UI 几何 `UiGeometry`、补间 `UiTween`、悬停执行器、按钮/面板抽象基类、`UI_SingletonObject`（零引用死代码） |
-| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据、**遗物 `SO_Relic` ~60 具体 `SO_*` + 2 池**、**药水 `SO_Potion` ~15 具体**、**休息选项 `SO_RestOption` + 4 具体**、**事件系统 `SO_Event` + `EED_*` 效果数据 ~10 + 5 具体事件**、**商店 `SO_ShopPrices`**、地图配置 `SO_Map`/`MapConfig` |
-| **RuntimeData**        | 运行时对象（纯 C#，配置只读一次即烘焙）    | `Creature`（HP/MaxHp，setter 抛 `HpChanged`/`Healed`）/ `Player`（3 槽药水 + 持卡组/遗物引用）/ `CardModel`(`CM_Runtime`+`CM_ValuePatch`) / `CardPile`、`BattlePerk`+`BP_*`、`CardAffix`+`CA_*`、烘焙器、`EI_*` 意图 |
-| **GameBattle**         | 战斗域（流程、规则、桥）              | 八阶段状态机、`BattleAction`(`BA_*`)+`ActionSystem`、状态介入层 `Hook`、三个 Resolver、命令/事件/查询四桥、**「句柄拆分 + 收尾裁决下沉」**（胜负裁定移入域 `BattleContext`+`BP_BattleFinish`）、分派守卫 |
-| **GameRun**            | 跑图/局外域（**整局领域层，已段域化**）     | `RunState`（受控写入口 `GainGold`/`SpendGold`/`RestorePlayerHp`/`AddCard`/`AddRelic`/`TryAddPotion`/`EnterMapNode`/`CompleteMapNode`）+ `RunFlow`（节点→段映射）+ **六段 Loop/Session**（`AncientLoop`/`RestLoop`/`ShopSession`/`EventSession`/`ChestSession`/`BattleSession`，每段配 `PresentationBridge` 事实/命令门面）+ **地图系统**（`StandardMapGenerator` + `MapGraph`/`MapNode`）+ 遗物 `RE_*`(51) + `RelicBaker`(`_ => throw` 兜底) |
-| **CommonPresentation** | 通用表现层（与 `Presentation` **平级**，被其依赖） | `UI_CardFace`/`UI_ConcreteCardView`/`UI_CardSelectPanel`、`UI_HoverTip`+`PopFactory`、`UI_NumberPopTip`、VFX 族（`UI_SmithForgeVfx`）、`UI_RewardPanel`（兑现奖励，见「已知未完成」K1） |
-| **Presentation**       | 各场景阶段专属表现与装配（**六阶段 + 整局层 + 地图**） | Battle（单位/卡牌/HUD/瞄准/弹层特效）；Ancient/Rest/Chest/Shop/Event 五段 UI（均经 `XxxCommandDispatcher` 上发、订阅 `SegmentEventDispatcher` 事实）；Run 整局层（`UI_TopBar` + `UI_MapView` 地图 + `SegmentSceneManager`）；7 个 `*LifetimeScope` 隔离装配 |
+| **EngineUtility**      | 引擎级通用件（依赖 UnityEngine，不含业务，**零域层依赖**） | `MonoObjectPool<T>`、贝塞尔 `Curve`、UI 几何 `UiGeometry`/补间 `UiTween`、`UI_RowScaleFitter`、`UI_SingletonObject`（零引用死代码）；**`_GameSystem`** 四类：`Input`（`PointerInput`/`PointerCursor`）、`Scene`（`SceneLoadUtil`）、`Audio`（`AudioRoot` + cue/voice/SO 资产）、`Save`（`SaveService` + Interface/Model/Catalog/Enum）；含 3 处 `Update`（音频 tick/光标态/布局拟合），均为引擎机制 |
+| **ConfigData**         | 配置资产（策划可编辑，只有"做什么、做多少"）   | `SO_Player` / `SO_Enemy` / `SO_Card`、状态资产、`AD_*` 词条 / `UD_*` 升级补丁 / 意图数据、**遗物 `SO_Relic` ~60 具体 `SO_*` + 2 池**、**药水 `SO_Potion` ~15 具体**、**休息选项 `SO_RestOption` + 4 具体**、**事件系统 `SO_Event` + `EED_*` 效果数据 ~10 + 5 具体事件**、**商店 `SO_ShopPrices`**、地图配置 `SO_Map`、**双阶段 Boss `SO_CeremonialBeast`（纯资产，零方法）** |
+| **RuntimeData**        | 运行时对象（纯 C#，配置只读一次即烘焙）    | `Creature`（HP/MaxHp，setter 抛 `HpChanged`/`Healed`）/ `Player`（3 槽药水 + 持卡组/遗物引用，**卡/遗物/药水写入已下沉至本实体**）/ `CardModel`(`CM_Runtime`+`CM_ValuePatch`) / `CardPile`、`BattlePerk`+`BP_*`、`CardAffix`+`CA_*`、烘焙器、`EI_*` 意图；**`Reward`（`RewardRoller` 已去遭遇化、`RunReward`）**；**`Run/Save`（`RunStateRestore` + `RunStateSaveKeys` 集中键）** |
+| **GameBattle**         | 战斗域（流程、规则、桥）              | 八阶段状态机、`BattleAction`(`BA_*`)+`ActionSystem`、状态介入层 `Hook`、三个 Resolver、命令/事件/查询四桥、**「句柄拆分 + 收尾裁决下沉」**（胜负裁定移入域 `BattleContext`+`BP_BattleFinish`）、分派守卫；`BattleSetup.LoadPhaseTwo` 支持双阶段 Boss 二阶段意图烘焙（普通敌人早返回） |
+| **GameRun**            | 跑图/局外域（**整局领域层，已段域化**）     | `RunState`（受控写入口 `GainGold`/`SpendGold`/`RestoreGoldTo`/`SpendPlayerHp`/`RestorePlayerHp`/`RestorePlayerHpTo`/`EnterMapNode`/`CompleteMapNode`/`SetSegmentPending`/`SetPendingRewards`/`ClearPendingRewards`/`TickTime`；标量/流程控制已收敛，卡/遗物/药水写入下沉到 `Player`）+ `RunFlow`（节点→段映射）+ **六段 Loop/Session**（`AncientLoop`/`RestLoop`/`ShopSession`/`EventSession`/`ChestSession`/`BattleSession`，每段配 `PresentationBridge` 事实/命令门面）+ **地图系统**（`StandardMapGenerator` + `MapGraph`/`MapNode`）+ **`RelicRoller`**（遗物抽取下沉至此）+ `RE_*` + `RelicBaker`(`_ => throw` 兜底) |
+| **CommonPresentation** | 通用表现层（与 `Presentation` **平级**，被其依赖） | `UI_CardFace`/`UI_ConcreteCardView`/`UI_CardSelectPanel`、`UI_HoverTip`+`PopFactory`、`UI_NumberPopTip`、VFX 族、`UI_RewardPanel`（兑现奖励，见 K1）、**跨段弹板基类 `UI_CardSelectPanel`(368)/`UI_CardUpgradePanel`(173，「满选自动对照」)**、`UI_ClickSfx`（常驻 EventSystem 射线取点击主体播 UiClick） |
+| **Presentation**       | 各场景阶段专属表现与装配（**六阶段 + 整局层 + 地图**） | Battle（单位/卡牌/HUD/瞄准/弹层特效）；Ancient/Rest/Chest/Shop/Event 五段 UI（均经 `XxxCommandDispatcher` 上发、订阅 `SegmentEventDispatcher` 事实）；Run 整局层（`UI_TopBar` + `UI_MapView`/`UI_MapInk`/`UI_MapCircle` 地图路径圈淡显 + `SegmentSceneManager`）；**`MainMenuFlow` 已归位 `Presentation/_Run/Bootstrap`**；7 个 `*LifetimeScope` 隔离装配 |
 
 ### 双层四通道通信
 
@@ -111,21 +111,21 @@
 - **可复用件放对层。** 只依赖 UnityEngine 的通用工具 → `EngineUtility`；跨场景复用的表现件 → `CommonPresentation`；只有某阶段专属的 → `Presentation/<阶段>/`。
 - **整局进度由 `RunState` 持有，表现层只读（受控写入口除外）。**
 
-### 代码规模（本次评审工作树，`HEAD = 8eac818`）
+### 代码规模（本次评审 `HEAD = 3fdf650`）
 
 | 域                   |      文件 |       行数 |
 | ------------------- | ------: | -------: |
-| Utility             |       7 |      247 |
-| ConfigData          |     165 |    2,745 |
-| RuntimeData         |      43 |    1,754 |
-| EngineUtility       |      16 |      967 |
-| GameBattle          |      77 |    2,482 |
-| GameRun             |     138 |    4,976 |
-| CommonPresentation  |      33 |    3,391 |
-| Presentation        |     105 |    9,345 |
-| **合计**              | **584** | **25,907** |
+| Utility             |       8 |      327 |
+| ConfigData          |     174 |    2,974 |
+| RuntimeData         |      71 |    4,286 |
+| EngineUtility       |      34 |    2,190 |
+| GameBattle          |      85 |    2,734 |
+| GameRun             |     117 |    3,189 |
+| CommonPresentation  |      47 |    4,244 |
+| Presentation        |     118 |   11,231 |
+| **合计**              | **654** | **31,175** |
 
-555 / 584 个文件在 150 行以内（95.0%）。超出的 29 个均为内聚单体：最大 `UI_HandView` 451 / `StandardMapGenerator` 423 / `UI_PotionGroup` 402 / `UI_ShopRugPanel` 387 / `UI_CardBattle` 366 / `UI_CardSelectPanel` 334 / `UI_MapView` 313。
+616 / 654 个文件在 150 行以内（94.2%）。超出的 38 个均为内聚单体：最大 `UI_HandView` 448 / `StandardMapGenerator` 423 / `UI_PotionGroup` 401 / `UI_ShopRugPanel` 398 / `AudioRoot` 378 / `UI_CardSelectPanel` 368 / `UI_CardBattle` 366 / `RunStateRestore` 358 / `MainMenuFlow` 353 / `UI_MapView` 337。
 
 ---
 
@@ -185,6 +185,18 @@
 - **H-1 彻底解决（往期）**：删除 `GameEvent`/`GameRest`/`GameShop` 三个空骨架 asmdef。
 - **分层澄清（往期）**：`CommonPresentation` 与 `Presentation` 平级、`Presentation` 依赖 `CommonPresentation` 为故意设计；`UI_RewardPanel` 经注入 `RunState` 兑现奖励在允许方向上。
 
+### 近期落地（2026-11 上旬，相对上一版报告）
+
+- **存档系统接入与收敛到检查点**：`SaveService` 静态门面 + `RunStateSaveKeys` 集中键管理（D6 已解）、`SaveService` 静态可变字段 6→4（D1 缓解）；写入时机收敛为三处（选点落盘 / 战斗后落盘 / 新局补档），领奖期间不写盘；待领奖励随检查点落盘、读档按同批恢复不重掷。
+- **音频系统接入**：`EngineUtility/_GameSystem/Audio/AudioRoot` 驱动 cue/voice/SO 资产；`UI_ClickSfx` 经 `Bind(AudioRoot)` 注入播放点击声。
+- **输入与场景装载收口**：新输入系统 `PointerInput`/`PointerCursor`（挂常驻 GameRoot，全局生效，场景切换不丢）；装载逻辑迁 `EngineUtility/_GameSystem/Scene/SceneLoadUtil`（旧 `SegmentSceneLoader` 假注释与死 using 已清，F3 已解）。
+- **脚本目录重组**：`EngineUtility/_GameSystem` 将输入 / 场景 / 音频 / 存档收拢为四类引擎子系统；`MainMenuFlow` 从 `CommonPresentation` 归位 `Presentation/_Run/Bootstrap`，using 全部落在 Presentation 允许域内。
+- **奖励去遭遇化**：`RewardRoller` 从战斗遭遇剥离为纯 RuntimeData，仅依赖 `SO_Reward`+`RunState`，掷骰顺序固定、全走 `RunState.Rng` 同种子可复现。
+- **地图路径圈淡显**：`UI_MapView`/`UI_MapInk`/`UI_MapCircle` 历史圈半透明（`_historyCircleAlpha=0.45`），先古 / Boss 不出圈。
+- **升级面板满选自动对照**：`UI_CardUpgradePanel` 选满即 `OpenPreview()` 双排（当前 / 升级）预览，确认才 `upgraded[i].Upgrade()`。
+- **双阶段 Boss**：新增纯资产 `SO_CeremonialBeast`，`BattleSetup.LoadPhaseTwo` 烘焙二阶段意图（普通敌人早返回，行为等价）。
+- **v0.1 发行配置**：补发行构建配置。
+
 ### 已知未完成 / 待收口（功能完整性 + 架构，非全部为缺陷）
 
 | 项 | 状态 |
@@ -196,15 +208,17 @@
 | **K4｜1 处 `StartCoroutine`** | `UI_MapView` 地图选点延迟回调，可改 UniTask/DOTween |
 | **K5｜`UI_SingletonObject` 死代码** | `EngineUtility/UI/UI_SingletonObject`（`DontDestroyOnLoad` 助手，零引用），建议删除 |
 | **K6｜`StatHook`/`SettleHook` 手动 `switch` 分派** | 新增状态需改两处，评估注册表分派 |
-| **K7｜29 文件 >150 行** | 经核验均内聚、非 SRP 违例；新功能优先拆小组件 |
-| **K8｜`TODO`×4 / `Debug.Log`×29** | 发布前收敛 |
+| **K7｜38 文件 >150 行** | 经核验均内聚、非 SRP 违例；新功能优先拆小组件；`Presentation` 已破 11k 行（拆分触发线观察） |
+| **K8｜`TODO`×3 / `Debug.Log`×45** | 发布前收敛（`Debug.Log` 由 29 升至 45，多为诊断） |
+| **D2｜存档根键 = `GetType().FullName`** | `SaveService:113,157` 聚合根键用类型全名，重命名即静默丢档；字段级键已由 `RunStateSaveKeys` 集中、根键未解 |
+| **D4｜`BattleEventDispatcher` 缺 `Unregister`** | 订阅只增不减；每场新建实例、随 scope 销毁回收，单场有界滞留 |
+| **EngineUtility 内 3 处 `Update`** | 音频 tick / 光标态 / 布局拟合，均引擎机制（带差量 / 脏检查守卫），非域逻辑；旧口径「Update 只在表现层」已修订为「Update 仅用于引擎级机制」 |
 | 战斗结束奖励（战败分支） | 胜利分支已打通；**战败分支仍未接**（照旧立即收段） |
 | 卡牌升级正式入口 | 升级数据→烘焙→运行时应用全链路已通；"升级获取途径 / 升级 UI 入口"仍未规划 |
 | 商店 / 金币闭环 | 消费端已就位（金币字段、牌堆视图可复用），金币循环待与事件/地图打通 |
 | 遗物 / 药水（局外持有 / 掉落 / 获取途径） | 战斗内效果已通、`RunState` 持有已就位；商店 / 事件等其它获取途径未做 |
 | 格挡 / 治疗意图数值 | 数据层有 `Amount`，意图图标为占位，玩家无法预判敌人会挡多少 / 回多少 |
-| 音效 | 代码中已留触发点 TODO，音效层尚未开写 |
-| `BattleEventDispatcher.Unregister` | 单位视图销毁后事件处理器仍滞留（单场战斗内有界，靠 null 检查兜住） |
+| 音效（战斗 / 反馈层） | 点击声 `UI_ClickSfx` 已接入；战斗 / 反馈（`BE_*` 订阅播放）音效层尚未开写 |
 | `UI_OneShotVfx` 魔法字符串 | `_clip.name` 当 Animator 状态名（L-1），动画状态改名即静默失效 |
 
 ---
@@ -233,12 +247,13 @@
 4. `BattleEventDispatcher` 增 `Unregister`，单位视图 `OnDestroy` 反注册。
 5. 敌方意图图标补数值展示（与卡面 `CardValueRenderer` 同源）。
 6. 升级正式入口：升级 UI + 获取途径（事件 / 遗物 / 商店）。
-7. 音效层 `Presentation/Feedback`：订阅 `BE_*` 播发声。
+7. 音效层：点击声 `UI_ClickSfx` 已接入；战斗 / 反馈层（订阅 `BE_*` 播发声）尚未开写。
 
 ### 阶段三：可扩展性加固
 
 1. `PerkBaker`/`CardModelBaker`/`IntentBaker`/`Hook.Settle` 的 `switch` 加 `default` 报错（`RelicBaker` 已先行）。
 2. 清理未使用依赖、删除死代码 `UI_SingletonObject`、修 `UI_OneShotVfx` 的 `_clip.name` 魔法字符串（L-1）。
+3. `SaveService` 存档根键由 `GetType().FullName` 迁移为稳定常量键（D2），消除「重命名即静默丢档」隐患。
 3. 阵型上限收进 `BattleSlots`，与槽位定义同源。
 4. 分派守卫抽 `ReentrancyGuard`/`RunOnceGuard`，区分 `IDeathGuard` 命名。
 5. `StatHook`/`SettleHook` 改注册表分派，消除手动 `switch` 摩擦（K6）。
@@ -272,7 +287,7 @@ git lfs pull
 
 | 文档 | 内容 |
 | --- | --- |
-| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 96/100、六维分项评分、逐模块分析、反模式扫描、不变量核验、问题清单 |
+| [Doc/架构分析报告.md](Doc/架构分析报告.md) | 逐文件架构评审：综合评分 95/100、六维分项评分、逐模块分析、反模式扫描、不变量核验、问题清单 |
 | [Doc/世界观与背景设定.md](Doc/世界观与背景设定.md) | 游戏世界观与背景设定文档 |
 | [.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md](.codebuddy/Docs/03-毕业设计方案-卡牌肉鸽融合成熟玩法.md) | 纯游戏设计稿（v3.5）：玩法 / 数值 / 题材定案，不含实现 |
 | [.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md](.codebuddy/Docs/04-项目实现顺序与系统解耦设计.md) | 架构定案与 P0 待办清单：「代码放哪、依赖谁、先做什么」以此为准 |

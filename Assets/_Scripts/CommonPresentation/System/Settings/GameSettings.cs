@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using _DreamKeep.EngineUtility;
@@ -18,7 +19,16 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>下拉首项「自动」的索引：表示跟随显示器当前分辨率。</summary>
         public const int AutoResolutionIndex = 0;
 
-        private static readonly List<Vector2Int> _resolutions = new();
+        // 固定常用档位（上限 2560 × 1440）：不枚举 Screen.resolutions，任意显示器下选项一致
+        private static readonly Vector2Int[] _presetResolutions =
+        {
+            new(1280, 720),
+            new(1366, 768),
+            new(1600, 900),
+            new(1920, 1080),
+            new(2560, 1440)
+        };
+
         private static readonly List<string> _labels = new();
         private static int _resolutionIndex;
 
@@ -27,23 +37,25 @@ namespace _DreamKeep.CommonPresentation
         public static bool Fullscreen { get; private set; } = true;
         public static int ResolutionIndex => _resolutionIndex;
 
-        /// <summary>下拉选项表：索引 0 恒为「自动」，其后是去重后的屏幕分辨率；每次读取按当前屏幕重建。</summary>
-        public static IReadOnlyList<string> ResolutionLabels
-        {
-            get
-            {
-                BuildResolutionOptions();
-                return _labels;
-            }
-        }
+        /// <summary>下拉选项表：索引 0 恒为「自动」，其后为固定常用档位。</summary>
+        public static IReadOnlyList<string> ResolutionLabels => _labels;
 
         static GameSettings()
         {
             BgmVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(BgmKey, 1f));
             SfxVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxKey, 1f));
             Fullscreen = PlayerPrefs.GetInt(FullscreenKey, 1) == 1;
-            BuildResolutionOptions();
+            _labels.Add("自动");
+            foreach (Vector2Int size in _presetResolutions)
+                _labels.Add($"{size.x} × {size.y}");
+            _resolutionIndex = FindSavedIndex(PlayerPrefs.GetInt(WidthKey, 0), PlayerPrefs.GetInt(HeightKey, 0));
         }
+
+        // 落盘的是宽高而非索引：档位表调整也不会选错；IndexOf 未命中为 -1，+1 后正好回到「自动」
+        private static int FindSavedIndex(int width_, int height_) =>
+            width_ <= 0 || height_ <= 0
+                ? AutoResolutionIndex
+                : Array.IndexOf(_presetResolutions, new Vector2Int(width_, height_)) + 1;
 
         #region 对外：写入即生效并落盘
 
@@ -68,12 +80,12 @@ namespace _DreamKeep.CommonPresentation
             PlayerPrefs.SetInt(FullscreenKey, value_ ? 1 : 0);
         }
 
-        /// <summary>按下拉索引应用分辨率：0 = 跟随显示器，其余取去重表里的宽高；越界忽略。</summary>
+        /// <summary>按下拉索引应用分辨率：0 = 跟随显示器，其余取固定档位；越界忽略。</summary>
         public static void SetResolutionIndex(int index_)
         {
-            if (index_ < 0 || index_ >= _resolutions.Count) return;
+            if (index_ < 0 || index_ > _presetResolutions.Length) return;
             _resolutionIndex = index_;
-            Vector2Int size = _resolutions[index_];
+            Vector2Int size = SizeOf(index_);
             PlayerPrefs.SetInt(WidthKey, size.x);
             PlayerPrefs.SetInt(HeightKey, size.y);
             ApplyResolution(size);
@@ -84,36 +96,14 @@ namespace _DreamKeep.CommonPresentation
         {
             AudioRoot.BgmVolume = BgmVolume;
             AudioRoot.SfxVolume = SfxVolume;
-            ApplyResolution(_resolutions[_resolutionIndex]);
+            ApplyResolution(SizeOf(_resolutionIndex));
         }
 
         #endregion
 
-        // 选项表按当前屏幕重建：首项「自动」占索引 0，分辨率按宽高去重（同宽高不同刷新率只留一条）
-        private static void BuildResolutionOptions()
-        {
-            _resolutions.Clear();
-            _labels.Clear();
-            _resolutions.Add(Vector2Int.zero);
-            _labels.Add("自动");
-            for (int i = Screen.resolutions.Length - 1; i >= 0; i--)
-            {
-                Vector2Int size = new(Screen.resolutions[i].width, Screen.resolutions[i].height);
-                if (_resolutions.Contains(size)) continue;
-                _resolutions.Add(size);
-                _labels.Add($"{Screen.resolutions[i].width} × {Screen.resolutions[i].height}");
-            }
-
-            _resolutionIndex = FindSavedIndex(PlayerPrefs.GetInt(WidthKey, 0), PlayerPrefs.GetInt(HeightKey, 0));
-        }
-
-        // 落盘的是宽高而非索引：分辨率表随显示器变化，按宽高反查不会选错
-        private static int FindSavedIndex(int width_, int height_)
-        {
-            if (width_ <= 0 || height_ <= 0) return AutoResolutionIndex;
-            int index = _resolutions.IndexOf(new Vector2Int(width_, height_));
-            return index < 0 ? AutoResolutionIndex : index;
-        }
+        // 索引 0 是「自动」（零尺寸），其余对应档位表前一位
+        private static Vector2Int SizeOf(int index_) =>
+            index_ == AutoResolutionIndex ? Vector2Int.zero : _presetResolutions[index_ - 1];
 
         private static void ApplyResolution(Vector2Int size_)
         {

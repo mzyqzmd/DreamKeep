@@ -396,7 +396,7 @@ MonoBehaviour:
   _skeleton: {fileID: 5303775420819641571}
   _hoverReticle: {fileID: 8209362450807832573}
   _actorName: {fileID: 8474587368811794539}
-  _outlineShader: {fileID: 4800000, guid: 28b5cf4804845fe4b868531fd0bb81d5, type: 3}
+  _outlineShader: {fileID: 4800000, guid: 8f5d14d2a7fedb84998c50eb96c8b748, type: 3}
   _skeletonMaterial: {fileID: 2100000, guid: a0275cd1d00a45e49ab862f65d0c4e45, type: 2}
   _intentGroup: {fileID: 2655814881467545538}
   _moveDuration: 0.3

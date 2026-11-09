@@ -120,7 +120,7 @@ namespace _DreamKeep.EngineUtility
                 file.Entries.Add(key, writer.Bag);
             }
 
-            try { File.WriteAllText(FilePath, JsonConvert.SerializeObject(file)); }
+            try { File.WriteAllText(FilePath, JsonConvert.SerializeObject(file, Formatting.Indented)); }
             catch (Exception e) { Debug.LogError($"[SaveService] 写盘失败：{e.Message}"); }
         }
 
