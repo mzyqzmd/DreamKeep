@@ -170,6 +170,12 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>每次清场时回调：收起子类特有层（如第二层对照预览）。</summary>
         protected virtual void OnResetVisual() { }
 
+        /// <summary>满选后再点未选卡是否踢掉最早选中：删牌面板沿用 FIFO，升级面板关闭后改为忽略。</summary>
+        protected virtual bool ReplaceOldestWhenFull => true;
+
+        /// <summary>选择变化并刷新确认键显隐后回调：子类据此在"刚选满"时直达下一步。</summary>
+        protected virtual void OnSelectionChanged() { }
+
         #endregion
 
         #region 子类可用的编排件：取选中卡、收场交付
@@ -205,7 +211,7 @@ namespace _DreamKeep.CommonPresentation
         protected MonoObjectPool<UI_CardInDeck> CreateCardPool(Transform parent_) =>
             new(parent_, 64, onCreate_: instance_ => _resolver.InjectGameObject(instance_.gameObject));
 
-        // 左键选择：已选即取消；未选未满即加入；未选已满按 FIFO 踢掉最早选中的
+        // 左键选择：已选即取消；未选未满即加入；未选已满时按子类开关决定 FIFO 替换或忽略
         private void ToggleCard(UI_CardInDeck item_)
         {
             if (_selected.Contains(item_))
@@ -218,7 +224,7 @@ namespace _DreamKeep.CommonPresentation
                 _selected.Add(item_);
                 item_.SetRippleVisible(true);
             }
-            else
+            else if (ReplaceOldestWhenFull)
             {
                 if (_selected.Count == 0) return; // 目标为 0：一张都不该能选中
                 UI_CardInDeck oldest = _selected[0];
@@ -227,8 +233,13 @@ namespace _DreamKeep.CommonPresentation
                 _selected.Add(item_);
                 item_.SetRippleVisible(true);
             }
+            else
+            {
+                return; // 满选且子类关闭替换：忽略这次点击
+            }
 
             ShowConfirm(_selected.Count == _target);
+            OnSelectionChanged();
         }
 
         // 确认键显隐：选满弹出、不满收起，同态零操作（等值短路）

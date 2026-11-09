@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>当前位置标记：PlayAt 摆到节点并从第 0 帧播一次（单次状态播完自然停在末帧），
+    /// <summary>节点标记：PlayAt 摆到节点并从第 0 帧播一次（单次状态播完自然停在末帧），
     /// ShowAt 只摆位并直接定到末帧（重开地图不重播），Hide 收回。
-    /// 纯视觉不接指针事件，帧 Image 关 raycast 防挡节点点击。</summary>
+    /// 透明度随调用传入：当前节点实心、历史路径圈压淡；纯视觉不接指针事件，帧 Image 关 raycast 防挡节点点击。</summary>
     public sealed class UI_MapCircle : MonoBehaviour
     {
         private const string PlayState = "MapCircleOnce";
@@ -25,16 +25,18 @@ namespace _DreamKeep.Presentation
         public float PlayDuration => _animator != null ? _animator.GetCurrentAnimatorStateInfo(0).length : 0f;
 
         /// <summary>迁到节点位置、按节点尺寸等比缩放，并从头播一次；重触发即重播。</summary>
-        public void PlayAt(RectTransform parent_, Vector2 anchoredPos_, Vector2 targetSize_)
+        public void PlayAt(RectTransform parent_, Vector2 anchoredPos_, Vector2 targetSize_, float alpha_ = 1f)
         {
             PlaceAt(parent_, anchoredPos_, targetSize_);
+            SetAlpha(alpha_);
             PlayFrame(0f);
         }
 
         /// <summary>迁到节点位置、按节点尺寸缩放并直接停在末帧：重开地图用，不产生播放过程。</summary>
-        public void ShowAt(RectTransform parent_, Vector2 anchoredPos_, Vector2 targetSize_)
+        public void ShowAt(RectTransform parent_, Vector2 anchoredPos_, Vector2 targetSize_, float alpha_ = 1f)
         {
             PlaceAt(parent_, anchoredPos_, targetSize_);
+            SetAlpha(alpha_);
             PlayFrame(1f);
         }
 
@@ -54,6 +56,15 @@ namespace _DreamKeep.Presentation
             rect.localScale = Vector3.one * (baseMax <= 0f ? 1f : targetMax * _sizePadding / baseMax);
             transform.SetAsLastSibling();
             gameObject.SetActive(true);
+        }
+
+        // 动画只驱动 sprite、不碰 color：透明度直接写 Image.color，不会被定帧覆盖
+        private void SetAlpha(float alpha_)
+        {
+            if (_frame == null) return;
+            Color color = _frame.color;
+            color.a = alpha_;
+            _frame.color = color;
         }
 
         // 预制体 KeepAnimatorStateOnDisable=0：失活不保留姿态，显示时必须显式定帧

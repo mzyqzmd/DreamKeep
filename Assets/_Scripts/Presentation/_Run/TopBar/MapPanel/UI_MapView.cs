@@ -19,6 +19,9 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_MapLine _linePrefab;
         [SerializeField] private UI_MapCircle _circlePrefab;
 
+        [Tooltip("历史路径圈透明度：当前节点恒为实心")] [SerializeField]
+        private float _historyCircleAlpha = 0.45f;
+
         [Header("层级（两层必须同尺寸）")] [SerializeField]
         private RectTransform _lineLayer;
 
@@ -62,7 +65,7 @@ namespace _DreamKeep.Presentation
         private readonly Dictionary<MapNode, UI_MapNode> _views = new Dictionary<MapNode, UI_MapNode>();
         private readonly Dictionary<MapNode, Vector2> _positions = new Dictionary<MapNode, Vector2>(); // 层坐标（左上原点、y 向下）
         private readonly List<UI_MapLine> _lines = new List<UI_MapLine>();
-        private UI_MapCircle _circle;
+        private readonly Dictionary<MapNode, UI_MapCircle> _circles = new Dictionary<MapNode, UI_MapCircle>();
         private Rect _mapRect;
         private int[] _rowCounts;
 
@@ -99,7 +102,7 @@ namespace _DreamKeep.Presentation
             if (!_laidOut) LayoutAll(); // 首次打开：面板已激活，先把 Content 撑开再取层矩形
             foreach (KeyValuePair<MapNode, UI_MapNode> pair in _views)
                 pair.Value.Bind(pair.Key, pair.Key.State);
-            RefreshCircle();
+            RefreshCircles();
             ScrollToCurrentNode();
         }
 
@@ -129,9 +132,8 @@ namespace _DreamKeep.Presentation
             _positions.Clear();
             foreach (UI_MapLine line in _lines) Destroy(line.gameObject);
             _lines.Clear();
-            HideCircle();
-            if (_circle != null) Destroy(_circle.gameObject);
-            _circle = null;
+            foreach (UI_MapCircle circle in _circles.Values) Destroy(circle.gameObject);
+            _circles.Clear();
         }
 
         private void CreateView(MapNode node_)
@@ -160,14 +162,14 @@ namespace _DreamKeep.Presentation
         {
             if (_selectRoutine != null) return;
             if (!_positions.TryGetValue(node_, out Vector2 pos)) return;
-            if (_circle == null) _circle = Instantiate(_circlePrefab, _nodeLayer, false);
-            _circle.PlayAt(_nodeLayer, ToAnchored(pos), ViewSizeOf(_views[node_]));
-            _selectRoutine = StartCoroutine(RaiseAfterCircle(node_));
+            UI_MapCircle circle = GetOrCreateCircle(node_);
+            circle.PlayAt(_nodeLayer, ToAnchored(pos), ViewSizeOf(_views[node_]));
+            _selectRoutine = StartCoroutine(RaiseAfterCircle(node_, circle.PlayDuration));
         }
 
-        private IEnumerator RaiseAfterCircle(MapNode node_)
+        private IEnumerator RaiseAfterCircle(MapNode node_, float duration_)
         {
-            yield return new WaitForSecondsRealtime(Mathf.Max(0.01f, _circle.PlayDuration));
+            yield return new WaitForSecondsRealtime(Mathf.Max(0.01f, duration_));
             _selectRoutine = null;
             NodeClicked?.Invoke(node_);
         }
@@ -269,26 +271,32 @@ namespace _DreamKeep.Presentation
             return new Vector2(rect.rect.width, rect.rect.height) * view_.transform.localScale.x;
         }
 
-        #region 当前位置圆环：先古与 Boss 不出圈，非先古/Boss 的当前节点播一次停末帧
+        #region 路径圆环：当前节点实心、已通过节点压淡，先古与 Boss 不出圈
 
-        private void RefreshCircle()
+        private void RefreshCircles()
         {
-            MapNode current = _graph.CurrentNode;
-            if (current == null || current.PointType is EMapPointType.Ancient or EMapPointType.Boss ||
-                !_positions.TryGetValue(current, out Vector2 pos))
-            {
-                HideCircle();
-                return;
-            }
+            if (_graph == null) return;
+            foreach (UI_MapCircle circle in _circles.Values) circle.Hide(); // 误点/换局留下的圈先收回，随后只亮本次路径
 
-            if (_circle == null) _circle = Instantiate(_circlePrefab, _nodeLayer, false);
-            // 重开地图只摆位不重播
-            if (_views.TryGetValue(current, out UI_MapNode view)) _circle.ShowAt(_nodeLayer, ToAnchored(pos), ViewSizeOf(view));
+            foreach (KeyValuePair<MapNode, UI_MapNode> pair in _views)
+            {
+                MapNode node = pair.Key;
+                if (node.PointType is EMapPointType.Ancient or EMapPointType.Boss) continue;
+                bool current = node == _graph.CurrentNode;
+                if (!current && node.State != EMapNodeState.Traveled) continue;
+                if (!_positions.TryGetValue(node, out Vector2 pos)) continue;
+                // 重开地图只摆位不重播：当前实心、历史压淡，同一实例每次显式写透明度，不残留上一状态
+                GetOrCreateCircle(node).ShowAt(_nodeLayer, ToAnchored(pos), ViewSizeOf(pair.Value),
+                    current ? 1f : _historyCircleAlpha);
+            }
         }
 
-        private void HideCircle()
+        private UI_MapCircle GetOrCreateCircle(MapNode node_)
         {
-            if (_circle != null) _circle.Hide();
+            if (_circles.TryGetValue(node_, out UI_MapCircle circle)) return circle;
+            circle = Instantiate(_circlePrefab, _nodeLayer, false);
+            _circles[node_] = circle;
+            return circle;
         }
 
         #endregion

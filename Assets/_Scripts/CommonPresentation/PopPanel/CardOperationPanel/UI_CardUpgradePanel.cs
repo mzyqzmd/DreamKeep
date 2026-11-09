@@ -70,11 +70,19 @@ namespace _DreamKeep.CommonPresentation
         {
             if (!_tipText) return;
             _tipText.text = Target > 0
-                ? $"选择 {Target} 张卡牌进行升级（右键查看详情）"
+                ? $"选择 {Target} 张卡牌进行升级（选满自动进入对照，右键查看详情）"
                 : "没有可升级的卡牌，点击确认继续";
         }
 
         protected override void OnResetVisual() => ClosePreview();
+
+        // 满选直接翻对照页：选满后再点未选卡不替换，玩家要改选得先取消一张
+        protected override bool ReplaceOldestWhenFull => false;
+
+        protected override void OnSelectionChanged()
+        {
+            if (Target > 0 && Selected.Count == Target) OpenPreview();
+        }
 
         // 第一层确认：只翻到对照页、不动域
         protected override void OnConfirm() => OpenPreview();
@@ -89,7 +97,8 @@ namespace _DreamKeep.CommonPresentation
         // 对照页：按选中顺序生成两排卡——上排当前形态、下排升级副本（一次性预览，不写回域）
         private void OpenPreview()
         {
-            if (_previewRoot) _previewRoot.SetActive(true);
+            if (_previewRoot == null || _previewRoot.activeSelf) return; // 自动跳转与确认键共用：已打开不重复绑
+            _previewRoot.SetActive(true);
 
             List<CardModel> originals = new(Selected.Count);
             List<CardModel> upgraded = new(Selected.Count);
