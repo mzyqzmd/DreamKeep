@@ -7927,9 +7927,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.085, y: 0.48047224}
   m_AnchorMax: {x: 0.57878125, y: 0.91977787}
-  m_AnchoredPosition: {x: 1, y: -0.5}
+  m_AnchoredPosition: {x: 1, y: -0.75823975}
   m_SizeDelta: {x: 311, y: 156.99994}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0.78}
 --- !u!114 &1325089363
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7959,7 +7959,7 @@ MonoBehaviour:
   initialSkinName: default
   initialFlipX: 0
   initialFlipY: 0
-  startingAnimation: 
+  startingAnimation: animation
   startingLoop: 1
   timeScale: 1
   freeze: 0
@@ -11894,8 +11894,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _idleCursor: {fileID: 2800000, guid: 17283c15fe56ae6418839167b0625d36, type: 3}
   _pressedCursor: {fileID: 2800000, guid: 14d539ae027fc8d4c92200425f026ab0, type: 3}
-  _idleHotspot: {x: 13, y: 4}
-  _pressedHotspot: {x: 8, y: 7}
+  _hotspot: {x: 12, y: 3}
 --- !u!1 &2118129206
 GameObject:
   m_ObjectHideFlags: 0
