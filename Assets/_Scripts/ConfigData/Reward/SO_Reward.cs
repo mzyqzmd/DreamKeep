@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace _DreamKeep.ConfigData
 {
-    /// <summary>遭遇奖励配置：一场战斗打完给什么——金币区间、卡牌奖励组数（每组恒三选一）、药水掉落概率与遗物件数，以及三类抽取池列表。
+    /// <summary>奖励配置：一场战斗打完给什么——金币区间、卡牌奖励组数（每组恒三选一）、药水掉落概率与遗物件数，以及三类抽取池列表。
     /// 池列表内所有池合并成一个候选集后等权抽取，想按稀有度/角色分池就多建几份池资产、在这里逐个列出。
-    /// 战斗独有，由 <see cref="SO_Encounter"/> 引用；Boss 等终局遭遇不配（打完即结束），留空即不结算。</summary>
-    [CreateAssetMenu(fileName = "Reward", menuName = "DreamKeep/Data/Encounter/Reward")]
-    public sealed class SO_EncounterReward : ScriptableObject
+    /// 跨来源通用：当前由 <see cref="SO_Encounter"/> 引用（战斗奖励）；Boss 等终局战斗不配（打完即结束），留空即不结算。</summary>
+    [CreateAssetMenu(fileName = "Reward", menuName = "DreamKeep/Data/Reward")]
+    public sealed class SO_Reward : ScriptableObject
     {
         [Header("金币")] [SerializeField] private int _goldMin = 15;
         [SerializeField] private int _goldMax = 25;

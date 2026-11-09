@@ -11,19 +11,17 @@ namespace _DreamKeep.GameRun
     /// 胜利当帧标记节点通过（不等奖励面板的「继续」），有配置且掷出奖励才弹面板等待领取，
     /// 战败 / 无配置 / 掷空 / 表现弹板失败一律按退出收尾。等待点由命令门面放行，玩法事实经段分发器播出；
     /// 纯 C#，配置缺口经注入的 onWarning_ 上报，不直接依赖引擎日志出口。
-    /// 读档恢复时由 RestoreRewards 直接给定已冻结的奖励清单，跳过战斗循环与掷骰。</summary>
+    /// 掷出的奖励清单写进 RunState.PendingRewards 随检查点落盘；领奖中读档由段组合根按清单直接弹板，不重掷。</summary>
     public sealed class BattleSegmentLoop
     {
         private readonly RunState _run;
         private readonly BattleLoop _battleLoop;
-        private readonly SO_EncounterReward _reward;
+        private readonly SO_Reward _reward;
         private readonly BattleSegmentEventDispatcher _events;
         private readonly Action<string> _onWarning;
         private UniTaskCompletionSource<bool> _rewardDone = new();
-        private IReadOnlyList<RunReward> _restoreRewards;
-        private uint? _rewardRngState;
 
-        public BattleSegmentLoop(RunState run_, BattleLoop battleLoop_, SO_EncounterReward reward_,
+        public BattleSegmentLoop(RunState run_, BattleLoop battleLoop_, SO_Reward reward_,
             BattleSegmentEventDispatcher events_, Action<string> onWarning_)
         {
             _run = run_;
@@ -33,29 +31,7 @@ namespace _DreamKeep.GameRun
             _onWarning = onWarning_;
         }
 
-        /// <summary>是否领奖恢复：表现入口据此跳过战斗循环，只走领奖等待链。</summary>
-        public bool IsRewardRestore => _restoreRewards != null || _rewardRngState.HasValue;
-
-        public void Start()
-        {
-            if (_rewardRngState.HasValue) ApplyRewardRng();
-            if (_restoreRewards != null) RestoreAsync().Forget();
-            else RunAsync().Forget();
-        }
-
-        /// <summary>读档恢复：奖励清单来自存档，不再掷骰、不重复消耗整局随机流。</summary>
-        public void RestoreRewards(IReadOnlyList<RunReward> rewards_) => _restoreRewards = rewards_;
-
-        /// <summary>领奖中读档：记下掷骰前流状态，待 Start 时设回并重掷，保证退出前后奖励一致。</summary>
-        public void RestoreRewardsAt(uint rngState_) => _rewardRngState = rngState_;
-
-        // 重掷必须晚于段组合根的遭遇抽取与洗牌，否则那些消耗会与掷骰前状态互相覆盖
-        private void ApplyRewardRng()
-        {
-            _run.Rng.State = _rewardRngState.Value;
-            _rewardRngState = null;
-            _restoreRewards = EncounterRewardRoller.Roll(_reward, _run, _onWarning);
-        }
+        public void Start() => RunAsync().Forget();
 
         /// <summary>奖励面板「继续」已点：领完放行，段按完成收尾。</summary>
         public void AcknowledgeReward() => _rewardDone.TrySetResult(true);
@@ -88,7 +64,7 @@ namespace _DreamKeep.GameRun
             List<RunReward> rewards;
             try
             {
-                rewards = EncounterRewardRoller.Roll(_reward, _run, _onWarning);
+                rewards = RewardRoller.Roll(_reward, _run, _onWarning);
             }
             catch (Exception e)
             {
@@ -103,18 +79,8 @@ namespace _DreamKeep.GameRun
                 return;
             }
 
+            _run.SetPendingRewards(rewards); // 检查点写盘用：领奖中读档按同一批清单恢复，不重掷
             await OfferRewardsAsync(rewards);
-        }
-
-        private async UniTask RestoreAsync()
-        {
-            if (_restoreRewards.Count == 0)
-            {
-                await _events.PlayAsync(new BAE_BattleExited());
-                return;
-            }
-
-            await OfferRewardsAsync(_restoreRewards);
         }
 
         // 新战斗与读档恢复共用同一条领奖等待链：播出清单 → 等「继续」→ 完成或退出

@@ -80,7 +80,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(new ShopCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_ShopRugPanel>();
             builder_.RegisterComponentInHierarchy<UI_ShopMerchant>();
-            builder_.RegisterComponentInHierarchy<UI_ShopProceedItem>();
+            builder_.RegisterComponentInHierarchy<UI_ShopProceedButton>();
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>(); // 场景里已摆好的删牌弹板实例
             builder_.RegisterEntryPoint<ShopEntry>();
 

@@ -11,7 +11,7 @@ namespace _DreamKeep.EngineUtility
     /// 写盘遍历绑定进来的集合逐个 Capture，按实现类类型全名聚合进单文件；读盘先把整份快照静态暂存，
     /// 跨过场景加载与容器装配后再统一 Restore 分发。静态字段在域重载与 Play 启动时重置，不缓存跨场景对象。
     /// 为什么必须是静态：消费方横跨三层生命周期——常驻编排者在整局 scope 建起来之前就要读写档（主菜单的继续/删档），
-    /// 组合根在装配期 Bind 与 ApplyRestore，段内 scope 再取领奖恢复态；做成实例就得挂 App 级常驻 scope 再往下传两层，
+    /// 组合根在装配期 Bind 与 ApplyRestore，段组合根按 RunState 的待领奖励清单判定领奖恢复；做成实例就得挂 App 级常驻 scope 再往下传两层，
     /// 反而比静态更绕。域重载后的残留由 ResetStatics 兜住。</summary>
     public static class SaveService
     {
@@ -20,8 +20,6 @@ namespace _DreamKeep.EngineUtility
         private static SaveFile _pending;
         private static IReadOnlyList<ISaveable> _saveables;
         private static SO_SaveCatalog _catalog;
-        private static ESavePhase? _restorePhase;
-        private static uint? _restoreRewardRng;
         private static int _restoreSegmentKind = -1;
 
         /// <summary>磁盘上是否存在存档文件。</summary>
@@ -44,20 +42,13 @@ namespace _DreamKeep.EngineUtility
             ClearRestoreIntent();
         }
 
-        #region 读档意图：段编排者 Restore 时写入，编排层各消费一次后清空
+        #region 读档意图：段编排者 Restore 时写入，编排层消费一次后清空
 
-        public static void MarkRestoreIntent(ESavePhase phase_, uint? rewardRng_, int segmentKind_)
-        {
-            _restorePhase = phase_;
-            _restoreRewardRng = rewardRng_;
-            _restoreSegmentKind = segmentKind_;
-        }
+        public static void MarkRestoreIntent(int segmentKind_) => _restoreSegmentKind = segmentKind_;
 
         public static void ClearRestoreIntent()
         {
             _pending = null;
-            _restorePhase = null;
-            _restoreRewardRng = null;
             _restoreSegmentKind = -1;
         }
 
@@ -67,15 +58,6 @@ namespace _DreamKeep.EngineUtility
             int kind = _restoreSegmentKind;
             _restoreSegmentKind = -1;
             return kind;
-        }
-
-        /// <summary>战斗段取走领奖恢复状态并清该字段，避免下一场战斗误判。</summary>
-        public static uint? ConsumeRestoreRewardRng()
-        {
-            uint? state = _restorePhase == ESavePhase.AwaitingReward ? _restoreRewardRng : null;
-            _restorePhase = null;
-            _restoreRewardRng = null;
-            return state;
         }
 
         #endregion

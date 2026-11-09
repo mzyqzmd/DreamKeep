@@ -125,8 +125,11 @@ namespace _DreamKeep.Presentation
         public void Restore(ISaveReader reader_)
         {
             _phase = (ESavePhase)reader_.Read(KeyPhase, (int)ESavePhase.OnMap);
+            // 旧档降级：领奖阶段却没有奖励清单，按战斗中重打本场，避免读档后无面板可恢复而卡在空段
+            if (_phase == ESavePhase.AwaitingReward && (_run.PendingRewards == null || _run.PendingRewards.Count == 0))
+                _phase = ESavePhase.InBattle;
             int segmentKind = (int)RunFlow.SegmentKindOf(_run.Map.CurrentNode.ResolvedType);
-            SaveService.MarkRestoreIntent(_phase, _run.RewardRngState, segmentKind);
+            SaveService.MarkRestoreIntent(segmentKind);
         }
 
         #endregion
@@ -168,12 +171,9 @@ namespace _DreamKeep.Presentation
             if (_resultPanel) _resultPanel.Show(EResultKind.RunDefeated);
         }
 
-        // 保存并退出：写盘后走回主菜单链（不删档），主菜单据磁盘真值亮出「继续」
-        private void OnSaveAndQuitClicked()
-        {
-            SaveService.Save();
-            _returnToMainMenu?.Invoke();
-        }
+        // 保存并退出：段内一律不写盘——磁盘停留在最近提交点（地图选点或战斗胜利检查点），
+        // 读档即回到该点；主菜单据磁盘真值亮出「继续」
+        private void OnSaveAndQuitClicked() => _returnToMainMenu?.Invoke();
 
         #endregion
 
@@ -228,8 +228,9 @@ namespace _DreamKeep.Presentation
         {
             if (_switching) return;
             _run.SetSegmentPending(false); // 内容已通过时本就解除了，这里兜住异常收尾
+            _run.ClearPendingRewards(); // 领奖链结束：清内存待领清单，下一场不再误判为恢复
             SetPhase(ESavePhase.OnMap);
-            SaveService.Save(); // 段完成自动落盘：强退最多丢当前段进度
+            // 段内不写盘：段收益要到「在地图上选中下一个节点」才随提交点固化
             CloseBattleSession();
             if (_audio) _audio.PlayBgm(_audio.Cues.BgmRun);
             if (_topBar) _topBar.OpenMap();
@@ -243,6 +244,7 @@ namespace _DreamKeep.Presentation
             if (_switching) return;
             _switching = true;
             _run.SetSegmentPending(false);
+            _run.ClearPendingRewards(); // 无奖励退出：清单不会再用，清掉免得下次读档误判
             CloseBattleSession();
             EndSegmentAsync().Forget();
         }

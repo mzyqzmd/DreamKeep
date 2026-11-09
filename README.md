@@ -144,7 +144,7 @@
 - 卡牌升级全链路：`UD_*` → `CardModelBaker` → `CM_Runtime.Upgrade()`；预览用 `ToMutable().Upgrade()` 副本
 - 遗物系统（~51 运行时效果 / ~60 配置）：`RE_*` 经订阅战斗事件 + 组合 `BattleAction` 接入，`LizardTail` 经 `IDeathGuard` 介入致命伤，`RelicBaker` 类型分派 + `_ => throw` 兜底
 - 药水系统（~15 种）：饮用经 `BC_UsePotion` → `PotionResolver` → `BA_ConsumePotion`，玩家持 3 槽
-- **战后奖励结算**：`EncounterRewardRoller`（同种子可复现）→ `UI_RewardPanel` 展示并兑现
+- **战后奖励结算**：`RewardRoller`（同种子可复现）→ `UI_RewardPanel` 展示并兑现
 
 **「段域化」重构完成（本轮重大进展）**
 

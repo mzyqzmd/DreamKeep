@@ -5,25 +5,24 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>遭遇奖励掷骰：把奖励配置 + 整局状态掷成一份奖励清单，是"配置 → 面板条目"的唯一入口。
+    /// <summary>奖励掷骰：把奖励配置 + 整局状态掷成一份奖励清单，是"配置 → 面板条目"的唯一入口。
     /// 掷骰顺序固定（金币 → 卡牌各组 → 药水 → 遗物）且全部走同一条整局随机流，同种子可复现；
     /// 三类奖励都支持配置多份池，掷骰前先把池列表合并成一份带权候选集（同引用去重、按池权重赋权）再加权无放回抽取，卡牌候选按配置概率直接以升级形态抽出；
     /// 配置为空（Boss）或卡/药水候选集为空时静默跳过该条，池里断引用的项也直接跳过——绝不让结算抛异常卡住流程；
     /// 遗物候选不足时由整局兜底遗物补齐到配置件数，绝不空手离场。
     /// 配置缺口经调用方注入的 onWarning_ 上报，域层不直接依赖引擎日志出口。</summary>
-    public static class EncounterRewardRoller
+    public static class RewardRoller
     {
         /// <summary>每组卡牌奖励的候选张数：恒为三选一，不随配置变化。</summary>
         private const int CardOptionCount = 3;
 
         #region 掷出一份奖励清单：配置为空时返回空表
 
-        public static List<RunReward> Roll(SO_EncounterReward config_, RunState run_, Action<string> onWarning_ = null)
+        public static List<RunReward> Roll(SO_Reward config_, RunState run_, Action<string> onWarning_ = null)
         {
             List<RunReward> rewards = new();
             if (config_ == null || run_ == null) return rewards;
             Rng rng = run_.Rng;
-            run_.SetRewardRngState(rng.State); // 领奖中写盘据此把流设回掷骰前重掷，保证退出前后奖励一致
 
             RollGold(config_, rng, rewards);
             RollCards(config_, rng, rewards, onWarning_);
@@ -35,8 +34,24 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
+        #region 必得型药水抽取：无概率门槛，跨来源通用
+
+        /// <summary>从药水池列表必得指定瓶数：池列表合并去重成带权候选集后按权重无放回抽取（不足给足，候选为空返回空表）；
+        /// 事件段等跨来源"必得 N 瓶"走这里，战斗内"先掷概率再抽"的流程由 RollPotion 私有方法承担。</summary>
+        public static List<RunReward> RollPotions(IReadOnlyList<SO_PotionPool> pools_, int count_, Rng rng_)
+        {
+            List<WeightedItem<SO_Potion>> potions = CollectWeighted(pools_, static pool_ => pool_.Potions,
+                static pool_ => pool_.Weight);
+            List<SO_Potion> taken = rng_.TakeWeighted(potions, count_);
+            List<RunReward> rewards = new(taken.Count);
+            for (int i = 0; i < taken.Count; i++) rewards.Add(RunReward.PotionOf(taken[i]));
+            return rewards;
+        }
+
+        #endregion
+
         // 金币：上限为 0 视为不给；上下限相等时取定值，否则闭区间掷一次
-        private static void RollGold(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_)
+        private static void RollGold(SO_Reward config_, Rng rng_, List<RunReward> rewards_)
         {
             int min = config_.GoldMin;
             int max = config_.GoldMax;
@@ -47,7 +62,7 @@ namespace _DreamKeep.RuntimeData
         }
 
         // 卡牌：每组独立抽三张不重复的候选；合并后的候选集不足三张时有几张给几张
-        private static void RollCards(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
+        private static void RollCards(SO_Reward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
         {
             if (config_.CardRewardCount <= 0) return;
             List<WeightedItem<SO_Card>> cards = CollectWeighted(config_.CardPools, static pool_ => pool_.Cards,
@@ -96,7 +111,7 @@ namespace _DreamKeep.RuntimeData
         // 不放回抽样：候选集按池权重轮盘逐张取出，保证同一组里不会出现重复项；
         // 每张按升级概率掷骰（概率为 0 或卡不可升级时不掷、不消耗随机流），命中即以升级形态产出——
         // canonical 原型禁止原地升级，须先克隆成可变副本再应用补丁
-        private static List<CardModel> DrawCards(SO_EncounterReward config_, List<WeightedItem<SO_Card>> cards_, Rng rng_)
+        private static List<CardModel> DrawCards(SO_Reward config_, List<WeightedItem<SO_Card>> cards_, Rng rng_)
         {
             List<SO_Card> taken = rng_.TakeWeighted(cards_, CardOptionCount);
             List<CardModel> options = new(taken.Count);
@@ -116,7 +131,7 @@ namespace _DreamKeep.RuntimeData
         }
 
         // 药水：先掷概率再按池权重抽一瓶；合并后的候选集为空视为没有药水奖励
-        private static void RollPotion(SO_EncounterReward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
+        private static void RollPotion(SO_Reward config_, Rng rng_, List<RunReward> rewards_, Action<string> onWarning_)
         {
             if (config_.PotionChance <= 0f) return;
             List<WeightedItem<SO_Potion>> potions = CollectWeighted(config_.PotionPools, static pool_ => pool_.Potions,
@@ -132,7 +147,7 @@ namespace _DreamKeep.RuntimeData
         }
 
         // 遗物：抽取全交给 RelicRoller（常规池跳过已持有，抽空自动降级到兜底池补齐）
-        private static void RollRelics(SO_EncounterReward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
+        private static void RollRelics(SO_Reward config_, RunState run_, Rng rng_, List<RunReward> rewards_)
         {
             if (config_.RelicCount <= 0) return;
             List<SO_Relic> taken = RelicRoller.Roll(run_, config_.RelicPools, config_.RelicCount, rng_);

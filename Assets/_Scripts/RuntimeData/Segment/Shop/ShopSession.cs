@@ -236,7 +236,7 @@ namespace _DreamKeep.RuntimeData
         // 卡：多池合并按权重去重后不放回抽取，不足按实数出；canonical 原型先烘焙，卖出时才克隆成局内卡
         private void RollCards(List<CardModel> into_, Rng rng_, int count_, SO_CardPool first_, SO_CardPool second_ = null)
         {
-            List<WeightedItem<SO_Card>> candidates = EncounterRewardRoller.CollectWeighted(
+            List<WeightedItem<SO_Card>> candidates = RewardRoller.CollectWeighted(
                 new[] { first_, second_ }, static pool_ => pool_.Cards, static pool_ => pool_.Weight);
 
             List<SO_Card> taken = rng_.TakeWeighted(candidates, count_);
@@ -265,7 +265,7 @@ namespace _DreamKeep.RuntimeData
         // 药水：两池合并按权重去重后不放回抽取三瓶
         private void RollPotions(Rng rng_, SO_PotionPool first_, SO_PotionPool second_)
         {
-            List<WeightedItem<SO_Potion>> candidates = EncounterRewardRoller.CollectWeighted(
+            List<WeightedItem<SO_Potion>> candidates = RewardRoller.CollectWeighted(
                 new[] { first_, second_ }, static pool_ => pool_.Potions, static pool_ => pool_.Weight);
             _potions.AddRange(rng_.TakeWeighted(candidates, PotionSlotCount));
         }

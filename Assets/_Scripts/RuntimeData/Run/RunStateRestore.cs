@@ -15,7 +15,6 @@ namespace _DreamKeep.RuntimeData
         private const string KeyRemovals = "removals";
         private const string KeyElapsed = "elapsed";
         private const string KeyRng = "rng";
-        private const string KeyRewardRng = "rewardRng";
         private const string KeyStart = "start";
         private const string KeyCleared = "cleared";
 
@@ -28,12 +27,12 @@ namespace _DreamKeep.RuntimeData
             writer_.Write(KeyRemovals, run_.CardRemovalsUsed);
             writer_.Write(KeyElapsed, run_.ElapsedSeconds);
             writer_.Write(KeyRng, run_.Rng.State);
-            writer_.Write(KeyRewardRng, run_.RewardRngState.HasValue ? (long)run_.RewardRngState.Value : -1L);
             writer_.Write("playerConfig", GuidOf(run_.Config));
             writer_.Write("mapConfig", GuidOf(run_.MapConfig));
             writer_.Write("fallbackPool", GuidOf(run_.FallbackRelicPool));
             CaptureMap(run_.Map, writer_);
             CapturePlayer(run_.Player, writer_);
+            CapturePendingRewards(run_.PendingRewards, writer_);
         }
 
         #endregion
@@ -45,8 +44,7 @@ namespace _DreamKeep.RuntimeData
             run_.RestoreScalars(reader_.Read(KeyGold, 0), reader_.Read(KeyFloor, 1),
                 reader_.Read(KeyRemovals, 0), reader_.Read(KeyElapsed, 0d),
                 reader_.Read<uint>(KeyRng, 0u));
-            long rewardRng = reader_.Read(KeyRewardRng, -1L);
-            run_.SetRewardRngState(rewardRng < 0 ? null : (uint?)rewardRng);
+            run_.SetPendingRewards(BuildPendingRewards(reader_, SaveService.Catalog));
         }
 
         #endregion
@@ -251,6 +249,98 @@ namespace _DreamKeep.RuntimeData
             }
 
             return player;
+        }
+
+        #endregion
+
+        #region 待领奖励拍平：按条目平行表 + 卡牌组扁平表，卡牌只存配置 GUID 与升级标记
+
+        private static void CapturePendingRewards(IReadOnlyList<RunReward> rewards_, ISaveWriter writer_)
+        {
+            int count = rewards_?.Count ?? 0;
+            int[] kinds = new int[count];
+            int[] gold = new int[count];
+            string[] potions = new string[count];
+            string[] relics = new string[count];
+            List<int> cardGroups = new();
+            List<string> cardSources = new();
+            List<bool> cardUpgraded = new();
+            for (int i = 0; i < count; i++)
+            {
+                RunReward reward = rewards_[i];
+                kinds[i] = (int)reward.Kind;
+                gold[i] = reward.Gold;
+                potions[i] = GuidOf(reward.Potion);
+                relics[i] = GuidOf(reward.Relic);
+                IReadOnlyList<CardModel> cards = reward.Cards;
+                if (cards == null) continue;
+                for (int c = 0; c < cards.Count; c++)
+                {
+                    cardGroups.Add(i);
+                    cardSources.Add(GuidOf(cards[c].Source));
+                    cardUpgraded.Add(cards[c].IsUpgraded);
+                }
+            }
+
+            writer_.Write("reward.kinds", kinds);
+            writer_.Write("reward.gold", gold);
+            writer_.Write("reward.potions", potions);
+            writer_.Write("reward.relics", relics);
+            writer_.Write("reward.cardGroup", cardGroups.ToArray());
+            writer_.Write("reward.cardSource", cardSources.ToArray());
+            writer_.Write("reward.cardUpgraded", cardUpgraded.ToArray());
+        }
+
+        #endregion
+
+        #region 待领奖励重建：解析失败的条目跳过，全空视为不在领奖阶段
+
+        private static IReadOnlyList<RunReward> BuildPendingRewards(ISaveReader reader_, SO_SaveCatalog catalog_)
+        {
+            int[] kinds = reader_.Read<int[]>("reward.kinds", Array.Empty<int>());
+            if (kinds.Length == 0) return null;
+            int[] gold = reader_.Read<int[]>("reward.gold", Array.Empty<int>());
+            string[] potions = reader_.Read<string[]>("reward.potions", Array.Empty<string>());
+            string[] relics = reader_.Read<string[]>("reward.relics", Array.Empty<string>());
+            int[] cardGroups = reader_.Read<int[]>("reward.cardGroup", Array.Empty<int>());
+            string[] cardSources = reader_.Read<string[]>("reward.cardSource", Array.Empty<string>());
+            bool[] cardUpgraded = reader_.Read<bool[]>("reward.cardUpgraded", Array.Empty<bool>());
+
+            List<RunReward> rewards = new(kinds.Length);
+            for (int i = 0; i < kinds.Length; i++)
+            {
+                switch ((ERewardKind)kinds[i])
+                {
+                    case ERewardKind.Gold:
+                        int amount = i < gold.Length ? gold[i] : 0;
+                        if (amount > 0) rewards.Add(RunReward.GoldOf(amount));
+                        break;
+                    case ERewardKind.Card:
+                        List<CardModel> cards = new();
+                        for (int c = 0; c < cardGroups.Length; c++)
+                        {
+                            if (cardGroups[c] != i) continue;
+                            SO_Card source = c < cardSources.Length ? catalog_?.Find<SO_Card>(cardSources[c]) : null;
+                            if (source == null) continue;
+                            CardModel card = CardModelBaker.Bake(source).ToMutable();
+                            if (c < cardUpgraded.Length && cardUpgraded[c]) card.Upgrade();
+                            cards.Add(card);
+                        }
+
+                        if (cards.Count > 0) rewards.Add(RunReward.CardsOf(cards));
+                        break;
+                    case ERewardKind.Potion:
+                        SO_Potion potion = i < potions.Length ? catalog_?.Find<SO_Potion>(potions[i]) : null;
+                        if (potion != null) rewards.Add(RunReward.PotionOf(potion));
+                        break;
+                    case ERewardKind.Relic:
+                        SO_Relic relic = i < relics.Length ? catalog_?.Find<SO_Relic>(relics[i]) : null;
+                        if (relic != null) rewards.Add(RunReward.RelicOf(relic));
+                        break;
+                }
+            }
+
+            return rewards.Count == 0 ? null : rewards;
         }
 
         #endregion

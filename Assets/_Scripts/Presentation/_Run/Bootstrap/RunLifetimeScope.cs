@@ -90,6 +90,7 @@ namespace _DreamKeep.Presentation
                 // 容器装配完成后一次性交接存档集合：读档快照此时统一下发，笔迹经 MapRebuilt 订阅链幂等重建
                 SaveService.Bind(resolver_.Resolve<IReadOnlyList<ISaveable>>());
                 if (SaveService.HasPendingRestore) SaveService.ApplyRestore();
+                else SaveService.Save(); // 新局补初始档：先古段开始前即有档，退出后可继续
             });
         }
 

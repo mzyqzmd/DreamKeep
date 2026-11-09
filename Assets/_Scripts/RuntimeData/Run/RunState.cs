@@ -26,11 +26,12 @@ namespace _DreamKeep.RuntimeData
         /// <summary>兜底遗物池：常规遗物池抽空时的降级来源（池内只放头环），随整局构建传入，RelicRoller 各入口经此取用。</summary>
         public SO_RelicPool FallbackRelicPool { get; }
 
-        /// <summary>最近一次奖励掷骰前的随机流状态：仅「领奖中」读档重掷用，null 表示本局尚未掷过奖励。</summary>
-        private uint? _rewardRngState;
+        /// <summary>待领奖励清单：仅战斗胜利进领奖时写入并存档，领奖期间读档据此复原同一批奖励；
+        /// 段结束即清空，null 表示当前不在领奖阶段。</summary>
+        private IReadOnlyList<RunReward> _pendingRewards;
 
-        /// <summary>奖励掷骰前随机流：领奖中写盘据此复原同一份奖励；新开局为 null。</summary>
-        public uint? RewardRngState => _rewardRngState;
+        /// <summary>待领奖励清单：与存档同源，领奖中读档恢复面板用；null/空表示不在领奖阶段。</summary>
+        public IReadOnlyList<RunReward> PendingRewards => _pendingRewards;
 
         private int _gold;
 
@@ -232,7 +233,11 @@ namespace _DreamKeep.RuntimeData
             Rng.State = rngState_;
         }
 
-        internal void SetRewardRngState(uint? state_) => _rewardRngState = state_;
+        /// <summary>登记本场待领奖励：战斗胜利掷出后写入，随检查点一起落盘。</summary>
+        public void SetPendingRewards(IReadOnlyList<RunReward> rewards_) => _pendingRewards = rewards_;
+
+        /// <summary>清空待领奖励：段结束（领完/退出/战败）时调用，避免下一场误判为领奖恢复。</summary>
+        public void ClearPendingRewards() => _pendingRewards = null;
 
         #endregion
     }

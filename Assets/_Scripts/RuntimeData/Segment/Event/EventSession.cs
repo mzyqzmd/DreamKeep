@@ -80,15 +80,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>遗物 N 选一领奖：流程循环裁决玩家选中的候选后交模型入列。</summary>
         public void ClaimRelicChoice(SO_Relic relic_) => _run.Player.AddRelic(relic_);
 
-        /// <summary>药水奖励清单：从池里洗牌取指定瓶数，逐条转成奖励条目。</summary>
-        public List<RunReward> RollPotions(EED_RewardPotions effect_)
-        {
-            List<SO_Potion> potions = new(effect_.Pool.Potions);
-            List<SO_Potion> bottles = _run.Rng.TakeShuffled(potions, Math.Min(effect_.Count, potions.Count));
-            List<RunReward> rewards = new(bottles.Count);
-            for (int i = 0; i < bottles.Count; i++) rewards.Add(RunReward.PotionOf(bottles[i]));
-            return rewards;
-        }
+        /// <summary>药水奖励清单：抽取全交给 RewardRoller（池合并去重后按权重必得指定瓶数，不足给足）。</summary>
+        public List<RunReward> RollPotions(EED_RewardPotions effect_) =>
+            RewardRoller.RollPotions(new[] { effect_.Pool }, effect_.Count, _run.Rng);
 
         // 条件求值：不满足即置灰并给出原因（扣血后至少留 1 点，靠置灰而非封顶杜绝致死）
         private bool IsEnabled(EventOptionData option_, out string reason_)

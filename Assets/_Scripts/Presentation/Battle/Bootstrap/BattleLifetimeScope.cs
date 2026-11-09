@@ -4,7 +4,6 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 using _DreamKeep.ConfigData;
-using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.CommonPresentation;
@@ -24,8 +23,11 @@ namespace _DreamKeep.Presentation
         [SerializeField] private SO_EncounterPool _encounterPool;
         [SerializeField] private SO_BackgroundPool _backgroundPool;
 
-        [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")]
-        [SerializeField] private RectTransform _rewardPanelParent;
+        [Tooltip("奖励面板停泊位：拖本段 Canvas_HUD 根——整局奖励弹层由本段领进自己的画布，HUD 层低于顶栏所在画布才不会盖顶栏")] [SerializeField]
+        private RectTransform _rewardPanelParent;
+
+        [Tooltip("战斗交互层：战斗完成与领奖恢复时整体失活")] [SerializeField]
+        private GameObject[] _hudLayers;
 
         protected override void Configure(IContainerBuilder builder_)
         {
@@ -36,6 +38,10 @@ namespace _DreamKeep.Presentation
             BattleStage stage = Parent.Container.Resolve<BattleStage>();
             int floor = run.Floor;
 
+            // 领奖中读档：本段只作背景，不抽遭遇、不洗牌、不建敌人、不烘焙遗物——随机流一格都不许动，
+            // 否则读档后的跑图随机序列会与退出前分叉。判定只认「有待领奖励清单」，正常战斗该字段为空。
+            bool restoring = run.PendingRewards is { Count: > 0 };
+
             // 遭遇种类由地图节点决定：问号节点取揭示结果（揭示为精英就得进精英遭遇），其余只会是 Monster/Elite/Boss
             EEncounterKind kind = run.Map.CurrentNode.ResolvedType switch
             {
@@ -44,14 +50,23 @@ namespace _DreamKeep.Presentation
                 _ => EEncounterKind.Normal, // 开发面板等旁路直开 Scene_Battle 时当前节点仍是起点：按普通遭遇兜底
             };
 
-            // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
-            IReadOnlyList<SO_Encounter> encounters = _encounterPool.Select(kind, floor);
-            SO_Encounter encounter = run.Rng.Pick(encounters);
-            if (encounter == null)
-                throw new InvalidOperationException(
-                    $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_EncounterPool)} 未配置该档）");
-
-            BattleContext battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
+            BattleContext battleContext;
+            SO_Encounter encounter = null;
+            if (restoring)
+            {
+                // 空战斗态：只为满足战斗 UI 的注入闭包，不启动循环、不生成单位
+                battleContext = new BattleContext(run.Player, new List<Enemy>(), null, run.Rng);
+            }
+            else
+            {
+                // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
+                IReadOnlyList<SO_Encounter> encounters = _encounterPool.Select(kind, floor);
+                encounter = run.Rng.Pick(encounters);
+                if (encounter == null)
+                    throw new InvalidOperationException(
+                        $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_EncounterPool)} 未配置该档）");
+                battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
+            }
 
             BattleEventDispatcher dispatcher = new BattleEventDispatcher();
             // 遗物播报器住整局容器（Run 级单例）：战斗效果与休息处挖掘共用同一涟漪通道，本段只取用
@@ -60,19 +75,17 @@ namespace _DreamKeep.Presentation
 
             // 段收尾域 Loop（GameRun）：战斗终局裁决住整局域——胜利通过、掷奖励、领完或退出，经段事实驱动表现
             BattleSegmentEventDispatcher segmentEvents = new BattleSegmentEventDispatcher();
-            BattleSegmentLoop segmentLoop = new BattleSegmentLoop(run, loop, encounter.Reward, segmentEvents,
+            BattleSegmentLoop segmentLoop = new BattleSegmentLoop(run, loop, encounter?.Reward, segmentEvents,
                 static message_ => Debug.LogWarning(message_));
-            // 领奖中读档：取走掷骰前流状态，由段 Loop 在 Start 时设回并重掷同一份奖励
-            uint? rewardRng = SaveService.ConsumeRestoreRewardRng();
-            if (rewardRng.HasValue) segmentLoop.RestoreRewardsAt(rewardRng.Value);
 
             // 遗物系统（GameRun 程序集）：遍历玩家整局持有的遗物，逐件烘焙效果并挂上本场事件流；
             // 战斗域零感知（装配反转），效果实例随本容器销毁。播报器是本段表现出口，遗物生效/用尽经它通知遗物栏
-            foreach (var relic in battleContext.Player.Relics)
-                RelicBaker.Bake(relic, battleContext, loop.ActionSystem, dispatcher, relicNotifier);
+            if (!restoring)
+                foreach (var relic in battleContext.Player.Relics)
+                    RelicBaker.Bake(relic, battleContext, loop.ActionSystem, dispatcher, relicNotifier);
 
             // 背景抽取放在洗牌之后：它同样消耗整局随机流，放在洗牌前会让牌序跟着背景变化而偏移
-            SO_Background background = run.Rng.Pick(_backgroundPool.Select(kind));
+            SO_Background background = restoring ? null : run.Rng.Pick(_backgroundPool.Select(kind));
 
             builder_.RegisterInstance(battleContext); // 预留：供 HUD 等视图 [Inject] 读取血量 / 能量
             builder_.RegisterInstance(new SpeechLineTracker());
@@ -89,7 +102,7 @@ namespace _DreamKeep.Presentation
             // 单位视图预制体一律来自配置资产：玩家取自整局角色配置，敌人列表与遭遇同源同序，
             // 由本组合根抽出转发，BattleEntry 无需认识配置
             builder_.RegisterInstance(run.Config.ViewPrefab).Keyed("Player");
-            builder_.RegisterInstance(EnemyViewPrefabs(encounter));
+            builder_.RegisterInstance(restoring ? new List<GameObject>() : EnemyViewPrefabs(encounter));
 
             builder_.RegisterComponentInHierarchy<UI_HandView>();
             // 瞄准器与本体同挂一个节点：它要上行门面现算整手牌的数值预览，无每帧入口、由目标提示驱动在下发结果时驱动
@@ -111,7 +124,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterComponentInHierarchy<UI_BattleVfxRoot>();
             builder_.RegisterComponentInHierarchy<UI_BattleAudioRoot>(); // 战斗音频编排：订全部战斗事件统一播音效回执，与特效/弹层各自独立订阅
             builder_.RegisterComponentInHierarchy<BattleTargetDirector>(); // 瞄准中间件：持唯一的目标箭头与当前瞄准客户端，按玩法层预览点亮目标单位
-            builder_.RegisterComponentInHierarchy<UI_TargetArrow>(); // 目标箭头：战斗通用视图，住 Canvas_HUD/TargetingLayer，由瞄准中间件独占驱动
+            builder_
+                .RegisterComponentInHierarchy<UI_TargetArrow>(); // 目标箭头：战斗通用视图，住 Canvas_HUD/TargetingLayer，由瞄准中间件独占驱动
             builder_.RegisterComponentInHierarchy<UI_ActorRoot>(); // 战场单位区：槽位点坐标来源（出生摆位与移动补间）+ 单位视图登记表（目标提示按生物查视图）
             builder_.RegisterComponentInHierarchy<UI_BackgroundView>(); // 背景层视图：本场背景在构建完成后一次写入
             // 场景里预摆的悬停发起器既不经过池、也不会被 RegisterComponentInHierarchy 逐个覆盖：装配期只对组件本身补一次注入。
@@ -122,12 +136,20 @@ namespace _DreamKeep.Presentation
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>(), _hudLayers);
+                if (restoring)
+                {
+                    stage.HideHud(); // 领奖恢复：五个交互层在入口 Start 之前收起，其 Start 不会再跑
+                    return; // 不写背景、不开会话：本段只作背景，任何交互都不该响应
+                }
+
                 resolver_.Resolve<UI_BackgroundView>().Apply(background);
-                stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>());
                 session.Open(resolver_.Resolve<BattleCommandDispatcher>(), resolver_.Resolve<BattleQueryDispatcher>(),
                     dispatcher, loop);
             });
             builder_.RegisterEntryPoint<BattleEntry>();
+
+            ValidateHudLayers();
 
             // 奖励面板停泊：整局单例面板由本段装配期领进自己的 HUD 画布（不按节点名反查，停泊位 Inspector 拖入）；
             // 段卸载会带走面板，下一个战斗段装配时工厂按新停泊位重建/换挂。漏接线按装配期报错契约抛出
@@ -135,6 +157,21 @@ namespace _DreamKeep.Presentation
                 throw new InvalidOperationException(
                     $"{nameof(BattleLifetimeScope)} 未接线奖励面板停泊位（_rewardPanelParent，拖本段 Canvas_HUD 根）");
             Parent.Container.Resolve<PopPanelFactory>().AcquireRewardPanel(_rewardPanelParent);
+        }
+
+        // 交互层漏接线只报错不抛异常：段照常加载，只是战斗完成时该层收不起来
+        private void ValidateHudLayers()
+        {
+            if (_hudLayers == null || _hudLayers.Length < 5)
+            {
+                Debug.LogError(
+                    $"[{nameof(BattleLifetimeScope)}] 战斗交互层未接线（_hudLayers），战斗完成时手牌/能量等不会收起");
+                return;
+            }
+
+            for (int i = 0; i < _hudLayers.Length; i++)
+                if (!_hudLayers[i])
+                    Debug.LogError($"[{nameof(BattleLifetimeScope)}] 战斗交互层第 {i} 项为空，该层不会被收起");
         }
 
         // 敌人视图预制体列表与遭遇同源派生：下标即敌人下标，未接线的配置留 null 交生成侧报错跳过该敌人

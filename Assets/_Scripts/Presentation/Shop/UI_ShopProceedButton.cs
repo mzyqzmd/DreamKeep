@@ -6,7 +6,7 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>商店「继续」按钮：首次掀开地毯的事实到达后亮出（场景初始是关的），
     /// 每次点击只提交继续意图，收段开图由商店段完成事实的订阅方完成。</summary>
-    public sealed class UI_ShopProceedItem : UI_Button
+    public sealed class UI_ShopProceedButton : UI_Button
     {
         private ShopCommandDispatcher _commands;
 

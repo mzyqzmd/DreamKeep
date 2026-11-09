@@ -1031,6 +1031,12 @@ MonoBehaviour:
   _encounterPool: {fileID: 11400000, guid: 3d5a697be06cd1723f59d88e2b706cad, type: 2}
   _backgroundPool: {fileID: 11400000, guid: 5f7c8b9da82ef3945b7bfa004d928ecf, type: 2}
   _rewardPanelParent: {fileID: 2057050349337935963}
+  _hudLayers:
+  - {fileID: 5977378035180033372}
+  - {fileID: 8997567028771170337}
+  - {fileID: 1623334183448969651}
+  - {fileID: 5440137107362387886}
+  - {fileID: 1428734493495719132}
 --- !u!1 &977987626911269203
 GameObject:
   m_ObjectHideFlags: 0

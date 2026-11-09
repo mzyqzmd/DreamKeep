@@ -29,6 +29,8 @@ namespace _DreamKeep.Presentation
         private readonly PopPanelFactory _popFactory;
         private readonly UI_ResultPanel _resultPanel;
         private readonly UI_ActorRoot _actorRoot;
+        private readonly BattleStage _stage;
+        private readonly RunState _run;
         private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
         private readonly IObjectResolver _resolver;
@@ -37,7 +39,8 @@ namespace _DreamKeep.Presentation
             BattleSegmentLoop segmentLoop_, BattleSegmentEventDispatcher segmentEvents_,
             BattleSegmentCommandDispatcher segmentCommands_, SegmentSceneManager segmentManager_,
             PopPanelFactory popFactory_, UI_ResultPanel resultPanel_, UI_ActorRoot actorRoot_,
-            [Key("Player")] GameObject playerViewPrefab_, List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
+            BattleStage stage_, RunState run_, [Key("Player")] GameObject playerViewPrefab_,
+            List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
         {
             _loop = loop_;
             _battleContext = battleContext_;
@@ -49,6 +52,8 @@ namespace _DreamKeep.Presentation
             _popFactory = popFactory_;
             _resultPanel = resultPanel_;
             _actorRoot = actorRoot_;
+            _stage = stage_;
+            _run = run_;
             _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
             _resolver = resolver_;
@@ -59,13 +64,22 @@ namespace _DreamKeep.Presentation
             _segmentEvents.Register<BAE_RewardOffered>(OnRewardOffered);
             _segmentEvents.Register<BAE_RewardClaimed>(claimed_ => _segmentManager.CompleteSegment());
             // 整局终点弹结果面板：面板自身拦下全部输入，确认后由面板直调编排者回主菜单
-            _segmentEvents.Register<BAE_RunCleared>(cleared_ => _resultPanel.Show(EResultKind.RunVictory));
-            _segmentEvents.Register<BAE_RunDefeated>(defeated_ => _resultPanel.Show(EResultKind.RunDefeated));
+            _segmentEvents.Register<BAE_RunCleared>(cleared_ => ShowResult(EResultKind.RunVictory));
+            _segmentEvents.Register<BAE_RunDefeated>(defeated_ => ShowResult(EResultKind.RunDefeated));
             // 无奖励胜利等开发期缺口维持立即卸段，不弹面板
             _segmentEvents.Register<BAE_BattleExited>(exited_ => _segmentManager.FinishSegment());
+
+            // 领奖中读档：本段只作背景，不生成单位、不跑战斗循环，直接复原同一批奖励
+            if (_run.PendingRewards is { Count: > 0 })
+            {
+                _stage.HideHud();
+                ShowRestoreRewards();
+                return;
+            }
+
             SpawnPlayerView();
             SpawnEnemyViews();
-            if (!_segmentLoop.IsRewardRestore) _loop.Start(); // 领奖中读档：跳过战斗循环，只重领奖励
+            _loop.Start();
             _segmentLoop.Start();
         }
 
@@ -142,7 +156,9 @@ namespace _DreamKeep.Presentation
         // 弹板自管领取与演出，「继续」关板并交回领完意图；弹板失败降级为跳过奖励（异常照报，不静默吞）
         private void OnRewardOffered(BAE_RewardOffered offered_)
         {
-            _segmentManager.SetPhase(ESavePhase.AwaitingReward); // 领奖中写盘据此重领，不重打战斗
+            _stage.HideHud(); // 战斗完成：交互层收起，画面上只留奖励面板
+            _segmentManager.SetPhase(ESavePhase.AwaitingReward); // 领奖中读档据此复原，不重打战斗
+            SaveService.Save(); // 唯一检查点：战斗后 RunState + 待领奖励清单落盘，领奖期间不再写盘
             try
             {
                 UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
@@ -157,6 +173,24 @@ namespace _DreamKeep.Presentation
                 Debug.LogException(e);
                 _segmentCommands.SkipReward();
             }
+        }
+
+        // 领奖中读档的复原：清单来自存档，不重掷、不再走段 Loop 的等待点，领完直接完成本段
+        private void ShowRestoreRewards()
+        {
+            UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
+            panel.Show("战斗奖励", _run.PendingRewards, () =>
+            {
+                panel.Close();
+                _segmentManager.CompleteSegment();
+            });
+        }
+
+        // 战斗结束弹整局结果面板：先收起战斗交互层，免得面板背后露出空手牌与回合按钮
+        private void ShowResult(EResultKind kind_)
+        {
+            _stage.HideHud();
+            _resultPanel.Show(kind_);
         }
     }
 }
