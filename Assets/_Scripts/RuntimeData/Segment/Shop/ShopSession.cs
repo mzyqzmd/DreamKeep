@@ -166,21 +166,23 @@ namespace _DreamKeep.RuntimeData
         #region 货架快照：表现层铺格子与重染价格的唯一数据源
 
         /// <summary>货架快照：售出格为 null（价格记 0、半价记 false），视图按 null 收起该格。
-        /// 组装直接用内部名册与价格表，不经公开报价面反查重组。</summary>
+        /// 卡货架价格先折入半价、与结算侧 PriceOfCard 同为实付价；组装直接用内部名册与价格表，不经公开报价面反查重组。</summary>
         public ShopShelfSnapshot BuildSnapshot()
         {
             return new ShopShelfSnapshot(_commonRareCards, _superRareCards, _relics, _potions,
-                PriceSnapshot(_commonRareCards, _commonRarePrices), PriceSnapshot(_superRareCards, _superRarePrices),
+                PriceSnapshot(_commonRareCards, _commonRarePrices, _commonRareSaleIndex),
+                PriceSnapshot(_superRareCards, _superRarePrices, _superRareSaleIndex),
                 PriceSnapshot(_relics, _relicPrices), PriceSnapshot(_potions, _potionPrices),
                 SaleSnapshot(_commonRareCards, _commonRareSaleIndex), SaleSnapshot(_superRareCards, _superRareSaleIndex),
                 RemovalPrice, _removalUsed);
         }
 
-        // 价格快照：售出格价格记 0
-        private static List<int> PriceSnapshot<T>(List<T> shelf_, List<int> prices_) where T : class
+        // 价格快照：卡货架按半价下标折成实付价，售出格记 0
+        private static List<int> PriceSnapshot<T>(List<T> shelf_, List<int> prices_, int saleIndex_ = -1) where T : class
         {
             List<int> snapshot = new(shelf_.Count);
-            for (int i = 0; i < shelf_.Count; i++) snapshot.Add(shelf_[i] == null ? 0 : prices_[i]);
+            for (int i = 0; i < shelf_.Count; i++)
+                snapshot.Add(shelf_[i] == null ? 0 : SalePrice(prices_[i], i == saleIndex_));
             return snapshot;
         }
 

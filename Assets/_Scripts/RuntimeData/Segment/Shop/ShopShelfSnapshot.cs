@@ -5,7 +5,7 @@ using _DreamKeep.ConfigData;
 namespace _DreamKeep.RuntimeData
 {
     /// <summary>商店货架快照：事件负载专用的只读陈列数据，复制货架与价格表，不持有会话与场景引用。
-    /// 视图只按本快照铺格子、重染价格，查询面与 ShopSession 的只读部分一致；
+    /// 价格表即实付价（两个卡货架已折入半价），查询面与 ShopSession 的只读部分一致；IsOnSale 只作视图折扣标识。
     /// 金币不随快照，染色一律实时取 RunState.Gold，避免快照与整局状态两个真源。</summary>
     public sealed class ShopShelfSnapshot
     {
