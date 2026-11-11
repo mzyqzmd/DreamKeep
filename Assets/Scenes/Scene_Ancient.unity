@@ -2226,6 +2226,7 @@ GameObject:
   - component: {fileID: 883659731216807404}
   - component: {fileID: 1290516625942660942}
   - component: {fileID: 1290516625942660943}
+  - component: {fileID: 1290516625942660944}
   m_Layer: 0
   m_Name: GameAncientRoot
   m_TagString: Untagged
@@ -2263,6 +2264,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _bannerParent: {fileID: 2057050349337935963}
+--- !u!114 &1290516625942660944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290516625942660941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59b13beba4721454c955e7bd98017e60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playVfxParent: {fileID: 2057050349337935963}
+  _vfxSpacingPx: 500
+  _vfxScale: 1
 --- !u!224 &2057050349337935963
 RectTransform:
   m_ObjectHideFlags: 0

@@ -11,12 +11,14 @@ namespace _DreamKeep.RuntimeData
         {
             SO_Vulnerable vulnerable => new BP_Vulnerable(vulnerable),
             SO_Weak weak => new BP_Weak(weak),
+            SO_Shrink shrink => new BP_Shrink(shrink),
             SO_Strength strength => new BP_Strength(strength),
             SO_Dexterity dexterity => new BP_Dexterity(dexterity),
             SO_Regen regen => new BP_Regen(regen),
             SO_Slow slow => new BP_Slow(slow),
             SO_Rampage rampage => new BP_Rampage(rampage),
             SO_Dizzy dizzy => new BP_Dizzy(dizzy),
+            SO_Slippery slippery => new BP_Slippery(slippery),
             _ => null,
         };
 

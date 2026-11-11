@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using VContainer.Unity;
@@ -35,16 +36,21 @@ namespace _DreamKeep.Presentation
         public void Start()
         {
             _events.Register<AE_ErrorReported>(reported_ => Debug.LogError(reported_.Message));
-            // 强制选牌：交回取消由域流程重弹（cancelable=false 的时机由 helper 内部保证）
+            // 强制选牌：交回取消由域流程重弹（不可取消的开板时序由面板内部保证）
             _events.Register<AE_UpgradeCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_upgradePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_), cancelable_: false).Forget());
+                SubmitSelectionAsync(_upgradePanel, requested_.Count, requested_.Result, cancelable_: false));
             _events.Register<AE_RemoveCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_), cancelable_: false).Forget());
+                SubmitSelectionAsync(_removePanel, requested_.Count, requested_.Result, cancelable_: false));
             _events.Register<AE_AncientCompleted>(completed_ => _segmentManager.CompleteSegment());
             _loop.Start();
         }
 
+        // 选板结果交回请求事件自带的结果源：null = 关板取消，由域侧重弹
+        private async UniTask SubmitSelectionAsync(UI_CardSelectPanel panel_, int count_,
+            UniTaskCompletionSource<IReadOnlyList<CardModel>> result_, bool cancelable_ = true)
+        {
+            IReadOnlyList<CardModel> cards = await panel_.ShowAndWaitAsync(_run.Player, count_, cancelable_);
+            result_.TrySetResult(cards);
+        }
     }
 }

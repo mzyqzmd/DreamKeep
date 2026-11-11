@@ -22,7 +22,7 @@ namespace _DreamKeep.RuntimeData
         public override string Name { get; }
         public override bool ShowDescription { get; }
         public ModifiableStat Amount { get; }
-        internal override int PipelineOrder => 4;
+        internal override int PipelineOrder => 0;
 
         // 数值属能量通道：升级增量走容器已生效，战斗内的能量修正通道尚未接入
         public override string GetDescription(IStatRenderer valueRenderer_ = null)

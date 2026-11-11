@@ -1234,6 +1234,7 @@ GameObject:
   m_Component:
   - component: {fileID: 883659731216807404}
   - component: {fileID: 1290516625942660942}
+  - component: {fileID: 1290516625942660943}
   m_Layer: 0
   m_Name: GameEventRoot
   m_TagString: Untagged
@@ -1263,6 +1264,21 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 49bd6133124688e4f919ac0130349dac, type: 2}
   - {fileID: 11400000, guid: b1bd6eb8608a4354eb215496d6ff146f, type: 2}
   - {fileID: 11400000, guid: a4858be1736bc964889d57161b993b17, type: 2}
+--- !u!114 &1290516625942660943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290516625942660941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f692fc243fd4dc44b94663655d238869, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _playVfxParent: {fileID: 2057050349337935963}
+  _vfxSpacingPx: 500
+  _vfxScale: 1
 --- !u!224 &2057050349337935963
 RectTransform:
   m_ObjectHideFlags: 0

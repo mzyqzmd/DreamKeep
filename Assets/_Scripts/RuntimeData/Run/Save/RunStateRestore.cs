@@ -340,7 +340,7 @@ namespace _DreamKeep.RuntimeData
         #endregion
 
         private static string GuidOf(UnityEngine.ScriptableObject asset_) =>
-            asset_ == null ? null : SaveService.Catalog?.GuidOf(asset_);
+            !asset_ ? null : SaveService.Catalog?.GuidOf(asset_);
 
         private static string[] GuidsOf<T>(IReadOnlyList<T> assets_) where T : UnityEngine.ScriptableObject
         {

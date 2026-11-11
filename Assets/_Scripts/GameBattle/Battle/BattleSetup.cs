@@ -43,7 +43,7 @@ namespace _DreamKeep.GameBattle
             return runCardOf;
         }
 
-        /// <summary>敌人按遭遇列表顺序装配：从最靠后槽位向前排（1 只站 3 号、2 只站 2/3 号），并烘焙最前槽位替换意图；
+        /// <summary>敌人按遭遇列表顺序装配：从最靠后槽位向前排（1 只站 4 号、3 只站 2/3/4 号），并烘焙最前槽位替换意图；
         /// 台词表在构造时一次写入，留空即全程沉默。</summary>
         private static List<Enemy> BuildEnemies(SO_Encounter encounter_, Rng rng_)
         {
@@ -69,9 +69,16 @@ namespace _DreamKeep.GameBattle
             return enemies;
         }
 
-        /// <summary>双阶段敌人装配期装载二阶段意图：普通敌人没有该配置直接跳过。</summary>
+        /// <summary>双阶段敌人装配期装载二阶段意图：普通敌人没有该配置直接跳过；缩小甲虫额外写入自动切换标记。</summary>
         private static void LoadPhaseTwo(Enemy enemy_, SO_Enemy config_)
         {
+            if (config_ is SO_ShrinkerBeetle beetle)
+            {
+                enemy_.LoadPhaseTwo(IntentBaker.Bake(beetle.PhaseTwoIntents), null);
+                if (beetle.SwitchPhaseAfterFirstIntent) enemy_.MarkSwitchPhaseAfterFirstIntent();
+                return;
+            }
+
             if (config_ is not SO_CeremonialBeast beast) return;
             enemy_.LoadPhaseTwo(IntentBaker.Bake(beast.PhaseTwoIntents),
                 IntentBaker.Bake(beast.PhaseTwoFrontSlotIntent));

@@ -17,7 +17,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string Name { get; }
         public override bool ShowDescription { get; }
-        internal override int PipelineOrder => 6;
+        internal override int PipelineOrder => 2;
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null) => "打出后从整局游戏中\n永久移除自身";
 

@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: Stoke
+  m_EditorClassIdentifier: 
+  _name: "\u7239\uFF01\u4F60\u6CA1\u6B7B\u554A"
+  _cost: 2
+  _icon: {fileID: 21300000, guid: d0cb61527c48400458409abd03c13b6e, type: 3}
+  _rarity: 2
+  _type: 1
+  _targetType: 1
+  _affixes:
+  - rid: 6594183804317859869
+  - rid: 6594183804317859870
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183804317859871
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183804317859869
+      type: {class: AD_SelectExhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _scope: 0
+        _count: 0
+    - rid: 6594183804317859870
+      type: {class: AD_DrawCard, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _count: 10
+    - rid: 6594183804317859871
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 0
+        _additive: -1
+        _multiplier: 1

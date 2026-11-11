@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using VContainer.Unity;
 using _DreamKeep.CommonPresentation;
@@ -14,16 +15,15 @@ namespace _DreamKeep.Presentation
         private readonly RestEventDispatcher _events;
         private readonly RestCommandDispatcher _commands;
         private readonly RunState _run;
-        private readonly UI_RestVFXRoot _vfxRoot;
+        private readonly RestVfxRoot _vfxRoot;
         private readonly UI_CardUpgradePanel _panel;
         private readonly UI_CardRemovePanel _removePanel;
         private readonly UI_RestProceedButton _proceedButton;
         private readonly SegmentSceneManager _segmentManager;
-        private readonly VfxFactory _vfxFactory;
 
         public RestEntry(RestLoop loop_, RestEventDispatcher events_, RestCommandDispatcher commands_, RunState run_,
-            UI_RestVFXRoot vfxRoot_, UI_CardUpgradePanel panel_, UI_CardRemovePanel removePanel_,
-            UI_RestProceedButton proceedButton_, SegmentSceneManager segmentManager_, VfxFactory vfxFactory_)
+            RestVfxRoot vfxRoot_, UI_CardUpgradePanel panel_, UI_CardRemovePanel removePanel_,
+            UI_RestProceedButton proceedButton_, SegmentSceneManager segmentManager_)
         {
             _loop = loop_;
             _events = events_;
@@ -34,20 +34,15 @@ namespace _DreamKeep.Presentation
             _removePanel = removePanel_;
             _proceedButton = proceedButton_;
             _segmentManager = segmentManager_;
-            _vfxFactory = vfxFactory_;
         }
 
         public void Start()
         {
-            _vfxRoot.Initialize(_vfxFactory); // 工厂在父容器、跨场景不可序列化，运行时交底
-
             _events.Register<REE_RestSmokeRequested>(smoke_ => _vfxRoot.PlayRestSmokeAsync());
             _events.Register<REE_UpgradeCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_panel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
+                SubmitSelectionAsync(_panel, requested_.Count, requested_.Result));
             _events.Register<REE_RemoveCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
+                SubmitSelectionAsync(_removePanel, requested_.Count, requested_.Result));
             _events.Register<REE_ProceedOffered>(OnProceedOffered);
             _events.Register<REE_RestCompleted>(completed_ => _segmentManager.CompleteSegment());
             _loop.Start();
@@ -60,5 +55,13 @@ namespace _DreamKeep.Presentation
         }
 
         private void OnProceedButtonClicked() => _commands.Proceed();
+
+        // 选板结果交回请求事件自带的结果源：null = 关板取消，由域侧短路
+        private async UniTask SubmitSelectionAsync(UI_CardSelectPanel panel_, int count_,
+            UniTaskCompletionSource<IReadOnlyList<CardModel>> result_, bool cancelable_ = true)
+        {
+            IReadOnlyList<CardModel> cards = await panel_.ShowAndWaitAsync(_run.Player, count_, cancelable_);
+            result_.TrySetResult(cards);
+        }
     }
 }

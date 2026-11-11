@@ -33,6 +33,12 @@ namespace _DreamKeep.RuntimeData
             EUpgradeChannel.DrawCount => affix_ is CA_DrawCard drawCard ? drawCard.Count : null,
             EUpgradeChannel.EnergyGain => affix_ is CA_GainEnergy gainEnergy ? gainEnergy.Amount : null,
             EUpgradeChannel.Heal => affix_ is CA_Heal heal ? heal.Amount : null,
+            EUpgradeChannel.SelectCount => affix_ switch
+            {
+                CA_SelectUpgrade upgrade => upgrade.Count,
+                CA_SelectExhaust exhaust => exhaust.Count,
+                _ => null,
+            },
             _ => null,
         };
 

@@ -30,7 +30,8 @@ namespace _DreamKeep.Presentation
     [RequireComponent(typeof(UI_CardFaceSelector))]
     [RequireComponent(typeof(UI_HoverOffset))]
     [RequireComponent(typeof(UI_HoverScaler))]
-    public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+    public sealed class UI_CardBattle : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler,
+        IPointerClickHandler
     {
         [Tooltip("拖拽跟手高度（画布像素）：拖拽时让卡锚点（下沿中点）上方该距离的点与指针重合，指针便停在卡内这个高度")] [SerializeField]
         private float _anchorLiftPx = 120f;
@@ -238,6 +239,13 @@ namespace _DreamKeep.Presentation
             if (!_dragging) return;
             _dragging = false;
             Host.OnCardReleased(this); // 瞄准与否由宿主分流：松手后是打出还是回位都不在这里判断
+        }
+
+        // 选牌态点击：此态 CanGrab 恒为假，按下不会进入拖拽，纯点击经这里上报宿主
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            if (Host && Host.IsSelectMode) Host.OnCardClicked(this);
         }
 
         #endregion

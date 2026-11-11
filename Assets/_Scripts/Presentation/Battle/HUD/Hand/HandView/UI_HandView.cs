@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
@@ -91,6 +92,8 @@ namespace _DreamKeep.Presentation
         // "按下走哪种交互"由包装读自己的卡回答，不经此路
         private bool _cardsPlayable;
         private UI_CardBattle _draggedCard;
+        private bool _selectMode;
+        private Action<CardModel> _onCardSelected;
 
         // 同节点的两个协作组件：悬停身份、避让量与词条气泡长在悬停器上，瞄准态与整手数值预览长在瞄准器上，
         // 这里只留引用与调用（RequireComponent 保证它们必有）
@@ -264,8 +267,8 @@ namespace _DreamKeep.Presentation
         internal bool CanHover(UI_CardBattle card_) =>
             !_draggedCard && IsInRow(card_) && !_entering.Contains(card_);
 
-        /// <summary>这张牌此刻能不能抓：悬停资格之上再要求本回合可打。</summary>
-        public bool CanGrab(UI_CardBattle card_) => _cardsPlayable && CanHover(card_);
+        /// <summary>这张牌此刻能不能抓：悬停资格之上再要求本回合可打，选牌态一律吞掉拖拽。</summary>
+        public bool CanGrab(UI_CardBattle card_) => !_selectMode && _cardsPlayable && CanHover(card_);
 
         #endregion
 
@@ -412,6 +415,67 @@ namespace _DreamKeep.Presentation
         // 悬停抬起不读指针（按手牌区的点换算，与卡自身缩放无关，故拖动起始无跳变）
         internal Vector3 PointerAnchorPosition(UI_CardBattle card_) =>
             PointerWorldPosition() - _fanCenterPoint.TransformVector(Vector3.up * card_.AnchorLiftPx);
+
+        #endregion
+
+        #region 选牌态：只由局内选牌面板驱动
+
+        internal bool IsSelectMode => _selectMode;
+
+        /// <summary>进入或退出选牌态：进入时吞掉抓取并登记点击回调，退出时清回调。</summary>
+        public void SetSelectMode(bool active_, Action<CardModel> onSelected_)
+        {
+            _selectMode = active_;
+            _onCardSelected = active_ ? onSelected_ : null;
+        }
+
+        /// <summary>选牌态下点中手牌：只上报行内的牌，已离手等结算的牌不参与选择。</summary>
+        public void OnCardClicked(UI_CardBattle card_)
+        {
+            if (!_selectMode || !IsInRow(card_)) return;
+            _onCardSelected?.Invoke(card_.Card);
+        }
+
+        /// <summary>选中：视图离手换飞行层并缩到 0 交棒给面板展示卡，返回离手前的世界位姿供起飞。</summary>
+        internal bool TryTakeForSelection(CardModel model_, out Vector3 position_, out Quaternion rotation_,
+            out float scale_)
+        {
+            if (!_views.TryGetValue(model_, out UI_CardBattle view))
+            {
+                position_ = default;
+                rotation_ = default;
+                scale_ = 1f;
+                return false;
+            }
+
+            position_ = view.WorldPosition;
+            rotation_ = view.WorldRotation;
+            scale_ = view.transform.localScale.x;
+            _hover.ClearHover();
+            _hand.Remove(view);
+            MoveToFly(view);
+            view.ClearHover();
+            view.transform.localScale = Vector3.zero;
+            ApplyLayout();
+            return true;
+        }
+
+        /// <summary>取消或升级生效：视图重新入列，整体重排负责把它飞回槽位并恢复尺寸。</summary>
+        internal void ReturnFromSelection(CardModel model_)
+        {
+            if (!_views.TryGetValue(model_, out UI_CardBattle view) || _hand.Contains(view)) return;
+            _hand.Add(view);
+            MoveToHand(view);
+            ApplyLayout();
+        }
+
+        /// <summary>消耗生效前原地显形：让既有离场飞行能从面板卡位起飞，缩放交给飞行补间收尾。</summary>
+        internal void RevealFromSelection(CardModel model_, Vector3 position_, Quaternion rotation_)
+        {
+            if (!_views.TryGetValue(model_, out UI_CardBattle view)) return;
+            view.Place(position_, rotation_);
+            view.transform.localScale = Vector3.one;
+        }
 
         #endregion
 

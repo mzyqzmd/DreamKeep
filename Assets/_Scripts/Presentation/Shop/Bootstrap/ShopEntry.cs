@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using _DreamKeep.CommonPresentation;
 using Cysharp.Threading.Tasks;
 using VContainer;
@@ -58,8 +59,7 @@ namespace _DreamKeep.Presentation
             _events.Register<SE_RemovalPanelRequested>(requested_ =>
             {
                 if (_audio) _audio.Play(_audio.Cues.MerchantHum);
-                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget();
+                return SubmitSelectionAsync(_removePanel, requested_.Count, requested_.Result);
             });
             _events.Register<SE_ShopCompleted>(_ => _segmentManager.CompleteSegment());
             _events.Register<SE_ShopOpened>(_ => { if (_audio) _audio.Play(_audio.Cues.MerchantWelcome); });
@@ -109,6 +109,14 @@ namespace _DreamKeep.Presentation
             }
 
             if (_audio && cue_) _audio.Play(cue_);
+        }
+
+        // 选板结果交回请求事件自带的结果源：null = 关板取消，由域侧短路
+        private async UniTask SubmitSelectionAsync(UI_CardSelectPanel panel_, int count_,
+            UniTaskCompletionSource<IReadOnlyList<CardModel>> result_, bool cancelable_ = true)
+        {
+            IReadOnlyList<CardModel> cards = await panel_.ShowAndWaitAsync(_run.Player, count_, cancelable_);
+            result_.TrySetResult(cards);
         }
     }
 }

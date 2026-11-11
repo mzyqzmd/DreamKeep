@@ -3,9 +3,9 @@ using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>敌人：占据一个纵深敌人槽位（1 最靠前、3 最靠后，可在槽位间移动），持有一串运行时意图并按顺序循环取用。
+    /// <summary>敌人：占据一个纵深敌人槽位（1 最靠前、4 最靠后，可在槽位间移动），持有一串运行时意图并按顺序循环取用。
     /// 对外意图走三级覆盖：击晕 > 站最前槽位的替换意图 > 序列当前意图（执行与预告统一走 PreviewIntent）；
-    /// 双阶段敌人（仪式兽）在装配期收下二阶段意图表，触发时整表切换。</summary>
+    /// 双阶段敌人在装配期收下二阶段意图表，按配置决定由掉血阈值还是阶段一意图执行完触发切换。</summary>
     public class Enemy
     {
         private static readonly EnemyIntent StunIntent = new EI_Stun(); // 无字段，全体被击晕的敌人共享同一实例
@@ -16,6 +16,7 @@ namespace _DreamKeep.RuntimeData
         private List<EnemyIntent> _phaseTwoIntents;
         private EnemyIntent _phaseTwoFrontSlotIntent;
         private bool _isPhaseTwo;
+        private bool _switchPhaseAfterFirstIntent;
         private int _intentIndex;
 
         public Creature Creature { get; }
@@ -29,6 +30,9 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>是否处于阶段二：仅双阶段敌人经 SwitchToPhaseTwo 进入，普通敌人恒为阶段一。</summary>
         public bool IsPhaseTwo => _isPhaseTwo;
+
+        /// <summary>是否应在本次阶段一意图执行后自动切阶段：仅由配置开关启用，切入阶段二后恒 false。</summary>
+        public bool ShouldSwitchPhaseAfterIntent => !_isPhaseTwo && _switchPhaseAfterFirstIntent;
 
         /// <summary>本次将要执行的意图序号：表现层据此查台词目录，须在 AdvanceIntent() 之前读出。</summary>
         public int IntentIndex => _intentIndex;
@@ -74,6 +78,9 @@ namespace _DreamKeep.RuntimeData
             _phaseTwoIntents = intents_ ?? new List<EnemyIntent>();
             _phaseTwoFrontSlotIntent = frontSlotIntent_;
         }
+
+        /// <summary>标记阶段一意图执行一次后自动切阶段：装配期由配置写入。</summary>
+        public void MarkSwitchPhaseAfterFirstIntent() => _switchPhaseAfterFirstIntent = true;
 
         /// <summary>切入阶段二：整表换成二阶段并归零意图索引；已处于阶段二时直接返回（幂等）。</summary>
         public void SwitchToPhaseTwo()

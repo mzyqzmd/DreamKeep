@@ -47,6 +47,8 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_CardDiscarded>(OnCardDiscardedAsync);
             eventDispatcher_.Register<BE_CardsDiscarded>(OnCardsDiscardedAsync);
             eventDispatcher_.Register<BE_CardExhausted>(exhausted_ => ExitToPileAsync(exhausted_.Card, _handView.ExhaustPile));
+            // 本场升级：按升级后的卡重绑卡面，再让选中的卡飞回手牌；卡仍在手牌时只重绑、不挪位
+            eventDispatcher_.Register<BE_CardUpgraded>(OnCardUpgraded);
             // 遗忘只借道飞往出牌区、不落堆，故不发进堆通知；永久移除与否由域侧决定，这里只播形式
             eventDispatcher_.Register<BE_CardErased>(erased_ => ExitToPileAsync(erased_.Card, null));
             eventDispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejected);
@@ -105,6 +107,13 @@ namespace _DreamKeep.Presentation
             _handView.ApplyLayout();
 
             await _handView.DropZone.WaitArrivalAsync(view);
+        }
+
+        private void OnCardUpgraded(BE_CardUpgraded upgraded_)
+        {
+            if (!_handView.TryGetView(upgraded_.Card, out UI_CardBattle view)) return;
+            view.Bind(upgraded_.Card);
+            _handView.ReturnFromSelection(upgraded_.Card);
         }
 
         // 被拒退回：域侧已判明命令不生效，撤下出牌区并整手重排一次——行重新开缝，这张从队列位置飞回自己的槽位

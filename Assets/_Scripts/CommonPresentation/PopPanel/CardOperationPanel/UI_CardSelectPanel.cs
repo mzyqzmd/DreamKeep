@@ -26,11 +26,6 @@ namespace _DreamKeep.CommonPresentation
 
         [Tooltip("弹出/收起补间时长")] [SerializeField] private float _confirmPopDuration = 0.2f;
 
-        [Header("演出")] [Tooltip("多个演出的整体缩放")] [SerializeField] private float _vfxScale = 1f;
-
-        [Tooltip("多个演出的横向间距（画布像素，经面板父级换算成世界偏移）")] [SerializeField]
-        private float _vfxSpacingPx = 500f;
-
         [Header("开合")] [SerializeField] private Button _closeButton;
 
         private bool _cancelable = true; // 拾取型遗物的强制选牌用：false 时藏起关闭键并拦住取消路径
@@ -39,8 +34,6 @@ namespace _DreamKeep.CommonPresentation
         private UI_ConcreteCardView _concrete;
 
         private IObjectResolver _resolver;
-        private VfxFactory _vfxFactory;
-        private AudioRoot _audio;
         private MonoObjectPool<UI_CardInDeck> _pool;
         private readonly List<UI_CardInDeck> _activeItems = new();
         private readonly List<UI_CardInDeck> _selected = new(); // FIFO 真源：先选中的先被替换
@@ -56,8 +49,6 @@ namespace _DreamKeep.CommonPresentation
         protected int Target => _target;
         protected IReadOnlyList<UI_CardInDeck> Selected => _selected;
         protected UI_CardInDeck CardPrefab => _cardPrefab;
-        protected VfxFactory VfxFactory => _vfxFactory;
-        protected AudioRoot Audio => _audio;
 
         private void Awake()
         {
@@ -83,8 +74,6 @@ namespace _DreamKeep.CommonPresentation
         public void Construct(IObjectResolver resolver_)
         {
             _resolver = resolver_;
-            _vfxFactory = _resolver.Resolve<VfxFactory>();
-            _audio = _resolver.Resolve<AudioRoot>();
             _pool = CreateCardPool(_scrollContent);
             OnConstructed();
         }
@@ -125,6 +114,16 @@ namespace _DreamKeep.CommonPresentation
             _closeButton.gameObject.SetActive(cancelable_);
         }
 
+        /// <summary>开板、可选关取消许可、等玩家结果一步到位：必须先 Show 再关取消许可，
+        /// Show 内的清场会复位许可。结果原样交还（null = 取消，空列表 = 零可选）。</summary>
+        public async UniTask<IReadOnlyList<CardModel>> ShowAndWaitAsync(Player player_, int count_,
+            bool cancelable_ = true)
+        {
+            Show(player_, count_);
+            if (!cancelable_) SetCancelable(false);
+            return await WaitResultAsync();
+        }
+
         #endregion
 
         protected override void OnShown()
@@ -146,17 +145,13 @@ namespace _DreamKeep.CommonPresentation
             if (UseConfirmButton) ShowConfirm(_selected.Count == _target); // 目标为 0 即开板就算「选满」
         }
 
-        #region 子类钩子：只回答「选哪些卡、确认后做什么、演出播哪个」
+        #region 子类钩子：只回答「选哪些卡、确认后做什么」
 
         /// <summary>本次可选的候选卡（决定网格陈列与目标张数上限）。</summary>
         protected abstract IReadOnlyList<CardModel> CollectCandidates();
 
-        /// <summary>已选满目标张数且目标大于 0 时的确认动作：写域与演出由子类编排，最终调 FinishAsync 交付。</summary>
+        /// <summary>已选满目标张数且目标大于 0 时的确认动作：子类只交回选中卡，写域由域侧链路完成。</summary>
         protected abstract void OnConfirm();
-
-        /// <summary>单个卡牌的演出投放（横向均布的位置与缩放由基类算好）。</summary>
-        protected abstract void PlayVfx(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
-            Action onFinished_);
 
         #endregion
 
@@ -208,20 +203,12 @@ namespace _DreamKeep.CommonPresentation
             OnSelectionChanged();
         }
 
-        /// <summary>收场并交付：关板 → 横向均布演出一遍 → 交还结果；演出异常也交付，调用方不会永久挂住。</summary>
-        protected async UniTask FinishAsync(IReadOnlyList<CardModel> cards_)
+        /// <summary>收场并交付：关板后直接把选中卡交回结果源，演出由域侧结算后的完成事实驱动。</summary>
+        protected void FinishAsync(IReadOnlyList<CardModel> cards_)
         {
-            UniTaskCompletionSource<IReadOnlyList<CardModel>> pending = _result; // 演出期间结果槽不被下一轮覆盖
             _selected.Clear();
             Hide(); // 确认即整板收起：背景、列表与子类特有层一并消失
-            try
-            {
-                await PlaySpreadVfxAsync(cards_);
-            }
-            finally
-            {
-                pending?.TrySetResult(cards_);
-            }
+            _result?.TrySetResult(cards_);
         }
 
         #endregion
@@ -325,24 +312,6 @@ namespace _DreamKeep.CommonPresentation
 
             Confirmed?.Invoke(); // 先播"开始处理"的表现，再进子类的删牌/升级流程
             OnConfirm();
-        }
-
-        // 演出：N 个以面板父级（弹层画布容器）中心为基准横向均布，同帧开播同时结束；
-        // 完成回调全指向同一完成源（TrySetResult 幂等），任一完成即全部完成；工厂预制体缺失会立即回调不挂死
-        private UniTask PlaySpreadVfxAsync(IReadOnlyList<CardModel> cards_)
-        {
-            if (cards_.Count == 0) return UniTask.CompletedTask; // 没有卡就没有演出，直接放行
-            UniTaskCompletionSource done = new();
-            Transform parent = transform.parent;
-            Vector3 center = parent.position;
-            for (int i = 0; i < cards_.Count; i++)
-            {
-                float shift = (i - (cards_.Count - 1) / 2f) * _vfxSpacingPx;
-                Vector3 worldPos = center + parent.TransformVector(new Vector3(shift, 0f, 0f));
-                PlayVfx(parent, worldPos, _vfxScale, cards_[i], () => done.TrySetResult());
-            }
-
-            return done.Task;
         }
 
         // 清场：特写、子类特有层、网格台账与确认键一并复位，选中表清空（开板与失活兜底共用）；

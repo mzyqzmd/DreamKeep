@@ -31,6 +31,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new AncientCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_AncientDialoguePanel>();
+            builder_.RegisterComponentInHierarchy<AncientVfxRoot>(); // 注册即注入：订阅本段结算完成事实并播演出
             builder_.RegisterComponentInHierarchy<UI_AncientOptionGroup>();
             builder_.RegisterComponentInHierarchy<UI_AncientPopRoot>();
             builder_.RegisterComponentInHierarchy<UI_CardUpgradePanel>(); // 注册即注入：面板池与特效工厂走 [Inject] Construct

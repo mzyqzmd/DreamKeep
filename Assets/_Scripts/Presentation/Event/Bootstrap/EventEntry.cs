@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using VContainer.Unity;
 using _DreamKeep.CommonPresentation;
@@ -13,6 +14,7 @@ namespace _DreamKeep.Presentation
         private readonly EventLoop _loop;
         private readonly EventEventDispatcher _events;
         private readonly EventCommandDispatcher _commands;
+        private readonly RunCommandDispatcher _runCommands;
         private readonly RunState _run;
         private readonly UI_CardRemovePanel _removePanel;
         private readonly UI_CardUpgradePanel _upgradePanel;
@@ -20,12 +22,13 @@ namespace _DreamKeep.Presentation
         private readonly SegmentSceneManager _segmentManager;
 
         public EventEntry(EventLoop loop_, EventEventDispatcher events_, EventCommandDispatcher commands_,
-            RunState run_, UI_CardRemovePanel removePanel_, UI_CardUpgradePanel upgradePanel_,
-            UI_RewardPanel rewardPanel_, SegmentSceneManager segmentManager_)
+            RunCommandDispatcher runCommands_, RunState run_, UI_CardRemovePanel removePanel_,
+            UI_CardUpgradePanel upgradePanel_, UI_RewardPanel rewardPanel_, SegmentSceneManager segmentManager_)
         {
             _loop = loop_;
             _events = events_;
             _commands = commands_;
+            _runCommands = runCommands_;
             _run = run_;
             _removePanel = removePanel_;
             _upgradePanel = upgradePanel_;
@@ -37,20 +40,30 @@ namespace _DreamKeep.Presentation
         {
             _events.Register<EE_EventCompleted>(completed_ => _segmentManager.CompleteSegment());
             _events.Register<EE_RemoveCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_removePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
+                SubmitSelectionAsync(_removePanel, requested_.Count, requested_.Result));
             _events.Register<EE_UpgradeCardsRequested>(requested_ =>
-                CardSelectFlow.OpenAndSubmitAsync(_upgradePanel, _run.Player, requested_.Count,
-                    cards_ => _commands.SubmitCardSelection(cards_)).Forget());
+                SubmitSelectionAsync(_upgradePanel, requested_.Count, requested_.Result));
             _events.Register<EE_RewardPotionsOffered>(OnRewardPotionsOffered);
             _loop.Start();
         }
 
-        private void OnRewardPotionsOffered(EE_RewardPotionsOffered offered_) =>
+        private void OnRewardPotionsOffered(EE_RewardPotionsOffered offered_)
+        {
+            _runCommands.BeginRewardClaim(offered_.Rewards);
             _rewardPanel.Show(offered_.Title, offered_.Rewards, () =>
             {
+                _runCommands.EndRewardClaim();
                 _rewardPanel.Close();
                 _commands.AcknowledgeReward();
             });
+        }
+
+        // 选板结果交回请求事件自带的结果源：null = 关板取消，由域侧短路
+        private async UniTask SubmitSelectionAsync(UI_CardSelectPanel panel_, int count_,
+            UniTaskCompletionSource<IReadOnlyList<CardModel>> result_, bool cancelable_ = true)
+        {
+            IReadOnlyList<CardModel> cards = await panel_.ShowAndWaitAsync(_run.Player, count_, cancelable_);
+            result_.TrySetResult(cards);
+        }
     }
 }

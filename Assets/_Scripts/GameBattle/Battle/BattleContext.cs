@@ -18,8 +18,8 @@ namespace _DreamKeep.GameBattle
         /// <summary>玩家每回合抽牌数：由 BattleLoop 装配时写入，供遗物读取"初始手牌张数"。</summary>
         public int DrawPerTurn { get; internal set; }
 
-        /// <summary>一场战斗最多同时参与的敌人数。</summary>
-        public const int MaxEnemyCount = 2;
+        /// <summary>一场战斗最多同时参与的敌人数：与敌人槽位数一致。</summary>
+        public const int MaxEnemyCount = BattleSlots.RearEnemy - BattleSlots.FrontEnemy + 1;
 
         private readonly Dictionary<CardModel, CardModel> _runCardOf;
 
@@ -92,7 +92,7 @@ namespace _DreamKeep.GameBattle
             return false;
         }
 
-        /// <summary>从最靠后的敌人槽位向前扫第一个空槽，全满返回 -1（最多两只敌人时不会发生）。</summary>
+        /// <summary>从最靠后的敌人槽位向前扫第一个空槽，敌人占满全部敌人槽位时返回 -1。</summary>
         public int GetRearmostEmptySlot(Enemy except_)
         {
             for (int slot = BattleSlots.RearEnemy; slot >= BattleSlots.FrontEnemy; slot--)

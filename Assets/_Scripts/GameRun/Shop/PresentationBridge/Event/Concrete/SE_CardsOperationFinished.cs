@@ -1,0 +1,19 @@
+using System.Collections.Generic;
+using _DreamKeep.RuntimeData;
+
+namespace _DreamKeep.GameRun
+{
+    /// <summary>商店段删牌结算完成：域侧已写域，特效根据此播演出，演出播完流程才继续。</summary>
+    public struct SE_CardsOperationFinished : IShopEvent
+    {
+        public IReadOnlyList<CardModel> Cards { get; }
+
+        public bool Upgraded { get; }
+
+        public SE_CardsOperationFinished(IReadOnlyList<CardModel> cards_, bool upgraded_)
+        {
+            Cards = cards_;
+            Upgraded = upgraded_;
+        }
+    }
+}

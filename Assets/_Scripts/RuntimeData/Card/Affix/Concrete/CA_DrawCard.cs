@@ -21,7 +21,7 @@ namespace _DreamKeep.RuntimeData
         public override string Name { get; }
         public override bool ShowDescription { get; }
         public ModifiableStat Count { get; }
-        internal override int PipelineOrder => 3;
+        internal override int PipelineOrder => 0;
 
         // 抽牌数无战斗内修正，静态与升级前基准比较着色（高于基准标升色）
         public override string GetDescription(IStatRenderer valueRenderer_ = null) =>

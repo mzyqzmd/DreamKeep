@@ -18,7 +18,6 @@ namespace _DreamKeep.GameRun
         private readonly RelicTriggerNotifier _notifier;
         private readonly RestEventDispatcher _events;
         private UniTaskCompletionSource<int> _choice = new();
-        private UniTaskCompletionSource<IReadOnlyList<CardModel>> _cardSelection = new();
         private UniTaskCompletionSource _proceed = new();
 
         public RestLoop(RunState run_, List<SO_RestOption> restOptions_, SO_RelicPool commonPool_,
@@ -37,8 +36,6 @@ namespace _DreamKeep.GameRun
         public void Choose(int index_) => _choice.TrySetResult(index_);
 
         public void Proceed() => _proceed.TrySetResult();
-
-        public void SubmitCardSelection(IReadOnlyList<CardModel> cards_) => _cardSelection.TrySetResult(cards_);
 
         private async UniTask RunAsync()
         {
@@ -62,16 +59,24 @@ namespace _DreamKeep.GameRun
 
                 if (chosen is SO_ForgeRestOption)
                 {
-                    await _events.PlayAsync(new REE_UpgradeCardsRequested(1));
-                    if (await TakeCardSelectionAsync() == null) continue;
+                    REE_UpgradeCardsRequested request = new(1);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> upgraded = await request.Result.Task;
+                    if (upgraded == null) continue;
+                    for (int i = 0; i < upgraded.Count; i++) upgraded[i].Upgrade();
+                    await _events.PlayAsync(new REE_CardsOperationFinished(upgraded, true));
                     _run.CompleteMapNode();
                     break;
                 }
 
                 if (chosen is SO_CookRestOption)
                 {
-                    await _events.PlayAsync(new REE_RemoveCardsRequested(cleaver.RemoveCards));
-                    if (await TakeCardSelectionAsync() == null) continue;
+                    REE_RemoveCardsRequested request = new(cleaver.RemoveCards);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> removed = await request.Result.Task;
+                    if (removed == null) continue;
+                    for (int i = 0; i < removed.Count; i++) _run.Player.Deck.Remove(removed[i]);
+                    await _events.PlayAsync(new REE_CardsOperationFinished(removed, false));
                     _run.Player.Creature.RaiseMaxHp(cleaver.HpGain);
                     _run.CompleteMapNode();
                     break;
@@ -154,11 +159,5 @@ namespace _DreamKeep.GameRun
             return index;
         }
 
-        private async UniTask<IReadOnlyList<CardModel>> TakeCardSelectionAsync()
-        {
-            IReadOnlyList<CardModel> cards = await _cardSelection.Task;
-            _cardSelection = new UniTaskCompletionSource<IReadOnlyList<CardModel>>();
-            return cards;
-        }
     }
 }

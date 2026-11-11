@@ -62,6 +62,8 @@ namespace _DreamKeep.RuntimeData
                 AD_LostHealth lostHealth => new CA_LostHealth(lostHealth),
                 AD_MoveEnemy moveEnemy => new CA_MoveEnemy(moveEnemy),
                 AD_Retain retain => new CA_Retain(retain),
+                AD_SelectUpgrade selectUpgrade => new CA_SelectUpgrade(selectUpgrade),
+                AD_SelectExhaust selectExhaust => new CA_SelectExhaust(selectExhaust),
                 AD_UnableToPlay unableToPlay => new CA_UnableToPlay(unableToPlay),
                 _ => null,
             };

@@ -2142,6 +2142,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0053d6f4526c4125b2a33e2eb595302e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _playVfxParent: {fileID: 2057050349337935963}
+  _vfxSpacingPx: 500
+  _vfxScale: 1
   _playVFXParent: {fileID: 2057050349337935963}
   _restSmokeScale: 1
 --- !u!224 &1869720061494986509 stripped

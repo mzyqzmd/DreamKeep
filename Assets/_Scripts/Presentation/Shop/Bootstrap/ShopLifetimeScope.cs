@@ -79,6 +79,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new ShopCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_ShopRugPanel>();
+            builder_.RegisterComponentInHierarchy<ShopVfxRoot>(); // 注册即注入：订阅本段结算完成事实并播演出
             builder_.RegisterComponentInHierarchy<UI_ShopMerchant>();
             builder_.RegisterComponentInHierarchy<UI_ShopProceedButton>();
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>(); // 场景里已摆好的删牌弹板实例

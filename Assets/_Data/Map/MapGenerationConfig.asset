@@ -15,11 +15,11 @@ MonoBehaviour:
   _mapWidth: 10
   _roomRows: 20
   _pathCount: 7
-  _numOfElites: 10
+  _numOfElites: 12
   _numOfShops: 4
-  _unknownMean: 18
+  _unknownMean: 20
   _unknownStd: 1
-  _unknownMin: 15
+  _unknownMin: 18
   _unknownMax: 24
   _restMean: 7
   _restStd: 1

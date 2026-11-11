@@ -56,22 +56,22 @@ namespace _DreamKeep.GameRun
             else Succeed();
         }
 
-        public void RequestRemoval()
+        public async UniTask RequestRemovalAsync()
         {
             EShopBuyResult check = _session.CheckRemoval();
             if (check == EShopBuyResult.SoldOut) return;
             if (check == EShopBuyResult.NotEnoughGold)
             {
-                _events.PlayAsync(new SE_RemovalRefused()).Forget();
+                await _events.PlayAsync(new SE_RemovalRefused());
                 return;
             }
 
-            _events.PlayAsync(new SE_RemovalPanelRequested(1)).Forget();
-        }
-
-        public void SubmitCardSelection(IReadOnlyList<CardModel> cards_)
-        {
-            if (cards_ == null) return; // 关板取消：不扣钱、价格不动
+            SE_RemovalPanelRequested request = new(1);
+            await _events.PlayAsync(request);
+            IReadOnlyList<CardModel> cards = await request.Result.Task;
+            if (cards == null) return; // 关板取消：不扣钱、价格不动
+            for (int i = 0; i < cards.Count; i++) _run.Player.Deck.Remove(cards[i]);
+            await _events.PlayAsync(new SE_CardsOperationFinished(cards, false));
             _session.CompleteRemoval();
             PublishShelf();
         }

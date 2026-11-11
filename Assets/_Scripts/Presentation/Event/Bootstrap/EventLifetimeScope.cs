@@ -32,6 +32,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new EventCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_EventPanel>();
+            builder_.RegisterComponentInHierarchy<EventVfxRoot>(); // 注册即注入：订阅本段结算完成事实并播演出
             builder_.RegisterComponentInHierarchy<UI_EventOptionGroup>();
             builder_.RegisterComponentInHierarchy<UI_RewardPanel>();
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>();

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 
@@ -21,10 +21,7 @@ namespace _DreamKeep.GameRun
         public void BuyPotion(SO_Potion potion_) => _loop.BuyPotion(potion_);
 
         /// <summary>点删牌服务位：金币校验与弹板由流程决定。</summary>
-        public void RequestRemoval() => _loop.RequestRemoval();
-
-        /// <summary>交回删牌面板结果：null 表示关板取消，不扣钱。</summary>
-        public void SubmitCardSelection(IReadOnlyList<CardModel> cards_) => _loop.SubmitCardSelection(cards_);
+        public void RequestRemoval() => _loop.RequestRemovalAsync().Forget();
 
         /// <summary>点「继续」：每次点击都播一次段完成。</summary>
         public void Proceed() => _loop.Proceed();

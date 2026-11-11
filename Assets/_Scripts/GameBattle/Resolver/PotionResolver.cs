@@ -29,6 +29,9 @@ namespace _DreamKeep.GameBattle
                 case SO_WeakPotion weak:
                     AddPerk(actions, source, targets_, weak.Perk, weak.Layers);
                     break;
+                case SO_BeetleJuicePotion juice:
+                    AddPerk(actions, source, targets_, juice.Perk, juice.Layers);
+                    break;
                 case SO_PotionOfBinding binding:
                     AddPerk(actions, source, targets_, binding.WeakPerk, binding.WeakLayers);
                     AddPerk(actions, source, targets_, binding.VulnerablePerk, binding.VulnerableLayers);
@@ -45,6 +48,10 @@ namespace _DreamKeep.GameBattle
                     break;
                 case SO_SwiftPotion swift:
                     for (int i = 0; i < swift.Count; i++) actions.Add(new BA_DrawCard(source, targets_));
+                    break;
+                // 手牌判空放在动作内：Build 返回空表会被当成无法结算而拒绝扣槽，空手牌也要能喝掉这瓶
+                case SO_AshwaterPotion _:
+                    actions.Add(new BA_PotionSelectExhaust(source, targets_));
                     break;
                 case SO_BloodPotion blood:
                     actions.Add(new BA_Heal(source, targets_, (int)(source.MaxHp * blood.HealPercent)));

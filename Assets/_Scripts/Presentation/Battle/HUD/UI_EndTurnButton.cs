@@ -31,6 +31,7 @@ namespace _DreamKeep.Presentation
         private Color _textBase;
         private bool _interactive;
         private bool _hovered;
+        private bool _selectionBlocked;
 
         // 采集编辑期本色后按保守初值刷灰：战斗开始前与战斗开始阶段按钮即处于不可交互外观
         private void Awake()
@@ -49,6 +50,8 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
             eventDispatcher_.Register<BE_PlayerTurnActiveStarted>(OnPlayerTurnActiveStarted);
             eventDispatcher_.Register<BE_BattleEnded>(OnBattleEnded);
+            eventDispatcher_.Register<BE_CardSelectionRequested>(OnSelectionStarted);
+            eventDispatcher_.Register<BE_CardSelectionFinished>(OnSelectionFinished);
         }
 
         #endregion
@@ -81,9 +84,23 @@ namespace _DreamKeep.Presentation
         // 外观唯一写入口：底色/文本二选一本色或灰调，发光由可交互与悬停共同裁决
         private void ApplyLook()
         {
-            _background.color = _interactive ? _backgroundBase : _backgroundBase * _disabledTint;
-            _text.color = _interactive ? _textBase : _textBase * _disabledTint;
-            _glowFrame.SetActive(_interactive && _hovered);
+            bool interactive = _interactive && !_selectionBlocked;
+            _background.color = interactive ? _backgroundBase : _backgroundBase * _disabledTint;
+            _text.color = interactive ? _textBase : _textBase * _disabledTint;
+            _glowFrame.SetActive(interactive && _hovered);
+        }
+
+        // 选牌阶段屏蔽结束回合：命令不得排进队列等下一个玩家回合开头生效
+        private void OnSelectionStarted(BE_CardSelectionRequested requested_)
+        {
+            _selectionBlocked = true;
+            ApplyLook();
+        }
+
+        private void OnSelectionFinished(BE_CardSelectionFinished finished_)
+        {
+            _selectionBlocked = false;
+            ApplyLook();
         }
 
         // 回合开始：刷新文案并一律关闸（抽牌演出期间不可点），开闸只由操作窗口开启事件负责

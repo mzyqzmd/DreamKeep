@@ -41,6 +41,15 @@ namespace _DreamKeep.GameBattle
                     await actions.PerformAllAsync();
                 }
 
+                // 阶段一意图执行完即整表切二阶段：索引归零后不能再推进，否则二阶段从第 2 条开始
+                if (enemy.ShouldSwitchPhaseAfterIntent)
+                {
+                    enemy.SwitchToPhaseTwo();
+                    if (enemy.Creature.IsDead) continue;
+                    await PlayEvent(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));
+                    continue;
+                }
+
                 enemy.AdvanceIntent();
                 if (enemy.Creature.IsDead) continue;
                 await PlayEvent(new BE_EnemyIntentChanged(enemy, enemy.PreviewIntent));

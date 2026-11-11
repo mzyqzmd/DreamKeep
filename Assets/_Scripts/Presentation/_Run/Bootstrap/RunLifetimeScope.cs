@@ -63,6 +63,13 @@ namespace _DreamKeep.Presentation
             }
 
             builder_.RegisterInstance(run).AsSelf().As<ISaveable>();
+            // 整局段推进：阶段位、选点写盘与待领清单清理归域侧（见 RunProgressService）
+            RunProgressService progress = new(run);
+            builder_.RegisterInstance(progress).AsSelf().As<ISaveable>();
+            // 整局命令入口：常驻界面上报计时、战斗外药水与领奖意图，写域在域侧执行（见 RunCommandDispatcher）
+            RewardClaimService rewards = new(run);
+            builder_.RegisterInstance(rewards);
+            builder_.RegisterInstance(new RunCommandDispatcher(run, rewards));
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
@@ -92,7 +99,7 @@ namespace _DreamKeep.Presentation
             // 墨迹控制器：注入视图以订阅 MapRebuilt，换局重建即清空本局笔迹；同时进存档集合
             builder_.RegisterComponentInHierarchy<UI_MapInk>().AsSelf().As<ISaveable>();
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
-            builder_.RegisterComponentInHierarchy<SegmentSceneManager>().AsSelf().As<ISaveable>();
+            builder_.RegisterComponentInHierarchy<SegmentSceneManager>().AsSelf();
             builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败共用，确认后上报回主菜单
             // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）

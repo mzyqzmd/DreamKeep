@@ -16,7 +16,6 @@ namespace _DreamKeep.GameRun
         private readonly AncientEventDispatcher _events;
         private readonly RelicTriggerNotifier _notifier;
         private UniTaskCompletionSource<int> _choice = new();
-        private UniTaskCompletionSource<IReadOnlyList<CardModel>> _cardSelection = new();
 
         public AncientLoop(AncientSession session_, RunState run_, AncientEventDispatcher events_,
             RelicTriggerNotifier notifier_)
@@ -30,8 +29,6 @@ namespace _DreamKeep.GameRun
         public void Start() => RunAsync().Forget();
 
         public void Choose(int index_) => _choice.TrySetResult(index_);
-
-        public void SubmitCardSelection(IReadOnlyList<CardModel> cards_) => _cardSelection.TrySetResult(cards_);
 
         private async UniTask RunAsync()
         {
@@ -97,13 +94,21 @@ namespace _DreamKeep.GameRun
                     _run.Player.Creature.RaiseMaxHp(oyster.MaxHpGain);
                     break;
                 case SO_Pomander pomander:
+                {
                     _run.SpendPlayerHp(relic_.PickupHpCost);
-                    await PickCardsAsync(new AE_UpgradeCardsRequested(pomander.CardCount));
+                    IReadOnlyList<CardModel> upgraded = await PickCardsAsync(pomander.CardCount, true);
+                    for (int i = 0; i < upgraded.Count; i++) upgraded[i].Upgrade();
+                    await _events.PlayAsync(new AE_CardsOperationFinished(upgraded, true));
                     break;
+                }
                 case SO_PrecariousShears shears:
+                {
                     _run.SpendPlayerHp(relic_.PickupHpCost);
-                    await PickCardsAsync(new AE_RemoveCardsRequested(shears.CardCount));
+                    IReadOnlyList<CardModel> removed = await PickCardsAsync(shears.CardCount, false);
+                    for (int i = 0; i < removed.Count; i++) _run.Player.Deck.Remove(removed[i]);
+                    await _events.PlayAsync(new AE_CardsOperationFinished(removed, false));
                     break;
+                }
                 case SO_ArcaneScroll scroll:
                     await AddRandomCard(scroll.CardPool);
                     break;
@@ -118,13 +123,26 @@ namespace _DreamKeep.GameRun
             }
         }
 
-        // 强制选牌：取消许可由表现层关掉；万一仍交回取消就重弹，玩家不能空手离场
-        private async UniTask PickCardsAsync(IAncientEvent request_)
+        // 强制选牌：取消许可由表现层关掉；万一仍交回取消就重弹，玩家不能空手离场。
+        // 每次重弹都新建请求事件：结果源只能交回一次，复用同一实例会让第二次等待永远挂住。
+        private async UniTask<IReadOnlyList<CardModel>> PickCardsAsync(int count_, bool upgrade_)
         {
             while (true)
             {
-                await _events.PlayAsync(request_);
-                if (await TakeCardSelectionAsync() != null) return;
+                if (upgrade_)
+                {
+                    AE_UpgradeCardsRequested request = new(count_);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> cards = await request.Result.Task;
+                    if (cards != null) return cards;
+                }
+                else
+                {
+                    AE_RemoveCardsRequested request = new(count_);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> cards = await request.Result.Task;
+                    if (cards != null) return cards;
+                }
             }
         }
 
@@ -162,11 +180,5 @@ namespace _DreamKeep.GameRun
             return index;
         }
 
-        private async UniTask<IReadOnlyList<CardModel>> TakeCardSelectionAsync()
-        {
-            IReadOnlyList<CardModel> cards = await _cardSelection.Task;
-            _cardSelection = new UniTaskCompletionSource<IReadOnlyList<CardModel>>();
-            return cards;
-        }
     }
 }

@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -90,13 +88,6 @@ namespace _DreamKeep.CommonPresentation
         // 第一层确认动作保留给基类契约：没有确认键后不会被触发，实际入口是选满自动跳转
         protected override void OnConfirm() => OpenPreview();
 
-        protected override void PlayVfx(Transform parent_, Vector3 worldPosition_, float scale_, CardModel card_,
-            Action onFinished_)
-        {
-            if (Audio) Audio.Play(Audio.Cues.Forge);
-            VfxFactory.PlaySmithForge(parent_, worldPosition_, scale_, card_, onFinished_);
-        }
-
         // 对照页：按选中顺序生成两排卡——上排当前形态、下排升级副本（一次性预览，不写回域）
         private void OpenPreview()
         {
@@ -127,13 +118,11 @@ namespace _DreamKeep.CommonPresentation
             ClearSelection();
         }
 
-        // 对照页确认：逐张升级真卡，随后由基类关板、横向均布锻造演出并交付
+        // 对照页确认：只交回选中卡，升级写域归域侧链路
         private void OnPreviewConfirm()
         {
             if (Selected.Count == 0) return;
-            List<CardModel> upgraded = TakeSelectedCards();
-            for (int i = 0; i < upgraded.Count; i++) upgraded[i].Upgrade();
-            FinishAsync(upgraded).Forget();
+            FinishAsync(TakeSelectedCards());
         }
 
         // 一排对照卡：多退少补后按序绑定；纯展示（无点击回调），关掉自驱悬停缩放任整行等比适配

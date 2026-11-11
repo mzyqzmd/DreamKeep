@@ -96,6 +96,8 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(new BattleCommandDispatcher(loop)); // 被视图的 [Inject] 要（出牌命令）
             builder_.RegisterInstance(new BattleQueryDispatcher(battleContext)); // 被视图的 [Inject] 要（预览查询与牌堆张数）
             builder_.RegisterInstance(loop); // 被 BattleEntry 的构造函数要
+            // 手牌选择结果应用器：常驻订阅选牌请求，注册进容器保活（动作系统的唯一写入方）
+            builder_.RegisterInstance(new CardSelectionFlow(loop.ActionSystem, dispatcher));
             builder_.RegisterInstance(segmentEvents); // 供入口 [Inject] 注册收尾事实处理器
             builder_.RegisterInstance(segmentLoop); // 被命令门面与入口的构造函数要
             builder_.RegisterInstance(new BattleSegmentCommandDispatcher(segmentLoop)); // 供入口提交领完/降级意图
@@ -117,6 +119,8 @@ namespace _DreamKeep.Presentation
             // 牌堆查看面板：预摆默认失活，三堆点击经 UI_Pile 转发打开；自己订阅卡牌事件做差分刷新
             builder_.RegisterComponentInHierarchy<UI_PileCardsView>();
             builder_.RegisterComponentInHierarchy<UI_EnergyRemain>();
+            // 战斗内手牌选择面板：预摆默认失活，订阅选牌请求并把选中列表交回域侧
+            builder_.RegisterComponentInHierarchy<UI_BattleSelectCardPanel>();
             builder_.RegisterComponentInHierarchy<UI_EndTurnButton>();
             // 弹层与特效编排挂在段根上；弹层工厂与特效工厂注册在父容器（池要跨段复用），构造注入即可取到
             builder_.RegisterComponentInHierarchy<UI_BattlePopRoot>(); // 战斗弹层编排：订伤害/回血/回合开始，决定弹什么、弹在哪

@@ -31,6 +31,8 @@ namespace _DreamKeep.Presentation
         private readonly UI_ActorRoot _actorRoot;
         private readonly BattleStage _stage;
         private readonly RunState _run;
+        private readonly RunCommandDispatcher _commands;
+        private readonly RunProgressService _progress;
         private readonly GameObject _playerViewPrefab;
         private readonly List<GameObject> _enemyViewPrefabs;
         private readonly IObjectResolver _resolver;
@@ -39,7 +41,8 @@ namespace _DreamKeep.Presentation
             BattleSegmentLoop segmentLoop_, BattleSegmentEventDispatcher segmentEvents_,
             BattleSegmentCommandDispatcher segmentCommands_, SegmentSceneManager segmentManager_,
             PopPanelFactory popFactory_, UI_ResultPanel resultPanel_, UI_ActorRoot actorRoot_,
-            BattleStage stage_, RunState run_, [Key("Player")] GameObject playerViewPrefab_,
+            BattleStage stage_, RunState run_, RunCommandDispatcher commands_, RunProgressService progress_,
+            [Key("Player")] GameObject playerViewPrefab_,
             List<GameObject> enemyViewPrefabs_, IObjectResolver resolver_)
         {
             _loop = loop_;
@@ -54,6 +57,8 @@ namespace _DreamKeep.Presentation
             _actorRoot = actorRoot_;
             _stage = stage_;
             _run = run_;
+            _commands = commands_;
+            _progress = progress_;
             _playerViewPrefab = playerViewPrefab_;
             _enemyViewPrefabs = enemyViewPrefabs_;
             _resolver = resolver_;
@@ -157,13 +162,15 @@ namespace _DreamKeep.Presentation
         private void OnRewardOffered(BAE_RewardOffered offered_)
         {
             _stage.HideHud(); // 战斗完成：交互层收起，画面上只留奖励面板
-            _segmentManager.SetPhase(ESavePhase.AwaitingReward); // 领奖中读档据此复原，不重打战斗
+            _progress.SetPhase(ESavePhase.AwaitingReward); // 领奖中读档据此复原，不重打战斗
             SaveService.Save(); // 唯一检查点：战斗后 RunState + 待领奖励清单落盘，领奖期间不再写盘
             try
             {
                 UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
+                _commands.BeginRewardClaim(offered_.Rewards);
                 panel.Show("战斗奖励", offered_.Rewards, () =>
                 {
+                    _commands.EndRewardClaim();
                     panel.Close();
                     _segmentCommands.AcknowledgeReward();
                 });
@@ -179,8 +186,10 @@ namespace _DreamKeep.Presentation
         private void ShowRestoreRewards()
         {
             UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
+            _commands.BeginRewardClaim(_run.PendingRewards);
             panel.Show("战斗奖励", _run.PendingRewards, () =>
             {
+                _commands.EndRewardClaim();
                 panel.Close();
                 _segmentManager.CompleteSegment();
             });

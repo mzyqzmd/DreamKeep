@@ -1,7 +1,9 @@
 using System;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using Spine.Unity;
 using TMPro;
 using UnityEngine;
@@ -22,6 +24,8 @@ namespace _DreamKeep.Presentation
         [Header("悬停信息显示")] [SerializeField] private TextMeshProUGUI _actorName;
         [SerializeField] private Shader _outlineShader; // 描边 shader 引用，留空则运行时按名查找
         [SerializeField] private Material _skeletonMaterial;
+        [Header("状态视觉")] [SerializeField] private float _shrinkScale = 0.7f;
+        [SerializeField] private float _shrinkDuration = 0.2f;
 
         // 公约四条动画名：十条骨架统一导出，全单位一致，写死不可改（将来某单位要做状态变体时再议）
         protected const string IdleLoopAnim = "idle_loop";
@@ -47,6 +51,8 @@ namespace _DreamKeep.Presentation
 
         protected UI_ActorAnimTool _animTool;
         private UI_ActorHoverBox _hoverBox;
+        private Tween _shrinkTween;
+        private Vector3 _renderBaseScale;
 
         /// <summary>已播完死亡动画：此后忽略一切动画请求（托管字段，宿主销毁后仍可安全读）。</summary>
         protected bool _deathAnimTriggered;
@@ -55,11 +61,13 @@ namespace _DreamKeep.Presentation
         {
             _animTool = GetComponent<UI_ActorAnimTool>();
             _hoverBox = GetComponent<UI_ActorHoverBox>(); // 与单位视图同挂根节点
+            _renderBaseScale = _skeleton != null ? _skeleton.transform.localScale : Vector3.one;
         }
 
         // 销毁即收掉悬停补间与描边副本，再注销登记（覆盖敌人死亡自毁这条路径）；子类覆写时先收自己的尾再转调
         protected virtual void OnDestroy()
         {
+            _shrinkTween?.Kill();
             if (_actorRoot) _actorRoot.Unregister(_boundCreature);
         }
 
@@ -93,7 +101,10 @@ namespace _DreamKeep.Presentation
             _actorName.text = creature_.ActorName;
             // 初始状态随装配自带perk
             foreach (var p in creature_.Perks)
+            {
                 _perkGroup.AddPerk(p);
+                if (p is BP_Shrink) SetShrunk(true, false);
+            }
         }
 
         #endregion
@@ -178,7 +189,9 @@ namespace _DreamKeep.Presentation
         // 施加状态：新建槽位或叠加层数；子类覆写可追加自身演出，事件链会等它（槽位刷新始终在覆写方之前完成）
         protected virtual UniTask OnPerkApplied(BE_PerkApplied applied_)
         {
-            if (applied_.Target == _boundCreature && _perkGroup != null) _perkGroup.AddPerk(applied_.Perk);
+            if (applied_.Target != _boundCreature) return UniTask.CompletedTask;
+            if (_perkGroup != null) _perkGroup.AddPerk(applied_.Perk);
+            if (applied_.Perk is BP_Shrink) SetShrunk(true, true);
             return UniTask.CompletedTask;
         }
 
@@ -191,9 +204,28 @@ namespace _DreamKeep.Presentation
         // 状态移除：Perk 是被摘下的挂载实例，槽位按状态类型对号删除
         protected virtual void OnPerkRemoved(BE_PerkRemoved removed_)
         {
-            if (removed_.Target == _boundCreature && _perkGroup != null) _perkGroup.RemovePerk(removed_.Perk);
+            if (removed_.Target != _boundCreature) return;
+            if (_perkGroup != null) _perkGroup.RemovePerk(removed_.Perk);
+            if (removed_.Perk is BP_Shrink) SetShrunk(false, true);
         }
 
         #endregion
+
+        // 只缩 Render 子节点：根节点矩形是命中框，血条/状态槽/意图图标一律不跟着缩
+        private void SetShrunk(bool shrunk_, bool animate_)
+        {
+            if (!_skeleton) return;
+            Transform render = _skeleton.transform;
+            float factor = shrunk_ ? _shrinkScale : 1f;
+            if (!animate_)
+            {
+                _shrinkTween?.Kill();
+                render.localScale = _renderBaseScale * factor;
+                return;
+            }
+
+            UiTween.PlayScalar(ref _shrinkTween, () => render.localScale.x / _renderBaseScale.x,
+                value_ => render.localScale = _renderBaseScale * value_, factor, _shrinkDuration);
+        }
     }
 }

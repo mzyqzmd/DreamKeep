@@ -21,7 +21,7 @@ namespace _DreamKeep.RuntimeData
         public override string Name { get; }
         public override bool ShowDescription { get; }
         public ModifiableStat Amount { get; }
-        internal override int PipelineOrder => 1;
+        internal override int PipelineOrder => 0;
 
         /// <summary>格挡值经渲染器着色（修正求值与颜色归表现层），升级增量已由数值容器承载。</summary>
         public override string GetDescription(IStatRenderer valueRenderer_ = null)

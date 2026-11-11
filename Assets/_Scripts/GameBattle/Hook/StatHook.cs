@@ -56,8 +56,10 @@ namespace _DreamKeep.GameBattle
                 BP_Strength strength => strength.GetModifier(channel_, host_, source_, target_),
                 BP_Dexterity dexterity => dexterity.GetModifier(channel_, host_, source_, target_),
                 BP_Weak weak => weak.GetModifier(channel_, host_, source_, target_),
+                BP_Shrink shrink => shrink.GetModifier(channel_, host_, source_, target_),
                 BP_Vulnerable vulnerable => vulnerable.GetModifier(channel_, host_, source_, target_),
                 BP_Slow slow => slow.GetModifier(channel_, host_, source_, target_),
+                BP_Slippery slippery => slippery.GetModifier(channel_, host_, source_, target_),
                 _ => StatModifier.Neutral
             };
     }

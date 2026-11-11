@@ -22,7 +22,7 @@ namespace _DreamKeep.RuntimeData
         public override string Name { get; }
         public override bool ShowDescription { get; }
         public ModifiableStat Offset { get; }
-        internal override int PipelineOrder => 2;
+        internal override int PipelineOrder => 0;
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null)
         {

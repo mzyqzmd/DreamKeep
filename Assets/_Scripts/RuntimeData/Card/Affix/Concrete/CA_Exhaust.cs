@@ -17,7 +17,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string Name { get; }
         public override bool ShowDescription { get; }
-        internal override int PipelineOrder => 7;
+        internal override int PipelineOrder => 1;
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null) => "打出后消耗自身本场战斗\n不再被抽到";
 

@@ -41,6 +41,7 @@ namespace _DreamKeep.Presentation
         private readonly List<Vector3> _landingPoints = new(4); // 飞行落点复用表：每次使用重填，零分配
 
         private RunState _run;
+        private RunCommandDispatcher _commands;
         private BattleSession _session;
         private BattleStage _stage;
         private BattleCommandDispatcher _commandDispatcher;
@@ -55,6 +56,7 @@ namespace _DreamKeep.Presentation
         private int _popupSlot = NoPopupSlot; // 菜单正在为哪个槽位展开
         private bool _arrowShown;
         private bool _interactable;
+        private bool _selectionBlocked;
         private float _outsideSince = -1f; // 指针开始不在"菜单 ∪ 槽位"内的时刻，用于宽限
         private Camera _canvasCamera;
 
@@ -98,9 +100,11 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(RunState run_, BattleSession session_, BattleStage stage_, VfxFactory vfxFactory_)
+        public void Construct(RunState run_, RunCommandDispatcher commands_, BattleSession session_, BattleStage stage_,
+            VfxFactory vfxFactory_)
         {
             _run = run_;
+            _commands = commands_;
             _session = session_;
             _stage = stage_;
             _vfxFactory = vfxFactory_;
@@ -122,6 +126,7 @@ namespace _DreamKeep.Presentation
             CancelAim();
             HidePopup();
             _interactable = false;
+            _selectionBlocked = false;
 
             _commandDispatcher = _session.Command;
             _queryDispatcher = _session.Query;
@@ -133,7 +138,14 @@ namespace _DreamKeep.Presentation
             _session.Events.Register<BE_PotionConsumed>(OnPotionConsumedAsync);
             _session.Events.Register<BE_TurnStarted>(OnTurnStarted);
             _session.Events.Register<BE_PlayerTurnEnded>(OnTurnEnded);
+            _session.Events.Register<BE_CardSelectionRequested>(OnSelectionStarted);
+            _session.Events.Register<BE_CardSelectionFinished>(OnSelectionFinished);
         }
+
+        // 选牌阶段屏蔽药水使用与丢弃：命令不得排进队列等下一个玩家回合开头生效
+        private void OnSelectionStarted(BE_CardSelectionRequested requested_) => _selectionBlocked = true;
+
+        private void OnSelectionFinished(BE_CardSelectionFinished finished_) => _selectionBlocked = false;
 
         #endregion
 
@@ -227,7 +239,7 @@ namespace _DreamKeep.Presentation
         {
             SO_Potion potion = PotionAt(slotIndex_);
             if (potion == null) return false;
-            return InBattle ? _interactable : potion.UsableOutsideBattle;
+            return InBattle ? _interactable && !_selectionBlocked : potion.UsableOutsideBattle;
         }
 
         private void HidePopup()
@@ -246,6 +258,7 @@ namespace _DreamKeep.Presentation
 
         private void UsePotion(int slotIndex_)
         {
+            if (_selectionBlocked) return;
             HidePopup();
             SO_Potion potion = PotionAt(slotIndex_);
             if (potion == null) return;
@@ -254,9 +267,8 @@ namespace _DreamKeep.Presentation
             if (!InBattle)
             {
                 if (!potion.UsableOutsideBattle) return;
-                // 先问能不能结算再扣槽：结算失败时药水仍留在槽里，不会凭空消失
-                if (!PotionResolver.TryApplyOutsideBattle(potion, _run.Player)) return;
-                _run.Player.TryTakePotion(slotIndex_, out _);
+                // 结算与扣槽都在域侧：失败时药水仍留在槽里，不会凭空消失
+                _commands.UsePotionOutsideBattle(slotIndex_);
                 return;
             }
 
@@ -271,6 +283,7 @@ namespace _DreamKeep.Presentation
 
         private void DiscardPotion(int slotIndex_)
         {
+            if (_selectionBlocked) return;
             HidePopup();
             if (InBattle)
             {
@@ -279,7 +292,7 @@ namespace _DreamKeep.Presentation
             }
 
             // 战斗外丢弃：不经战斗循环，取走即算丢掉；槽位刷新由 PotionSlotChanged 事件驱动
-            _run.Player.TryTakePotion(slotIndex_, out _);
+            _commands.DiscardPotionOutsideBattle(slotIndex_);
         }
 
         #endregion

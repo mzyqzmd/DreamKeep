@@ -99,6 +99,12 @@ namespace _DreamKeep.GameBattle
                 case CA_Exhaust _:
                     actions_.Add(new BA_Exhaust(source_, targets_, card_));
                     break;
+                case CA_SelectUpgrade selectUpgrade:
+                    actions_.Add(new BA_SelectUpgrade(source_, targets_, selectUpgrade));
+                    break;
+                case CA_SelectExhaust selectExhaust:
+                    actions_.Add(new BA_SelectExhaust(source_, targets_, selectExhaust));
+                    break;
                 // 被动词条不产生动作：由出牌与回合流程自行读取它们
                 case CA_Retain _:
                 case CA_UnableToPlay _:

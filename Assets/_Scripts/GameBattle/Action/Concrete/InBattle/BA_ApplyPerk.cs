@@ -19,6 +19,7 @@ namespace _DreamKeep.GameBattle
             {
                 if (target.IsDead) continue;
                 BattlePerk mounted = target.ApplyPerk(Perk);
+                if (mounted is BP_Shrink shrink) shrink.SetSource(Source);
                 events.Add(new BE_PerkApplied(Source, target, mounted));
             }
 

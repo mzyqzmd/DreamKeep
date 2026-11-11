@@ -29,8 +29,10 @@ namespace _DreamKeep.GameBattle
                     target.CurrentHp = remaining;
 
                 events.Add(new BE_HealthLost(target, Amount));
-                if (target.IsDead)
-                    events.Add(new BE_ActorDied(target, Source));
+                if (!target.IsDead) continue;
+
+                events.Add(new BE_ActorDied(target, Source));
+                DeathHook.Cleanup(battleContext_, target, events);
             }
 
             return events;

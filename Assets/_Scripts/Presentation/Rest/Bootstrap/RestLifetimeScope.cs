@@ -40,7 +40,7 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(loop);
             builder_.RegisterInstance(new RestCommandDispatcher(loop)); // 供视图提交意图
             builder_.RegisterComponentInHierarchy<UI_RestOptionGroup>(); // 注册即注入：选项组要订阅事实与拿命令门面
-            builder_.RegisterComponentInHierarchy<UI_RestVFXRoot>();
+            builder_.RegisterComponentInHierarchy<RestVfxRoot>();
             builder_.RegisterComponentInHierarchy<UI_CardUpgradePanel>(); // 注册即注入：面板池与特效工厂走 [Inject] Construct
             builder_.RegisterComponentInHierarchy<UI_CardRemovePanel>(); // 删牌面板场景自摆（与其余三段同形态）
             builder_.RegisterComponentInHierarchy<UI_RestProceedButton>();

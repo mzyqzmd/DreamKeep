@@ -23,7 +23,7 @@ namespace _DreamKeep.RuntimeData
         public override string Name { get; }
         public override bool ShowDescription { get; }
         public BattlePerk Perk { get; }
-        internal override int PipelineOrder => 2;
+        internal override int PipelineOrder => 0;
 
         /// <summary>层数经渲染器着色（高于原始层数标升色），状态名不参与。</summary>
         public override string GetDescription(IStatRenderer valueRenderer_ = null)

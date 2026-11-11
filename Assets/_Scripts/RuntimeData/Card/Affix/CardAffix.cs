@@ -3,7 +3,7 @@ namespace _DreamKeep.RuntimeData
     /// <summary>运行时词条基类：由配置数据烘焙而来，是卡组原型与战斗副本共用的词条形态，不持有任何配置引用。</summary>
     public abstract class CardAffix
     {
-        /// <summary>结算管线权重，越小越先结算；修饰型词条恒为 -1，不进入效果管线。</summary>
+        /// <summary>结算分档：保留 -2 / 不能被打出 -1 / 普通 0 / 消耗 1 / 遗忘 2；同档按卡配置顺序稳定排列。</summary>
         internal abstract int PipelineOrder { get; }
         /// <summary>词条名称。</summary>
         public abstract string Name { get; }

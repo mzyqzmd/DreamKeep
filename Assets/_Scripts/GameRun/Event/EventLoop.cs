@@ -15,7 +15,6 @@ namespace _DreamKeep.GameRun
         private readonly RunState _run;
         private readonly EventEventDispatcher _events;
         private UniTaskCompletionSource<int> _choice = new();
-        private UniTaskCompletionSource<IReadOnlyList<CardModel>> _cardSelection = new();
         private UniTaskCompletionSource _rewardAck = new();
         private UniTaskCompletionSource _proceed = new();
 
@@ -31,8 +30,6 @@ namespace _DreamKeep.GameRun
         public void Choose(int index_) => _choice.TrySetResult(index_);
 
         public void Proceed() => _proceed.TrySetResult();
-
-        public void SubmitCardSelection(IReadOnlyList<CardModel> cards_) => _cardSelection.TrySetResult(cards_);
 
         public void AcknowledgeReward() => _rewardAck.TrySetResult();
 
@@ -89,11 +86,25 @@ namespace _DreamKeep.GameRun
             switch (effect_)
             {
                 case EED_RemoveCards removeCards:
-                    await _events.PlayAsync(new EE_RemoveCardsRequested(removeCards.Count));
-                    return await TakeCardSelectionAsync() == null;
+                {
+                    EE_RemoveCardsRequested request = new(removeCards.Count);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> removed = await request.Result.Task;
+                    if (removed == null) return true;
+                    for (int i = 0; i < removed.Count; i++) _run.Player.Deck.Remove(removed[i]);
+                    await _events.PlayAsync(new EE_CardsOperationFinished(removed, false));
+                    return false;
+                }
                 case EED_UpgradeCards upgradeCards:
-                    await _events.PlayAsync(new EE_UpgradeCardsRequested(upgradeCards.Count));
-                    return await TakeCardSelectionAsync() == null;
+                {
+                    EE_UpgradeCardsRequested request = new(upgradeCards.Count);
+                    await _events.PlayAsync(request);
+                    IReadOnlyList<CardModel> upgraded = await request.Result.Task;
+                    if (upgraded == null) return true;
+                    for (int i = 0; i < upgraded.Count; i++) upgraded[i].Upgrade();
+                    await _events.PlayAsync(new EE_CardsOperationFinished(upgraded, true));
+                    return false;
+                }
                 case EED_RelicChoice relicChoice:
                     List<SO_Relic> picks = _session.RollRelicChoices(relicChoice);
                     if (picks.Count == 0) return false; // 兜底未接线时退化为不发放
@@ -120,11 +131,5 @@ namespace _DreamKeep.GameRun
             return index;
         }
 
-        private async UniTask<IReadOnlyList<CardModel>> TakeCardSelectionAsync()
-        {
-            IReadOnlyList<CardModel> cards = await _cardSelection.Task;
-            _cardSelection = new UniTaskCompletionSource<IReadOnlyList<CardModel>>();
-            return cards;
-        }
     }
 }
