@@ -86,7 +86,7 @@ namespace _DreamKeep.Presentation
         // 取出的实例在池里埋过兄弟位，先挪到末尾再登记，排列顺序即生成顺序
         private T Spawn<T>(T prefab_) where T : UI_Intent
         {
-            if (prefab_ == null) return null;
+            if (!prefab_) return null;
             T icon = (T)_iconPool.Get(prefab_);
             icon.transform.SetAsLastSibling();
             _icons.Add(icon);

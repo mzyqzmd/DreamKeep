@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: BowlbugGoop
   m_EditorClassIdentifier: 
   _name: "\u76DB\u7897\u866B\uFF08\u871C\uFF09"
-  _maxHP: 28
+  _maxHP: 22
   _viewPrefab: {fileID: 6187196625302473479, guid: 8b247e765b5aabf458f5bf82d2aad058, type: 3}
   _skinName: goop
   _enemyIntents:
-  - rid: 6594183821311344680
+  - rid: 6594183833515458566
   - rid: 6594183821311344683
   _frontSlotIntent:
     rid: 6594183821311344689
@@ -26,21 +26,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 6594183821311344680
-      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _intent1:
-          rid: 6594183821311344681
-        _intent2:
-          rid: 6594183821311344682
-    - rid: 6594183821311344681
-      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _damage: 3
-        _times: 1
-    - rid: 6594183821311344682
-      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
     - rid: 6594183821311344683
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -72,3 +57,8 @@ MonoBehaviour:
     - rid: 6594183821311344691
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
+    - rid: 6594183833515458566
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 3
+        _times: 1

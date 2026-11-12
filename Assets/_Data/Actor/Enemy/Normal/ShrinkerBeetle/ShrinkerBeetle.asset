@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: ShrinkerBeetle
   m_EditorClassIdentifier: 
   _name: "\u7F29\u5C0F\u7532\u866B"
-  _maxHP: 27
+  _maxHP: 32
   _viewPrefab: {fileID: 6187196625302473479, guid: 5326c83b9934012419726699d667a5d6, type: 3}
+  _skinName: default
   _enemyIntents:
   - rid: 6594183804317859840
   _frontSlotIntent:

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: CeremonialBeast
   m_EditorClassIdentifier: 
   _name: "\u4EEA\u5F0F\u517D"
-  _maxHP: 240
+  _maxHP: 245
   _viewPrefab: {fileID: 6187196625302473479, guid: c8890a9ad8b419948aa5a9353820273a, type: 3}
+  _skinName: default
   _enemyIntents:
   - rid: 6594183710656167969
   - rid: 6594183710656167953

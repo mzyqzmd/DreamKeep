@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d2e1f3c8e459fab7d1600ca3f8e425, type: 3}
   m_Name: Strong_0
   m_EditorClassIdentifier: 
-  _name: "\u4E24\u53EA\u6811\u679D\u53F2\u83B1\u59C6"
+  _name: "\u4E09\u53EA\u58A8\u5B9D"
   _enemies:
-  - {fileID: 11400000, guid: 0eeb19211ba698749bfb7d6f97ffd1f3, type: 2}
-  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
+  - {fileID: 11400000, guid: a5201d945dffed845a744959f6aece35, type: 2}
+  - {fileID: 11400000, guid: 50f667a1b08a4dc47804bcb5f2e038ad, type: 2}
+  - {fileID: 11400000, guid: aa63e7a80b336494eb0590534fc92d7d, type: 2}
   _hpVariance: 0.1
   _reward: {fileID: 11400000, guid: 1b08ebdafc489ed499ec824f1d48b574, type: 2}

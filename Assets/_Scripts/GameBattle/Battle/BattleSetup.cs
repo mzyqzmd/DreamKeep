@@ -59,7 +59,7 @@ namespace _DreamKeep.GameBattle
                 SO_Enemy config = configs[i];
                 int maxHp = RollMaxHp(config.MaxHp, encounter_.HpVariance, rng_);
                 Enemy enemy = new(config.Name, maxHp, i + rearOffset, IntentBaker.Bake(config.EnemyIntents),
-                    IntentBaker.Bake(config.FrontSlotIntent), config.SpeechLines);
+                    IntentBaker.Bake(config.FrontSlotIntent), config.SpeechLines, config.SkinName);
                 LoadPhaseTwo(enemy, config);
                 ApplyStartPerks(enemy, config);
 

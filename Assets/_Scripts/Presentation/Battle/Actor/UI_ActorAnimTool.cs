@@ -22,6 +22,7 @@ namespace _DreamKeep.Presentation
         public async UniTask PlayOnceAsync(string animationName_, float playRatio_ = DefaultPlayRatio,
             Action onFinished_ = null)
         {
+            if (string.IsNullOrEmpty(animationName_)) return;
             if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
             int ticket = ++_playTicket; // 票号先于 SetAnimation 自增：替换旧条目会同步补发 End，旧的待命回调据此作废
             TrackEntry entry = _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, false);
@@ -78,7 +79,7 @@ namespace _DreamKeep.Presentation
             }
 
             foreach (var animationName in names_)
-                if (data.FindAnimation(animationName) == null)
+                if (!string.IsNullOrEmpty(animationName) && data.FindAnimation(animationName) == null)
                     Debug.LogError($"[{GetType().Name}] 骨架缺少动画：{animationName}");
         }
 

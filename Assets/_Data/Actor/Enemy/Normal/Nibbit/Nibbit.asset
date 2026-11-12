@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Nibbit
   m_EditorClassIdentifier: 
   _name: "\u5C0F\u5543\u517D"
-  _maxHP: 28
+  _maxHP: 35
   _viewPrefab: {fileID: 6187196625302473479, guid: 6ded8dbbb5a145e4d968f92409bd2f44, type: 3}
+  _skinName: default
   _enemyIntents:
   - rid: 8162841984668532736
   - rid: 8162841984668532737

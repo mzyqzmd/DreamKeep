@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _name: "\u4E24\u53EA\u6811\u679D\u53F2\u83B1\u59C6"
   _enemies:
-  - {fileID: 11400000, guid: fa3daa7413c6f844e93c4b5c13e04008, type: 2}
-  - {fileID: 11400000, guid: fa3daa7413c6f844e93c4b5c13e04008, type: 2}
+  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
+  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
   _hpVariance: 0.1
   _reward: {fileID: 11400000, guid: 1b08ebdafc489ed499ec824f1d48b574, type: 2}

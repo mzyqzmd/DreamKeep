@@ -10,6 +10,8 @@ namespace _DreamKeep.ConfigData
         [Header("基础配置")] [SerializeField] private string _name;
         [SerializeField] private int _maxHP;
         [SerializeField] private GameObject _viewPrefab;
+        [Tooltip("Spine 皮肤名：同种强度变体各自填 v1/v2/v3，留空则用默认皮肤")] [SerializeField]
+        private string _skinName = "default";
 
         [Header("敌人配置")] [SerializeReference, SubclassSelector]
         private List<IntentData> _enemyIntents = new();
@@ -24,6 +26,7 @@ namespace _DreamKeep.ConfigData
         public string Name => _name;
         public int MaxHp => _maxHP;
         public GameObject ViewPrefab => _viewPrefab;
+        public string SkinName => _skinName;
         public List<IntentData> EnemyIntents => _enemyIntents;
         public MixedIntentData FrontSlotIntent => _frontSlotIntent;
         public List<PerkEntry> StartPerks => _startPerks;

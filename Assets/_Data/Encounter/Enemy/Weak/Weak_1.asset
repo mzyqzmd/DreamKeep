@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d2e1f3c8e459fab7d1600ca3f8e425, type: 3}
   m_Name: Weak_1
   m_EditorClassIdentifier: 
-  _name: "\u5355\u53EA\u5C0F\u5C0F\u5543\u517D"
+  _name: "\u5355\u53EA\u5C0F\u5543\u517D"
   _enemies:
   - {fileID: 11400000, guid: e0892cf42b3070840b824fe3f4113dfd, type: 2}
   _hpVariance: 0.1

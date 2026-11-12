@@ -45,13 +45,13 @@ git lfs pull
 ## 当前进度与后续计划
 
 **近期进展（2026-11 中旬）**
-- 架构评审综合评分由 95 上调至 **96/100（A）**：完成「整局命令通道」重构——新增统一门面 `RunCommandDispatcher` 与幂等领奖会话 `RewardClaimService`，原跨层一致性缺口 K1（奖励面板直写域）/ K2（战斗外药水与计时直写域）已收口，表现层现在只经命令门面上报意图。
-- 内容扩充：新增敌人 `ShrinkerBeetle`（含阶段二意图切换）、缩小 / 滑溜状态、灰水 / 甲虫汁药水、消耗 / 升级卡牌动作，均走既有数据驱动通道。
+- 架构评审综合评分由 96 上调至 **97/100（A）**：`GameBattle` 域内 `Action` 与 `Hook` 两层由扁平大目录重分类为语义子目录（`Action/Concrete` → `Combat`/`CardPile`/`RunBoundary`/`Selection`；`Hook` → `DeathGuard`/`PerkRules`），消除「40+ 文件扁平堆」可发现性异味，属纯代码组织净改善（工作树内、待提交）。
+- 内容扩充（零漂移、全走既有数据驱动通道）：已提交精英「盛碗虫」家族与**失衡（Imbalanced）**状态（满格挡触发击晕，经 `FullBlockHook` 接入）；工作树内新增精英「石蜜丝（Byrdonis）」、普通「BattlewornDummy / FuzzyWurmCrawler」敌人视图，以及状态「高墙（Rampart）/ 领地（Territorial）」。
 
 **后续计划**
 1. 功能补全：战败分支奖励结算、卡牌升级正式获取入口与 UI、商店金币完整闭环、战斗 / 反馈层 `BE_*` 音效接入、格挡 / 治疗意图数值显示。
-2. 技术债收口：D2（存档根键 `GetType().FullName` 静默丢档）、D4（`BattleEventDispatcher` 缺 `Unregister`）、K3（`RaiseMaxHp` 绕过 `RunState` 入口）、L-1（`UI_OneShotVfx` 魔法字符串）。
-3. 架构演进：`Presentation` 已 11,926 行、逼近 12k 拆分触发线，评估首拆（按玩法子系统划分子 asmdef）；数值平衡与内容填量随纵向切片试玩推进。
+2. 技术债收口：D2（存档根键 `GetType().FullName` 静默丢档）、D4（`BattleEventDispatcher` 缺 `Unregister`）、K3（`RaiseMaxHp` 绕过 `RunState` 入口）、L-1（`UI_OneShotVfx` 魔法字符串）、Z-1（`UI_SingletonObject` 零引用死代码）；尽快提交 `GameBattle` 分层重构。
+3. 架构演进：`Presentation` 已 12,165 行、逼近 12k 拆分触发线，评估首拆（按玩法子系统划分子 asmdef）；数值平衡与内容填量随纵向切片试玩推进。
 
 ---
 
@@ -117,7 +117,7 @@ git lfs pull
 - 表现层与域层之间固定四通道：**命令上行 / 事件下行 / 只读查询 / `Hook` 状态介入**；命令侧进一步分层为「段级 `XxxCommandDispatcher` + 整局级 `RunCommandDispatcher`」两级门面，常驻界面只上发意图、写域全部落在 `GameRun` 域（含幂等的 `RewardClaimService` 领奖会话）。预览与结算共用同一份规则，卡面数字与实际扣血在结构上不会不一致。
 - 整局进度由 `RunState` 持有，阶段逻辑归 `GameRun` 域，UI 只上发意图、订阅事实；存档收敛到三处检查点。
 
-→ 逐文件评审、依赖图与技术债清单见 **[Doc/架构分析报告.md](Doc/架构分析报告.md)**（综合评分 96/100，A）与 [Doc/asmdef-dependency-graph.svg](Doc/asmdef-dependency-graph.svg)。
+→ 逐文件评审、依赖图与技术债清单见 **[Doc/架构分析报告.md](Doc/架构分析报告.md)**（综合评分 97/100，A）与 [Doc/asmdef-dependency-graph.svg](Doc/asmdef-dependency-graph.svg)。
 
 ---
 

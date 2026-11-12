@@ -28,7 +28,7 @@ MonoBehaviour:
   _lowerRowLimit: 5
   _upperRestRowLimit: 5
   _revealMonster: 15
-  _revealElite: 10
-  _revealShop: 10
-  _revealTreasure: 10
-  _revealEvent: 55
+  _revealElite: 15
+  _revealShop: 5
+  _revealTreasure: 5
+  _revealEvent: 60

@@ -13,6 +13,7 @@ namespace _DreamKeep.RuntimeData
         private readonly List<EnemyIntent> _intents;
         private readonly EnemyIntent _frontSlotIntent;
         private readonly SO_EnemySpeechLines _speechLines;
+        private readonly string _skinName;
         private List<EnemyIntent> _phaseTwoIntents;
         private EnemyIntent _phaseTwoFrontSlotIntent;
         private bool _isPhaseTwo;
@@ -24,6 +25,9 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>本场战斗的台词分组：装配期一次写入，null 表示全程不说话。</summary>
         public SO_EnemySpeechLines SpeechLines => _speechLines;
+
+        /// <summary>本场战斗的 Spine 皮肤名：装配期一次写入，空串表示用默认皮肤。</summary>
+        public string SkinName => _skinName;
 
         /// <summary>是否处于击晕：本回合意图被替换为击晕，执行时跳过行动且不推进意图。</summary>
         public bool IsStunned { get; private set; }
@@ -51,13 +55,14 @@ namespace _DreamKeep.RuntimeData
             : CurrentIntent;
 
         public Enemy(string name_, int maxHp_, int slot_, List<EnemyIntent> intents_, EnemyIntent frontSlotIntent_,
-            SO_EnemySpeechLines speechLines_)
+            SO_EnemySpeechLines speechLines_, string skinName_ = "")
         {
             Creature = new Creature(name_, maxHp_);
             Slot = slot_;
             _intents = intents_ ?? new List<EnemyIntent>();
             _frontSlotIntent = frontSlotIntent_;
             _speechLines = speechLines_;
+            _skinName = skinName_;
         }
 
         #region 击晕：由位移撞击施加，敌人回合执行一次后清除

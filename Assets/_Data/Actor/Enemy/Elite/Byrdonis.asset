@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 304322232adb41ad99a309341d380707, type: 3}
+  m_Name: Byrdonis
+  m_EditorClassIdentifier: 
+  _name: "\u591A\u5C3C\u65AF\u5F02\u9E1F"
+  _maxHP: 95
+  _viewPrefab: {fileID: 6187196625302473479, guid: 54d6cb4d5a3bbff46bba7cb9e1aa2437, type: 3}
+  _skinName: default
+  _enemyIntents:
+  - rid: 6594183821311344657
+  - rid: 6594183821311344661
+  _frontSlotIntent:
+    rid: 6594183821311344664
+  _startPerks:
+  - _perk: {fileID: 11400000, guid: 9d4fcc19a1873024dad9f931b765cb72, type: 2}
+    _layers: 1
+  _speechLines: {fileID: 11400000, guid: 8801f7e166ffc4e499373e51348f2b50, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183821311344657
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344673
+        _intent2:
+          rid: 6594183821311344674
+    - rid: 6594183821311344661
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344675
+        _intent2:
+          rid: 6594183821311344676
+    - rid: 6594183821311344664
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344677
+        _intent2:
+          rid: 6594183821311344678
+    - rid: 6594183821311344673
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 18
+        _times: 1
+    - rid: 6594183821311344674
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183821311344675
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 3
+        _times: 3
+    - rid: 6594183821311344676
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183821311344677
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 3
+        _times: 4
+    - rid: 6594183821311344678
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

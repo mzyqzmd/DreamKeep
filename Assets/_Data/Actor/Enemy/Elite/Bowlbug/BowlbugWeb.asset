@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BowlbugWeb
   m_EditorClassIdentifier: 
   _name: "\u76DB\u7897\u866B\uFF08\u4E1D\uFF09"
-  _maxHP: 32
+  _maxHP: 30
   _viewPrefab: {fileID: 6187196625302473479, guid: 68b0e9857edb06448b38140895425f0a, type: 3}
   _skinName: web
   _enemyIntents:

@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c97e68c7fba7e214a8e7d6e823f6ec8f, type: 3}
   m_Name: Imbalanced
   m_EditorClassIdentifier: 
-  _icon: {fileID: 0}
+  _icon: {fileID: 21300000, guid: 9c1d9a76f6c332b44b599baaaee49c51, type: 3}
   _polarity: 1

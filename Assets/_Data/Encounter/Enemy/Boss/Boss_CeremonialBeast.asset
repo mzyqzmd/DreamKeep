@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5d2e1f3c8e459fab7d1600ca3f8e425, type: 3}
+  m_Name: Boss_CeremonialBeast
+  m_EditorClassIdentifier: 
+  _name: "\u4EEA\u5F0F\u517D"
+  _enemies:
+  - {fileID: 11400000, guid: d392f7dc9347a8c4d9601860a47585a9, type: 2}
+  _hpVariance: 0.1
+  _reward: {fileID: 0}

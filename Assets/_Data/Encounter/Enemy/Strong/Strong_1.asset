@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d2e1f3c8e459fab7d1600ca3f8e425, type: 3}
   m_Name: Strong_1
   m_EditorClassIdentifier: 
-  _name: "\u4E24\u53EA\u5C0F\u5C0F\u5543\u517D"
+  _name: "\u4E24\u53EA\u5C0F\u5543\u517D"
   _enemies:
-  - {fileID: 11400000, guid: a0401e9046a3ac94a8aa34ff6e58b834, type: 2}
+  - {fileID: 11400000, guid: e0892cf42b3070840b824fe3f4113dfd, type: 2}
   - {fileID: 11400000, guid: e0892cf42b3070840b824fe3f4113dfd, type: 2}
   _hpVariance: 0.1
   _reward: {fileID: 11400000, guid: 1b08ebdafc489ed499ec824f1d48b574, type: 2}

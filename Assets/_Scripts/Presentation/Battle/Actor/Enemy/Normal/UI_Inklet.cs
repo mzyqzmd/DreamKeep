@@ -6,7 +6,7 @@ using UnityEngine;
 namespace _DreamKeep.Presentation
 {
     /// <summary>墨宝视图：攻击动画从 attack 与两条专属变体中等概率随抽，每个意图只抽一次；单次播满，多段每波播到 70% 接棒重播。</summary>
-    public class UI_Inklet : UI_Enemy
+    public sealed class UI_Inklet : UI_Enemy
     {
         private const string AttackFastAnim = "attack_fast";
         private const string AttackTripleAnim = "attack_triple";

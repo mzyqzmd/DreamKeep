@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5d2e1f3c8e459fab7d1600ca3f8e425, type: 3}
   m_Name: Weak_3
   m_EditorClassIdentifier: 
-  _name: "\u4E00\u53EA\u6811\u679D\u53F2\u83B1\u59C6\u4E00\u53EA\u5C0F\u5543\u517D"
+  _name: "\u6811\u679D\u53F2\u83B1\u59C6\u4E0E\u7EC3\u4E60\u673A\u5668\u4EBA"
   _enemies:
-  - {fileID: 11400000, guid: fa3daa7413c6f844e93c4b5c13e04008, type: 2}
-  - {fileID: 11400000, guid: 07a027b96a8d5d540bf04f057344b81d, type: 2}
+  - {fileID: 11400000, guid: bfc329ada323b8341a47c313bda6f9c5, type: 2}
+  - {fileID: 11400000, guid: 35be9ca0c06cfce47879cc5c91412711, type: 2}
   _hpVariance: 0.1
   _reward: {fileID: 11400000, guid: 1b08ebdafc489ed499ec824f1d48b574, type: 2}

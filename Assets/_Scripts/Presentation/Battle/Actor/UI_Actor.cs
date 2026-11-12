@@ -11,7 +11,7 @@ using UnityEngine;
 namespace _DreamKeep.Presentation
 {
     /// <summary>战斗单位视图基类：绑定生物、面板装配、共享事件、目标提示、悬停名牌与描边高亮、演出编排（数字与动画同帧、同条事件内各演出并行）。
-    /// 骨架句柄、四条公约动画名与播放原语都在 UI_ActorAnimTool；意图与移动在 UI_Enemy；悬停演出与命中框在 UI_ActorHoverBox。</summary>
+    /// 骨架句柄与播放原语在 UI_ActorAnimTool；四条公约动画名默认写在本类、可被状态变体覆写；意图与移动在 UI_Enemy；悬停演出与命中框在 UI_ActorHoverBox。</summary>
     [RequireComponent(typeof(UI_ActorAnimTool))]
     [RequireComponent(typeof(UI_ActorHoverBox))]
     public abstract class UI_Actor : MonoBehaviour
@@ -27,11 +27,11 @@ namespace _DreamKeep.Presentation
         [Header("状态视觉")] [SerializeField] private float _shrinkScale = 0.7f;
         [SerializeField] private float _shrinkDuration = 0.2f;
 
-        // 公约四条动画名：十条骨架统一导出，全单位一致，写死不可改（将来某单位要做状态变体时再议）
-        protected const string IdleLoopAnim = "idle_loop";
-        protected const string AttackAnim = "attack";
-        protected const string HitAnim = "hurt";
-        protected const string DeathAnim = "die";
+        // 公约四条动画名：十条骨架统一导出，默认名全单位一致；有状态变体的单位覆写按状态取名
+        protected virtual string IdleLoopAnim => "idle_loop";
+        protected virtual string AttackAnim => "attack";
+        protected virtual string HitAnim => "hurt";
+        protected virtual string DeathAnim => "die";
 
         // 悬停名牌与描边的配置出口：唯一消费者是 UI_ActorHoverBox（它按指针事件演出），放这里是因为配置本来就归单位
         public SkeletonGraphic Skeleton => _skeleton;
