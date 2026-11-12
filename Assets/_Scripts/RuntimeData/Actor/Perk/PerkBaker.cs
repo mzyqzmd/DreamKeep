@@ -16,9 +16,12 @@ namespace _DreamKeep.RuntimeData
             SO_Dexterity dexterity => new BP_Dexterity(dexterity),
             SO_Regen regen => new BP_Regen(regen),
             SO_Slow slow => new BP_Slow(slow),
+            SO_Territorial territorial => new BP_Territorial(territorial),
             SO_Rampage rampage => new BP_Rampage(rampage),
+            SO_Rampart rampart => new BP_Rampart(rampart),
             SO_Dizzy dizzy => new BP_Dizzy(dizzy),
             SO_Slippery slippery => new BP_Slippery(slippery),
+            SO_Imbalanced imbalanced => new BP_Imbalanced(imbalanced),
             _ => null,
         };
 

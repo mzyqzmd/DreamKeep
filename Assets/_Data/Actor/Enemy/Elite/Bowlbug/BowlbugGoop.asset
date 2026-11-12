@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 304322232adb41ad99a309341d380707, type: 3}
+  m_Name: BowlbugGoop
+  m_EditorClassIdentifier: 
+  _name: "\u76DB\u7897\u866B\uFF08\u871C\uFF09"
+  _maxHP: 28
+  _viewPrefab: {fileID: 6187196625302473479, guid: 8b247e765b5aabf458f5bf82d2aad058, type: 3}
+  _skinName: goop
+  _enemyIntents:
+  - rid: 6594183821311344680
+  - rid: 6594183821311344683
+  _frontSlotIntent:
+    rid: 6594183821311344689
+  _startPerks: []
+  _speechLines: {fileID: 11400000, guid: dfb857a1772a2f44bb0befc3cf5e9c23, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183821311344680
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344681
+        _intent2:
+          rid: 6594183821311344682
+    - rid: 6594183821311344681
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 3
+        _times: 1
+    - rid: 6594183821311344682
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183821311344683
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344684
+        _intent2:
+          rid: 6594183821311344685
+    - rid: 6594183821311344684
+      type: {class: ApplyPerkIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
+        _layers: 16
+        _isSelf: 1
+    - rid: 6594183821311344685
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183821311344689
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594183821311344690
+        _intent2:
+          rid: 6594183821311344691
+    - rid: 6594183821311344690
+      type: {class: DamageIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _damage: 3
+        _times: 2
+    - rid: 6594183821311344691
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 

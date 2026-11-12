@@ -15,15 +15,11 @@ MonoBehaviour:
   _weakFloorLimit: 6
   _weak:
   - {fileID: 11400000, guid: 2c49586adf5bc0612e48c77d1a6f5b9c, type: 2}
-  - {fileID: 11400000, guid: d43e154b88080a84a8b701191b3097b4, type: 2}
-  - {fileID: 11400000, guid: 4d4f3f3d0e16dfd4a9240f4d3266f2d4, type: 2}
-  - {fileID: 11400000, guid: c529018cab6483341b9cae80ad53c620, type: 2}
-  - {fileID: 11400000, guid: e418ad34f56728d9e0f1a2b3c4d5e6f7, type: 2}
-  - {fileID: 11400000, guid: 4c7d5e7248a329b4aa2ea512038c092e, type: 2}
   _strong:
   - {fileID: 11400000, guid: 4435524594a148148ad3ae4047711fbc, type: 2}
-  - {fileID: 11400000, guid: bec55ac12cb09794dbfba9caa49ea8c2, type: 2}
   _elite:
   - {fileID: 11400000, guid: 2e72c76d88f2cad4f94222cf8ba22929, type: 2}
+  - {fileID: 11400000, guid: 005d1528d9c3d3941a0a4dcfaee42839, type: 2}
+  - {fileID: 11400000, guid: 8a3b36f9b0ed57742bc02dc0ed91c89c, type: 2}
   _boss:
   - {fileID: 11400000, guid: 452152f142611ac4b8ecc80f4a47353e, type: 2}

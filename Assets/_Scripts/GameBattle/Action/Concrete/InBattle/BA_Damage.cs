@@ -52,6 +52,10 @@ namespace _DreamKeep.GameBattle
                 // 实际掉血后询问横冲直撞：命中阈值即在本次结算内嵌套执行打断，事件并入本动作
                 if (hpLoss > 0) HpDropHook.Check(battleContext_, target, events);
 
+                // 攻击被完全格挡后询问失衡：攻击方带失衡即嵌套执行击晕，事件并入本动作
+                if (_applyModifiers && amount > 0 && absorbed == amount)
+                    FullBlockHook.Check(battleContext_, Source, events);
+
                 // 参与数值修正的伤害才消费滑溜：绕过修正的伤害不吃上限，也不扣层
                 if (_applyModifiers && hpLoss > 0) SlipperyHook.Consume(target, events);
             }
