@@ -1,8 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using VContainer;
+using Cysharp.Threading.Tasks;
 using _DreamKeep.ConfigData;
 using UnityEngine.UI;
 using _DreamKeep.RuntimeData;
@@ -14,6 +15,20 @@ namespace _DreamKeep.Presentation
     /// 同层再加确定性错落；节点、连线、圆环三处共用同一份层内坐标缓存，选点经 NodeClicked 上报。</summary>
     public class UI_MapView : MonoBehaviour
     {
+        // 失活、换局重建、宿主销毁都要显式中断在途等待：UniTask 不随面板失活停止，
+        // 否则关图后延时到点仍会触发 NodeClicked 直接切段
+        private void OnDisable() => CancelSelect();
+        private void OnDestroy() => CancelSelect();
+
+        // Cancel 让 Delay 静默返回、Dispose 释放令牌源，置空同时打开下次点选闸门
+        private void CancelSelect()
+        {
+            if (_selectCts == null) return;
+            _selectCts.Cancel();
+            _selectCts.Dispose();
+            _selectCts = null;
+        }
+
         [Header("生成件")] [SerializeField] private UI_StaticMapNode _staticNodePrefab;
         [SerializeField] private UI_BossMapNode _bossNodePrefab;
         [SerializeField] private UI_MapLine _linePrefab;
@@ -58,7 +73,7 @@ namespace _DreamKeep.Presentation
         public event Action MapRebuilt;
 
         private MapGraph _graph;
-        private Coroutine _selectRoutine;
+        private CancellationTokenSource _selectCts;
         private bool _laidOut;
         private ScrollRect _scroll;
         private MapNode _scrolledFor; // 上次已把滚动对准的节点：同一节点重复开图不打断玩家的手动滚动
@@ -69,16 +84,11 @@ namespace _DreamKeep.Presentation
         private Rect _mapRect;
         private int[] _rowCounts;
 
-        // 失活会中断协程：引用必须同步清掉，否则重开地图后 OnNodeClicked 会被残值永远拦截
-        private void OnDisable() => _selectRoutine = null;
-
         [Inject]
-        public void Construct(RunState run_) => Build(run_.Map);
-
-        /// <summary>全量建图：网格节点 + Boss；位置与连线等首次打开地图（面板已激活）时再摆。</summary>
-        public void Build(MapGraph graph_)
+        public void Construct(RunState run_)
         {
-            _graph = graph_;
+           // 全量建图：网格节点 + Boss；位置与连线等首次打开地图（面板已激活）时再摆。
+            _graph = run_.Map;
             ClearAll();
             MapRebuilt?.Invoke(); // 换局重建即换一局：墨迹等"限本局"内容据此清空
             if (_graph == null) return;
@@ -119,12 +129,7 @@ namespace _DreamKeep.Presentation
 
         private void ClearAll()
         {
-            if (_selectRoutine != null)
-            {
-                StopCoroutine(_selectRoutine);
-                _selectRoutine = null;
-            }
-
+            CancelSelect();
             _laidOut = false;
             _scrolledFor = null;
             foreach (UI_MapNode view in _views.Values) Destroy(view.gameObject);
@@ -157,20 +162,25 @@ namespace _DreamKeep.Presentation
             _ => _nodeScale,
         };
 
-        // 点节点：先在目标节点播一次圆环，播完才上报切段；等待期间重复点击作废（协程随面板失活自动中断）
+        // 点节点：先在目标节点播一次圆环，播完才上报切段；等待期间重复点击作废（失活/重建/销毁即中断）
         private void OnNodeClicked(MapNode node_)
         {
-            if (_selectRoutine != null) return;
+            if (_selectCts != null) return;
             if (!_positions.TryGetValue(node_, out Vector2 pos)) return;
             UI_MapCircle circle = GetOrCreateCircle(node_);
             circle.PlayAt(_nodeLayer, ToAnchored(pos), ViewSizeOf(_views[node_]));
-            _selectRoutine = StartCoroutine(RaiseAfterCircle(node_, circle.PlayDuration));
+            _selectCts = new CancellationTokenSource();
+            RaiseAfterCircleAsync(node_, circle.PlayDuration, _selectCts).Forget();
         }
 
-        private IEnumerator RaiseAfterCircle(MapNode node_, float duration_)
+        // 局部捕获 cts_ 比对引用：防延时到点但 continuation 未恢复时关图，闸门已被置空
+        private async UniTask RaiseAfterCircleAsync(MapNode node_, float duration_, CancellationTokenSource cts_)
         {
-            yield return new WaitForSecondsRealtime(Mathf.Max(0.01f, duration_));
-            _selectRoutine = null;
+            bool canceled = await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0.01f, duration_)),
+                ignoreTimeScale: true, cancellationToken: cts_.Token).SuppressCancellationThrow();
+            if (canceled || _selectCts != cts_) return;
+            cts_.Dispose();
+            _selectCts = null;
             NodeClicked?.Invoke(node_);
         }
 
