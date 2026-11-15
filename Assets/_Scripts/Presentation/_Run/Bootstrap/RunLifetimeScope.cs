@@ -76,9 +76,11 @@ namespace _DreamKeep.Presentation
             builder_.RegisterInstance(new BattleSession());
             // 表现侧孪生句柄：战斗段表现锚点（单位根 / 目标裁决）随它开关，常驻药水栏经它拿每帧引用（见 BattleStage）
             builder_.RegisterInstance(new BattleStage());
-            // 弹层与特效工厂注册在整局层：池要跨段复用，段内编排者（BattlePopRoot / BattleVfxRoot）从父容器解析即可，
-            // 段根 prefab 因此不必引用场景里的常驻对象
-            builder_.RegisterComponentInHierarchy<PopFactory>();
+            // 弹层工厂唯一实例住常驻 Scene_MainMenu（DontDestroyOnLoad），整局容器只登记这一份；
+            // DevPanel 等旁路直进 Scene_Run 时没有常驻场景，跳过登记与发起器注入，段流程照常、气泡静默失效
+            PopFactory popFactory = FindFirstObjectByType<PopFactory>();
+            if (popFactory) builder_.RegisterInstance(popFactory);
+            // 其余弹层/特效工厂注册在整局层：池要跨段复用，段内编排者从父容器解析即可
             builder_.RegisterComponentInHierarchy<PopPanelFactory>();
             builder_.RegisterComponentInHierarchy<VfxFactory>();
             builder_.RegisterComponentInHierarchy<VfxDefaultRoot>(); // 常驻特效默认根：战斗外玩家回血在屏幕中心播一次
@@ -101,11 +103,21 @@ namespace _DreamKeep.Presentation
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>().AsSelf();
             builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败共用，确认后上报回主菜单
-            // 常驻发起器随整局容器装配：PopFactory 本就注册在这层，段不在场时悬停也能弹气泡；
+            // 发起器随整局容器装配：全部注入常驻的那一份 PopFactory，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
             builder_.RegisterBuildCallback(resolver_ =>
             {
-                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                if (popFactory)
+                {
+                    foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                    foreach (UI_CardEncyclopediaPanel page in FindObjectsOfType<UI_CardEncyclopediaPanel>(true))
+                        resolver_.Inject(page);
+                    foreach (UI_RelicEncyclopediaPanel page in FindObjectsOfType<UI_RelicEncyclopediaPanel>(true))
+                        resolver_.Inject(page);
+                    foreach (UI_PotionEncyclopediaPanel page in FindObjectsOfType<UI_PotionEncyclopediaPanel>(true))
+                        resolver_.Inject(page);
+                }
+
                 BindMainMenuFlow(resolver_);
                 // 容器装配完成后一次性交接存档集合：读档快照此时统一下发，笔迹经 MapRebuilt 订阅链幂等重建
                 SaveService.Bind(resolver_.Resolve<IReadOnlyList<ISaveable>>());

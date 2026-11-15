@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _prefix: 
   _suffix: 
-  _find: Encounter
-  _replace: Weak
+  _find: Relic
+  _replace: Potion
   _useNumbering: 0
   _startNumber: 1
   _caseMode: 0

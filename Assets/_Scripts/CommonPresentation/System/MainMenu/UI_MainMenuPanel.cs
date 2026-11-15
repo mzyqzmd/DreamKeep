@@ -15,16 +15,18 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private Button _settingButton;
         [SerializeField] private Button _developLogButton;
         [SerializeField] private Button _quitButton;
+        [SerializeField] private Button _encyclopediaButton;
 
         #region 接线：只转发意图
 
         public void Wire(Action onNewGame_, Action onContinue_, Action onGiveUp_, Action onSetting_,
-            Action onDevelopLog_, Action onQuit_)
+            Action onEncyclopedia_, Action onDevelopLog_, Action onQuit_)
         {
             if (_newGameButton) _newGameButton.onClick.AddListener(() => onNewGame_?.Invoke());
             if (_continueButton) _continueButton.onClick.AddListener(() => onContinue_?.Invoke());
             if (_giveUpButton) _giveUpButton.onClick.AddListener(() => onGiveUp_?.Invoke());
             if (_settingButton) _settingButton.onClick.AddListener(() => onSetting_?.Invoke());
+            if (_encyclopediaButton) _encyclopediaButton.onClick.AddListener(() => onEncyclopedia_?.Invoke());
             if (_developLogButton) _developLogButton.onClick.AddListener(() => onDevelopLog_?.Invoke());
             if (_quitButton) _quitButton.onClick.AddListener(() => onQuit_?.Invoke());
         }

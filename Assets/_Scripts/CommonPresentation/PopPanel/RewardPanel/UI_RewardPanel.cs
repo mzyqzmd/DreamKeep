@@ -148,19 +148,25 @@ namespace _DreamKeep.CommonPresentation
             });
         }
 
-        // 槽位已满时领不了：解锁条目让玩家先去喝一瓶再回来点，不在数据侧静默丢弃
+        // 槽位已满时领不了：解锁条目并抖一下内容层，让玩家先去喝一瓶再回来点，不在数据侧静默丢弃
         private void ClaimPotion(int index_, UI_RewardItem item_) =>
             Settle(_commands.ClaimReward(index_), item_);
 
         private void ClaimRelic(int index_, UI_RewardItem item_) =>
             Settle(_commands.ClaimReward(index_), item_);
 
-        // 成功才收起条目；槽满/配置缺失都解锁重试，陈旧回调静默不动
+        // 成功才收起条目；槽满解锁后抖一下内容层，配置缺失只解锁，陈旧回调静默不动
         private static void Settle(ERewardClaimResult result_, UI_RewardItem item_)
         {
             if (result_ == ERewardClaimResult.Stale) return;
-            if (result_ == ERewardClaimResult.Success) item_.Complete();
-            else item_.Cancel();
+            if (result_ == ERewardClaimResult.Success)
+            {
+                item_.Complete();
+                return;
+            }
+
+            item_.Cancel();
+            if (result_ == ERewardClaimResult.PotionSlotsFull) item_.PlayRefuse();
         }
 
         #endregion

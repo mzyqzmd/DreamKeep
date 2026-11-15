@@ -6,8 +6,8 @@ using _DreamKeep.RuntimeData;
 namespace _DreamKeep.CommonPresentation
 {
     /// <summary>卡牌陈列排序工具：牌堆查看器等纯展示场合的显示顺序，只影响陈列、不写回域内任何堆。
-    /// 按类型（诅咒→能力→技能→攻击）与按费用（低→高）各一条入口，均可用 descending 反转方向；
-    /// 主键相同者一律保持域内相对顺序（洗牌后的堆序不被搅乱），倒序只翻转主键、不反转同值组；
+    /// 按类型（诅咒→能力→技能→攻击）、按稀有度（普通→稀有→超稀有）与按费用（低→高）各一条入口，
+    /// 均可用 descending 反转方向；主键相同者一律保持域内相对顺序（洗牌后的堆序不被搅乱），倒序只翻转主键、不反转同值组；
     /// 未登记类型与无费用卡（费用为负）恒排最后，不参与方向翻转。</summary>
     public static class CardSorter
     {
@@ -19,6 +19,12 @@ namespace _DreamKeep.CommonPresentation
         /// <summary>按类型陈列顺序原位排序：正序诅咒→能力→技能→攻击，descending 反转为攻击→技能→能力→诅咒。</summary>
         public static void SortByType(List<CardModel> cards_, bool descending_ = false) =>
             Sort(cards_, (a_, b_) => CompareType(a_, b_, descending_));
+
+        /// <summary>按稀有度陈列顺序原位排序：正序普通→稀有→超稀有，descending 反转；同档位保持输入相对顺序。</summary>
+        public static void SortByRarity(List<CardModel> cards_, bool descending_ = false) =>
+            Sort(cards_, (a_, b_) => descending_
+                ? ((int)b_.Rarity).CompareTo((int)a_.Rarity)
+                : ((int)a_.Rarity).CompareTo((int)b_.Rarity));
 
         /// <summary>按当前费用原位排序：正序低费在前、高费在后，descending 反转；无费用卡（费用为负）两个方向都排最后。</summary>
         public static void SortByCost(List<CardModel> cards_, bool descending_ = false) =>

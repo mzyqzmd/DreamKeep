@@ -33,8 +33,11 @@ namespace _DreamKeep.Presentation
 
         private UI_FadeScreen _fadeScreen; // 黑屏过渡幕（住 Scene_MainMenu）：跨场景引用不可序列化，进局时经 BindFadeScreen 注入
 
-        [Tooltip("暂停面板：顶栏菜单按钮开合，四条出口在此接线（同场景，Inspector 拖引用）")] [SerializeField]
+        [Tooltip("暂停面板：顶栏菜单按钮开合，五条出口在此接线（同场景，Inspector 拖引用）")] [SerializeField]
         private UI_PausePanel _pausePanel;
+
+        [Tooltip("百科大全面板：暂停面板的百科出口打开（同场景，Inspector 拖引用）")] [SerializeField]
+        private UI_EncyclopediaPanel _encyclopediaPanel;
 
         /// <summary>战斗段场景名：按段种类映射到构建列表中的场景名。</summary>
         public const string BattleSegmentName = "Scene_Battle";
@@ -80,7 +83,8 @@ namespace _DreamKeep.Presentation
             if (_mapView) _mapView.NodeClicked += OnMapNodeClicked;
             // 暂停面板常常预摆失活：接线挂在本类（随整局容器装配必跑），不依赖面板自身 Awake
             if (_pausePanel)
-                _pausePanel.Wire(ClosePausePanel, OnSettingClicked, OnGiveUpClicked, OnSaveAndQuitClicked);
+                _pausePanel.Wire(ClosePausePanel, OnSettingClicked, OnEncyclopediaClicked, OnGiveUpClicked,
+                    OnSaveAndQuitClicked);
         }
 
         #region 对外：常驻方运行时注入（相机/幕布/回主菜单出口）与回主菜单清理
@@ -127,7 +131,7 @@ namespace _DreamKeep.Presentation
             if (_topBar) _topBar.gameObject.SetActive(false);
         }
 
-        #region 暂停面板四条出口：继续 / 设置 / 放弃 / 保存并退出
+        #region 暂停面板五条出口：继续 / 设置 / 百科 / 放弃 / 保存并退出
 
         private void ClosePausePanel()
         {
@@ -136,6 +140,9 @@ namespace _DreamKeep.Presentation
 
         // 设置面板住常驻主菜单画布（层级在整局之上），本类只转发开合
         private void OnSettingClicked() => _showSetting?.Invoke();
+
+        // 百科与本类同场景，直接开合；主菜单那份百科归常驻编排者，两条入口互不干扰
+        private void OnEncyclopediaClicked() => _encyclopediaPanel.Show();
 
         // 放弃先过二次确认（面板同样住常驻画布），确认后才真的结束本局
         private void OnGiveUpClicked() => _showGiveUp?.Invoke(ConfirmGiveUp);

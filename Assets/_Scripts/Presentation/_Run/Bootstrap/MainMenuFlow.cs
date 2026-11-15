@@ -33,6 +33,9 @@ namespace _DreamKeep.Presentation
         [Tooltip("设置面板：主菜单与整局内共用（同场景 Canvas_System，默认失活）")] [SerializeField]
         private UI_SettingPanel _settingPanel;
 
+        [Tooltip("百科大全面板（同场景 Canvas_System，默认失活）")] [SerializeField]
+        private UI_EncyclopediaPanel _encyclopediaPanel;
+
         [Tooltip("放弃二次确认面板：主菜单删档与整局内放弃共用，确认语义由调用方给定（同场景 Canvas_System，默认失活）")] [SerializeField]
         private UI_GiveUpPanel _giveUpPanel;
 
@@ -93,13 +96,22 @@ namespace _DreamKeep.Presentation
             if (_mainMenuPanel)
             {
                 _mainMenuPanel.Wire(OnNewGameClicked, OnContinueClicked, OnGiveUpSaveClicked,
-                    ShowSettingPanel, ShowDevelopLogPanel, ShowQuitGamePanel);
+                    ShowSettingPanel, ShowEncyclopediaPanel, ShowDevelopLogPanel, ShowQuitGamePanel);
                 _mainMenuPanel.SetHasSave(SaveService.HasSave); // 启动时按磁盘上的单档切两态
             }
 
             // 放弃确认：关闭即收起，确认即转发开面板时给的那份语义
             if (_giveUpPanel) _giveUpPanel.Wire(OnGiveUpClosed, OnGiveUpConfirmed);
             if (_quitGamePanel) _quitGamePanel.Wire(OnQuitClosed, OnQuitConfirmed);
+            // 主菜单阶段没有整局容器：百科三页的弹层工厂依赖在这里显式装配，进局后由整局容器构建回调再补一次
+            PopFactory popFactory = GetComponent<PopFactory>();
+            if (popFactory)
+            {
+                _encyclopediaPanel.GetComponentInChildren<UI_CardEncyclopediaPanel>(true).Construct(popFactory);
+                _encyclopediaPanel.GetComponentInChildren<UI_RelicEncyclopediaPanel>(true).Construct(popFactory);
+                _encyclopediaPanel.GetComponentInChildren<UI_PotionEncyclopediaPanel>(true).Construct(popFactory);
+            }
+
             HideOverlays(); // 常驻场景：进 Play 先统一收一遍，避免 Inspector 残留激活态
         }
 
@@ -147,6 +159,12 @@ namespace _DreamKeep.Presentation
             if (_developLogPanel) _developLogPanel.Show();
         }
 
+        private void ShowEncyclopediaPanel()
+        {
+            HideOverlays();
+            if (_encyclopediaPanel) _encyclopediaPanel.Show();
+        }
+
         #endregion
 
         #region 常驻弹层面板：主菜单与整局共用同一份，开一个先收其余
@@ -166,7 +184,7 @@ namespace _DreamKeep.Presentation
             if (_giveUpPanel) _giveUpPanel.Show();
         }
 
-        // 四个弹层互斥：开任一个先把其余收起，避免两层全屏遮罩叠着互相吃点击
+        // 五个弹层互斥：开任一个先把其余收起，避免两层全屏遮罩叠着互相吃点击
         private void HideOverlays()
         {
             _giveUpConfirm = null;
@@ -174,6 +192,7 @@ namespace _DreamKeep.Presentation
             if (_giveUpPanel) _giveUpPanel.Hide();
             if (_developLogPanel) _developLogPanel.Hide();
             if (_quitGamePanel) _quitGamePanel.Hide();
+            if (_encyclopediaPanel) _encyclopediaPanel.Hide();
         }
 
         private void OnGiveUpClosed()
