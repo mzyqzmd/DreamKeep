@@ -183,6 +183,21 @@ internal static class DevPanelCommands
         return run != null && run.Player.CombatState != null;
     }
 
+    /// <summary>直接通过本场战斗：全体敌人血置 0 后入队结束回合让胜负判定推进；不发死亡事件，跳过倒地演出。</summary>
+    internal static string PassBattle()
+    {
+        IObjectResolver container = ResolveContainer();
+        if (container == null) return Fail("未找到 RunState（整局层是否已构建）");
+
+        BattleSession session = container.Resolve<BattleSession>();
+        if (session == null || !session.IsOpen || !IsInBattle()) return Fail("不在战斗中，先进入战斗段");
+
+        IReadOnlyList<Creature> enemies = session.Query.GetAliveEnemies();
+        foreach (Creature enemy in enemies) enemy.CurrentHp = 0;
+        session.Command.EndTurn();
+        return $"已秒掉 {enemies.Count} 个敌人，等待战斗结算";
+    }
+
     /// <summary>把玩家当前能量设为指定值：只钳下限 0，可超过回合上限。</summary>
     internal static string SetPlayerEnergy(int value_) => WriteEnergy(_ => value_);
 

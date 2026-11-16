@@ -36,9 +36,6 @@ namespace _DreamKeep.Presentation
         [Tooltip("暂停面板：顶栏菜单按钮开合，五条出口在此接线（同场景，Inspector 拖引用）")] [SerializeField]
         private UI_PausePanel _pausePanel;
 
-        [Tooltip("百科大全面板：暂停面板的百科出口打开（同场景，Inspector 拖引用）")] [SerializeField]
-        private UI_EncyclopediaPanel _encyclopediaPanel;
-
         /// <summary>战斗段场景名：按段种类映射到构建列表中的场景名。</summary>
         public const string BattleSegmentName = "Scene_Battle";
 
@@ -67,6 +64,7 @@ namespace _DreamKeep.Presentation
         private RunProgressService _progress;
         private Action _returnToMainMenu; // 回主菜单请求出口：常驻主菜单编排者经 BindReturnHandler 注入
         private Action _showSetting; // App 层设置面板开合：住 Scene_MainMenu，跨场景引用不可序列化
+        private Action _showEncyclopedia; // App 层百科大全开合，同上
         private Action<Action> _showGiveUp; // App 层放弃确认（形参是「确认放弃」的语义），同上
 
         [Inject]
@@ -102,10 +100,11 @@ namespace _DreamKeep.Presentation
         /// <summary>注入回主菜单请求出口：终点确认只上报事实，本类不认识常驻编排者。</summary>
         public void BindReturnHandler(Action handler_) => _returnToMainMenu = handler_;
 
-        /// <summary>注入 App 层常驻面板入口（设置开合、带确认语义的放弃确认）：面板住 Scene_MainMenu，只能运行时转交。</summary>
-        public void BindAppPanels(Action showSetting_, Action<Action> showGiveUp_)
+        /// <summary>注入 App 层常驻面板入口（设置开合、百科开合、带确认语义的放弃确认）：面板住 Scene_MainMenu，只能运行时转交。</summary>
+        public void BindAppPanels(Action showSetting_, Action showEncyclopedia_, Action<Action> showGiveUp_)
         {
             _showSetting = showSetting_;
+            _showEncyclopedia = showEncyclopedia_;
             _showGiveUp = showGiveUp_;
         }
 
@@ -141,8 +140,8 @@ namespace _DreamKeep.Presentation
         // 设置面板住常驻主菜单画布（层级在整局之上），本类只转发开合
         private void OnSettingClicked() => _showSetting?.Invoke();
 
-        // 百科与本类同场景，直接开合；主菜单那份百科归常驻编排者，两条入口互不干扰
-        private void OnEncyclopediaClicked() => _encyclopediaPanel.Show();
+        // 百科面板住常驻主菜单画布（与设置同一份），本类只转发开合
+        private void OnEncyclopediaClicked() => _showEncyclopedia?.Invoke();
 
         // 放弃先过二次确认（面板同样住常驻画布），确认后才真的结束本局
         private void OnGiveUpClicked() => _showGiveUp?.Invoke(ConfirmGiveUp);
@@ -223,6 +222,12 @@ namespace _DreamKeep.Presentation
             // 段内不写盘：段收益要到「在地图上选中下一个节点」才随提交点固化
             CloseBattleSession();
             if (_audio) _audio.PlayBgm(_audio.Cues.BgmRun);
+            if (_topBar) _topBar.OpenMap();
+        }
+
+        /// <summary>重复点奖励「继续」时只重开地图：段完成已由首次点击走完，不重跑结算。</summary>
+        public void OpenMap()
+        {
             if (_topBar) _topBar.OpenMap();
         }
 

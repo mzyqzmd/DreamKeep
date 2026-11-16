@@ -87,6 +87,14 @@ namespace _DreamKeep.RuntimeData
             CurrentHp += amount_; // 先抬上限再回血，CurrentHp 恒不超过 MaxHp
         }
 
+        /// <summary>降低最大生命上限，保底 1；当前生命跟随压到新上限内，经 setter 刷新 HUD。</summary>
+        public void LowerMaxHp(int amount_)
+        {
+            if (amount_ <= 0) return;
+            MaxHp = Math.Max(1, MaxHp - amount_);
+            if (CurrentHp > MaxHp) CurrentHp = MaxHp;
+        }
+
         #endregion
 
         #region 施加状态：同类型累加层数，未挂载过则克隆一份挂载；返回挂载实例供动作侧发事件

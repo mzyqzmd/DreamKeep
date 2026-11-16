@@ -114,6 +114,8 @@ internal sealed class DevPanelWindow : EditorWindow
         bool inBattle = EditorApplication.isPlaying && DevPanelCommands.IsInBattle();
         using (new EditorGUI.DisabledScope(!inBattle))
         {
+            if (GUILayout.Button("直接通过这场战斗")) _lastResult = DevPanelCommands.PassBattle();
+            EditorGUILayout.Space(4);
             DrawPlayerEnergyRow();
             DrawAddCardSection();
         }

@@ -15,6 +15,7 @@ namespace _DreamKeep.CommonPresentation
         private const string FullscreenKey = "DreamKeep.Setting.Fullscreen";
         private const string WidthKey = "DreamKeep.Setting.ResolutionWidth";
         private const string HeightKey = "DreamKeep.Setting.ResolutionHeight";
+        private const string TestModeKey = "DreamKeep.Setting.TestMode";
 
         /// <summary>下拉首项「自动」的索引：表示跟随显示器当前分辨率。</summary>
         public const int AutoResolutionIndex = 0;
@@ -37,6 +38,12 @@ namespace _DreamKeep.CommonPresentation
         public static bool Fullscreen { get; private set; } = true;
         public static int ResolutionIndex => _resolutionIndex;
 
+        /// <summary>测试模式：默认关闭，开启后局内显示 Dev 浮窗；跨场景显隐通道走 TestModeChanged。</summary>
+        public static bool TestMode { get; private set; }
+
+        /// <summary>测试模式变更通知：参数为变更后的开关状态。</summary>
+        public static event Action<bool> TestModeChanged;
+
         /// <summary>下拉选项表：索引 0 恒为「自动」，其后为固定常用档位。</summary>
         public static IReadOnlyList<string> ResolutionLabels => _labels;
 
@@ -45,6 +52,7 @@ namespace _DreamKeep.CommonPresentation
             BgmVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(BgmKey, 1f));
             SfxVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxKey, 1f));
             Fullscreen = PlayerPrefs.GetInt(FullscreenKey, 1) == 1;
+            TestMode = PlayerPrefs.GetInt(TestModeKey, 0) == 1;
             _labels.Add("自动");
             foreach (Vector2Int size in _presetResolutions)
                 _labels.Add($"{size.x} × {size.y}");
@@ -78,6 +86,15 @@ namespace _DreamKeep.CommonPresentation
             Fullscreen = value_;
             Screen.fullScreen = value_;
             PlayerPrefs.SetInt(FullscreenKey, value_ ? 1 : 0);
+        }
+
+        /// <summary>写入测试模式并通知订阅者：同值不重复触发，保持局内浮窗显隐与偏好一致。</summary>
+        public static void SetTestMode(bool value_)
+        {
+            if (TestMode == value_) return;
+            TestMode = value_;
+            PlayerPrefs.SetInt(TestModeKey, value_ ? 1 : 0);
+            TestModeChanged?.Invoke(value_);
         }
 
         /// <summary>按下拉索引应用分辨率：0 = 跟随显示器，其余取固定档位；越界忽略。</summary>

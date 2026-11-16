@@ -21,15 +21,21 @@ namespace _DreamKeep.GameBattle
             {
                 if (target.IsDead) continue;
 
-                int remaining = target.CurrentHp - Amount;
+                // 滑溜按"失去生命"生效，钳后真实值贯穿拦截、写血与飘字
+                int loss = SlipperyHook.Clamp(target, Amount);
+                int remaining = target.CurrentHp - loss;
                 // 与伤害共用同一条拦截口径：拦下则血量从不归零，后续自然不产生死亡事实
-                if (remaining <= 0 && DeathGuardHook.TryPreventDeath(battleContext_, target, Amount, out int hpAfter_))
+                if (remaining <= 0 && DeathGuardHook.TryPreventDeath(battleContext_, target, loss, out int hpAfter_))
                     target.CurrentHp = hpAfter_;
                 else
                     target.CurrentHp = remaining;
 
-                events.Add(new BE_HealthLost(target, Amount));
-                if (!target.IsDead) continue;
+                events.Add(new BE_HealthLost(target, loss));
+                if (!target.IsDead)
+                {
+                    if (loss > 0) SlipperyHook.Consume(target, events);
+                    continue;
+                }
 
                 events.Add(new BE_ActorDied(target, Source));
                 DeathHook.Cleanup(battleContext_, target, events);

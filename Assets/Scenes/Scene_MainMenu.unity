@@ -6469,7 +6469,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &627171692
 RectTransform:
   m_ObjectHideFlags: 0
@@ -11770,7 +11770,9 @@ MonoBehaviour:
   _SfxSlider: {fileID: 33240139}
   _resolutionDropdown: {fileID: 1114430550}
   _fullScreenToggle: {fileID: 1208542033}
+  _devModeToggle: {fileID: 1294315077}
   _fullScreenCheckmark: {fileID: 1144260686}
+  _devModeCheckmark: {fileID: 2050711922}
   _fullScreenTickedSprite: {fileID: 21300000, guid: 9a6eddd0e6e77fe4fa37bae868c616ee, type: 3}
   _fullScreenUnTickedSprite: {fileID: 21300000, guid: b85285501e8149240a815cbdd9e8e983, type: 3}
   _closeButton: {fileID: 1523835775}
@@ -15180,7 +15182,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 1
+  m_IsOn: 0
 --- !u!1 &1298575581
 GameObject:
   m_ObjectHideFlags: 0

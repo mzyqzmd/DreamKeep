@@ -27,10 +27,11 @@ namespace _DreamKeep.GameBattle
             {
                 if (target.IsDead) continue;
 
-                // 修正逐目标求值：同一张群伤卡对不同易伤状态的目标结算不同值
+                // 攻击类修正逐目标求值，再由防护类滑溜钳上限；投掷伤害不吃攻击修正但照样受滑溜约束
                 int amount = _applyModifiers
                     ? StatHook.Resolve(battleContext_, EStatChannel.Damage, Source, target, BaseAmount)
                     : BaseAmount;
+                amount = SlipperyHook.Clamp(target, amount);
                 int absorbed = Math.Min(target.Block, amount);
                 target.Block -= absorbed;
                 int hpLoss = amount - absorbed;
@@ -56,8 +57,8 @@ namespace _DreamKeep.GameBattle
                 if (_applyModifiers && amount > 0 && absorbed == amount)
                     FullBlockHook.Check(battleContext_, Source, events);
 
-                // 参与数值修正的伤害才消费滑溜：绕过修正的伤害不吃上限，也不扣层
-                if (_applyModifiers && hpLoss > 0) SlipperyHook.Consume(target, events);
+                // 真实掉血才消费滑溜：与是否参与攻击修正无关
+                if (hpLoss > 0) SlipperyHook.Consume(target, events);
             }
 
             return events;

@@ -159,7 +159,8 @@ namespace _DreamKeep.Presentation
             if (_developLogPanel) _developLogPanel.Show();
         }
 
-        private void ShowEncyclopediaPanel()
+        /// <summary>打开百科大全：主菜单按钮与整局暂停面板共用同一份常驻面板；开前先收起其余弹层。</summary>
+        public void ShowEncyclopediaPanel()
         {
             HideOverlays();
             if (_encyclopediaPanel) _encyclopediaPanel.Show();

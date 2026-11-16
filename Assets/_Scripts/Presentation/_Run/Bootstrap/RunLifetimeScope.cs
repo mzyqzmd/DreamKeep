@@ -29,6 +29,21 @@ namespace _DreamKeep.Presentation
         // 常驻服务：住 Scene_MainMenu，本场景取不到，只能由常驻编排者在本容器 Build 之前转交
         private AudioRoot _audioRoot;
         private ScreenShakeDriver _shakeDriver;
+        private UI_DevPanel _devPanel;
+
+        private void OnEnable() => GameSettings.TestModeChanged += OnTestModeChanged;
+
+        private void OnDisable()
+        {
+            GameSettings.TestModeChanged -= OnTestModeChanged;
+            _devPanel = null;
+        }
+
+        // 面板失活时自身 Awake 不跑，显隐订阅由本常驻编排者承担；解析到面板前忽略通知
+        private void OnTestModeChanged(bool enabled_)
+        {
+            if (_devPanel) _devPanel.gameObject.SetActive(enabled_);
+        }
 
         /// <summary>转交常驻服务：由常驻编排者在 Build 之前直调，Configure 里按实例注册给下游注入。</summary>
         public void BindPersistentServices(AudioRoot audioRoot_, ScreenShakeDriver shakeDriver_)
@@ -53,7 +68,10 @@ namespace _DreamKeep.Presentation
             RunState run = new(_playerConfig, seed, _mapConfig, _fallbackRelicPool);
             if (pending != null)
             {
-                try { run = RunStateRestore.Build(pending, _playerConfig, _mapConfig, _fallbackRelicPool); }
+                try
+                {
+                    run = RunStateRestore.Build(pending, _playerConfig, _mapConfig, _fallbackRelicPool);
+                }
                 catch (Exception e)
                 {
                     Debug.LogError($"[RunLifetimeScope] 整局状态重建失败，删档并退回新局：{e.Message}");
@@ -75,7 +93,15 @@ namespace _DreamKeep.Presentation
             // 段会话句柄：段在容器构建完成时写入自己的门面、销毁前清空，常驻 UI 只认它（见 BattleSession）
             builder_.RegisterInstance(new BattleSession());
             // 表现侧孪生句柄：战斗段表现锚点（单位根 / 目标裁决）随它开关，常驻药水栏经它拿每帧引用（见 BattleStage）
-            builder_.RegisterInstance(new BattleStage());
+            BattleStage stage = new();
+            builder_.RegisterInstance(stage);
+            // 局内 Dev 面板的血条补刷回调：跨程序集只传委托，直刷视图不补发会播特效的回血事件
+            builder_.RegisterInstance<Action<Creature>>(creature_ =>
+            {
+                if (!stage.ActorRoot || !stage.ActorRoot.TryGetView(creature_, out UI_Actor view) || !view) return;
+                UI_HealthBar healthBar = view.GetComponentInChildren<UI_HealthBar>(true);
+                if (healthBar) healthBar.SetHealth(creature_.CurrentHp);
+            });
             // 弹层工厂唯一实例住常驻 Scene_MainMenu（DontDestroyOnLoad），整局容器只登记这一份；
             // DevPanel 等旁路直进 Scene_Run 时没有常驻场景，跳过登记与发起器注入，段流程照常、气泡静默失效
             PopFactory popFactory = FindFirstObjectByType<PopFactory>();
@@ -103,21 +129,17 @@ namespace _DreamKeep.Presentation
             // 段场景加载管理器：由它 additive 加载各段，段收尾后保留到选定下一个节点才卸载，它也要拿到会话句柄
             builder_.RegisterComponentInHierarchy<SegmentSceneManager>().AsSelf();
             builder_.RegisterComponentInHierarchy<UI_ResultPanel>(); // 整局终点结果面板（Canvas_System 顶层）：通关/战败共用，确认后上报回主菜单
+            builder_.RegisterComponentInHierarchy<UI_DevPanel>(); // 测试模式浮窗（Canvas_System）：由 GameSettings 开关控制显隐
             // 发起器随整局容器装配：全部注入常驻的那一份 PopFactory，段不在场时悬停也能弹气泡；
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
             builder_.RegisterBuildCallback(resolver_ =>
             {
                 if (popFactory)
-                {
-                    foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
-                    foreach (UI_CardEncyclopediaPanel page in FindObjectsOfType<UI_CardEncyclopediaPanel>(true))
-                        resolver_.Inject(page);
-                    foreach (UI_RelicEncyclopediaPanel page in FindObjectsOfType<UI_RelicEncyclopediaPanel>(true))
-                        resolver_.Inject(page);
-                    foreach (UI_PotionEncyclopediaPanel page in FindObjectsOfType<UI_PotionEncyclopediaPanel>(true))
-                        resolver_.Inject(page);
-                }
-
+                    foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true))
+                        resolver_.Inject(tip);
+                // 显隐订阅者在本类：首次按偏好设一次，面板失活也能被拉起；之后由 TestModeChanged 直接 SetActive
+                _devPanel = resolver_.Resolve<UI_DevPanel>();
+                if (_devPanel) _devPanel.gameObject.SetActive(GameSettings.TestMode);
                 BindMainMenuFlow(resolver_);
                 // 容器装配完成后一次性交接存档集合：读档快照此时统一下发，笔迹经 MapRebuilt 订阅链幂等重建
                 SaveService.Bind(resolver_.Resolve<IReadOnlyList<ISaveable>>());
@@ -137,8 +159,8 @@ namespace _DreamKeep.Presentation
             manager.BindCamera(flow.MainCamera);
             manager.BindFadeScreen(flow.FadeScreen); // 黑屏唯一实例住 Scene_MainMenu：换段/卸段共用同一份幕布
             manager.BindReturnHandler(flow.RequestReturnToMainMenu);
-            // 暂停面板的「设置」「放弃」也接常驻画布上的同一份面板（跨场景引用不可序列化，只能运行时转交）
-            manager.BindAppPanels(flow.ShowSettingPanel, flow.ShowGiveUpPanel);
+            // 暂停面板的「设置」「百科」「放弃」也接常驻画布上的同一份面板（跨场景引用不可序列化，只能运行时转交）
+            manager.BindAppPanels(flow.ShowSettingPanel, flow.ShowEncyclopediaPanel, flow.ShowGiveUpPanel);
         }
     }
 }

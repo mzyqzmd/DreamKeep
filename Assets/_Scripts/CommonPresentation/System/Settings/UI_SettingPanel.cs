@@ -15,9 +15,12 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private Slider _SfxSlider;
         [SerializeField] private TMP_Dropdown _resolutionDropdown;
         [SerializeField] private Toggle _fullScreenToggle;
+        [SerializeField] private Toggle _devModeToggle;
 
         [Tooltip("全屏开关的勾选图标：按开关状态在两张 sprite 之间切换")] [SerializeField]
         private Image _fullScreenCheckmark;
+        [Tooltip("测试模式开关的勾选图标：与全屏共用同一对 sprite")] [SerializeField]
+        private Image _devModeCheckmark;
 
         [SerializeField] private Sprite _fullScreenTickedSprite;
         [SerializeField] private Sprite _fullScreenUnTickedSprite;
@@ -31,6 +34,7 @@ namespace _DreamKeep.CommonPresentation
             WireOnce();
             RefreshControls();
             RefreshFullScreenIcon();
+            RefreshDevModeIcon();
         }
 
         #region 接线与回填：首次显示接线，之后每次显示按当前偏好回填
@@ -42,6 +46,7 @@ namespace _DreamKeep.CommonPresentation
             if (_BgmSlider) _BgmSlider.onValueChanged.AddListener(GameSettings.SetBgmVolume);
             if (_SfxSlider) _SfxSlider.onValueChanged.AddListener(GameSettings.SetSfxVolume);
             if (_fullScreenToggle) _fullScreenToggle.onValueChanged.AddListener(OnFullScreenChanged);
+            if (_devModeToggle) _devModeToggle.onValueChanged.AddListener(OnDevModeChanged);
             if (_resolutionDropdown) _resolutionDropdown.onValueChanged.AddListener(GameSettings.SetResolutionIndex);
             if (_closeButton) _closeButton.onClick.AddListener(Hide);
         }
@@ -52,6 +57,7 @@ namespace _DreamKeep.CommonPresentation
             if (_BgmSlider) _BgmSlider.SetValueWithoutNotify(GameSettings.BgmVolume);
             if (_SfxSlider) _SfxSlider.SetValueWithoutNotify(GameSettings.SfxVolume);
             if (_fullScreenToggle) _fullScreenToggle.SetIsOnWithoutNotify(GameSettings.Fullscreen);
+            if (_devModeToggle) _devModeToggle.SetIsOnWithoutNotify(GameSettings.TestMode);
             if (!_resolutionDropdown) return;
 
             _resolutionDropdown.ClearOptions();
@@ -66,12 +72,25 @@ namespace _DreamKeep.CommonPresentation
             RefreshFullScreenIcon();
         }
 
+        private void OnDevModeChanged(bool value_)
+        {
+            GameSettings.SetTestMode(value_);
+            RefreshDevModeIcon();
+        }
+
         // 勾选态换图标：勾上用 ticked、未勾用 unticked，缺 sprite 时保留原图不覆盖
         private void RefreshFullScreenIcon()
         {
             if (!_fullScreenCheckmark) return;
             Sprite sprite = GameSettings.Fullscreen ? _fullScreenTickedSprite : _fullScreenUnTickedSprite;
             if (sprite) _fullScreenCheckmark.sprite = sprite;
+        }
+
+        private void RefreshDevModeIcon()
+        {
+            if (!_devModeCheckmark) return;
+            Sprite sprite = GameSettings.TestMode ? _fullScreenTickedSprite : _fullScreenUnTickedSprite;
+            if (sprite) _devModeCheckmark.sprite = sprite;
         }
 
         #endregion
