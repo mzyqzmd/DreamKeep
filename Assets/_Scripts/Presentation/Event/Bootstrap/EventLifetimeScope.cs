@@ -53,7 +53,7 @@ namespace _DreamKeep.Presentation
             for (int e = 0; e < events_.Length; e++)
             {
                 SO_Event config = events_[e];
-                if (config == null)
+                if (!config)
                     throw new InvalidOperationException($"[{nameof(EventLifetimeScope)}] 事件列表第 {e} 项是空引用");
 
                 for (int o = 0; o < config.Options.Count; o++)
@@ -63,10 +63,10 @@ namespace _DreamKeep.Presentation
                     {
                         string missing = option.Effects[i] switch
                         {
-                            EED_AddCard addCard when addCard.Card == null => "卡牌",
-                            EED_RandomRelic randomRelic when randomRelic.Pool == null => "遗物池",
-                            EED_RelicChoice relicChoice when relicChoice.Pool == null => "遗物池",
-                            EED_RewardPotions rewardPotions when rewardPotions.Pool == null => "药水池",
+                            EED_AddCard addCard when !addCard.Card => "卡牌",
+                            EED_RandomRelic randomRelic when !randomRelic.Pool => "遗物池",
+                            EED_RelicChoice relicChoice when !relicChoice.Pool => "遗物池",
+                            EED_RewardPotions rewardPotions when !rewardPotions.Pool => "药水池",
                             _ => null,
                         };
                         if (missing != null)

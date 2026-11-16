@@ -61,7 +61,8 @@ namespace _DreamKeep.Presentation
             {
                 // 先抽遭遇再洗牌：遭遇抽取会推进整局随机流，顺序固定才能保证同种子可复现
                 IReadOnlyList<SO_Encounter> encounters = _encounterPool.Select(kind, floor);
-                encounter = run.Rng.Pick(encounters);
+                // 洗牌袋去重：打过的遭遇不再出现，档位池轮完一圈才重置全池随机
+                encounter = run.DrawLedger.DrawEncounter(run.Rng, encounters);
                 if (encounter == null)
                     throw new InvalidOperationException(
                         $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_EncounterPool)} 未配置该档）");

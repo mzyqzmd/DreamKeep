@@ -26,6 +26,10 @@ namespace _DreamKeep.RuntimeData
         /// <summary>兜底遗物池：常规遗物池抽空时的降级来源（池内只放头环），随整局构建传入，RelicRoller 各入口经此取用。</summary>
         public SO_RelicPool FallbackRelicPool { get; }
 
+        /// <summary>抽取台账：战斗遭遇与事件节点内容按洗牌袋去重（抽过的不再出现，轮完一圈重置），
+        /// 随检查点落盘由 RunStateRestore 拍平；抽取动作本身住台账类，本类只持有。</summary>
+        public RunDrawLedger DrawLedger { get; } = new();
+
         /// <summary>待领奖励清单：仅战斗胜利进领奖时写入并存档，领奖期间读档据此复原同一批奖励；
         /// 段结束即清空，null 表示当前不在领奖阶段。</summary>
         private IReadOnlyList<RunReward> _pendingRewards;

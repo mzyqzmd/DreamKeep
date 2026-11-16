@@ -17,7 +17,7 @@ namespace _DreamKeep.RuntimeData
             _events = events_;
         }
 
-        public SO_Event PickEvent() => _events[_run.Rng.Next(_events.Length)];
+        public SO_Event PickEvent() => _run.DrawLedger.DrawEvent(_run.Rng, _events);
 
         /// <summary>选项 → 视图模型：置灰的副标题换成原因文案；展示卡按配置烘焙成只读卡面。</summary>
         public List<EventOptionViewModel> BuildOptionVMs(IReadOnlyList<EventOptionData> options_)

@@ -65,5 +65,12 @@ namespace _DreamKeep.RuntimeData
         public const string RewardCardUpgraded = "reward.cardUpgraded";
 
         #endregion
+
+        #region 抽取台账：已用遭遇与事件 GUID
+
+        public const string DrawEncounters = "draw.encounters";
+        public const string DrawEvents = "draw.events";
+
+        #endregion
     }
 }

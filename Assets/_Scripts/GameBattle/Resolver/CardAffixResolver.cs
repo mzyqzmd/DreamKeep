@@ -88,11 +88,6 @@ namespace _DreamKeep.GameBattle
                 case CA_LostHealth lostHealth:
                     actions_.Add(new BA_LoseHealth(source_, SelfTargets(source_), lostHealth.Amount.Value));
                     break;
-                case CA_MoveEnemy moveEnemy:
-                    foreach (Enemy enemy in battleContext_.Enemies)
-                        if (!enemy.Creature.IsDead && targets_.Contains(enemy.Creature))
-                            actions_.Add(new BA_MoveEnemy(enemy, moveEnemy.Offset.Value));
-                    break;
                 case CA_Erase _:
                     actions_.Add(new BA_Erase(source_, targets_, card_));
                     break;

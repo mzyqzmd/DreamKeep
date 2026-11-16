@@ -26,6 +26,7 @@ namespace _DreamKeep.RuntimeData
             CaptureMap(run_.Map, writer_);
             CapturePlayer(run_.Player, writer_);
             CapturePendingRewards(run_.PendingRewards, writer_);
+            CaptureDrawLedger(run_.DrawLedger, writer_);
         }
 
         #endregion
@@ -38,6 +39,8 @@ namespace _DreamKeep.RuntimeData
                 reader_.Read(RunStateSaveKeys.Removals, 0), reader_.Read(RunStateSaveKeys.Elapsed, 0d),
                 reader_.Read<uint>(RunStateSaveKeys.Rng, 0u));
             run_.SetPendingRewards(BuildPendingRewards(reader_, SaveService.Catalog));
+            run_.DrawLedger.RestoreEncounters(ResolveUsed<SO_Encounter>(reader_, RunStateSaveKeys.DrawEncounters, SaveService.Catalog));
+            run_.DrawLedger.RestoreEvents(ResolveUsed<SO_Event>(reader_, RunStateSaveKeys.DrawEvents, SaveService.Catalog));
         }
 
         #endregion
@@ -335,6 +338,37 @@ namespace _DreamKeep.RuntimeData
             }
 
             return rewards.Count == 0 ? null : rewards;
+        }
+
+        #endregion
+
+        #region 抽取台账拍平与重建：两集合 GUID 扁平表，空引用与目录查不到的资产一律跳过
+
+        private static void CaptureDrawLedger(RunDrawLedger ledger_, ISaveWriter writer_)
+        {
+            writer_.Write(RunStateSaveKeys.DrawEncounters, GuidsOf(ledger_.UsedEncounters));
+            writer_.Write(RunStateSaveKeys.DrawEvents, GuidsOf(ledger_.UsedEvents));
+        }
+
+        private static T[] ResolveUsed<T>(ISaveReader reader_, string key_, SO_SaveCatalog catalog_)
+            where T : UnityEngine.ScriptableObject
+        {
+            string[] guids = reader_.Read<string[]>(key_, Array.Empty<string>());
+            T[] assets = new T[guids.Length];
+            for (int i = 0; i < guids.Length; i++) assets[i] = catalog_?.Find<T>(guids[i]);
+            return assets;
+        }
+
+        private static string[] GuidsOf<T>(IEnumerable<T> assets_) where T : UnityEngine.ScriptableObject
+        {
+            List<string> guids = new();
+            foreach (T asset in assets_)
+            {
+                string guid = GuidOf(asset);
+                if (guid != null) guids.Add(guid);
+            }
+
+            return guids.ToArray();
         }
 
         #endregion
