@@ -52,6 +52,7 @@ namespace _DreamKeep.Presentation
 
             // 订阅整局数据变更（事件驱动，避免每帧轮询）
             _run.Player.Creature.HpChanged += OnHpChanged;
+            _run.Player.Creature.MaxHpChanged += RefreshHp;
             _run.GoldChanged += OnGoldChanged;
             _run.FloorChanged += OnFloorChanged;
 
@@ -68,6 +69,7 @@ namespace _DreamKeep.Presentation
             _goldTween?.Kill(); // 顶栏随整局常驻，补间兜底在自己身上收
             if (_run == null) return;
             _run.Player.Creature.HpChanged -= OnHpChanged;
+            _run.Player.Creature.MaxHpChanged -= RefreshHp;
             _run.GoldChanged -= OnGoldChanged;
             _run.FloorChanged -= OnFloorChanged;
         }

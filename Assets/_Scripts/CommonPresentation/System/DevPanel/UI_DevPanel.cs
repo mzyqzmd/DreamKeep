@@ -106,7 +106,7 @@ namespace _DreamKeep.CommonPresentation
             if (_foldArrow) _foldArrow.localRotation = Quaternion.Euler(0f, 0f, expand ? 90f : -90f);
         }
 
-        // 顶栏随 HpChanged 自动刷新；战斗内血条由注入委托直刷，不补发会播特效的回血事件
+        // 顶栏随 HpChanged / MaxHpChanged 自动刷新；战斗内血条由注入委托直刷，不补发会播特效的回血事件
         private void RefreshHealthBar() => _refreshHealthBar?.Invoke(Player);
 
         private void OnRaiseMaxHealth()

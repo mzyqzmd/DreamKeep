@@ -12,6 +12,7 @@ namespace _DreamKeep.RuntimeData
 
         public string ActorName { get; }
         private int _currentHp;
+        private int _maxHp;
 
         /// <summary>当前生命：set 内抛 HpChanged，供整局 HUD（顶栏）订阅刷新；上升时另抛 Healed；
         /// 敌我共用，敌人变更暂无订阅者亦不影响。</summary>
@@ -32,6 +33,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>生命变更通知。</summary>
         public event Action<int> HpChanged;
 
+        /// <summary>最大生命变更通知：任何上限写入（构造/读档/增减）都抛，供顶栏整串重写血量文本。</summary>
+        public event Action MaxHpChanged;
+
         /// <summary>回血通知：CurrentHp 上升时抛回复量，覆盖战斗内直写与局外结算全部路径；
         /// 是否播放由表现层按场景判定。敌人回血同样抛，暂无订阅者亦不影响。</summary>
         public event Action<int> Healed;
@@ -40,8 +44,18 @@ namespace _DreamKeep.RuntimeData
         /// 是否播放由表现层按场景判定。快照回滚走 RestoreHpTo 不经过 setter，不会触发。</summary>
         public event Action<int> HpLost;
 
-        /// <summary>最大生命：构造期取配置初值，局内可经 <see cref="RaiseMaxHp"/> 增长（战斗内恒定）。</summary>
-        public int MaxHp { get; private set; }
+        /// <summary>最大生命：构造期取配置初值，局内可经 <see cref="RaiseMaxHp"/> / <see cref="LowerMaxHp"/> 增减；
+        /// setter 判等后抛 MaxHpChanged，所有写入路径统一在此通知视图。</summary>
+        public int MaxHp
+        {
+            get => _maxHp;
+            private set
+            {
+                if (_maxHp == value) return;
+                _maxHp = value;
+                MaxHpChanged?.Invoke();
+            }
+        }
 
         public int Block { get; set; }
 

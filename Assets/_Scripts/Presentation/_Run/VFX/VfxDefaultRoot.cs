@@ -84,7 +84,7 @@ namespace _DreamKeep.Presentation
         {
             if (_session.IsFighting || !_root) return;
             _vfxFactory.PlayHeal(_root, _root.TransformPoint(
-                new Vector3(0, _root.rect.yMin, 0)), _healScale);
+                new Vector3(0, 0, 0)), _healScale);
         }
 
         // 非战斗受伤：先震屏、抖动收尾再弹「失去 N」飘字；战斗内归段内伤害链路，这里不重复
