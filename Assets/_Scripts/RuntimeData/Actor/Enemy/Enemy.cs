@@ -65,7 +65,7 @@ namespace _DreamKeep.RuntimeData
             _skinName = skinName_;
         }
 
-        #region 击晕：由位移撞击施加，敌人回合执行一次后清除
+        #region 击晕：由横冲直撞打断或失衡施加，敌人回合执行一次后清除
 
         /// <summary>施加击晕，把本回合意图覆盖成击晕。</summary>
         public void ApplyStun() => IsStunned = true;

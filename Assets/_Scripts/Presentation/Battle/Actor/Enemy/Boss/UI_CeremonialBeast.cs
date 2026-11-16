@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 namespace _DreamKeep.Presentation
 {
     /// <summary>仪式兽视图：双阶段演出——阶段一攻击 plow→plow_end 两段连播算一次攻击、阶段二用公约 attack；
-    /// 给自己施加正面增益播 shrill；横冲直撞触发的击晕播 stun→stun_loop，醒来播 wake_up（位移撞晕不发事件、不播）。</summary>
+    /// 给自己施加正面增益播 shrill；被击晕播 stun→stun_loop，醒来播 wake_up（击晕经 BE_EnemyStunned 事件驱动，横冲直撞打断 / 失衡自击晕通用）。</summary>
     public sealed class UI_CeremonialBeast : UI_Enemy
     {
         private const string PlowAnim = "plow";

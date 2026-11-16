@@ -1,11 +1,11 @@
 # 尖塔梦境 · Dream Spire
 
 > 一款以「梦之尖塔」为舞台的单人 Roguelike 卡牌构筑游戏，基于 Unity 2022.3 LTS。
-> 工程代号 **DreamKeep**，游戏名 **尖塔梦境 / Dream Spire**，当前版本 `v0.1`（开发中，纵向切片已可运行）。
+> 工程代号 **DreamKeep**，游戏名 **尖塔梦境 / Dream Spire**，当前版本 **`v0.4`**（开发中，纵向切片已可运行）。
 
 沉睡者的意识世界里，晨门被封，被困的意识化作梦魇沿梦境走廊逼近。你是**守梦人**——沉眠中唯一清醒的自我。沿塔一层层向上净化梦魇，重新打开晨门，让黎明降临；每一次力竭都只是从浅梦处重新醒来。
 
-> **关于命名**：`DreamKeep` 是技术代号（仓库名、项目根目录、程序集名 `_DreamKeep.*`）；`尖塔梦境 / Dream Spire` 是游戏名（设定文档与对外展示，Player Settings 中登记为 `DreamSpire`）。二者有意解耦，详见 [Doc/世界观与背景设定.md](Doc/世界观与背景设定.md) §0。
+> **关于命名**：`DreamKeep` 是技术代号（仓库名、项目根目录、程序集名 `_DreamKeep.*`）；`尖塔梦境 / Dream Spire` 是游戏名（设定文档与对外展示，Player Settings 中登记为 `productName = DreamSpire`）。二者有意解耦，详见 [Doc/世界观与背景设定.md](Doc/世界观与背景设定.md) §0。
 
 ---
 
@@ -33,10 +33,10 @@ git lfs pull
 
 | | 已落地 |
 | --- | --- |
-| **整局** | 7 列网格 DAG 地图（同种子可复现）、问号节点按权重揭示、六阶段按节点类型叠加加载、整局顶栏（卡组 / 遗物 / 药水 / 地图 / 菜单）、三处检查点存档与读档续局 |
-| **战斗** | 八阶段回合循环；能量—手牌—意图循环；五个牌堆与局内卡组跨战斗保留；敌人意图预告与推进；纵深阵型（0 号玩家 + 1~3 号敌人槽位，敌人可前进 / 回绕）；前排优先级与敌人前进触发特殊意图 |
-| **构筑** | 状态（力量 / 敏捷 / 虚弱 / 易伤 / 再生 / 高墙 / 领地 / 失衡…）经 `Hook` 修正数值；卡牌词条与升级链路；约 60 种遗物配置、17 种药水、5 个事件、4 个休息选项、双阶段 Boss；战后奖励掷骰与兑现 |
-| **表现** | Spine 攻击 / 受击 / 死亡 / 施法演出；弧形手牌、悬停偏移、拖拽阻尼与弧长瞄准；牌堆计数、伤害 / 回血飘字、一次性特效；卡面稀有度与数值着色、关键词悬停；商店货架、事件选项、宝箱与休息界面；点击音效；主菜单内**百科大全**（卡牌 / 遗物 / 药水图鉴，升级预览只读不写域）与**开发者日志** |
+| **整局** | 7 列网格 DAG 地图（同种子可复现）、问号节点按权重揭示、六阶段按节点类型叠加加载、整局顶栏（卡组 / 遗物 / 药水 / 地图 / 菜单）、三处检查点存档与读档续局；**遭遇与事件整局不重复抽取（可随存档恢复）** |
+| **战斗** | 八阶段回合循环；能量—手牌—意图循环；五个牌堆与局内卡组跨战斗保留；敌人意图预告与推进；纵深阵型（0 号玩家 + 1~3 号敌人槽位，敌人可前进 / 回绕）；前排优先级与敌人前进触发特殊意图；伤害钳制预览与实际结算同源 |
+| **构筑** | 状态（力量 / 敏捷 / 虚弱 / 易伤 / 再生 / 高墙 / 领地 / 失衡 / 滑溜…）经 `Hook` 修正数值；卡牌词条与升级链路；约 60 种遗物配置、17 种药水、5 个事件、4 个休息选项、双阶段 Boss；战后奖励掷骰与兑现 |
+| **表现** | Spine 攻击 / 受击 / 死亡 / 施法演出；弧形手牌、悬停偏移、拖拽阻尼与弧长瞄准；牌堆计数、伤害 / 回血飘字、一次性特效；卡面稀有度与数值着色、关键词悬停；商店货架、事件选项、宝箱与休息界面；点击音效；主菜单内**百科大全**（卡牌 / 遗物 / 药水图鉴，升级预览只读不写域）与**开发者日志**；**血量上限变化时顶栏血条同步刷新** |
 
 **仍未完成**（功能层面）：战败分支的奖励结算、卡牌升级的正式获取入口与 UI、商店与金币的完整闭环、战斗 / 反馈层音效、格挡与治疗意图的数值显示。内部技术债与架构评审结论不在此列，见 [架构分析报告](Doc/架构分析报告.md)。
 
@@ -44,15 +44,17 @@ git lfs pull
 
 ## 当前进度与后续计划
 
-**近期进展（2026-11 上旬末）**
-- 架构评审综合评分维持 **97/100（A）**（上一轮 2026-11-13 同分）：代码库扩张至 **712 个 .cs / 33,778 行**，反模式画像与上轮完全一致（`GameObject.Find`/`FindObjectOfType`/单例/跨对象强耦合全 0；`FindObjectsOfType` 由 7 升至 10、`FindFirstObjectByType` 由 1 升至 2，均因百科大全子页在 `RunLifetimeScope` 装配期经同模式注入，属合法 DI 复用、非新增反模式）；`>150` 行文件由 48 降至 40，超大单体持续收敛。
-- 新增两类跨阶段复用系统（均放 `CommonPresentation`，零反向依赖、零反模式）：**百科大全**（卡牌 / 遗物 / 药水三图鉴，升级预览走 `ToMutable().Upgrade()` 只读不写域）与**开发者日志**（主菜单内展示开发进度）。
-- 内容扩充（零漂移、全走既有数据驱动通道，均已提交）：弱强怪池（weak/strong monster pool）重构；新增精英「石蜜丝（Byrdonis）」、普通「BattlewornDummy / FuzzyWurmCrawler」敌人视图；新增状态「高墙（Rampart）/ 领地（Territorial）」与配套 `BA_RampartBlock`/`BA_Move` 动作；药水 15 → 17。
+**近期进展（截至 2026-11-16，版本 v0.4）**
+
+- 架构评审综合评分 **96/100（A）**（上一轮 2026-11-15 为 97）：代码库 **711 个 .cs / 34,037 行**。本轮四个净改善——① 新增整局抽取台账 `RunDrawLedger`（遭遇 / 事件去重抽取，GUID 表随存档恢复）；② 滑溜结算改 `SlipperyHook.Clamp` 钳制，预览与结算同源，修复投掷 / 遗物伤害绕过上限；③ `Creature.MaxHp` 改 private setter + `MaxHpChanged` 通知，修复上限变化血条不同步；④ `UI_MapView` 协程改 UniTask + `CancellationTokenSource` 显式取消，**全库 `StartCoroutine` 归零**。`FindObjectsOfType` 由 10 降至 7，反模式进一步收敛。
+- 数据/内容侧：删除位移词条完整链（`AD_MoveEnemy` / `CA_MoveEnemy` / `BA_MoveEnemy`，符号零残留），敌人意图移动动作 `BA_Move` 保留；版本 `0.3 → 0.4`（提交 `4eec724`）。全程只读复核，**未修改任何代码或配置**。
+- 评分小幅下调源于：`Presentation` 单程序集在精确文本口径下已达 12,021 行、越过 12k 拆分线；新引入 `BP_Slippery.GetModifier` 死代码与 4 处位移删除遗留的过时注释。
 
 **后续计划**
+
 1. 功能补全：战败分支奖励结算、卡牌升级正式获取入口与 UI、商店金币完整闭环、战斗 / 反馈层 `BE_*` 音效接入、格挡 / 治疗意图数值显示。
-2. 技术债收口：D2（存档根键 `GetType().FullName` 静默丢档）、D4（`BattleEventDispatcher` 缺 `Unregister`）、K3（`RaiseMaxHp` 绕过 `RunState` 入口）、L-1（`UI_OneShotVfx` 魔法字符串）、Z-1（`UI_SingletonObject` 零引用死代码）。（2026-11-15 只读复核：上述债务经重新 `grep` 扫描确认现状未变，本次未改动任何代码。）
-3. 架构演进：`Presentation` 已 11,933 行、逼近 12k 拆分触发线，评估首拆（按玩法子系统划分子 asmdef）；数值平衡与内容填量随纵向切片试玩推进。
+2. 架构演进：`Presentation` 已触 12k 拆分线，按现有目录边界首拆（优先 `Battle` 5,054 行 / `_Run` 3,941 行各自独立成程序集，二者占该域 75%）；数值平衡与内容填量随纵向切片试玩推进。
+3. 技术债收口：D2（存档根键 `GetType().FullName` 静默丢档）、D4（`BattleEventDispatcher` 缺 `Unregister`）、K3（`RaiseMaxHp` 绕过 `RunState` 入口）、L-1（`UI_OneShotVfx` 魔法字符串）、Z-1（`UI_SingletonObject` 零引用死代码）；新增 N-1（`BP_Slippery.GetModifier` 死代码 + 过时注释）与 N-2（4 处位移撞晕过时注释）。
 
 ---
 
@@ -70,7 +72,7 @@ git lfs pull
 | 类别 | 选型 |
 | --- | --- |
 | 依赖注入 | VContainer `1.19.0` |
-| 异步 | UniTask |
+| 异步 | UniTask（全库已无协程） |
 | 补间动画 | DOTween（Demigiant） |
 | 2D 骨骼动画 | Spine（spine-unity） |
 | UI | uGUI `1.0.0` + TextMeshPro `3.0.9` |
@@ -78,7 +80,7 @@ git lfs pull
 | 序列化 | Newtonsoft.Json `3.2.2` |
 | 多态配置 | MackySoft.SerializeReferenceExtensions（`[SerializeReference]` + `[SubclassSelector]`，源码内置于 `Assets/Plugins/`） |
 | 编辑器特性 | NaughtyAttributes（仅编辑器绘制，运行时不参与） |
-| 随包启用 | Timeline `1.7.7`、Visual Scripting `1.9.11`（非核心依赖） |
+| 随包启用 | Timeline `1.7.7`、Visual Scripting `1.9.11`、Unity MCP（编辑器侧桥接，非运行时依赖） |
 
 ---
 
@@ -90,22 +92,22 @@ git lfs pull
 | `Assets/_Data/` | 策划可编辑的 `SO_*` 配置资产（卡牌 / 敌人 / 遗物 / 药水 / 事件 / 地图 / 存档目录等） |
 | `Assets/_Art/`、`Assets/_Prefabs/` | 美术、音频、字体、动画与预制体 |
 | `Assets/Scenes/` | 8 个场景（主菜单 + 整局层 + 六阶段） |
-| `Assets/Plugins/`、`Assets/Editor/` | 第三方插件与编辑器工具集（含 ToolBoxHub、开发面板） |
+| `Assets/Plugins/`、`Assets/Editor/` | 第三方插件与编辑器工具集（含 ToolBoxHub、开发面板 DevPanel） |
 | `Assets/Resources/` | 需运行时 `Resources.Load` 的少量资产（`SO_SaveCatalog`、DOTween 设置） |
 | `Doc/` | 设定、系统设计与架构文档（见下节索引） |
 
 八个域各自负责什么：
 
-| 域 | 职责 |
-| --- | --- |
-| `Utility` | 纯 C# 通用件：状态机、确定性随机、可修正数值、对象池 |
-| `ConfigData` | 配置资产定义（只有「做什么、做多少」，零执行逻辑） |
-| `RuntimeData` | 运行时对象：`Creature` / `Player` / `CardModel` / 牌堆 / 状态 / 奖励 / 存档模型 |
-| `EngineUtility` | 引擎级通用件，以及输入 / 场景 / 音频 / 存档四类 `_GameSystem` 子系统 |
-| `GameBattle` | 战斗规则：回合状态机、动作系统、`Hook`，命令 / 事件 / 查询通道 |
-| `GameRun` | 整局领域层：`RunState`、地图生成、六段 `Loop`/`Session`、遗物效果与抽取 |
-| `CommonPresentation` | 跨阶段复用的表现件（卡面、悬停提示、飘字、奖励面板、**百科大全、开发者日志**等） |
-| `Presentation` | 各阶段专属 UI、场景装配与整局层（顶栏 / 地图 / 主菜单流程） |
+| 域 | 文件 / 行 | 职责 |
+| --- | --- | --- |
+| `Utility` | 8 / 327 | 纯 C# 通用件：状态机、确定性随机、可修正数值、对象池 |
+| `ConfigData` | 184 / 3,124 | 配置资产定义（只有「做什么、做多少」，零玩法逻辑） |
+| `RuntimeData` | 79 / 4,676 | 运行时对象：`Creature` / `Player` / `CardModel` / 牌堆 / 状态 / `RunState` / 抽取台账 / 地图 / 存档 |
+| `EngineUtility` | 34 / 2,190 | 引擎级通用件，以及输入 / 场景 / 音频 / 存档四类 `_GameSystem` 子系统 |
+| `GameBattle` | 99 / 3,154 | 战斗规则：回合状态机、动作系统、`Hook`，命令 / 事件 / 查询通道 |
+| `GameRun` | 124 / 3,469 | 整局领域层：`RunState`、地图生成、六段 `Loop`/`Session`、遗物效果与抽取 |
+| `CommonPresentation` | 54 / 5,119 | 跨阶段复用的表现件（卡面、悬停提示、飘字、奖励面板、百科大全、开发者日志等；含测试用 Dev 浮窗） |
+| `Presentation` | 129 / 11,978 | 各阶段专属 UI、场景装配与整局层（顶栏 / 地图 / 主菜单流程） |
 
 ---
 
@@ -114,11 +116,11 @@ git lfs pull
 四句话概括这个工程的设计取向，逐文件评审另见架构报告：
 
 - 8 个 `asmdef` 构成一张无环依赖 DAG，依赖方向由编译期强制；`CommonPresentation` 与 `Presentation` 是平级表现层，后者依赖前者为有意设计。
-- 配置只读一次即烘焙为运行时对象，运行时状态不持有配置引用；规则与状态只存在一处。
-- 表现层与域层之间固定四通道：**命令上行 / 事件下行 / 只读查询 / `Hook` 状态介入**；命令侧进一步分层为「段级 `XxxCommandDispatcher` + 整局级 `RunCommandDispatcher`」两级门面，常驻界面只上发意图、写域全部落在 `GameRun` 域（含幂等的 `RewardClaimService` 领奖会话）。预览与结算共用同一份规则，卡面数字与实际扣血在结构上不会不一致。
-- 整局进度由 `RunState` 持有，阶段逻辑归 `GameRun` 域，UI 只上发意图、订阅事实；存档收敛到三处检查点。
+- 配置只读一次即烘焙为运行时对象，运行时状态不持有配置引用；规则与状态只存在一处；遭遇 / 事件抽取经整局台账去重并可随存档恢复。
+- 表现层与域层之间固定四通道：**命令上行 / 事件下行 / 只读查询 / `Hook` 状态介入**；命令侧分层为「段级 `XxxCommandDispatcher` + 整局级 `RunCommandDispatcher`」两级门面，常驻界面只上发意图、写域全部落在 `GameRun` 域（含幂等的 `RewardClaimService` 领奖会话）。伤害钳制的预览与实际扣血共用同一份规则。
+- 整局进度由 `RunState` 持有，阶段逻辑归 `GameRun` 域，UI 只上发意图、订阅事实；存档收敛到三处检查点；异步统一 UniTask，面板失活 / 销毁显式取消在途等待。
 
-→ 逐文件评审、依赖图与技术债清单见 **[Doc/架构分析报告.md](Doc/架构分析报告.md)**（综合评分 97/100，A）与 [Doc/asmdef-dependency-graph.svg](Doc/asmdef-dependency-graph.svg)。
+→ 逐文件评审、依赖图与技术债清单见 **[Doc/架构分析报告.md](Doc/架构分析报告.md)**（综合评分 96/100，A）与 [Doc/asmdef-dependency-graph.svg](Doc/asmdef-dependency-graph.svg)。
 
 ---
 
@@ -140,4 +142,4 @@ git lfs pull
 - **写新代码前记住三条**：状态变更只经动作系统；表现层不持业务规则、不直接篡改域状态；新增数值判定不要另写一份，与预览共用 `Hook.Resolve`。完整 10 条不变量见架构报告 §8。
 - 提交前用 `git lfs ls-files` 确认本次新增的二进制资源已被 LFS 接管。
 - 编码规范：private/protected 字段 `_camelCase`、枚举 `E` 前缀、UI 类 `UI_` 前缀、SO 类 `SO_` 前缀、public 方法用 `#region` 包裹、`using` 放 namespace 外。
-- 注释写「为什么」和「踩过什么坑」，不写「做了什么」；**重构时不要删注释**——本项目的注释密度是其最有价值的部分。
+- 注释写「为什么」和「踩过什么坑」，不写「做了什么」；**重构时不要删注释**——本项目的注释密度是其最有价值的部分。删除系统时要同步清理描述旧机制的注释。

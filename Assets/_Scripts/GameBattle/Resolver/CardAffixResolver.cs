@@ -57,7 +57,7 @@ namespace _DreamKeep.GameBattle
         // 自身落点：资源型词条（格挡/失血/抽牌/能量）恒定作用于出牌者，与卡牌是否以敌人为目标无关
         private static List<Creature> SelfTargets(Creature source_) => new List<Creature> { source_ };
 
-        // 按词条类型转动作：伤害/状态/位移用卡牌落点，资源型词条恒为出牌者；重复次数由词条自身决定
+        // 按词条类型转动作：伤害/状态用卡牌落点，资源型词条恒为出牌者；重复次数由词条自身决定
         private static void ResolveAffix(BattleContext battleContext_, CardAffix affix_, Creature source_,
             List<Creature> targets_, CardModel card_, List<BattleAction> actions_)
         {
