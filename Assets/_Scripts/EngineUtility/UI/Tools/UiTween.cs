@@ -6,10 +6,19 @@ using UnityEngine;
 namespace _DreamKeep.EngineUtility
 {
     /// <summary>通用补间工具箱（无状态）：一次性脉冲缩放、标量补间通道、位姿通道与"等补间结束"的等待胶水，
-    /// 由牌堆、目标箭头、单位视图、手牌包装与悬停组件共用。同通道独占由本类保证（建前先杀旧值）；
+    /// 由牌堆、目标箭头、单位视图、手牌包装与悬停组件共用。同通道独占由本类保证（建前先判存活再杀旧值）；
     /// 宿主销毁时的兜底 Kill 归宿主自己，本类不碰生命周期。</summary>
     public static class UiTween
     {
+        // 建新补间前收掉同通道的旧补间：活着才杀，已经播完被 DOTween 回收的只丢引用。
+        // 对已回收的补间再 Kill 会让 activeTweens 紧凑数组错位而抛越界，故一律经这里收口
+        private static void KillSlot(ref Tween slot_)
+        {
+            if (slot_ == null) return;
+            if (slot_.IsActive()) slot_.Kill();
+            slot_ = null;
+        }
+
         #region 对外暴露的补间
 
         /// <summary>一次性脉冲：从当前缩放放大到 基准×（1+幅度）再回落到基准，两段都是 OutQuad；基准取向量，非等比缩放同样适用。
@@ -17,7 +26,7 @@ namespace _DreamKeep.EngineUtility
         public static Tween PlayPunch(ref Tween slot_, Transform target_, Vector3 baseScale_, float punchScale_,
             float upDuration_, float downDuration_)
         {
-            slot_?.Kill();
+            KillSlot(ref slot_);
             slot_ = DOTween.Sequence()
                 .Append(target_.DOScale(baseScale_ * (1f + punchScale_), upDuration_).SetEase(Ease.OutQuad))
                 .Append(target_.DOScale(baseScale_, downDuration_).SetEase(Ease.OutQuad));
@@ -29,7 +38,7 @@ namespace _DreamKeep.EngineUtility
         public static Tween PlayScalar(ref Tween slot_, Func<float> read_,
             Action<float> write_, float to_, float duration_, Ease ease_ = Ease.OutQuad)
         {
-            slot_?.Kill();
+            KillSlot(ref slot_);
             // 对外只收 Func/Action（不把 DOTween 的委托类型摊到签名上），故这里转一层——DOTween.To 的 getter 只在启动时读一次起点、setter 每帧写
             slot_ = DOTween.To(() => read_(), value_ => write_(value_), to_, duration_).SetEase(ease_);
             return slot_;
@@ -40,7 +49,7 @@ namespace _DreamKeep.EngineUtility
         public static Tween PlayAlpha(ref Tween slot_, CanvasGroup group_, float to_, float duration_,
             float delay_ = 0f)
         {
-            slot_?.Kill();
+            KillSlot(ref slot_);
             slot_ = group_.DOFade(to_, duration_).SetEase(Ease.OutQuad);
             if (delay_ > 0f) slot_.SetDelay(delay_);
             return slot_;
@@ -51,7 +60,7 @@ namespace _DreamKeep.EngineUtility
         public static Tween PlayPose(ref Tween slot_, Transform target_, Vector3 toPosition_, Quaternion toRotation_,
             float duration_)
         {
-            slot_?.Kill();
+            KillSlot(ref slot_);
             Vector3 fromPosition = target_.position;
             Quaternion fromRotation = target_.rotation;
             float progress = 0f;

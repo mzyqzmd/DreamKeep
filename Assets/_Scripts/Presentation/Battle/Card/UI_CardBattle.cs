@@ -339,15 +339,31 @@ namespace _DreamKeep.Presentation
         {
             _moveTargetPosition = worldPosition_;
             _moveTargetRotation = worldRotation_;
-            return UiTween.PlayPose(ref _moveTween, _rect, worldPosition_, worldRotation_, duration_).WaitAsync();
+            Tween tween = UiTween.PlayPose(ref _moveTween, _rect, worldPosition_, worldRotation_, duration_);
+            return ClearMoveWhenSettled(tween);
         }
 
-        // 起一条缩放补间：同样先记住目标；同通道独占由 UiTween 建前杀旧值保证
+        // 起一条缩放补间：同样先记住目标；同通道独占由 UiTween 建前判存活再杀旧值保证
         private UniTask StartScale(float scale_, float duration_)
         {
             _scaleTarget = scale_;
-            return UiTween.PlayScalar(ref _scaleTween, () => transform.localScale.x,
-                value_ => transform.localScale = Vector3.one * value_, scale_, duration_).WaitAsync();
+            Tween tween = UiTween.PlayScalar(ref _scaleTween, () => transform.localScale.x,
+                value_ => transform.localScale = Vector3.one * value_, scale_, duration_);
+            return ClearScaleWhenSettled(tween);
+        }
+
+        // 到岸清槽：通道只留"在飞的那条"，播完即置空——否则字段会长期握着已被 DOTween 回收的僵尸引用。
+        // 只清自己那条（等待期间被顶替过的不动），判据用引用相等
+        private async UniTask ClearMoveWhenSettled(Tween tween_)
+        {
+            await tween_.WaitAsync();
+            if (_moveTween == tween_) _moveTween = null;
+        }
+
+        private async UniTask ClearScaleWhenSettled(Tween tween_)
+        {
+            await tween_.WaitAsync();
+            if (_scaleTween == tween_) _scaleTween = null;
         }
 
         // 两条通道的目标比较：阈值复用"已就位"那三项，不另立常量
@@ -358,6 +374,14 @@ namespace _DreamKeep.Presentation
         #endregion
 
         #region 清干净播放的动画
+
+        /// <summary>把在飞的位移 / 缩放补间推到终点并清槽：出牌区据此保证队位补间从静止姿态起算，
+        /// 域侧自动打出的牌（入场飞行还没停稳）也不会被半途打断，回手牌等换区场合同样用它先归位。</summary>
+        public void SettleMotion()
+        {
+            UiTween.Settle(ref _moveTween);
+            UiTween.Settle(ref _scaleTween);
+        }
 
         // 回收前统一清干净补间（含悬停组件那两条），防止补间继续写已被复用的对象
         public void KillMotion()
