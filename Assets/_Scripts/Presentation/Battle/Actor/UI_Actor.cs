@@ -54,7 +54,7 @@ namespace _DreamKeep.Presentation
         private Tween _shrinkTween;
         private Vector3 _renderBaseScale;
 
-        /// <summary>已播完死亡动画：此后忽略一切动画请求（托管字段，宿主销毁后仍可安全读）。</summary>
+        /// <summary>已进入死亡演出：此后不再处理死亡事件，动画工具的终结位同禁一切播放请求（托管字段，宿主销毁后仍可安全读）。</summary>
         protected bool _deathAnimTriggered;
 
         protected void Awake()
@@ -117,19 +117,17 @@ namespace _DreamKeep.Presentation
             _animTool.PlayLoop(IdleLoopAnim);
         }
 
-        // 死亡：播 die（播到最短比例即放行事件链）→ 自然播完停留 1 秒后自毁视图
+        // 死亡：走终结位播 die（此后本单位不再接受任何播放请求）→ 播满停留 0.2 秒后自毁视图
         protected virtual async UniTask OnActorDiedAsync(BE_ActorDied died_)
         {
             if (died_.Creature != _boundCreature || _deathAnimTriggered) return;
             _deathAnimTriggered = true;
             if (_hoverBox) _hoverBox.enabled = false; // 尸体不再响应悬停：禁用会触发它自己的兜底收起
-            await _animTool.PlayOnceAsync(DeathAnim, onFinished_: () =>
-                UniTask.Delay(TimeSpan.FromSeconds(0.2f))
-                    .ContinueWith(() =>
-                    {
-                        if (this != null) Destroy(gameObject);
-                    })
-                    .Forget());
+            // 播满才返回：自毁由这里统一编排，不依赖骨骼播完回调，视图绝不会停在场上
+            await _animTool.PlayFinalAsync(DeathAnim, playRatio_: 1f);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.2f), cancellationToken: destroyCancellationToken)
+                .SuppressCancellationThrow();
+            if (this != null) Destroy(gameObject);
         }
 
         // 我打人：播攻击动画（播到最短比例即放行，多段伤害逐段接棒），自然播完才回待机

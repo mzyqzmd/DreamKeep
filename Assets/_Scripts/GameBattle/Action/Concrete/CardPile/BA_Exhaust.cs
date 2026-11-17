@@ -19,6 +19,8 @@ namespace _DreamKeep.GameBattle
 
             state.ExhaustPile.Add(_cardToExhaust);
             events.Add(new BE_CardExhausted(_cardToExhaust));
+            // 消耗落堆后询问黑暗之拥与无惧疼痛：每张牌各触发一次
+            ExhaustHook.Check(battleContext_, Source, events);
             return events;
         }
     }

@@ -24,6 +24,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>结算时机：宿主自己的回合边界结算一次。</summary>
         public EPerkSettleTiming SettleTiming => _data.SettleTiming;
 
+        /// <summary>能量上限加成：由宿主的上限汇总统一求和，默认不参与。</summary>
+        public virtual int EnergyCapBonus => 0;
+
         public void AddLayers(int amount_) => Layers += amount_;
 
         /// <summary>出牌响应：每张牌结算完成后由链尾动作广播，默认不参与；覆写方在此自行增减层数。</summary>
@@ -37,6 +40,13 @@ namespace _DreamKeep.RuntimeData
         }
 
         public abstract string GetDescription();
+
+        /// <summary>带渲染器的描述：层数按 PerkLayers 通道着色，基准值为升级前层数；默认回退无参版本，旧状态零改动。</summary>
+        public virtual string GetDescription(IStatRenderer valueRenderer_, int baseLayers_) => GetDescription();
+
+        /// <summary>层数渲染：无渲染器时退回纯文本，供各状态描述复用。</summary>
+        protected string RenderLayers(IStatRenderer valueRenderer_, int baseLayers_) =>
+            valueRenderer_?.Render(baseLayers_, Layers, EStatChannel.PerkLayers) ?? Layers.ToString();
 
         #region 深拷贝一份独立实例，层数一并带走，供施加到生物与卡牌克隆使用
 

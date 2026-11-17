@@ -34,6 +34,8 @@ namespace _DreamKeep.GameBattle
                 if (!target.IsDead)
                 {
                     if (loss > 0) SlipperyHook.Consume(target, events);
+                    // 失去生命与受到伤害共用同一条掉血后询问：狱火据此判定回合内失血
+                    if (loss > 0) HpDropHook.Check(battleContext_, target, events);
                     continue;
                 }
 

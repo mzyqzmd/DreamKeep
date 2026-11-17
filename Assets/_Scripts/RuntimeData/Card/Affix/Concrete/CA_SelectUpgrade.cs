@@ -3,7 +3,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>选择升级词条（运行时）：本场战斗中升级手牌，档位为全部或指定张数。</summary>
+    /// <summary>选择升级词条（运行时）：本场战斗中升级手牌，档位为全部、恰好指定张数、至多指定张数或任意张。</summary>
     public sealed class CA_SelectUpgrade : CardAffix
     {
         internal CA_SelectUpgrade(AD_SelectUpgrade select_) : this(select_.Name, select_.ShowDescriptionCardView,
@@ -30,6 +30,7 @@ namespace _DreamKeep.RuntimeData
             ESelectScope.AllHand => "升级手牌中的所有牌",
             ESelectScope.Exact => $"从你的手牌中\n选取 {RenderCount(valueRenderer_)} 张进行升级",
             ESelectScope.UpTo => $"从你的手牌中至多\n选取 {RenderCount(valueRenderer_)} 张进行升级",
+            ESelectScope.Any => "从你的手牌中\n任意选取进行升级",
             _ => "你能看到这句话说明游戏有bug",
         };
 

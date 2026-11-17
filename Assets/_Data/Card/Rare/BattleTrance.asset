@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: BattleTrance
+  m_EditorClassIdentifier: 
+  _name: "\u6218\u6597\u4E13\u6CE8"
+  _cost: 0
+  _icon: {fileID: 21300000, guid: d86515c34d52f5743ba063fa3d007e1f, type: 3}
+  _rarity: 1
+  _type: 1
+  _targetType: 1
+  _affixes:
+  - rid: 6594183935192989708
+  - rid: 6594183935192989709
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183935192989710
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183935192989708
+      type: {class: AD_DrawCard, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _count: 3
+    - rid: 6594183935192989709
+      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 2da5dd99e3ee0614e9ce3100b6b3a196, type: 2}
+        _layers: 1
+        _showPerkDescription: 1
+    - rid: 6594183935192989710
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 4
+        _additive: 1
+        _multiplier: 1

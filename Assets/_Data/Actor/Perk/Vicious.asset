@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d1a694717f6e6e4fa0768b8120f3ed7, type: 3}
+  m_Name: Vicious
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 21300000, guid: b864d7e3747a1e14cac8a1e56d28fd14, type: 3}
+  _polarity: 0

@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: FlameBarrier
+  m_EditorClassIdentifier: 
+  _name: "\u706B\u7130\u5C4F\u969C"
+  _cost: 2
+  _icon: {fileID: 21300000, guid: c8f15e183424dc6408b6ad0f449aba39, type: 3}
+  _rarity: 1
+  _type: 1
+  _targetType: 1
+  _affixes:
+  - rid: 6594183935192989714
+  - rid: 6594183935192989715
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183935192989716
+  - rid: 6594183935192989717
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183935192989714
+      type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 12
+    - rid: 6594183935192989715
+      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: ae30d5ae06f05f64f972046179d632fa, type: 2}
+        _layers: 4
+        _showPerkDescription: 1
+    - rid: 6594183935192989716
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 3
+        _additive: 4
+        _multiplier: 1
+    - rid: 6594183935192989717
+      type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: ae30d5ae06f05f64f972046179d632fa, type: 2}
+        _additive: 2

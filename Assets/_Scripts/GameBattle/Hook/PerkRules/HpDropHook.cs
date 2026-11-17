@@ -24,6 +24,15 @@ namespace _DreamKeep.GameBattle
                 events_.AddRange(breakAction.Execute(context_));
                 break;
             }
+
+            // 狱火：宿主在自己回合内失血时对所有敌人造成群体伤害；纯状态伤害不吃攻击修正也不触发反伤
+            if (!context_.IsPlayerTurn) return;
+            BP_Inferno inferno = BattlePerkQuery.Find<BP_Inferno>(target_);
+            if (inferno == null || inferno.Layers <= 0) return;
+
+            List<Creature> enemies = context_.GetAliveCreatures();
+            if (enemies.Count == 0) return;
+            events_.AddRange(new BA_Damage(target_, enemies, inferno.Layers, false, false).Execute(context_));
         }
 
         #endregion

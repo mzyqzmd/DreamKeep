@@ -14,7 +14,9 @@ namespace _DreamKeep.RuntimeData
         public CardPile PlayPile { get; } = new();
 
         public int CurrentEnergy { get; set; }
-        public int MaxEnergy { get; }
+
+        /// <summary>配置给的能量上限基础值：真实上限由 Player.MaxEnergy 汇总身上状态加成后给出。</summary>
+        public int BaseMaxEnergy { get; }
 
         /// <summary>本回合已打出的牌数：BA_ToPlayPile 入打出堆时自增，玩家回合开始清零；昏眩的「只能打出 1 张」以它判定。</summary>
         public int CardsPlayedThisTurn { get; set; }
@@ -36,10 +38,10 @@ namespace _DreamKeep.RuntimeData
 
         #endregion
 
-        public PlayerCombatState(int maxEnergy_)
+        public PlayerCombatState(int baseMaxEnergy_)
         {
-            MaxEnergy = maxEnergy_;
-            CurrentEnergy = maxEnergy_;
+            BaseMaxEnergy = baseMaxEnergy_;
+            CurrentEnergy = baseMaxEnergy_;
         }
     }
 }

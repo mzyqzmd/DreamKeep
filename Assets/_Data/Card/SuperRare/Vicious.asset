@@ -12,49 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
   m_Name: Vicious
   m_EditorClassIdentifier: 
-  _name: "\u66B4\u6012"
+  _name: "\u51F6\u6076"
   _cost: 1
-  _icon: {fileID: 21300000, guid: a7ab2212e193d1d4b88601e8d8796293, type: 3}
+  _icon: {fileID: 21300000, guid: 9c21de2f00950fe45a644f40d3a7daf3, type: 3}
   _rarity: 2
   _type: 2
   _targetType: 1
   _affixes:
-  - rid: 8162841859020816384
-  - rid: 8162841859020816385
-  - rid: 8162841859020816386
-  - rid: 8162841859020816389
+  - rid: 6594183935192989745
+  - rid: 6594183935192989746
   _canUpdate: 1
   _upgrades:
-  - rid: 8162841859020816387
-  - rid: 8162841859020816388
+  - rid: 6594183935192989747
   references:
     version: 2
     RefIds:
-    - rid: 8162841859020816384
+    - rid: 6594183935192989745
       type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _layers: 2
-    - rid: 8162841859020816385
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: 635652384785c3e40afdbaba0e9f7795, type: 2}
-        _layers: 2
-    - rid: 8162841859020816386
-      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: 8749e2db03cae0044b1dec8f8fba7e62, type: 2}
+        _perk: {fileID: 11400000, guid: a54f8e3d52a762646abff0a576e12c22, type: 2}
         _layers: 1
-    - rid: 8162841859020816387
-      type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _additive: 3
-    - rid: 8162841859020816388
-      type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _perk: {fileID: 11400000, guid: 8749e2db03cae0044b1dec8f8fba7e62, type: 2}
-        _additive: 1
-    - rid: 8162841859020816389
+        _showPerkDescription: 1
+    - rid: 6594183935192989746
       type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
+    - rid: 6594183935192989747
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 0
+        _additive: -1
+        _multiplier: 1

@@ -1,6 +1,7 @@
 using _DreamKeep.RuntimeData;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 namespace _DreamKeep.CommonPresentation
 {
@@ -30,6 +31,15 @@ namespace _DreamKeep.CommonPresentation
             if (_upgradePreview) _upgradePreview.Changed -= Refresh;
         }
 
+        [Inject]
+        public void Construct(PopFactory popFactory_) => _closeupCard.Construct(popFactory_);
+
+        /// <summary>容器侧装配：常驻工厂缺席时静默降级，不在各消费面板重复 TryResolve。</summary>
+        public void Construct(IObjectResolver resolver_)
+        {
+            if (resolver_.TryResolve<PopFactory>(out PopFactory popFactory_)) Construct(popFactory_);
+        }
+
         #region 对外：开合特写
 
         /// <summary>打开指定卡的详情：先开层（首次激活在此补跑 Awake 接好监听）再摆内容，压住同父级其余内容。</summary>
@@ -41,12 +51,20 @@ namespace _DreamKeep.CommonPresentation
             Refresh();
         }
 
-        /// <summary>收起特写：纯展示层无状态，下次 Open 全量重摆。</summary>
-        public void Close() => gameObject.SetActive(false);
+        /// <summary>收起特写：先收气泡再关层，下次 Open 全量重摆。</summary>
+        public void Close()
+        {
+            _closeupCard.HideTip();
+            gameObject.SetActive(false);
+        }
 
         #endregion
 
-        // 特写刷新：展示口径归开关行，这里只重绑
-        private void Refresh() => _closeupCard.Bind(_upgradePreview.DisplayCard, null);
+        // 特写刷新：展示口径归开关行，重绑后立即按当前卡重刷气泡
+        private void Refresh()
+        {
+            _closeupCard.Bind(_upgradePreview.DisplayCard, null);
+            _closeupCard.ShowTip();
+        }
     }
 }

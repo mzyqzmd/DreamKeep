@@ -282,10 +282,11 @@ internal static class DevPanelCommands
         int target = targetOf_(combat.CurrentEnergy);
         int clamped = Mathf.Max(0, target);
         combat.CurrentEnergy = clamped;
-        session.Events.PlayAsync(new BE_EnergyChanged(clamped, combat.MaxEnergy));
+        int maxEnergy = run.Player.MaxEnergy;
+        session.Events.PlayAsync(new BE_EnergyChanged(clamped, maxEnergy));
         return clamped == target
-            ? $"能量 {clamped}/{combat.MaxEnergy}"
-            : $"能量 {clamped}/{combat.MaxEnergy}（输入 {target} 已钳到 0）";
+            ? $"能量 {clamped}/{maxEnergy}"
+            : $"能量 {clamped}/{maxEnergy}（输入 {target} 已钳到 0）";
     }
 
     // 药水落格下标：TryAddPotion 成功后调用，理论上必命中，-1 仅防御异常路径

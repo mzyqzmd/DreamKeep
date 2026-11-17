@@ -3,7 +3,7 @@ using _DreamKeep.Utility;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>选择消耗词条（运行时）：消耗手牌，档位为全部或至多指定张数。</summary>
+    /// <summary>选择消耗词条（运行时）：消耗手牌，档位为全部、恰好指定张数、至多指定张数或任意张。</summary>
     public sealed class CA_SelectExhaust : CardAffix
     {
         internal CA_SelectExhaust(AD_SelectExhaust select_) : this(select_.Name, select_.ShowDescriptionCardView,
@@ -30,6 +30,7 @@ namespace _DreamKeep.RuntimeData
             ESelectScope.AllHand => "消耗手牌中的所有牌",
             ESelectScope.Exact => $"从你的手牌中\n选取 {RenderCount(valueRenderer_)} 张进行消耗",
             ESelectScope.UpTo => $"从你的手牌中至多\n选取 {RenderCount(valueRenderer_)} 张进行消耗",
+            ESelectScope.Any => "从你的手牌中\n任意选取进行消耗",
             _ => "你能看到这句话说明游戏有bug",
         };
 

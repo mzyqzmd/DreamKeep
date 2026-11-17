@@ -9,10 +9,12 @@ namespace _DreamKeep.GameBattle
     {
         #region 建队：先解析落点，再按词条类型逐个转动作后整体返回
 
+        /// <summary>建队：forceRandomEnemy_ 为真时把单体牌的落点改成随机（地狱狂徒自动打出专用），
+        /// 忽略"前方敌人"取值与瞄准下标；手动出牌一律传 false。</summary>
         public static List<BattleAction> Build(BattleContext battleContext_, CardModel card_, Player player_,
-            int aimSlot_)
+            int aimSlot_, bool forceRandomEnemy_)
         {
-            List<Creature> targets = ResolveTarget(battleContext_, card_, player_, aimSlot_);
+            List<Creature> targets = ResolveTarget(battleContext_, card_, player_, aimSlot_, forceRandomEnemy_);
             List<BattleAction> actions = new List<BattleAction>();
             foreach (CardAffix affix in card_.ActiveAffixes)
                 ResolveAffix(battleContext_, affix, player_.Creature, targets, card_, actions);
@@ -29,13 +31,14 @@ namespace _DreamKeep.GameBattle
             int aimSlot_) =>
             card_.IsRandomEnemyTarget
                 ? battleContext_.GetAliveCreatures()
-                : ResolveTarget(battleContext_, card_, player_, aimSlot_);
+                : ResolveTarget(battleContext_, card_, player_, aimSlot_, false);
 
         #endregion
 
-        /// <summary>落点解析：自标卡先判自身，避免空场时打不出防御牌；其余落点针对存活敌人。</summary>
+        /// <summary>落点解析：自标卡先判自身，避免空场时打不出防御牌；其余落点针对存活敌人。
+        /// 强制随机只改单体牌（前方敌人 / 任意敌人）的落点，随机源与"本来就是随机敌人"的牌共用一次掷骰口径。</summary>
         private static List<Creature> ResolveTarget(BattleContext battleContext_, CardModel card_, Player player_,
-            int aimSlot_)
+            int aimSlot_, bool forceRandomEnemy_)
         {
             if (card_.IsNoneTarget) return new List<Creature>();
             if (card_.IsSelfTarget) return new List<Creature> { player_.Creature };
@@ -43,8 +46,9 @@ namespace _DreamKeep.GameBattle
             List<Creature> alive = battleContext_.GetAliveCreatures();
             if (alive.Count == 0) return new List<Creature>();
             if (card_.IsAllEnemyTarget) return alive;
-            if (card_.IsRandomEnemyTarget)
-                return new List<Creature> { alive[battleContext_.Rng.Next(alive.Count)] };
+            if (card_.IsRandomEnemyTarget) return RandomOne(battleContext_, alive);
+            // 自动打出的单体牌按状态描述落到随机敌人：前方敌人与瞄准下标都不再生效
+            if (forceRandomEnemy_ && (card_.IsFrontEnemyTarget || card_.IsAnyEnemyTarget)) return RandomOne(battleContext_, alive);
             if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0] };
             // 瞄准下标来自表现层命令，可能为 -1（未瞄准）或目标刚死而越界：按空落点处理，与药水解析同口径
             if (card_.IsAnyEnemyTarget)
@@ -53,6 +57,10 @@ namespace _DreamKeep.GameBattle
                     : new List<Creature>();
             return new List<Creature>();
         }
+
+        // 随机单体落点：随机敌人牌与强制随机共用同一处掷骰，保证两路消耗随机流的次数一致
+        private static List<Creature> RandomOne(BattleContext battleContext_, List<Creature> alive_) =>
+            new List<Creature> { alive_[battleContext_.Rng.Next(alive_.Count)] };
 
         // 自身落点：资源型词条（格挡/失血/抽牌/能量）恒定作用于出牌者，与卡牌是否以敌人为目标无关
         private static List<Creature> SelfTargets(Creature source_) => new List<Creature> { source_ };
@@ -70,7 +78,9 @@ namespace _DreamKeep.GameBattle
                             : new BA_Damage(source_, targets_, damage.Amount.Value));
                     break;
                 case CA_Block block:
-                    actions_.Add(new BA_Block(source_, SelfTargets(source_), block.Amount.Value));
+                    // 按牌加成经 CardBonusHook 统一求值：与预览门面共用同一份规则，杜绝结算/预览漂移
+                    actions_.Add(new BA_Block(source_, SelfTargets(source_),
+                        block.Amount.Value + CardBonusHook.GetBonus(source_, card_, EStatChannel.Block)));
                     break;
                 case CA_ApplyPerk applyPerk:
                     actions_.Add(new BA_ApplyPerk(source_, targets_, applyPerk.Perk));

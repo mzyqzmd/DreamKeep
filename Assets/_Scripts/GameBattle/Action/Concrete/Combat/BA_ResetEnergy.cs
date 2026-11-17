@@ -16,7 +16,7 @@ namespace _DreamKeep.GameBattle
             List<IBattleEvent> events = new();
             PlayerCombatState state = battleContext_.Player.CombatState;
             state.CurrentEnergy = Amount;
-            events.Add(new BE_EnergyChanged(state.CurrentEnergy, state.MaxEnergy));
+            events.Add(new BE_EnergyChanged(state.CurrentEnergy, battleContext_.Player.MaxEnergy));
             return events;
         }
     }

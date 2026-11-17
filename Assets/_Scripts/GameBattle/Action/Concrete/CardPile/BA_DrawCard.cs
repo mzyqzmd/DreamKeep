@@ -15,6 +15,9 @@ namespace _DreamKeep.GameBattle
             List<IBattleEvent> events = new();
             PlayerCombatState state = battleContext_.Player.CombatState;
 
+            // 禁抽状态：本回合的后续抽牌直接失效，洗回与抽牌堆消耗都不发生
+            if (BattlePerkQuery.Has<BP_NoDraw>(battleContext_.Player.Creature)) return events;
+
             if (state.DrawPile.Count == 0)
             {
                 if (state.DiscardPile.Count == 0)
@@ -43,6 +46,8 @@ namespace _DreamKeep.GameBattle
 
             state.Hand.Add(drawn);
             events.Add(new BE_CardDrawn(drawn));
+            // 入手后询问地狱狂徒：命中「打击」牌即在本次抽牌内直接打出
+            DrawHook.Check(battleContext_, battleContext_.Player.Creature, drawn, events);
             return events;
         }
     }

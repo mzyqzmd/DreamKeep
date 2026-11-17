@@ -11,8 +11,13 @@ namespace _DreamKeep.ConfigData
         [SerializeField] private SO_Perk _perk;
         [SerializeField] private int _layers;
 
+        [Tooltip("卡面是否直接输出状态自身的描述：能力牌用，避免出现「对目标施加 N 层状态」这类错误文案")]
+        [SerializeField]
+        private bool _showPerkDescription;
+
         public SO_Perk Perk => _perk;
         public int Layers => _layers;
+        public bool ShowPerkDescription => _showPerkDescription;
         public override string Name => "施加效果";
     }
 }

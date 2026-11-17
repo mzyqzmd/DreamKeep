@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using _DreamKeep.ConfigData;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
@@ -18,7 +19,8 @@ namespace _DreamKeep.GameBattle
 
             return new List<IBattleEvent>
             {
-                new BE_CardSelectionRequested(ECardSelectMode.Exhaust, candidates.Count, candidates, Source, Targets),
+                new BE_CardSelectionRequested(ECardSelectMode.Exhaust, ESelectScope.Any, candidates.Count, candidates,
+                    Source, Targets),
             };
         }
     }

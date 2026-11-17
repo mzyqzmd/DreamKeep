@@ -18,6 +18,9 @@ namespace _DreamKeep.GameBattle
         /// <summary>玩家每回合抽牌数：由 BattleLoop 装配时写入，供遗物读取"初始手牌张数"。</summary>
         public int DrawPerTurn { get; internal set; }
 
+        /// <summary>当前是否处于玩家回合：由玩家回合开始/结束阶段各写一次，供狱火这类"我方回合内"判定使用。</summary>
+        public bool IsPlayerTurn { get; internal set; }
+
         /// <summary>一场战斗最多同时参与的敌人数：与敌人槽位数一致。</summary>
         public const int MaxEnemyCount = BattleSlots.RearEnemy - BattleSlots.FrontEnemy + 1;
 

@@ -81,7 +81,7 @@ namespace _DreamKeep.GameBattle
             // 入打出堆动作产出出牌事件，必须早于结算动作，否则播放队列会先播死亡再播攻击
             _owner.ActionSystem.Enqueue(new BA_ToPlayPile(context.Player.Creature, self, card_));
             _owner.ActionSystem.Enqueue(new BA_SpendEnergy(context.Player.Creature, self, card_.Cost.Value));
-            foreach (BattleAction action in CardAffixResolver.Build(context, card_, context.Player, aimSlot_))
+            foreach (BattleAction action in CardAffixResolver.Build(context, card_, context.Player, aimSlot_, false))
                 _owner.ActionSystem.Enqueue(action);
             // 消耗与遗忘已在队列内让卡离场，弃置动作取不到卡会自动跳过
             _owner.ActionSystem.Enqueue(new BA_DiscardSingle(context.Player.Creature, self, card_, state.PlayPile));

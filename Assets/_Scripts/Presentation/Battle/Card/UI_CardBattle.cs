@@ -171,11 +171,11 @@ namespace _DreamKeep.Presentation
                 switch (affixes[i])
                 {
                     case CA_Damage damage:
-                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, damage.Amount.Value,
+                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, Card, damage.Amount.Value,
                             EStatChannel.Damage));
                         break;
                     case CA_Block block:
-                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, block.Amount.Value,
+                        _previewDraft.Add(CardValueRenderer.Fold(queryDispatcher_, targets_, Card, block.Amount.Value,
                             EStatChannel.Block));
                         break;
                 }

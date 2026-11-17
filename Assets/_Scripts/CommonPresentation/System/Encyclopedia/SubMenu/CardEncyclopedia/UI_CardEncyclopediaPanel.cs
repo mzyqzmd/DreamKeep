@@ -46,7 +46,11 @@ namespace _DreamKeep.CommonPresentation
         private PopFactory _popFactory;
 
         [Inject]
-        public void Construct(PopFactory popFactory_) => _popFactory = popFactory_;
+        public void Construct(PopFactory popFactory_)
+        {
+            _popFactory = popFactory_;
+            _concrete.Construct(popFactory_);
+        }
 
         private void Awake()
         {

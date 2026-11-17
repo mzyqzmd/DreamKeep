@@ -11,13 +11,18 @@ namespace _DreamKeep.GameBattle
         /// <summary>是否参与数值修正：由触发 resolver 对纯状态结算传 false。</summary>
         private readonly bool _applyModifiers;
 
+        /// <summary>是否触发受击反伤：反伤自身传 false，避免双方互相反伤递归。</summary>
+        private readonly bool _triggerReact;
+
         /// <summary>基础伤害值（未修正）。</summary>
         public int BaseAmount { get; }
 
-        public BA_Damage(Creature source_, List<Creature> targets_, int amount_, bool applyModifiers_ = true) : base(source_, targets_)
+        public BA_Damage(Creature source_, List<Creature> targets_, int amount_, bool applyModifiers_ = true,
+            bool triggerReact_ = true) : base(source_, targets_)
         {
             BaseAmount = amount_;
             _applyModifiers = applyModifiers_;
+            _triggerReact = triggerReact_;
         }
 
         public override List<IBattleEvent> Execute(BattleContext battleContext_)
@@ -59,6 +64,10 @@ namespace _DreamKeep.GameBattle
 
                 // 真实掉血才消费滑溜：与是否参与攻击修正无关
                 if (hpLoss > 0) SlipperyHook.Consume(target, events);
+
+                // 攻击落点已确定后询问受击反伤：被完全格挡也算法受到一次攻击
+                if (_applyModifiers && _triggerReact && amount > 0)
+                    DamageReactHook.Check(battleContext_, Source, target, events);
             }
 
             return events;

@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cae9108485c36a41ab4188ab556f060, type: 3}
+  m_Name: FlameBarrier
+  m_EditorClassIdentifier: 
+  _icon: {fileID: 21300000, guid: f25d4888c31e8144e876834dec60847e, type: 3}
+  _polarity: 0

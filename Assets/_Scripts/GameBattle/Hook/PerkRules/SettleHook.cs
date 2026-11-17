@@ -34,6 +34,23 @@ namespace _DreamKeep.GameBattle
                         strength.AddLayers(territorial.Layers);
                         actions_.Add(new BA_ApplyPerk(host_, new List<Creature> { host_ }, strength));
                         break;
+                    // 恶魔形态：与领地意识同口径，层数即每回合开始获得的力量
+                    case BP_DemonForm demonForm:
+                        if (demonForm.Layers <= 0) break;
+                        BattlePerk demonStrength = PerkBaker.Bake(demonForm.Strength);
+                        demonStrength.AddLayers(demonForm.Layers);
+                        actions_.Add(new BA_ApplyPerk(host_, new List<Creature> { host_ }, demonStrength));
+                        break;
+                    // 绯红披风：先付出生命代价再拿格挡，两者分离入队保持先后
+                    case BP_CrimsonMantle crimsonMantle:
+                        if (crimsonMantle.Layers <= 0) break;
+                        actions_.Add(new BA_LoseHealth(host_, new List<Creature> { host_ }, crimsonMantle.HpCost));
+                        actions_.Add(new BA_Block(host_, new List<Creature> { host_ }, crimsonMantle.Layers));
+                        break;
+                    // 狱火：回合开始只负责失血，群伤由 HpDropHook 统一接住
+                    case BP_Inferno inferno:
+                        actions_.Add(new BA_LoseHealth(host_, new List<Creature> { host_ }, inferno.HpCost));
+                        break;
                 }
             }
         }

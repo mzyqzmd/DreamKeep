@@ -24,7 +24,8 @@ namespace _DreamKeep.GameBattle
 
             return new List<IBattleEvent>
             {
-                new BE_CardSelectionRequested(ECardSelectMode.Upgrade, _affix.Count.Value, candidates, Source, Targets),
+                new BE_CardSelectionRequested(ECardSelectMode.Upgrade, _affix.Scope, _affix.Count.Value, candidates,
+                    Source, Targets),
             };
         }
     }

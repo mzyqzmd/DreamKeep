@@ -74,6 +74,7 @@ namespace _DreamKeep.CommonPresentation
         public void Construct(IObjectResolver resolver_)
         {
             _resolver = resolver_;
+            _concrete.Construct(resolver_);
             _pool = CreateCardPool(_scrollContent);
             OnConstructed();
         }

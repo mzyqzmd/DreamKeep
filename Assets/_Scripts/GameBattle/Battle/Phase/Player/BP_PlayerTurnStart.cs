@@ -20,6 +20,7 @@ namespace _DreamKeep.GameBattle
 
         public override async UniTask RunAsync()
         {
+            _owner.BattleContext.IsPlayerTurn = true;
             await PlayEvent(new BE_TurnStarted(_owner.BattleContext.TurnCount, true));
 
             Player player = _owner.BattleContext.Player;
@@ -29,10 +30,12 @@ namespace _DreamKeep.GameBattle
             // 本回合出牌计数清零：昏眩的「只能打出 1 张」按自然回合计（直接写，同回合计数先例）
             player.CombatState.CardsPlayedThisTurn = 0;
 
-            // 先清盾再结算：回合开始获得的格挡不会被本阶段清掉，上回合残留的格挡也不跨回合保留
-            actions.Enqueue(new BA_ClearBlock(player.Creature, self));
+            // 先清盾再结算：回合开始获得的格挡不会被本阶段清掉，上回合残留的格挡也不跨回合保留；
+            // 带壁垒时整步跳过，格挡跨回合保留
+            if (!BattlePerkQuery.Has<BP_Barricade>(player.Creature))
+                actions.Enqueue(new BA_ClearBlock(player.Creature, self));
             actions.Enqueue(new BA_SettlePerk(player.Creature, self, EPerkSettleTiming.TurnStart));
-            actions.Enqueue(new BA_ResetEnergy(player.Creature, self, player.CombatState.MaxEnergy));
+            actions.Enqueue(new BA_ResetEnergy(player.Creature, self, player.MaxEnergy));
             for (int i = 0; i < _owner.DrawPerTurn; i++)
                 actions.Enqueue(new BA_DrawCard(player.Creature, self));
             await actions.PerformAllAsync();

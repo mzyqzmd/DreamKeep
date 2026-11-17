@@ -99,10 +99,12 @@ namespace _DreamKeep.Presentation
             _handView.ApplyLayout(); // 入场期间行若有过变动（别的牌打出 / 让位），在这里一次性纠正到最新槽位
         }
 
-        // 轮到执行：域侧确认这张已离手（手牌成员关系到此注销），行早在松手那一刻就让过位，这里只等入队补间播完
+        // 轮到执行：手动出牌的牌在松手那一刻就已入队，这里只注销手牌成员关系与重排让位；
+        // 域侧自动打出的牌（地狱狂徒）从未经过拖拽，这里补一次入队，让它先飞到出牌区落位再放行后续结算
         private async UniTask OnCardPlayedAsync(BE_CardPlayed played_)
         {
             if (!_handView.TryGetView(played_.Card, out UI_CardBattle view)) return;
+            if (!_handView.DropZone.Contains(view) && _handView.IsInHand(view)) _handView.DropZone.Enqueue(view);
             _handView.RemoveFromHand(view);
             _handView.ApplyLayout();
 

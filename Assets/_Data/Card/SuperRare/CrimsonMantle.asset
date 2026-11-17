@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: CrimsonMantle
+  m_EditorClassIdentifier: 
+  _name: "\u7EEF\u7EA2\u62AB\u98CE"
+  _cost: 1
+  _icon: {fileID: 21300000, guid: 38619af3dd8f5dc45ac73f43f444a8ff, type: 3}
+  _rarity: 2
+  _type: 2
+  _targetType: 1
+  _affixes:
+  - rid: 6594183935192989727
+  - rid: 6594183935192989728
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183935192989729
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183935192989727
+      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: c72f74e52ab244e4c8e7269217a6febd, type: 2}
+        _layers: 7
+        _showPerkDescription: 1
+    - rid: 6594183935192989728
+      type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183935192989729
+      type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: c72f74e52ab244e4c8e7269217a6febd, type: 2}
+        _additive: 3

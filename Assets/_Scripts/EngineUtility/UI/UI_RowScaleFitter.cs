@@ -46,10 +46,11 @@ namespace _DreamKeep.EngineUtility
 
         private void Fit()
         {
-            if (_layout == null) return;
+            if (!_layout) return;
 
             // 当前间距与上次写入值不同 = 作者在 Inspector 改了间距，改认新基准，免得把缩放结果当基准累积缩水
-            if (!Mathf.Approximately(_layout.spacing, _appliedSpacing)) _baseSpacing = _layout.spacing;
+            if (!Mathf.Approximately(_layout.spacing, _appliedSpacing))
+                _baseSpacing = _layout.spacing;
 
             int count = 0;
             float rowWidth = 0f;
@@ -78,7 +79,6 @@ namespace _DreamKeep.EngineUtility
             float scaleHeight = rowHeight <= 0f || availableHeight <= 0f ? 1f : availableHeight / rowHeight;
             float scale = Mathf.Clamp01(Mathf.Min(scaleWidth, scaleHeight));
 
-            if (count == _appliedCount && Mathf.Approximately(scale, _appliedScale)) return;
             _appliedCount = count;
             _appliedScale = scale;
             _appliedSpacing = _baseSpacing * scale;

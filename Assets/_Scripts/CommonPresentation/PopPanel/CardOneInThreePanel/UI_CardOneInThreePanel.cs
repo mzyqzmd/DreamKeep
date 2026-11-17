@@ -36,7 +36,11 @@ namespace _DreamKeep.CommonPresentation
         }
 
         [Inject]
-        public void Construct(IObjectResolver resolver_) => _resolver = resolver_;
+        public void Construct(IObjectResolver resolver_)
+        {
+            _resolver = resolver_;
+            _concrete.Construct(resolver_);
+        }
 
         #region 开合与内容：外界给牌与两个回调，面板只负责铺牌与回报
 

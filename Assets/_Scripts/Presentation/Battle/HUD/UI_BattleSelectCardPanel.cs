@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using _DreamKeep.CommonPresentation;
+using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
@@ -21,7 +22,7 @@ namespace _DreamKeep.Presentation
         [Header("分区")] [SerializeField] private GameObject _background;
         [SerializeField] private GameObject _selectSection;
         [SerializeField] private GameObject _upgradeSection;
-        [Tooltip("提示文本：升级/消耗两套文案按请求模式刷新，数字取目标张数")] [SerializeField]
+        [Tooltip("提示文本：由请求的模式与档位生成，Exact 报确切张数、UpTo 报至多、Any 报任意")] [SerializeField]
         private TextMeshProUGUI _tipText;
 
         [Header("陈列")] [SerializeField] private RectTransform _selectedGroup;
@@ -45,6 +46,7 @@ namespace _DreamKeep.Presentation
         private readonly List<UI_CardInDeck> _upgradePreviews = new();
         private UniTaskCompletionSource<IReadOnlyList<CardModel>> _result;
         private ECardSelectMode _mode;
+        private ESelectScope _scope;
         private int _targetCount;
         private bool _peeking;
         private bool _open;
@@ -56,6 +58,10 @@ namespace _DreamKeep.Presentation
 
         private MonoObjectPool<UI_CardInDeck> DisplayPool =>
             _mode == ECardSelectMode.Upgrade ? _unupgradePool : _selectedPool;
+
+        private bool MustPickAll => _scope == ESelectScope.Exact;
+
+        private bool ShouldConfirm => !MustPickAll || _selected.Count >= _targetCount;
 
         private void OnEnable() => EnsureListeners();
 
@@ -109,12 +115,11 @@ namespace _DreamKeep.Presentation
         private async UniTask OnRequestedAsync(BE_CardSelectionRequested requested_)
         {
             _mode = requested_.Mode;
-            _targetCount = requested_.TargetCount;
-            _tipText.text = _mode == ECardSelectMode.Upgrade
-                ? $"选择手牌中的 <color=yellow>{_targetCount}</color> 张牌进行升级"
-                : $"选择手牌中的至多 <color=yellow>{_targetCount}</color> 张牌进行消耗";
+            _scope = requested_.Scope;
             _candidates.Clear();
             _candidates.AddRange(requested_.Candidates);
+            _targetCount = Mathf.Clamp(requested_.TargetCount, 1, _candidates.Count);
+            _tipText.text = BuildTip();
             _result = requested_.Result;
             _peeking = false;
             _open = true;
@@ -127,6 +132,19 @@ namespace _DreamKeep.Presentation
             _handView.SetSelectMode(true, OnCardSelected);
             RefreshConfirm();
             await _result.Task;
+        }
+
+        // 文案单点：模式定动词，档位定量化口径，Any 不报数字
+        private string BuildTip()
+        {
+            string count = _scope switch
+            {
+                ESelectScope.Exact => $" <color=yellow>{_targetCount}</color> 张",
+                ESelectScope.UpTo => $"至多 <color=yellow>{_targetCount}</color> 张",
+                _ => "任意张",
+            };
+            string action = _mode == ECardSelectMode.Upgrade ? "升级" : "消耗";
+            return $"选择手牌中的{count}牌进行{action}";
         }
 
         #endregion
@@ -207,8 +225,7 @@ namespace _DreamKeep.Presentation
             _background.SetActive(!_peeking);
             _selectSection.SetActive(!_peeking && _mode == ECardSelectMode.Exhaust);
             _upgradeSection.SetActive(!_peeking && _mode == ECardSelectMode.Upgrade);
-            _confirmButton.gameObject.SetActive(!_peeking &&
-                (_mode == ECardSelectMode.Exhaust || _selected.Count >= _targetCount));
+            _confirmButton.gameObject.SetActive(!_peeking && ShouldConfirm);
             _handView.SetSelectMode(true, _peeking ? null : OnCardSelected);
             if (_peeking)
             {
@@ -259,7 +276,7 @@ namespace _DreamKeep.Presentation
 
         private void RefreshConfirm()
         {
-            bool ready = _mode == ECardSelectMode.Exhaust || _selected.Count >= _targetCount;
+            bool ready = ShouldConfirm;
             if (ready == _confirmButton.gameObject.activeSelf) return;
             if (!ready)
             {

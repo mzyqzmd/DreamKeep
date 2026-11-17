@@ -44,6 +44,9 @@ namespace _DreamKeep.GameBattle
             }
             if (discardBatch.Count > 0) actions.Enqueue(new BA_DiscardBatch(player.Creature, self, discardBatch, hand));
             await actions.PerformAllAsync();
+
+            // 弃牌收尾才算回合真正结束：回合末结算仍算"我方回合内"，狱火据此判定
+            context.IsPlayerTurn = false;
         }
 
         #endregion

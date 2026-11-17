@@ -17,6 +17,7 @@ namespace _DreamKeep.CommonPresentation
         private Color _costLowerColor;
         private BattleQueryDispatcher _queryDispatcher;
         private IReadOnlyList<Creature> _targets;
+        private CardModel _card;
 
         public CardValueRenderer(Color boostColor_, Color reduceColor_, Color costLowerColor_)
         {
@@ -27,12 +28,13 @@ namespace _DreamKeep.CommonPresentation
 
         #region 预览门面与配色：由持有方推入（未推门面即原值输出）
 
-        /// <summary>推入预览门面与当前的目标集合（持有方每帧对账时调用；门面为空时伤害与格挡直接用当前值
-        /// 与升级前基准静态比较着色，目标集合为空或为 null 即只算来源侧修正）。</summary>
-        public void SetContext(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
+        /// <summary>推入预览门面、目标集合与当前卡（持有方每帧对账时调用；门面为空时伤害与格挡直接用当前值
+        /// 与升级前基准静态比较着色，目标集合为空或为 null 即只算来源侧修正；card 供格挡按牌加成求值）。</summary>
+        public void SetContext(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_, CardModel card_)
         {
             _queryDispatcher = queryDispatcher_;
             _targets = targets_;
+            _card = card_;
         }
 
         /// <summary>换升/降/减费三色（卡面按不可打状态压暗时更新）。</summary>
@@ -49,25 +51,26 @@ namespace _DreamKeep.CommonPresentation
 
         /// <summary>跨目标折叠求值（预览基数=当前值，含升级增量）：各目标的最终值一致就取该值（多目标卡也能给出准确数字），
         /// 不一致回退只含来源侧修正的值——目标之间的差异无法用一个数字表达，回退基准即"不显示目标侧修正"；
-        /// 目标集合为空或为 null 同样只算来源侧。按词条各自调用，故伤害与格挡互不影响。</summary>
-        public static int Fold(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_, int value_,
-            EStatChannel channel_)
+        /// 目标集合为空或为 null 同样只算来源侧。按词条各自调用，故伤害与格挡互不影响；card 供格挡按牌加成求值。</summary>
+        public static int Fold(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_, CardModel card_,
+            int value_, EStatChannel channel_)
         {
-            if (targets_ == null || targets_.Count == 0) return Resolve(queryDispatcher_, channel_, value_, null);
+            if (targets_ == null || targets_.Count == 0)
+                return Resolve(queryDispatcher_, channel_, card_, value_, null);
 
-            int shown = Resolve(queryDispatcher_, channel_, value_, targets_[0]);
+            int shown = Resolve(queryDispatcher_, channel_, card_, value_, targets_[0]);
             for (int i = 1; i < targets_.Count; i++)
-                if (Resolve(queryDispatcher_, channel_, value_, targets_[i]) != shown)
-                    return Resolve(queryDispatcher_, channel_, value_, null);
+                if (Resolve(queryDispatcher_, channel_, card_, value_, targets_[i]) != shown)
+                    return Resolve(queryDispatcher_, channel_, card_, value_, null);
             return shown;
         }
 
-        // 单目标求值：与结算共用同一份规则（传 null 即只算来源侧修正）
-        private static int Resolve(BattleQueryDispatcher queryDispatcher_, EStatChannel channel_, int baseValue_,
-            Creature target_) =>
+        // 单目标求值：与结算共用同一份规则（传 null 即只算来源侧修正）；伤害忽略 card，格挡据此叠加按牌加成
+        private static int Resolve(BattleQueryDispatcher queryDispatcher_, EStatChannel channel_, CardModel card_,
+            int baseValue_, Creature target_) =>
             channel_ == EStatChannel.Damage
                 ? queryDispatcher_.PreviewCardDamage(target_, baseValue_)
-                : queryDispatcher_.PreviewCardBlock(target_, baseValue_);
+                : queryDispatcher_.PreviewCardBlock(target_, card_, baseValue_);
 
         #endregion
 
@@ -83,7 +86,7 @@ namespace _DreamKeep.CommonPresentation
             // 伤害与格挡的最终值含战斗内 perk 修正，经门面现算；基数取当前值（含升级增量），其余通道不经门面
             int shown = value_;
             if (_queryDispatcher != null && channel_ is EStatChannel.Damage or EStatChannel.Block)
-                shown = Fold(_queryDispatcher, _targets, value_, channel_);
+                shown = Fold(_queryDispatcher, _targets, _card, value_, channel_);
 
             return channel_ switch
             {

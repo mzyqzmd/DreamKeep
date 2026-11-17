@@ -92,10 +92,11 @@ namespace _DreamKeep.Presentation
         }
 
         [Inject]
-        public void Construct(PopPanelFactory popFactory_, ShopEventDispatcher events_, ShopCommandDispatcher commands_, RunState run_)
+        public void Construct(PopPanelFactory popFactory_, ShopEventDispatcher events_, ShopCommandDispatcher commands_, RunState run_, IObjectResolver resolver_)
         {
             // 段入口会为地毯子树再补注入一次：订阅只做一次，否则同一事实会播出多遍
             if (_commands != null) return;
+            _concreteView.Construct(resolver_);
             _popFactory = popFactory_;
             _commands = commands_;
             _run = run_;

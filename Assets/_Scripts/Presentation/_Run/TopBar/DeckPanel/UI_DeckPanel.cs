@@ -54,6 +54,7 @@ namespace _DreamKeep.Presentation
         public void Construct(RunState run_, IObjectResolver resolver_)
         {
             _run = run_;
+            _concrete.Construct(resolver_);
             // 池化实例在容器外生成：新建时补一次注入（卡内悬停气泡要 PopFactory），复用实例的依赖早已就位
             _pool = new MonoObjectPool<UI_CardInDeck>(_gridContent, 64,
                 onCreate_: instance_ => resolver_.InjectGameObject(instance_.gameObject));

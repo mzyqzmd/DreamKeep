@@ -226,8 +226,8 @@ namespace _DreamKeep.CommonPresentation
         /// 卡面与气泡两个渲染器推同一份，两者天然一致。</summary>
         public void SetPreviewContext(BattleQueryDispatcher queryDispatcher_, IReadOnlyList<Creature> targets_)
         {
-            _faceValueRenderer.SetContext(queryDispatcher_, targets_);
-            _tipValueRenderer.SetContext(queryDispatcher_, targets_);
+            _faceValueRenderer.SetContext(queryDispatcher_, targets_, Card);
+            _tipValueRenderer.SetContext(queryDispatcher_, targets_, Card);
         }
 
         /// <summary>收集悬停气泡的词条列（复用列表，先清后填）：只认带出词条的行（其余行由卡面自己陈列），

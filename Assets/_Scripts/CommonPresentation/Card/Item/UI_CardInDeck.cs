@@ -46,6 +46,19 @@ namespace _DreamKeep.CommonPresentation
 
         #endregion
 
+        #region 气泡：统一特写注入宿主后，由宿主决定显隐时机
+
+        /// <summary>由特写编排者转交气泡工厂；池化卡仍走各自的容器注入，本入口只服务静态特写卡。</summary>
+        public void Construct(PopFactory popFactory_) => _hoverTip.Construct(popFactory_);
+
+        /// <summary>弹出当前卡牌的词条气泡。</summary>
+        public void ShowTip() => _hoverTip.Show();
+
+        /// <summary>收起当前卡牌的词条气泡。</summary>
+        public void HideTip() => _hoverTip.Hide();
+
+        #endregion
+
         #region 涟漪开关：选中态等场合由绑定方显式开关 card_ripple 动效（Bind 恒按陈列态关闭）
 
         /// <summary>开关当前牌面的 card_ripple 动效边框：必须在 Bind 之后调用，节点缺失静默跳过。</summary>

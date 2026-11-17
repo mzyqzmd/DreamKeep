@@ -17,7 +17,7 @@ namespace _DreamKeep.GameBattle
             _eventDispatcher = eventDispatcher_;
         }
 
-        #region 入队一个动作，队列不设上限且永不丢动作
+        #region 入队一个动作，队列不设上限（施放者中途死亡的动作在出队时作废）
 
         public void Enqueue(BattleAction action_) => _queue.Enqueue(action_);
 
@@ -33,7 +33,10 @@ namespace _DreamKeep.GameBattle
             {
                 while (_queue.Count > 0)
                 {
-                    List<IBattleEvent> events = _queue.Dequeue().Execute(_battleContext);
+                    BattleAction action = _queue.Dequeue();
+                    // 施放者已死：其剩余动作作废（如敌人被反伤致死后，同一意图的剩余段数不再结算）
+                    if (action.Source is { IsDead: true }) continue;
+                    List<IBattleEvent> events = action.Execute(_battleContext);
                     await _eventDispatcher.PlayAsync(events);
                 }
             }

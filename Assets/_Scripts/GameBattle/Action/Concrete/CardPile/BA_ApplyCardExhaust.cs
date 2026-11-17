@@ -20,6 +20,8 @@ namespace _DreamKeep.GameBattle
                 if (!state.Hand.Remove(card)) continue;
                 state.ExhaustPile.Add(card);
                 events.Add(new BE_CardExhausted(card));
+                // 每张牌各触发一次消耗响应，与单张消耗动作同口径
+                ExhaustHook.Check(battleContext_, Source, events);
             }
 
             return events;

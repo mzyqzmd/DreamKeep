@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd350683b379ba747a54ec616823d6c6, type: 3}
+  m_Name: Cruelty
+  m_EditorClassIdentifier: 
+  _name: "\u6B8B\u9177"
+  _cost: 1
+  _icon: {fileID: 21300000, guid: 13e9faaf253253c4da354bc64d9ab287, type: 3}
+  _rarity: 1
+  _type: 2
+  _targetType: 1
+  _affixes:
+  - rid: 6594183935192989730
+  - rid: 6594183935192989731
+  _canUpdate: 1
+  _upgrades:
+  - rid: 6594183935192989732
+  references:
+    version: 2
+    RefIds:
+    - rid: 6594183935192989730
+      type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 10332d494a0ac0449a7a346f486003ee, type: 2}
+        _layers: 25
+        _showPerkDescription: 1
+    - rid: 6594183935192989731
+      type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594183935192989732
+      type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _perk: {fileID: 11400000, guid: 10332d494a0ac0449a7a346f486003ee, type: 2}
+        _additive: 25

@@ -37,6 +37,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>当前战斗态；不在战斗内时为 null。</summary>
         public PlayerCombatState CombatState { get; private set; }
 
+        /// <summary>本场战斗的能量上限：配置给的基础值 + 身上状态的上限加成；不在战斗内时为 0。</summary>
+        public int MaxEnergy => CombatState == null ? 0 : CombatState.BaseMaxEnergy + BattlePerkQuery.EnergyCapBonus(Creature);
+
         public Player(string actorName_, int maxHp_, IReadOnlyList<SO_Relic> startRelics_,
             IReadOnlyList<SO_Potion> startPotions_)
         {
@@ -109,7 +112,7 @@ namespace _DreamKeep.RuntimeData
 
         #region 进战斗：按配置的能量上限新建战斗态
 
-        public void StartCombat(int maxEnergy_) => CombatState = new PlayerCombatState(maxEnergy_);
+        public void StartCombat(int baseMaxEnergy_) => CombatState = new PlayerCombatState(baseMaxEnergy_);
 
         #endregion
 

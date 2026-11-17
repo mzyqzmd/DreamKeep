@@ -4740,7 +4740,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dcad55f94294d0ebf4641bce08f4b0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _trigger: 0
+  _trigger: 1
   _startAnchor: 2
   _tipAnchor: 0
   _tipOffsetPx: {x: 25, y: 0}

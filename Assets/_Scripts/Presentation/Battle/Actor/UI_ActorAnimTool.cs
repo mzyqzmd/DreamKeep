@@ -7,45 +7,33 @@ namespace _DreamKeep.Presentation
 {
     /// <summary>单位动画工具：持骨架句柄与四条公约动画名，只回答"怎么播"，不认识生物、事件与面板。
     /// 骨架未接线时就近取；一次动画播到 playRatio_ 比例就放行等待（事件链不必等它播完），
-    /// 剩余部分后台继续播、被后一次播放接棒顶掉；自然播完且期间没被接棒时执行 onFinished_，"播完干什么"由调用方在回调里编排。</summary>
+    /// 剩余部分后台继续播、被后一次播放接棒顶掉；自然播完且期间没被接棒时执行 onFinished_，"播完干什么"由调用方在回调里编排。
+    /// 死亡等收尾演出走终结位：置位后本单位不再接受任何播放请求，保证这一次演出不会被接棒顶掉。</summary>
     public class UI_ActorAnimTool : MonoBehaviour
     {
         private const float DefaultPlayRatio = 0.5f; // 一次动画播到该比例即放行等待，剩下的后台播完
 
         private UI_Actor _actor;
         private int _playTicket; // 播放票号：只认最后一次播放请求的播完回调
+        private bool _finalizing; // 终结位：单向置位，此后一切播放请求不再接棒
 
         private void Awake() => _actor = GetComponent<UI_Actor>();
 
         #region 播放一次：播到 playRatio_ 比例即放行等待，自然播完且没被接棒时执行 onFinished_
 
-        public async UniTask PlayOnceAsync(string animationName_, float playRatio_ = DefaultPlayRatio,
+        public UniTask PlayOnceAsync(string animationName_, float playRatio_ = DefaultPlayRatio,
+            Action onFinished_ = null) =>
+            _finalizing ? UniTask.CompletedTask : PlayCoreAsync(animationName_, playRatio_, onFinished_);
+
+        #endregion
+
+        #region 播放终结演出：先占终结位再播，此后本单位只认这一次演出
+
+        public UniTask PlayFinalAsync(string animationName_, float playRatio_ = DefaultPlayRatio,
             Action onFinished_ = null)
         {
-            if (string.IsNullOrEmpty(animationName_)) return;
-            if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
-            int ticket = ++_playTicket; // 票号先于 SetAnimation 自增：替换旧条目会同步补发 End，旧的待命回调据此作废
-            TrackEntry entry = _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, false);
-            UniTaskCompletionSource released = new(); // 放行源：播够比例 / 播完 / 被顶掉 / 宿主销毁，取最早的一个
-            bool finished = false;
-            entry.Complete += _ => OnFinished();
-            entry.End += _ => OnFinished();
-
-            // 到点放行：事件链不等动画播完（剩下的由后台播完，或被后一次播放接棒顶掉）
-            await UniTask.WhenAny(released.Task,
-                UniTask.Delay(TimeSpan.FromSeconds(playRatio_ * entry.Animation.Duration),
-                    cancellationToken: destroyCancellationToken).SuppressCancellationThrow());
-            return;
-
-            // 播完或被顶掉：先放行等待（免得挂到 delay 结束），再按票号独占编排收尾（回待机 / 死亡自毁）；
-            // Complete 与 End 的处理完全一致，故共用同一个回调——只改一处的守卫不会漏到另一条路径
-            void OnFinished()
-            {
-                released.TrySetResult();
-                if (finished || ticket != _playTicket) return;
-                finished = true;
-                onFinished_?.Invoke();
-            }
+            _finalizing = true;
+            return PlayCoreAsync(animationName_, playRatio_, onFinished_);
         }
 
         #endregion
@@ -54,6 +42,7 @@ namespace _DreamKeep.Presentation
 
         public void PlayLoop(string animationName_)
         {
+            if (_finalizing) return;
             if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
             _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, true);
         }
@@ -84,5 +73,36 @@ namespace _DreamKeep.Presentation
         }
 
         #endregion
+
+        // 播放核心：票号先于 SetAnimation 自增（替换旧条目会同步补发 End，旧的待命回调据此作废），
+        // 播够比例 / 播完 / 被顶掉 / 宿主销毁取最早的一个放行等待；播完或被顶掉时按票号独占执行 onFinished_
+        private async UniTask PlayCoreAsync(string animationName_, float playRatio_, Action onFinished_)
+        {
+            if (string.IsNullOrEmpty(animationName_) || _actor.Skeleton == null) return;
+            if (!_actor.Skeleton.IsValid) _actor.Skeleton.Initialize(false);
+            int ticket = ++_playTicket;
+            TrackEntry entry = _actor.Skeleton.AnimationState.SetAnimation(0, animationName_, false);
+            if (entry == null) return; // 名字不存在时 Spine 返回 null（装配期已由 VerifyAnim 报错），放行等待不成立
+            UniTaskCompletionSource released = new();
+            bool finished = false;
+            entry.Complete += _ => OnFinished();
+            entry.End += _ => OnFinished();
+
+            // 到点放行：事件链不等动画播完（剩下的由后台播完，或被后一次播放接棒顶掉）
+            await UniTask.WhenAny(released.Task,
+                UniTask.Delay(TimeSpan.FromSeconds(playRatio_ * entry.Animation.Duration),
+                    cancellationToken: destroyCancellationToken).SuppressCancellationThrow());
+            return;
+
+            // 播完或被顶掉：先放行等待（免得挂到 delay 结束），再按票号独占编排收尾（回待机 / 死亡自毁）；
+            // Complete 与 End 的处理完全一致，故共用同一个回调——只改一处的守卫不会漏到另一条路径
+            void OnFinished()
+            {
+                released.TrySetResult();
+                if (finished || ticket != _playTicket) return;
+                finished = true;
+                onFinished_?.Invoke();
+            }
+        }
     }
 }

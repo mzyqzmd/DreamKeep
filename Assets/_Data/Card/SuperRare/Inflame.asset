@@ -24,19 +24,26 @@ MonoBehaviour:
   _canUpdate: 1
   _upgrades:
   - rid: 8162842075076493312
+  - rid: 6594183935192989696
   references:
     version: 2
     RefIds:
+    - rid: 6594183935192989696
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 0
+        _additive: -1
+        _multiplier: 1
     - rid: 8162842063485534210
       type: {class: AD_ApplyPerk, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _layers: 5
+        _layers: 4
     - rid: 8162842075076493312
       type: {class: UD_ModifyPerkLayers, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _perk: {fileID: 11400000, guid: 8a4dff88d39ad5a4fbdb767cf617ed00, type: 2}
-        _additive: 2
+        _additive: 3
     - rid: 8162842080793329664
       type: {class: AD_Exhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
