@@ -22,8 +22,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null) => "这张牌无法被打出";
 
-        #region 深拷贝一份独立词条
+        // 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_UnableToPlay(Name, ShowDescription);
-        #endregion
     }
 }

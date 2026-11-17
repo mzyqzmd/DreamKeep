@@ -21,8 +21,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null) => "打出后从整局游戏中\n永久移除自身";
 
-        #region 深拷贝一份独立词条
+        // 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Erase(Name, ShowDescription);
-        #endregion
     }
 }

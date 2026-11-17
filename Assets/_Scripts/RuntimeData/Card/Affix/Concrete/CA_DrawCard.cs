@@ -27,8 +27,7 @@ namespace _DreamKeep.RuntimeData
         public override string GetDescription(IStatRenderer valueRenderer_ = null) =>
             $"玩家抽 {valueRenderer_?.Render(Count.BaseValue, Count.Value, EStatChannel.DrawCard) ?? Count.Value.ToString()} 张牌";
 
-        #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
+        // 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_DrawCard(Name, ShowDescription, Count.Clone());
-        #endregion
     }
 }

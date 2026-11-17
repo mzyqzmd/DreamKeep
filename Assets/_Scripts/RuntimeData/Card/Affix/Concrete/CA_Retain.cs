@@ -21,8 +21,7 @@ namespace _DreamKeep.RuntimeData
 
         public override string GetDescription(IStatRenderer valueRenderer_ = null) => "回合结束时拥有此词条的\n卡牌不会进入弃牌堆";
 
-        #region 深拷贝一份独立词条
+        // 深拷贝一份独立词条
         public override CardAffix Clone() => new CA_Retain(Name, ShowDescription);
-        #endregion
     }
 }

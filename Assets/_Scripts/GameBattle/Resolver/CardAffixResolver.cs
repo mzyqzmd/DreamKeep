@@ -25,13 +25,35 @@ namespace _DreamKeep.GameBattle
 
         #region 预览落点：表现层提示专用，与结算共用同一份映射
 
-        /// <summary>预览这张牌会命中的目标：与结算共用同一解析，故"提示的是谁就一定打到谁"；
-        /// 随机目标预告不出具体是哪一只，这里点亮全部存活敌人（且不消耗随机源）。</summary>
-        public static List<Creature> PreviewTargets(BattleContext battleContext_, CardModel card_, Player player_,
-            int aimSlot_) =>
-            card_.IsRandomEnemyTarget
-                ? battleContext_.GetAliveCreatures()
-                : ResolveTarget(battleContext_, card_, player_, aimSlot_, false);
+        /// <summary>预览落点：填充调用方缓冲（先清后填），存活敌人由调用方按槽位排好传入，语义与返回新列表的版本一致。</summary>
+        public static void PreviewTargets(CardModel card_, Player player_, int aimSlot_, List<Enemy> aliveEnemies_,
+            List<Creature> results_)
+        {
+            results_.Clear();
+            if (card_.IsNoneTarget) return;
+            if (card_.IsSelfTarget)
+            {
+                results_.Add(player_.Creature);
+                return;
+            }
+
+            if (aliveEnemies_.Count == 0) return;
+            // 随机目标预告不出具体是哪一只，点亮全部存活敌人（不消耗随机源）
+            if (card_.IsRandomEnemyTarget || card_.IsAllEnemyTarget)
+            {
+                for (int i = 0; i < aliveEnemies_.Count; i++) results_.Add(aliveEnemies_[i].Creature);
+                return;
+            }
+
+            if (card_.IsFrontEnemyTarget)
+            {
+                results_.Add(aliveEnemies_[0].Creature);
+                return;
+            }
+
+            if (card_.IsAnyEnemyTarget && aimSlot_ >= 0 && aimSlot_ < aliveEnemies_.Count)
+                results_.Add(aliveEnemies_[aimSlot_].Creature);
+        }
 
         #endregion
 
@@ -48,7 +70,8 @@ namespace _DreamKeep.GameBattle
             if (card_.IsAllEnemyTarget) return alive;
             if (card_.IsRandomEnemyTarget) return RandomOne(battleContext_, alive);
             // 自动打出的单体牌按状态描述落到随机敌人：前方敌人与瞄准下标都不再生效
-            if (forceRandomEnemy_ && (card_.IsFrontEnemyTarget || card_.IsAnyEnemyTarget)) return RandomOne(battleContext_, alive);
+            if (forceRandomEnemy_ && (card_.IsFrontEnemyTarget || card_.IsAnyEnemyTarget))
+                return RandomOne(battleContext_, alive);
             if (card_.IsFrontEnemyTarget) return new List<Creature> { alive[0] };
             // 瞄准下标来自表现层命令，可能为 -1（未瞄准）或目标刚死而越界：按空落点处理，与药水解析同口径
             if (card_.IsAnyEnemyTarget)

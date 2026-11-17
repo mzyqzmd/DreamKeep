@@ -27,8 +27,7 @@ namespace _DreamKeep.RuntimeData
         public override string GetDescription(IStatRenderer valueRenderer_ = null) =>
             $"玩家自身失去 {valueRenderer_?.Render(Amount.BaseValue, Amount.Value, EStatChannel.LostHealth) ?? Amount.Value.ToString()} 点生命";
 
-        #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
+        // 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_LostHealth(Name, ShowDescription, Amount.Clone());
-        #endregion
     }
 }

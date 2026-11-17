@@ -145,12 +145,13 @@ namespace _DreamKeep.Presentation
 
             HideAll();
             if (targets_ == null) return;
-            foreach (Creature creature in targets_)
+            // 接口序列用下标遍历：foreach 会取接口枚举器装箱
+            for (int i = 0; i < targets_.Count; i++)
             {
-                UI_ActorHoverBox box = GetHoverBox(creature);
+                UI_ActorHoverBox box = GetHoverBox(targets_[i]);
                 if (!box) continue;
                 box.ShowTargetTip(true);
-                _shownTargets.Add(creature);
+                _shownTargets.Add(targets_[i]);
             }
         }
 

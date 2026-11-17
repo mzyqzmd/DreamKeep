@@ -65,11 +65,18 @@ namespace _DreamKeep.GameBattle
         public List<Enemy> GetAliveEnemies()
         {
             List<Enemy> alive = new();
-            foreach (Enemy enemy in Enemies)
-                if (!enemy.Creature.IsDead)
-                    alive.Add(enemy);
-            alive.Sort((left_, right_) => left_.Slot.CompareTo(right_.Slot));
+            GetAliveEnemies(alive);
             return alive;
+        }
+
+        /// <summary>存活敌人填入调用方缓冲：先清后填再按槽位排序，供热路径复用列表、零分配。</summary>
+        public void GetAliveEnemies(List<Enemy> results_)
+        {
+            results_.Clear();
+            for (int i = 0; i < Enemies.Count; i++)
+                if (!Enemies[i].Creature.IsDead)
+                    results_.Add(Enemies[i]);
+            results_.Sort((left_, right_) => left_.Slot.CompareTo(right_.Slot));
         }
 
         /// <summary>存活敌人的 Creature 视图：卡牌与药水的落点解析、表现桥预览共用的单点。</summary>

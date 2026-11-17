@@ -5,10 +5,16 @@ namespace _DreamKeep.GameBattle
 {
     /// <summary>上行查询门面：表现层唯一的只读提问出口，只读直算、不入队、无副作用。
     /// 内部转调玩法层既有解析与 StatHook，与结算共用同一份规则（预览的是谁就一定打到谁）；视图不直接触碰战斗循环、战斗态与 StatHook。
-    /// 两类形态：边界型查询（牌堆张数）由独立 BQ_ 类型表达，每帧预览走方法调用（避免逐帧分配）。</summary>
+    /// 两类形态：边界型查询（牌堆张数）由独立 BQ_ 类型表达；每帧预览走方法调用，结果写进内部复用缓冲以避免逐帧分配——
+    /// 该缓冲只在当前调用帧内有效，调用方不得跨帧持有或缓存它的内容。</summary>
     public class BattleQueryDispatcher
     {
         private readonly BattleContext _battleContext;
+
+        // 预览热路径的复用缓冲：敌人各查一次即可，结果缓冲两者独立、互不覆盖
+        private readonly List<Enemy> _enemyScratch = new();
+        private readonly List<Creature> _aliveBuffer = new();
+        private readonly List<Creature> _targetBuffer = new();
 
         public BattleQueryDispatcher(BattleContext battleContext_) => _battleContext = battleContext_;
 
@@ -30,12 +36,22 @@ namespace _DreamKeep.GameBattle
             for (int i = 0; i < cards.Count; i++) results_.Add(cards[i]);
         }
 
-        /// <summary>存活敌人列表：按槽位排序，顺序即瞄准下标（aimSlot）的语义。</summary>
-        public IReadOnlyList<Creature> GetAliveEnemies() => _battleContext.GetAliveCreatures();
+        /// <summary>存活敌人列表：按槽位排序，顺序即瞄准下标（aimSlot）的语义。返回内部复用缓冲，仅当前帧有效。</summary>
+        public IReadOnlyList<Creature> GetAliveEnemies()
+        {
+            _battleContext.GetAliveEnemies(_enemyScratch);
+            _aliveBuffer.Clear();
+            for (int i = 0; i < _enemyScratch.Count; i++) _aliveBuffer.Add(_enemyScratch[i].Creature);
+            return _aliveBuffer;
+        }
 
-        /// <summary>预览这张牌在指定瞄准下标下会命中的目标：与结算共用同一份落点解析。</summary>
+        /// <summary>预览这张牌在指定瞄准下标下会命中的目标：与结算共用同一份落点解析。返回内部复用缓冲，仅当前帧有效。</summary>
         public IReadOnlyList<Creature> PreviewTargets(CardModel card_, int aimSlot_)
-            => CardAffixResolver.PreviewTargets(_battleContext, card_, _battleContext.Player, aimSlot_);
+        {
+            _battleContext.GetAliveEnemies(_enemyScratch);
+            CardAffixResolver.PreviewTargets(card_, _battleContext.Player, aimSlot_, _enemyScratch, _targetBuffer);
+            return _targetBuffer;
+        }
 
         /// <summary>预览玩家打出的卡造成的伤害：来源内定玩家，未瞄准目标时传 null（只算来源侧修正）。</summary>
         public int PreviewCardDamage(Creature target_, int baseAmount_)

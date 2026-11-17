@@ -30,8 +30,7 @@ namespace _DreamKeep.RuntimeData
             return $"玩家获得 {amount} 点格挡";
         }
 
-        #region 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
+        // 深拷贝一份独立词条，数值容器连同已生效的修正一并带走
         public override CardAffix Clone() => new CA_Block(Name, ShowDescription, Amount.Clone());
-        #endregion
     }
 }

@@ -69,10 +69,9 @@ namespace _DreamKeep.GameBattle
 
             // 四种打不出的情形一律广播拒绝，让视图把牌从出牌区退回手牌原槽位：
             // 卡可能已在更早的队列里离手、能量不足、带「不能被打出」词条、昏眩下本回合已打满 1 张
-            if (!state.Hand.Contains(card_) || state.CurrentEnergy < card_.Cost.Value || card_.IsUnableToPlay
-                || IsDizzy(context) && state.CardsPlayedThisTurn >= 1)
+            if (TryGetRejectReason(context, card_, out ECardPlayRejectReason reason))
             {
-                await PlayEvent(new BE_CardPlayRejected(card_, ReasonOf(state, card_)));
+                await PlayEvent(new BE_CardPlayRejected(card_, reason));
                 return;
             }
 
@@ -90,13 +89,23 @@ namespace _DreamKeep.GameBattle
             await _owner.ActionSystem.PerformAllAsync();
         }
 
-        // 拒绝原因回填：调用前四种条件必居其一，故前三条都不中时只可能是昏眩限牌
-        private static ECardPlayRejectReason ReasonOf(PlayerCombatState state_, CardModel card_)
+        // 能否打出与为什么打不出同源：判定顺序即拒绝原因优先级，四种情形必居其一
+        private static bool TryGetRejectReason(BattleContext context_, CardModel card_,
+            out ECardPlayRejectReason reason_)
         {
-            if (!state_.Hand.Contains(card_)) return ECardPlayRejectReason.NotInHand;
-            if (state_.CurrentEnergy < card_.Cost.Value) return ECardPlayRejectReason.NotEnoughEnergy;
-            if (card_.IsUnableToPlay) return ECardPlayRejectReason.Unplayable;
-            return ECardPlayRejectReason.DizzyLimited;
+            PlayerCombatState state = context_.Player.CombatState;
+            if (!state.Hand.Contains(card_)) reason_ = ECardPlayRejectReason.NotInHand;
+            else if (state.CurrentEnergy < card_.Cost.Value) reason_ = ECardPlayRejectReason.NotEnoughEnergy;
+            else if (card_.IsUnableToPlay) reason_ = ECardPlayRejectReason.Unplayable;
+            else if (IsDizzy(context_) && state.CardsPlayedThisTurn >= 1)
+                reason_ = ECardPlayRejectReason.DizzyLimited;
+            else
+            {
+                reason_ = default;
+                return false;
+            }
+
+            return true;
         }
 
         // 宿主身上是否挂着昏眩：只在出牌校验时查一次，不缓存

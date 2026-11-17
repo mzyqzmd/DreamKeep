@@ -106,8 +106,7 @@ namespace _DreamKeep.RuntimeData
         }
         #endregion
 
-        #region 变更所在槽位，由移动动作调用
+        // 变更所在槽位，由移动动作调用
         public void SetSlot(int slot_) => Slot = slot_;
-        #endregion
     }
 }
