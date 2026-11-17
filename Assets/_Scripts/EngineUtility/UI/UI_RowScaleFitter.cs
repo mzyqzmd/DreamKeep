@@ -11,6 +11,8 @@ namespace _DreamKeep.EngineUtility
     [RequireComponent(typeof(HorizontalLayoutGroup))]
     public sealed class UI_RowScaleFitter : MonoBehaviour
     {
+        [SerializeField] private bool _fitPerFrame; //是否每帧强制刷新布局
+
         //基准间距：首次启用时取布局组当前值，之后按缩放比例写回
         private float _baseSpacing = -1f;
 
@@ -85,6 +87,9 @@ namespace _DreamKeep.EngineUtility
 
             _layout.spacing = _appliedSpacing;
             WriteChildren(scale);
+
+            if (!_fitPerFrame && count == _appliedCount && Mathf.Approximately(scale, _appliedScale)) return;
+
             LayoutRebuilder.MarkLayoutForRebuild(_rect);
         }
 

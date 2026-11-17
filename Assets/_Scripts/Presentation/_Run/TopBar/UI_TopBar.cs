@@ -94,7 +94,7 @@ namespace _DreamKeep.Presentation
         // 金币：首帧直接写初值，之后每次变更从当前显示值滚到新值（连续买卖时从中途续跑，不叠加、不倒退）
         private void RefreshGold()
         {
-            if (_goldText == null) return;
+            if (!_goldText) return;
             if (!_goldInitialized)
             {
                 _goldInitialized = true;

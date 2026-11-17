@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using VContainer;
 using _DreamKeep.ConfigData;
 using _DreamKeep.EngineUtility;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,6 +22,7 @@ namespace _DreamKeep.CommonPresentation
         [SerializeField] private RectTransform _ancientSubGroupTemplate;
         [Header("槽位与详情")] [SerializeField] private UI_RelicSlot _relicSlotPrefab;
         [SerializeField] private UI_RelicsInfoPanel _relicInfoPanel;
+
         [Header("返回")] [Tooltip("本页返回键：点击只上报返回意图")] [SerializeField]
         private Button _closeButton;
 
@@ -72,14 +72,10 @@ namespace _DreamKeep.CommonPresentation
                 if (!has) continue;
                 IReadOnlyList<SO_Relic> relics = pool.Relics;
                 for (int j = 0; j < relics.Count; j++)
-                    if (relics[j]) SpawnSlot(_groupContents[i], relics[j], j);
+                    if (relics[j])
+                        SpawnSlot(_groupContents[i], relics[j], j);
             }
 
-            RefreshAncients();
-        }
-
-        private void RefreshAncients()
-        {
             ReturnSubGroups();
             bool any = false;
             if (_ancients != null)
@@ -98,12 +94,13 @@ namespace _DreamKeep.CommonPresentation
                 if (!ancient || !ancient.RelicPool) continue;
                 RectTransform sub = _subGroupPool.Get(_ancientSubGroupTemplate);
                 sub.SetSiblingIndex(i + 1); // Title 占第 0 位，子组依次往后排
-                sub.Find("Title/Icon").GetComponent<Image>().sprite = ancient.AncientView.Portrait;
-                sub.Find("Title/Text (TMP)").GetComponent<TextMeshProUGUI>().text = ancient.AncientName;
-                RectTransform group = sub.Find("Group") as RectTransform;
+                // 头像、名号与格子容器由子组组件的序列化引用给出，不按层级路径查找
+                UI_AncientSubGroup subGroup = sub.GetComponent<UI_AncientSubGroup>();
+                subGroup.Bind(ancient);
                 IReadOnlyList<SO_Relic> relics = ancient.RelicPool.Relics;
                 for (int j = 0; j < relics.Count; j++)
-                    if (relics[j]) SpawnSlot(group, relics[j], j);
+                    if (relics[j])
+                        SpawnSlot(subGroup.Group, relics[j], j);
                 _shownSubGroups.Add(sub);
             }
         }

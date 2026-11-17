@@ -21,14 +21,14 @@ MonoBehaviour:
   _unknownStd: 1
   _unknownMin: 18
   _unknownMax: 24
-  _restMean: 7
+  _restMean: 8
   _restStd: 1
-  _restMin: 4
-  _restMax: 8
+  _restMin: 5
+  _restMax: 10
   _lowerRowLimit: 5
   _upperRestRowLimit: 5
-  _revealMonster: 15
-  _revealElite: 15
+  _revealMonster: 25
+  _revealElite: 5
   _revealShop: 5
   _revealTreasure: 5
   _revealEvent: 60

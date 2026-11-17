@@ -46,6 +46,8 @@ namespace _DreamKeep.EngineUtility
 
         public static void MarkRestoreIntent(int segmentKind_) => _restoreSegmentKind = segmentKind_;
 
+        /// <summary>彻底放弃本次读档：除清空段种类字段，连待复原快照 _pending 一并清空——
+        /// 调用之后 ApplyRestore 已无任何可复原内容，读档彻底作废。</summary>
         public static void ClearRestoreIntent()
         {
             _pending = null;

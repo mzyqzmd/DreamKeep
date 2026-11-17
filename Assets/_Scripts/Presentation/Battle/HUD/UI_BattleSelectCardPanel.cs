@@ -22,6 +22,7 @@ namespace _DreamKeep.Presentation
         [Header("分区")] [SerializeField] private GameObject _background;
         [SerializeField] private GameObject _selectSection;
         [SerializeField] private GameObject _upgradeSection;
+
         [Tooltip("提示文本：由请求的模式与档位生成，Exact 报确切张数、UpTo 报至多、Any 报任意")] [SerializeField]
         private TextMeshProUGUI _tipText;
 
@@ -51,7 +52,6 @@ namespace _DreamKeep.Presentation
         private bool _peeking;
         private bool _open;
         private bool _listenersAdded;
-        private Transform _peekHome;
         private int _peekHomeIndex;
 
         private RectTransform DisplayGroup => _mode == ECardSelectMode.Upgrade ? _unupgradeGroup : _selectedGroup;
@@ -227,24 +227,6 @@ namespace _DreamKeep.Presentation
             _upgradeSection.SetActive(!_peeking && _mode == ECardSelectMode.Upgrade);
             _confirmButton.gameObject.SetActive(!_peeking && ShouldConfirm);
             _handView.SetSelectMode(true, _peeking ? null : OnCardSelected);
-            if (_peeking)
-            {
-                // 全工程唯一的运行期提层例外：牌堆看板的全屏黑底会盖住返回用的 peek 按钮，故临时提到本画布末位；
-                // 其余层级一律静态，勿再新增运行期提层
-                _peekHome = _peekButton.transform.parent;
-                _peekHomeIndex = _peekButton.transform.GetSiblingIndex();
-                _peekButton.transform.SetParent(transform.parent, true);
-                _peekButton.transform.SetAsLastSibling();
-            }
-            else RestorePeekButton();
-        }
-
-        private void RestorePeekButton()
-        {
-            if (!_peekHome) return;
-            _peekButton.transform.SetParent(_peekHome, true);
-            _peekButton.transform.SetSiblingIndex(_peekHomeIndex);
-            _peekHome = null;
         }
 
         #endregion
@@ -253,7 +235,6 @@ namespace _DreamKeep.Presentation
 
         private void ResetPanel(bool returnCards_)
         {
-            RestorePeekButton();
             foreach (CardModel card in _selected)
             {
                 if (_displayOf.TryGetValue(card, out UI_CardInDeck display)) DisplayPool.Release(display);
