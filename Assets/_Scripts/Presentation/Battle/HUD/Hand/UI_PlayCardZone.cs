@@ -51,6 +51,7 @@ namespace _DreamKeep.Presentation
         {
             if (_queue.Contains(card_)) return;
             _queue.Add(card_);
+            card_.SettleMotion(); // 入场飞行先归位：队位补间从静止姿态起算，自动打出的牌也不会被半途打断
             card_.MoveToLayer(transform, 0);
             _arrivals[card_] = MoveToSlotAsync(card_, _queue.Count - 1, _moveDuration);
         }
