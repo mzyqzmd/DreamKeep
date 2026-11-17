@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace _DreamKeep.GameRun
 {
@@ -42,13 +43,27 @@ namespace _DreamKeep.GameRun
             if (!_handlers.TryGetValue(segmentEvent_.GetType(), out List<Func<TEvent, UniTask>> handlers)) return;
             if (handlers.Count == 1)
             {
-                await handlers[0](segmentEvent_);
+                await InvokeSafely(handlers[0], segmentEvent_);
                 return;
             }
 
             List<UniTask> waits = new(handlers.Count);
-            for (int i = 0; i < handlers.Count; i++) waits.Add(handlers[i](segmentEvent_));
+            for (int i = 0; i < handlers.Count; i++) waits.Add(InvokeSafely(handlers[i], segmentEvent_));
             await UniTask.WhenAll(waits);
+        }
+
+        // 单处理器边界：演出异常只记日志不上抛——一条动画报错不该终止段流程（与 BattleEventDispatcher 逐字同构）
+        private static async UniTask InvokeSafely(Func<TEvent, UniTask> handler_, TEvent segmentEvent_)
+        {
+            try
+            {
+                await handler_(segmentEvent_);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"段事件 {segmentEvent_.GetType().Name} 的处理器抛出异常，已隔离并继续后续结算");
+                Debug.LogException(exception);
+            }
         }
     }
 }

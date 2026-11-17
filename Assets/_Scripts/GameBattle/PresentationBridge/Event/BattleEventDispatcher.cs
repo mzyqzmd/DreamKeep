@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
 namespace _DreamKeep.GameBattle
 {
@@ -47,7 +48,7 @@ namespace _DreamKeep.GameBattle
             if (!_handlers.TryGetValue(battleEvent_.GetType(), out List<Func<IBattleEvent, UniTask>> handlers)) return;
             if (handlers.Count == 1)
             {
-                await handlers[0](battleEvent_);
+                await InvokeSafely(handlers[0], battleEvent_);
                 return;
             }
 
@@ -55,9 +56,24 @@ namespace _DreamKeep.GameBattle
             // 复用字段会被嵌套分派 Clear 掉外层尚未等待完的任务，故每次分派各自收集
             List<UniTask> waits = new(handlers.Count);
             for (int i = 0; i < handlers.Count; i++)
-                waits.Add(handlers[i](battleEvent_));
+                waits.Add(InvokeSafely(handlers[i], battleEvent_));
 
             await UniTask.WhenAll(waits);
+        }
+
+        // 单处理器边界：演出异常只记日志不上抛——一条动画报错不该终止域动作链（队列会留下半截动作、后续命令错序）。
+        // 取舍：域内反应方（遗物等）也注册在这同一出口，它们的异常同样被兜住，故日志带上事件类型，排查先搜这里
+        private static async UniTask InvokeSafely(Func<IBattleEvent, UniTask> handler_, IBattleEvent battleEvent_)
+        {
+            try
+            {
+                await handler_(battleEvent_);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"战斗事件 {battleEvent_.GetType().Name} 的处理器抛出异常，已隔离并继续后续结算");
+                Debug.LogException(exception);
+            }
         }
     }
 }
