@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb93021b20a6ee941bd42f15919b1476, type: 3}
+  m_Name: StableSerum
+  m_EditorClassIdentifier: 
+  _potionName: "\u7A33\u5B9A\u8840\u6E05"
+  _icon: {fileID: 21300000, guid: a153cb0813154f141afeb9be87ce5112, type: 3}
+  _rarity: 1
+  _liquidColor: {r: 0.63529414, g: 0.75294125, b: 0.5803922, a: 1}
+  _description: "\u4FDD\u7559\u4F60\u7684\u624B\u724C <color=#7BD37B>2</color> \u56DE\u5408\u3002"
+  _stableSerum: {fileID: 11400000, guid: 562f0fd078b11fa43bbf91b31760ef96, type: 2}
+  _layers: 2

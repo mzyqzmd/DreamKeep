@@ -30,11 +30,7 @@ namespace _DreamKeep.RuntimeData
 
         public void SetPhase(ESavePhase phase_) => _phase = phase_;
 
-        public void MarkOnMap()
-        {
-            _run.ClearPendingRewards(); // 领奖链结束：清内存待领清单，下一场不再误判为恢复
-            _phase = ESavePhase.OnMap;
-        }
+        public void MarkOnMap() => _phase = ESavePhase.OnMap;
 
         public void ClearPendingRewards() => _run.ClearPendingRewards();
 

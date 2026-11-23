@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be88162ed2f288c4090f2326189d889e, type: 3}
+  m_Name: FlexPotion
+  m_EditorClassIdentifier: 
+  _potionName: "\u808C\u8089\u836F\u6C34"
+  _icon: {fileID: 21300000, guid: 2923b6096cc56cd4da3830bbe553a0f0, type: 3}
+  _rarity: 0
+  _liquidColor: {r: 0.9921569, g: 0.87843144, b: 0.39607847, a: 1}
+  _description: "\u83B7\u5F97 <color=#7BD37B>5</color> \u70B9\u529B\u91CF\u3002<br>\u5728\u4F60\u7684\u8FD9\u4E2A\u56DE\u5408\u7ED3\u675F\u65F6\uFF0C\u5931\u53BB
+    <color=#7BD37B>5</color> \u70B9\u529B\u91CF\u3002"
+  _muscle: {fileID: 11400000, guid: cf88eb0bab87f7845a4b5b46ed6e6f95, type: 2}
+  _layers: 5

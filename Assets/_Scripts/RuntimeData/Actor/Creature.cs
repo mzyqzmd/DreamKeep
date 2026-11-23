@@ -119,11 +119,13 @@ namespace _DreamKeep.RuntimeData
             {
                 if (_perks[i].GetType() != perk_.GetType()) continue;
                 _perks[i].AddLayers(perk_.Layers);
+                _perks[i].OnMounted(this);
                 return _perks[i];
             }
 
             BattlePerk mounted = perk_.Clone();
             _perks.Add(mounted);
+            mounted.OnMounted(this);
             return mounted;
         }
 
@@ -135,6 +137,7 @@ namespace _DreamKeep.RuntimeData
                 if (_perks[i].GetType() != perk_.GetType()) continue;
                 BattlePerk removed = _perks[i];
                 _perks.RemoveAt(i);
+                removed.OnUnmounted(this);
                 return removed;
             }
 
@@ -159,6 +162,8 @@ namespace _DreamKeep.RuntimeData
                 _perks.RemoveAt(i);
             }
 
+            // 卸载会反向增删真实属性状态，必须在全部摘除完成后统一调用，避免遍历中改表
+            for (int i = 0; i < removed.Count; i++) removed[i].OnUnmounted(this);
             return removed;
         }
 

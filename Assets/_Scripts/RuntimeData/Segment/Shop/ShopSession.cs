@@ -21,6 +21,7 @@ namespace _DreamKeep.RuntimeData
 
         private readonly RunState _run;
         private readonly SO_ShopPrices _prices;
+        private readonly float _priceMultiplier;
 
         private readonly List<CardModel> _commonRareCards = new();
         private readonly List<CardModel> _superRareCards = new();
@@ -53,14 +54,15 @@ namespace _DreamKeep.RuntimeData
         public bool RemovalUsed => _removalUsed;
 
         /// <summary>删牌服务当前价：随整局已用次数递增，下次进店更贵。</summary>
-        public int RemovalPrice => _prices.RemovalPrice(_run.CardRemovalsUsed);
+        public int RemovalPrice => ApplyPriceMultiplier(_prices.RemovalPrice(_run.CardRemovalsUsed));
 
         public ShopSession(RunState run_, SO_ShopPrices prices_, SO_CardPool normalCards_, SO_CardPool rareCards_,
             SO_CardPool superRareCards_, SO_RelicPool commonRelics_, SO_RelicPool rareRelics_,
-            SO_RelicPool shopRelics_, SO_PotionPool commonPotions_, SO_PotionPool rarePotions_)
+            SO_RelicPool shopRelics_, SO_PotionPool commonPotions_, SO_PotionPool rarePotions_, float priceMultiplier_ = 1f)
         {
             _run = run_;
             _prices = prices_;
+            _priceMultiplier = priceMultiplier_;
             Rng rng = run_.Rng;
 
             RollCards(_commonRareCards, rng, CommonRareSlotCount, normalCards_, rareCards_);
@@ -96,20 +98,20 @@ namespace _DreamKeep.RuntimeData
             return _superRareCards.IndexOf(card_) == _superRareSaleIndex;
         }
 
-        /// <summary>该遗物的进店浮动价；不在货架上时抛错。</summary>
+        /// <summary>该遗物的实付价（含整局折扣）；不在货架上时抛错。</summary>
         public int PriceOfRelic(SO_Relic relic_)
         {
             int index = _relics.IndexOf(relic_);
             if (index < 0) throw new InvalidOperationException($"[{nameof(ShopSession)}] 请求报价的遗物不在货架上");
-            return _relicPrices[index];
+            return ApplyPriceMultiplier(_relicPrices[index]);
         }
 
-        /// <summary>该药水的进店浮动价；不在货架上时抛错。</summary>
+        /// <summary>该药水的实付价（含整局折扣）；不在货架上时抛错。</summary>
         public int PriceOfPotion(SO_Potion potion_)
         {
             int index = _potions.IndexOf(potion_);
             if (index < 0) throw new InvalidOperationException($"[{nameof(ShopSession)}] 请求报价的药水不在货架上");
-            return _potionPrices[index];
+            return ApplyPriceMultiplier(_potionPrices[index]);
         }
 
         #endregion
@@ -178,7 +180,7 @@ namespace _DreamKeep.RuntimeData
         }
 
         // 价格快照：卡货架按半价下标折成实付价，售出格记 0
-        private static List<int> PriceSnapshot<T>(List<T> shelf_, List<int> prices_, int saleIndex_ = -1) where T : class
+        private List<int> PriceSnapshot<T>(List<T> shelf_, List<int> prices_, int saleIndex_ = -1) where T : class
         {
             List<int> snapshot = new(shelf_.Count);
             for (int i = 0; i < shelf_.Count; i++)
@@ -232,8 +234,11 @@ namespace _DreamKeep.RuntimeData
             for (int i = 0; i < items_.Count; i++) into_.Add(priceOf_(items_[i]));
         }
 
-        // 售价：半价卡取原价一半（整除）
-        private static int SalePrice(int price_, bool onSale_) => onSale_ ? price_ / 2 : price_;
+        // 售价：半价卡先取原价一半（整除），再乘整局折扣系数；结算报价与快照共用这一处换算
+        private int SalePrice(int price_, bool onSale_) => ApplyPriceMultiplier(onSale_ ? price_ / 2 : price_);
+
+        // 折扣系数向下取整到 1，避免极低系数把商品打成免费
+        private int ApplyPriceMultiplier(int price_) => Math.Max(1, (int)Math.Floor(price_ * _priceMultiplier));
 
         // 卡：多池合并按权重去重后不放回抽取，不足按实数出；canonical 原型先烘焙，卖出时才克隆成局内卡
         private void RollCards(List<CardModel> into_, Rng rng_, int count_, SO_CardPool first_, SO_CardPool second_ = null)

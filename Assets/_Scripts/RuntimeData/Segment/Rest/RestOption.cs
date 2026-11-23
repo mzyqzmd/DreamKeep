@@ -17,6 +17,9 @@ namespace _DreamKeep.RuntimeData
         /// <summary>回复选项：按比例换算出的绝对回血量；其余选项为 null。</summary>
         public int? HealAmount { get; }
 
+        /// <summary>回复选项：遗物带来的额外回血量（0 表示无加成）；其余选项为 null。</summary>
+        public int? HealBonus { get; }
+
         /// <summary>烹饪选项：要删除的牌数；其余选项为 null。</summary>
         public int? RemoveCards { get; }
 
@@ -24,7 +27,8 @@ namespace _DreamKeep.RuntimeData
         public int? HpGain { get; }
 
         public RestOption(string title_, string description_, Sprite icon_, bool enabled_,
-            float? healRatio_ = null, int? healAmount_ = null, int? removeCards_ = null, int? hpGain_ = null)
+            float? healRatio_ = null, int? healAmount_ = null, int? removeCards_ = null, int? hpGain_ = null,
+            int? healBonus_ = null)
         {
             Title = title_;
             Description = description_;
@@ -32,6 +36,7 @@ namespace _DreamKeep.RuntimeData
             Enabled = enabled_;
             HealRatio = healRatio_;
             HealAmount = healAmount_;
+            HealBonus = healBonus_;
             RemoveCards = removeCards_;
             HpGain = hpGain_;
         }

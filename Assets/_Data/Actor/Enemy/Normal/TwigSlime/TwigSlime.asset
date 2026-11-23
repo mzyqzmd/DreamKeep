@@ -17,8 +17,8 @@ MonoBehaviour:
   _viewPrefab: {fileID: 2171826752692776713, guid: 02f315ce282fada4c9a707f8bbeadc08, type: 3}
   _skinName: default
   _enemyIntents:
-  - rid: 8162841580618121217
-  - rid: 8162841580618121216
+  - rid: 6594184073303031817
+  - rid: 6594184073303031816
   _frontSlotIntent:
     rid: 8162841560953389058
   _startPerks:
@@ -28,6 +28,23 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: 6594184073303031816
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594184073303031817
+      type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _intent1:
+          rid: 6594184073303031820
+        _intent2:
+          rid: 6594184073303031821
+    - rid: 6594184073303031820
+      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data: 
+    - rid: 6594184073303031821
+      type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _amount: 5
     - rid: 8162841560953389058
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
@@ -38,13 +55,6 @@ MonoBehaviour:
     - rid: 8162841560953389062
       type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data: 
-    - rid: 8162841580618121216
-      type: {class: MoveIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data: 
-    - rid: 8162841580618121217
-      type: {class: BlockIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _amount: 5
     - rid: 8162841984668532746
       type: {class: MixedIntentData, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:

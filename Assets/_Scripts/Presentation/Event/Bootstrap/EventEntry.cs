@@ -20,6 +20,7 @@ namespace _DreamKeep.Presentation
         private readonly UI_CardUpgradePanel _upgradePanel;
         private readonly UI_RewardPanel _rewardPanel;
         private readonly SegmentSceneManager _segmentManager;
+        private bool _eventCompleted;
 
         public EventEntry(EventLoop loop_, EventEventDispatcher events_, EventCommandDispatcher commands_,
             RunCommandDispatcher runCommands_, RunState run_, UI_CardRemovePanel removePanel_,
@@ -38,7 +39,15 @@ namespace _DreamKeep.Presentation
 
         public void Start()
         {
-            _events.Register<EE_EventCompleted>(completed_ => _segmentManager.CompleteSegment());
+            _events.Register<EE_EventCompleted>(completed_ =>
+            {
+                if (_eventCompleted) _segmentManager.OpenMap();
+                else
+                {
+                    _eventCompleted = true;
+                    _segmentManager.CompleteSegment();
+                }
+            });
             _events.Register<EE_RemoveCardsRequested>(requested_ =>
                 SubmitSelectionAsync(_removePanel, requested_.Count, requested_.Result));
             _events.Register<EE_UpgradeCardsRequested>(requested_ =>
@@ -52,7 +61,6 @@ namespace _DreamKeep.Presentation
             _runCommands.BeginRewardClaim(offered_.Rewards);
             _rewardPanel.Show(offered_.Title, offered_.Rewards, () =>
             {
-                _runCommands.EndRewardClaim();
                 _rewardPanel.Close();
                 _commands.AcknowledgeReward();
             });

@@ -6,7 +6,7 @@ namespace _DreamKeep.ConfigData
     [CreateAssetMenu(fileName = "Shrink", menuName = "DreamKeep/Data/Perk/缩小")]
     public sealed class SO_Shrink : SO_Perk
     {
-        [SerializeField] private float _ratio = 0.3f;
+        [SerializeField] private float _ratio = 0.35f;
 
         public float Ratio => _ratio;
 

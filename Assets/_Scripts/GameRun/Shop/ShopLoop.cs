@@ -14,13 +14,16 @@ namespace _DreamKeep.GameRun
         private readonly RunState _run;
         private readonly ShopEventDispatcher _events;
         private readonly RelicTriggerNotifier _notifier;
+        private readonly RunRelicQueries _relicQueries;
 
-        public ShopLoop(ShopSession session_, RunState run_, ShopEventDispatcher events_, RelicTriggerNotifier notifier_)
+        public ShopLoop(ShopSession session_, RunState run_, ShopEventDispatcher events_, RelicTriggerNotifier notifier_,
+            RunRelicQueries relicQueries_)
         {
             _session = session_;
             _run = run_;
             _events = events_;
             _notifier = notifier_;
+            _relicQueries = relicQueries_;
         }
 
         public void Start() => _events.PlayAsync(new SE_ShelfUpdated(_session.BuildSnapshot(), true)).Forget();
@@ -28,6 +31,7 @@ namespace _DreamKeep.GameRun
         public void OpenShop()
         {
             _run.CompleteMapNode(); // 首次掀开摊子即通过（幂等），不等玩家点「继续」
+            _run.RestorePlayerHp(_relicQueries.ShopEntryHeal()); // 餐券进店回血，小于 0 忽略、超出上限钳制
             _events.PlayAsync(new SE_ShopOpened()).Forget();
         }
 

@@ -9,7 +9,7 @@ namespace _DreamKeep.RuntimeData
 
         public BP_Regen(SO_Regen data_) : base(data_) { }
 
-        public override string GetDescription() => $"回合结束恢复 {Layers} 点\n生命值，随后层数-1";
+        public override string GetDescription() => $"回合结束恢复 {Layers} 点\n生命值，随后层数 - 1";
         public override BattlePerk Clone() => WithLayers(new BP_Regen(Config));
     }
 }

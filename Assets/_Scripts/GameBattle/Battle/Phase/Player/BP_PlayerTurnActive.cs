@@ -75,18 +75,47 @@ namespace _DreamKeep.GameBattle
                 return;
             }
 
-            List<Creature> self = new List<Creature> { context.Player.Creature };
+            Creature playerCreature = context.Player.Creature;
+            List<Creature> self = new List<Creature> { playerCreature };
 
             // 入打出堆动作产出出牌事件，必须早于结算动作，否则播放队列会先播死亡再播攻击
-            _owner.ActionSystem.Enqueue(new BA_ToPlayPile(context.Player.Creature, self, card_));
-            _owner.ActionSystem.Enqueue(new BA_SpendEnergy(context.Player.Creature, self, card_.Cost.Value));
+            _owner.ActionSystem.Enqueue(new BA_ToPlayPile(playerCreature, self, card_));
+            _owner.ActionSystem.Enqueue(new BA_SpendEnergy(playerCreature, self, card_.Cost.Value));
+
+            // 超巨化与复制都在建队时查一次、按命中入队消费，不在动作里反复判定：
+            // 倍率经 StatHook 在伤害求值时生效，消费动作排在本次词条结算之后，预览与实扣同口径
             foreach (BattleAction action in CardAffixResolver.Build(context, card_, context.Player, aimSlot_, false))
                 _owner.ActionSystem.Enqueue(action);
+            ConsumePlayOncePerks(context, card_, playerCreature, self, aimSlot_);
+
             // 消耗与遗忘已在队列内让卡离场，弃置动作取不到卡会自动跳过
-            _owner.ActionSystem.Enqueue(new BA_DiscardSingle(context.Player.Creature, self, card_, state.PlayPile));
+            _owner.ActionSystem.Enqueue(new BA_DiscardSingle(playerCreature, self, card_, state.PlayPile));
             // 链尾才广播出牌：本张牌的词条已按旧层数结算，卡面预览与实扣一致
-            _owner.ActionSystem.Enqueue(new BA_TickCardPlayed(context.Player.Creature));
+            _owner.ActionSystem.Enqueue(new BA_TickCardPlayed(playerCreature));
             await _owner.ActionSystem.PerformAllAsync();
+        }
+
+        // 一次性出牌状态：超巨化仅攻击牌命中，复制让本次词条再结算一遍且不重复扣能量与入堆
+        private void ConsumePlayOncePerks(BattleContext context_, CardModel card_, Creature playerCreature_,
+            List<Creature> self_, int aimSlot_)
+        {
+            BattlePerk gigantification = BattlePerkQuery.Find<BP_Gigantification>(playerCreature_);
+            if (gigantification != null && HasDamageAffix(card_))
+                _owner.ActionSystem.Enqueue(new BA_ConsumePerk(playerCreature_, self_, gigantification));
+
+            BattlePerk duplication = BattlePerkQuery.Find<BP_Duplication>(playerCreature_);
+            if (duplication == null) return;
+
+            foreach (BattleAction action in CardAffixResolver.Build(context_, card_, context_.Player, aimSlot_, false))
+                _owner.ActionSystem.Enqueue(action);
+            _owner.ActionSystem.Enqueue(new BA_ConsumePerk(playerCreature_, self_, duplication));
+        }
+
+        private static bool HasDamageAffix(CardModel card_)
+        {
+            foreach (CardAffix affix in card_.ActiveAffixes)
+                if (affix is CA_Damage) return true;
+            return false;
         }
 
         // 能否打出与为什么打不出同源：判定顺序即拒绝原因优先级，四种情形必居其一

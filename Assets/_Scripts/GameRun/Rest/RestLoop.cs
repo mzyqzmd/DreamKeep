@@ -17,11 +17,13 @@ namespace _DreamKeep.GameRun
         private readonly SO_RelicPool _rarePool;
         private readonly RelicTriggerNotifier _notifier;
         private readonly RestEventDispatcher _events;
+        private readonly RunRelicQueries _relicQueries;
         private UniTaskCompletionSource<int> _choice = new();
         private UniTaskCompletionSource _proceed = new();
 
         public RestLoop(RunState run_, List<SO_RestOption> restOptions_, SO_RelicPool commonPool_,
-            SO_RelicPool rarePool_, RelicTriggerNotifier notifier_, RestEventDispatcher events_)
+            SO_RelicPool rarePool_, RelicTriggerNotifier notifier_, RestEventDispatcher events_,
+            RunRelicQueries relicQueries_)
         {
             _run = run_;
             _restOptions = restOptions_;
@@ -29,9 +31,15 @@ namespace _DreamKeep.GameRun
             _rarePool = rarePool_;
             _notifier = notifier_;
             _events = events_;
+            _relicQueries = relicQueries_;
         }
 
-        public void Start() => RunAsync().Forget();
+        // 到达休息处即标记古茶具的下场首回合能量（与选哪个选项无关），随后进入选项循环
+        public void Start()
+        {
+            _relicQueries.MarkNextBattleEnergy();
+            RunAsync().Forget();
+        }
 
         public void Choose(int index_) => _choice.TrySetResult(index_);
 
@@ -51,7 +59,9 @@ namespace _DreamKeep.GameRun
 
                 if (chosen is SO_HealRestOption heal)
                 {
-                    _run.RestorePlayerHp(HealAmount(_run.Player.Creature.MaxHp, heal.HealMaxHpRatio));
+                    // 基础回血与遗物加成同一处合计，和 BuildOptions 文案共用两份数值溯源
+                    _run.RestorePlayerHp(HealAmount(_run.Player.Creature.MaxHp, heal.HealMaxHpRatio)
+                        + _relicQueries.RestHealBonus());
                     await _events.PlayAsync(new REE_RestSmokeRequested());
                     _run.CompleteMapNode();
                     break;
@@ -117,6 +127,7 @@ namespace _DreamKeep.GameRun
                 bool enabled;
                 float? healRatio = null;
                 int? healAmount = null;
+                int? healBonus = null;
                 int? removeCards = null;
                 int? hpGain = null;
                 if (option is SO_HealRestOption heal)
@@ -124,6 +135,7 @@ namespace _DreamKeep.GameRun
                     enabled = true;
                     healRatio = heal.HealMaxHpRatio;
                     healAmount = HealAmount(_run.Player.Creature.MaxHp, heal.HealMaxHpRatio);
+                    healBonus = _relicQueries.RestHealBonus();
                 }
                 else if (option is SO_ForgeRestOption)
                 {
@@ -141,7 +153,7 @@ namespace _DreamKeep.GameRun
                 }
 
                 opts.Add(new RestOption(option.OptionName, option.IsStaticDescription ? option.Description : null,
-                    option.Icon, enabled, healRatio, healAmount, removeCards, hpGain));
+                    option.Icon, enabled, healRatio, healAmount, removeCards, hpGain, healBonus));
                 configs.Add(option);
             }
 

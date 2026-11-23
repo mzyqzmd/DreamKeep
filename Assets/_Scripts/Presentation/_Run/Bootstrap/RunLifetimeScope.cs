@@ -87,6 +87,8 @@ namespace _DreamKeep.Presentation
             // 整局命令入口：常驻界面上报计时、战斗外药水与领奖意图，写域在域侧执行（见 RunCommandDispatcher）
             RewardClaimService rewards = new(run);
             builder_.RegisterInstance(rewards);
+            // 跨段遗物查询：休息回血/进店回血/商店折扣/下场战斗能量四处判定收在此处，段循环只问能力值
+            builder_.RegisterInstance(new RunRelicQueries(run));
             builder_.RegisterInstance(new RunCommandDispatcher(run, rewards));
             // 遗物播报器：整局一个，跨段存活——战斗遗物效果与休息处挖掘领遗物共用同一涟漪通道（见 UI_RelicsGroup）
             builder_.RegisterInstance(new RelicTriggerNotifier());

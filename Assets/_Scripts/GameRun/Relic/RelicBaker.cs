@@ -79,11 +79,17 @@ namespace _DreamKeep.GameRun
                 SO_UnceasingTop data => new RE_UnceasingTop(data, context_, actions_, dispatcher_, notifier_),
                 SO_MeatOnTheBone data => new RE_MeatOnTheBone(data, context_, actions_, dispatcher_, notifier_),
 
+                // 非战斗节点触发：标记在休息段写入 Player.RelicsCounter，首回合战斗侧消费
+                SO_VenerableTeaSet data => new RE_VenerableTeaSet(data, context_, actions_, dispatcher_, notifier_),
+
                 // 纯局外效果：无战斗内行为（挖掘/烹饪资格由 RestEntry 判定，拾起时效果由先古段结算），显式登记 null 豁免
                 // 头环：兜底占位，既无战斗效果也无拾起效果
                 SO_Circlet => null,
                 SO_Shovel => null,
                 SO_MeatCleaver => null,
+                SO_RegalPillow => null,
+                SO_MealTicket => null,
+                SO_MembershipCard => null,
                 SO_GoldenPearl => null,
                 SO_NutritiousOyster => null,
                 SO_Pomander => null,

@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _icon: {fileID: 21300000, guid: 5e96f0fc348204541a7176f5fa5c4cbd, type: 3}
   _polarity: 1
-  _ratio: 0.3
+  _ratio: 0.35

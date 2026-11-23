@@ -82,6 +82,51 @@ namespace _DreamKeep.GameBattle
                     actions.Add(new BA_GainEnergy(source, targets_, cure.Energy));
                     for (int i = 0; i < cure.Cards; i++) actions.Add(new BA_DrawCard(source, targets_));
                     break;
+                case SO_BlessingOfTheForge _:
+                    actions.Add(new BA_UpgradeHand(source, targets_));
+                    break;
+                case SO_MazalethsGift gift:
+                    AddPerk(actions, source, targets_, gift.Ritual, gift.Layers);
+                    break;
+                case SO_RadiantTincture tincture:
+                    actions.Add(new BA_GainEnergy(source, targets_, tincture.Energy));
+                    AddPerk(actions, source, targets_, tincture.Radiance, tincture.Layers);
+                    break;
+                case SO_LiquidBronze bronze:
+                    AddPerk(actions, source, targets_, bronze.Thorns, bronze.Layers);
+                    break;
+                case SO_FlexPotion flex:
+                    AddPerk(actions, source, targets_, flex.Muscle, flex.Layers);
+                    break;
+                case SO_SpeedPotion speed:
+                    AddPerk(actions, source, targets_, speed.Speed, speed.Layers);
+                    break;
+                case SO_ShacklingPotion shackling:
+                    AddPerk(actions, source, targets_, shackling.Shackling, -shackling.Amount);
+                    break;
+                case SO_HeartOfIron heart:
+                    AddPerk(actions, source, targets_, heart.Plating, heart.Layers);
+                    break;
+                case SO_LuckyTonic tonic:
+                    AddPerk(actions, source, targets_, tonic.Buffer, tonic.Layers);
+                    break;
+                case SO_ShipInABottle ship:
+                    actions.Add(new BA_Block(null, targets_, ship.Block));
+                    AddPerk(actions, source, targets_, ship.BlockNextTurn, ship.Block);
+                    break;
+                case SO_ClarityPotion clarity:
+                    for (int i = 0; i < clarity.Cards; i++) actions.Add(new BA_DrawCard(source, targets_));
+                    AddPerk(actions, source, targets_, clarity.Clarity, clarity.Layers);
+                    break;
+                case SO_StableSerumPotion serum:
+                    AddPerk(actions, source, targets_, serum.StableSerum, serum.Layers);
+                    break;
+                case SO_GigantificationPotion gigantification:
+                    AddPerk(actions, source, targets_, gigantification.Gigantification, 1);
+                    break;
+                case SO_DuplicatorPotion duplicator:
+                    AddPerk(actions, source, targets_, duplicator.Duplication, 1);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(potion_),
                         $"{potion_.GetType().Name} 未登记：漏登记会让该药水静默失效");

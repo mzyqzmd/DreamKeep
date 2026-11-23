@@ -66,10 +66,11 @@ namespace _DreamKeep.Presentation
             if (!_merchantSpeechLines) throw new InvalidOperationException($"[{nameof(ShopLifetimeScope)}] 商人台词表未接线");
 
             RunState run = Parent.Container.Resolve<RunState>();
+            RunRelicQueries relicQueries = Parent.Container.Resolve<RunRelicQueries>();
             ShopSession session = new ShopSession(run, _prices, _normalCards, _rareCards, _superRareCards,
-                _commonRelics, _rareRelics, _shopRelics, _commonPotions, _rarePotions);
+                _commonRelics, _rareRelics, _shopRelics, _commonPotions, _rarePotions, relicQueries.ShopPriceMultiplier());
             ShopEventDispatcher events = new ShopEventDispatcher();
-            ShopLoop loop = new ShopLoop(session, run, events, Parent.Container.Resolve<RelicTriggerNotifier>());
+            ShopLoop loop = new ShopLoop(session, run, events, Parent.Container.Resolve<RelicTriggerNotifier>(), relicQueries);
 
             builder_.RegisterInstance(run);
             builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器

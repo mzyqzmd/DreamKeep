@@ -61,6 +61,7 @@ namespace _DreamKeep.GameBattle
                 BP_Slow slow => slow.GetModifier(channel_, host_, source_, target_),
                 BP_Cruelty cruelty => cruelty.GetModifier(channel_, host_, source_, target_),
                 BP_Colossus colossus => colossus.GetModifier(channel_, host_, source_, target_),
+                BP_Gigantification gigantification => gigantification.GetModifier(channel_, host_, source_, target_),
                 // 滑溜是防护类上限，不走攻击修正通道：由 SlipperyHook.Clamp 对预览与结算统一钳制
                 _ => StatModifier.Neutral
             };

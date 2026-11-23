@@ -62,6 +62,7 @@ namespace _DreamKeep.Presentation
         private AudioRoot _audio;
         private bool _switching; // 段装卸中：卸旧段 + 装新段
         private RunProgressService _progress;
+        private RunCommandDispatcher _commands;
         private Action _returnToMainMenu; // 回主菜单请求出口：常驻主菜单编排者经 BindReturnHandler 注入
         private Action _showSetting; // App 层设置面板开合：住 Scene_MainMenu，跨场景引用不可序列化
         private Action _showEncyclopedia; // App 层百科大全开合，同上
@@ -69,7 +70,7 @@ namespace _DreamKeep.Presentation
 
         [Inject]
         public void Construct(BattleSession session_, BattleStage stage_, RunState run_, RunProgressService progress_,
-            PopPanelFactory popFactory_, AudioRoot audioRoot_)
+            PopPanelFactory popFactory_, AudioRoot audioRoot_, RunCommandDispatcher commands_)
         {
             _session = session_;
             _stage = stage_;
@@ -77,6 +78,7 @@ namespace _DreamKeep.Presentation
             _progress = progress_;
             _popFactory = popFactory_;
             _audio = audioRoot_;
+            _commands = commands_;
             _loader = new SegmentSceneLoader(_runScope); // 相机由 BindCamera 运行时注入，构造期不持有
             if (_mapView) _mapView.NodeClicked += OnMapNodeClicked;
             // 暂停面板常常预摆失活：接线挂在本类（随整局容器装配必跑），不依赖面板自身 Awake
@@ -168,6 +170,7 @@ namespace _DreamKeep.Presentation
         {
             if (_switching) return; // 换段期间忽略二次点击：不能让域推进了而段没切
             if (_audio) _audio.Play(_audio.Cues.UiClick);
+            _commands.EndRewardClaim(); // 选点即领奖终点：先清待领清单，再让 EnterNode 落选点检查点
             StartSegmentAsync(_progress.EnterNode(node_)).Forget();
         }
 

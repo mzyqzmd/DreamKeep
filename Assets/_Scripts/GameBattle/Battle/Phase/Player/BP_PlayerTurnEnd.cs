@@ -36,10 +36,12 @@ namespace _DreamKeep.GameBattle
             // 倒序收集＝保持既有弃牌顺序（手牌末位那张先入堆）；筛选跑在任何动作执行之前，手牌不会被边遍历边改动
             CardPile hand = player.CombatState.Hand;
             List<CardModel> discardBatch = new();
+            // 稳定血清：层数在回合开始时递减，回合末读到的是递减前的值，整手跳过弃置
+            bool keepHand = BattlePerkQuery.Has<BP_StableSerum>(player.Creature);
             for (int i = hand.Count - 1; i >= 0; i--)
             {
                 CardModel card = hand.Cards[i];
-                if (card.IsRetain) continue;
+                if (keepHand || card.IsRetain) continue;
                 discardBatch.Add(card);
             }
             if (discardBatch.Count > 0) actions.Enqueue(new BA_DiscardBatch(player.Creature, self, discardBatch, hand));

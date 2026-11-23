@@ -50,7 +50,11 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _items.Count; i++)
                 if (_items[i] is UI_EventOptionItem option) option.SetEnabled(false);
 
-            if (_withProceed && index_ == _optionCount) _commands.Proceed();
+            if (_withProceed && index_ == _optionCount)
+            {
+                _commands.Proceed();
+                Unlock(); // 结果页继续会反复点：命令同步跑完后立即放开本组，普通选项仍保持整列锁
+            }
             else _commands.Choose(index_);
         }
 

@@ -33,7 +33,8 @@ namespace _DreamKeep.Presentation
 
             RestEventDispatcher events = new RestEventDispatcher();
             RestLoop loop = new RestLoop(run, _restOptions, _commonPool, _rarePool,
-                Parent.Container.Resolve<RelicTriggerNotifier>(), events);
+                Parent.Container.Resolve<RelicTriggerNotifier>(), events,
+                Parent.Container.Resolve<RunRelicQueries>());
 
             builder_.RegisterInstance(run);
             builder_.RegisterInstance(events); // 供视图 [Inject] 注册事实处理器

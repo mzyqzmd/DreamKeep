@@ -3,16 +3,17 @@ using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.GameBattle
 {
-    /// <summary>滑溜防护入口：Clamp 只读钳制单次失去生命上限（预览与结算共用），Consume 在真实掉血后扣一层；
-    /// 与攻击类修正（力量/易伤/虚弱）分家，投掷与遗物伤害不吃攻击修正但照样吃这层防护。</summary>
+    /// <summary>失去生命值统一钳口：Clamp 把单次失去生命钳进 [0, 上限]（有滑溜时上限 1），预览与结算共用；
+    /// Consume 在真实掉血后扣一层。与攻击类修正（力量/易伤/虚弱）分家，投掷与遗物伤害不吃攻击修正但照样吃这层防护。</summary>
     internal static class SlipperyHook
     {
-        #region 只读钳制：单次失去生命的上限 1 点
+        #region 只读钳制：下限 0，有滑溜时上限 1 点
 
-        /// <summary>目标仍有滑溜层数时把本次失去生命钳到 1 点；无目标、无状态或耗尽层数时原值返回。</summary>
+        /// <summary>下限钳到 0（负力量不产生负伤害）；目标仍有滑溜层数时钳到 1；无目标、无状态或耗尽层数时原值返回。</summary>
         internal static int Clamp(Creature target_, int amount_)
         {
-            if (target_ == null || amount_ <= 1) return amount_;
+            if (amount_ <= 0) return 0;
+            if (target_ == null || amount_ == 1) return amount_;
             IReadOnlyList<BattlePerk> perks = target_.Perks;
             for (int i = 0; i < perks.Count; i++)
                 if (perks[i] is BP_Slippery slippery && slippery.Layers > 0) return 1;

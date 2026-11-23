@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca7451e6b59dcf743a743da9f4d23e3d, type: 3}
+  m_Name: VenerableTeaSet
+  m_EditorClassIdentifier: 
+  _relicName: "\u53E4\u8336\u5177\u5957\u88C5"
+  _icon: {fileID: 21300000, guid: 9e7246e116505904f8057ce54dc10825, type: 3}
+  _rarity: 1
+  _description: "\u5728\u4F11\u606F\u5904\u4F11\u606F\u540E\uFF0C\u4E0B\u4E00\u573A\u6218\u6597<br>\u9996\u56DE\u5408\u989D\u5916\u83B7\u5F97
+    <color=green>2</color> \u70B9\u80FD\u91CF\u3002"
+  _pickupHpCost: 0
+  _energy: 2

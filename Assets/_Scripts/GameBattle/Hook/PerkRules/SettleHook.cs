@@ -51,6 +51,33 @@ namespace _DreamKeep.GameBattle
                     case BP_Inferno inferno:
                         actions_.Add(new BA_LoseHealth(host_, new List<Creature> { host_ }, inferno.HpCost));
                         break;
+                    // 仪式：与恶魔形态同口径，层数即每回合开始获得的力量，常驻不递减
+                    case BP_Ritual ritual:
+                        if (ritual.Layers <= 0 || ritual.Strength == null) break;
+                        BattlePerk ritualStrength = PerkBaker.Bake(ritual.Strength);
+                        ritualStrength.AddLayers(ritual.Layers);
+                        actions_.Add(new BA_ApplyPerk(host_, new List<Creature> { host_ }, ritualStrength));
+                        break;
+                    // 光辉：剩余回合数即层数，每回合开始额外获得 1 能量
+                    case BP_Radiance radiance:
+                        if (radiance.Layers > 0)
+                            actions_.Add(new BA_GainEnergy(null, new List<Creature> { host_ }, 1));
+                        break;
+                    // 覆甲：回合开始获得等同层数的格挡，随后由基类递减一层
+                    case BP_Plating plating:
+                        if (plating.Layers > 0)
+                            actions_.Add(new BA_Block(null, new List<Creature> { host_ }, plating.Layers));
+                        break;
+                    // 下回合格挡：触发后整条移除，层数即格挡值
+                    case BP_BlockNextTurn blockNextTurn:
+                        if (blockNextTurn.Layers > 0)
+                            actions_.Add(new BA_Block(null, new List<Creature> { host_ }, blockNextTurn.Layers));
+                        break;
+                    // 明晰：剩余回合数即层数，每回合开始额外抽 1 张
+                    case BP_ClarityPerk clarity:
+                        if (clarity.Layers > 0)
+                            actions_.Add(new BA_DrawCard(host_, new List<Creature> { host_ }));
+                        break;
                 }
             }
         }

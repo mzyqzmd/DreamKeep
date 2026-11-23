@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fc8ad11e36018f449d1f00ea39f27da, type: 3}
+  m_Name: RadiantTincture
+  m_EditorClassIdentifier: 
+  _potionName: "\u660E\u8000\u914A\u5242"
+  _icon: {fileID: 21300000, guid: 2623ba657c4d505408a1e7b6bf81ae54, type: 3}
+  _rarity: 1
+  _liquidColor: {r: 0.93725497, g: 0.7803922, b: 0.3647059, a: 1}
+  _description: "\u83B7\u5F97 1 \u70B9\u80FD\u91CF\u3002<br>\u5728\u4F60\u7684\u4E0B
+    <color=#7BD37B>3</color> \u4E2A\u56DE\u5408\u5F00\u59CB\u65F6\uFF0C<br>\u989D\u5916\u83B7\u5F97
+    1 \u70B9\u80FD\u91CF\u3002"
+  _energy: 1
+  _radiance: {fileID: 11400000, guid: 4732a4c2d25370847a37bcc12a01e5ff, type: 2}
+  _layers: 3

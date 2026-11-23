@@ -29,6 +29,12 @@ namespace _DreamKeep.RuntimeData
 
         public void AddLayers(int amount_) => Layers += amount_;
 
+        /// <summary>挂载/层数变化响应：由 Creature 的状态入口统一调用，默认不参与；影子状态据此同步真实属性层。</summary>
+        public virtual void OnMounted(Creature host_) { }
+
+        /// <summary>卸载响应：由 Creature 的移除入口统一调用，默认不参与；影子状态据此反向扣回真实属性层。</summary>
+        public virtual void OnUnmounted(Creature host_) { }
+
         /// <summary>出牌响应：每张牌结算完成后由链尾动作广播，默认不参与；覆写方在此自行增减层数。</summary>
         public virtual void OnCardPlayed() { }
 

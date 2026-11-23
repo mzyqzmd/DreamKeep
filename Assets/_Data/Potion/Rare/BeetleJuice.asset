@@ -16,6 +16,8 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: f80a48beffbe83e409449f32b1995aef, type: 3}
   _rarity: 1
   _liquidColor: {r: 0.45, g: 0.9, b: 0.45, a: 1}
-  _description: "\u5BF9\u4E00\u540D\u654C\u4EBA\u65BD\u52A0 <color=#7BD37B>4</color> \u5C42\u7F29\u5C0F\u3002"
+  _description: "\u5BF9\u4E00\u540D\u654C\u4EBA\u65BD\u52A0 <color=#7BD37B>4</color>
+    \u5C42\u7F29\u5C0F\u3002<br>\u7F29\u5C0F\uFF1A\u63A5\u4E0B\u6765 <color=yellow>\u6301\u6709\u5C42\u6570</color>
+    \u56DE\u5408\u5185\uFF0C\u9020\u6210\u7684\u4F24\u5BB3 - 35%\uFF0C<br>\u65BD\u52A0\u8005\u6B7B\u4EA1\u65F6\u89E3\u9664"
   _perk: {fileID: 11400000, guid: b1e57a01c2d34f5a6b7c8d9e0f1a2b3c, type: 2}
   _layers: 4

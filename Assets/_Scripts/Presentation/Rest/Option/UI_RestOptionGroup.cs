@@ -113,7 +113,11 @@ namespace _DreamKeep.Presentation
         private static string ComposeBody(RestOption option_)
         {
             if (option_.HealRatio.HasValue)
-                return $"回复 <color=green>{(int)Math.Round(option_.HealRatio.Value * 100f)}</color>% 生命值（{option_.HealAmount}）";
+            {
+                string body = $"回复 <color=green>{(int)Math.Round(option_.HealRatio.Value * 100f)}</color>% 生命值（{option_.HealAmount}）";
+                if (option_.HealBonus is > 0) body += $"<br>皇家枕头：额外 +{option_.HealBonus}";
+                return body;
+            }
             if (option_.RemoveCards.HasValue)
                 return $"删除 <color=yellow>{option_.RemoveCards}</color> 张牌，<br>并提高 <color=green>{option_.HpGain}</color> 点最大生命值";
             return option_.Description;

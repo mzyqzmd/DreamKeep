@@ -158,7 +158,7 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        // 弹板自管领取与演出，「继续」只收尾领奖并开图（面板留场供再次点继续重开地图）；弹板失败降级为跳过奖励
+        // 弹板自管领取与演出，「继续」只推进段一次并开图（面板留场供返回后领剩余奖励与重开地图）；弹板失败降级为跳过奖励
         private void OnRewardOffered(BAE_RewardOffered offered_)
         {
             _stage.HideHud(); // 战斗完成：交互层收起，画面上只留奖励面板
@@ -168,10 +168,15 @@ namespace _DreamKeep.Presentation
             {
                 UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
                 _commands.BeginRewardClaim(offered_.Rewards);
+                bool acknowledged = false;
                 panel.Show("战斗奖励", offered_.Rewards, () =>
                 {
-                    _commands.EndRewardClaim();
-                    _segmentCommands.AcknowledgeReward();
+                    if (!acknowledged)
+                    {
+                        acknowledged = true;
+                        _segmentCommands.AcknowledgeReward();
+                    }
+
                     _segmentManager.OpenMap(); // 首次由 AcknowledgeReward 的段完成开图；重复点只走这里重开
                 });
             }
@@ -182,7 +187,7 @@ namespace _DreamKeep.Presentation
             }
         }
 
-        // 领奖中读档的复原：清单来自存档，不重掷、不再走段 Loop 的等待点；继续只完成本段一次，之后重复点仅开图
+        // 领奖中读档的复原：清单来自存档，不重掷、不再走段 Loop 的等待点；继续只完成本段一次，会话留到选下一点再收尾
         private void ShowRestoreRewards()
         {
             UI_RewardPanel panel = _popFactory.AcquireRewardPanel();
@@ -190,7 +195,6 @@ namespace _DreamKeep.Presentation
             bool completed = false;
             panel.Show("搜刮!", _run.PendingRewards, () =>
             {
-                _commands.EndRewardClaim();
                 if (!completed)
                 {
                     completed = true;

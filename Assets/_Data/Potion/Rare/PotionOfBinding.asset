@@ -15,7 +15,7 @@ MonoBehaviour:
   _potionName: "\u7F1A\u9B42\u836F\u6C34"
   _icon: {fileID: 21300000, guid: 299a3bd49884af84181de4dc0bb86ba5, type: 3}
   _rarity: 1
-  _liquidColor: {r: 0.65, g: 0.4, b: 0.95, a: 1}
+  _liquidColor: {r: 0.63529414, g: 0.57254905, b: 0.5647059, a: 1}
   _description: "\u5BF9\u5168\u4F53\u654C\u4EBA\u65BD\u52A0 <color=#7BD37B>1</color>
     \u5C42\u865A\u5F31\u4E0E <color=#7BD37B>1</color> \u5C42\u6613\u4F24\u3002"
   _weakPerk: {fileID: 11400000, guid: 139c551b474963d449f421596cfc1e31, type: 2}

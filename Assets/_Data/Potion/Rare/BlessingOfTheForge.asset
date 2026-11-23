@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48314f3fb454d8b449d8291e806188d8, type: 3}
+  m_Name: BlessingOfTheForge
+  m_EditorClassIdentifier: 
+  _potionName: "\u7194\u7089\u7684\u795D\u798F"
+  _icon: {fileID: 21300000, guid: f553941646c89bb4eba553d8f0dc06b7, type: 3}
+  _rarity: 1
+  _liquidColor: {r: 0.9058824, g: 0.23137257, b: 0.23529413, a: 1}
+  _description: "\u5728\u672C\u573A\u6218\u6597\u4E2D\u5347\u7EA7\u4F60<br>\u624B\u724C\u4E2D\u7684\u6240\u6709\u724C\u3002"

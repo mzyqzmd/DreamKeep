@@ -46,7 +46,7 @@ namespace _DreamKeep.RuntimeData
             Creature = new Creature(actorName_, maxHp_);
             // 断引用的配置项直接跳过：遗物栏按本表建槽，塞进 null 会当场炸容器
             for (int i = 0; i < startRelics_.Count; i++)
-                if (startRelics_[i] != null) _relics.Add(startRelics_[i]);
+                if (startRelics_[i]) _relics.Add(startRelics_[i]);
             // 空槽也占位：槽位下标与视图下标一一对应，视图按同一份下标刷新
             for (int i = 0; i < PotionSlotCount; i++)
                 _potionSlots.Add(i < startPotions_.Count ? startPotions_[i] : null);
