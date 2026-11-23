@@ -22,7 +22,7 @@ namespace _DreamKeep.GameBattle
                 if (target.IsDead) continue;
 
                 // 滑溜按"失去生命"生效，钳后真实值贯穿拦截、写血与飘字
-                int loss = SlipperyHook.Clamp(target, Amount);
+                int loss = StatResolver.ResolveLoss(target, Amount);
                 int remaining = target.CurrentHp - loss;
                 // 与伤害共用同一条拦截口径：拦下则血量从不归零，后续自然不产生死亡事实
                 if (remaining <= 0 && DeathGuardHook.TryPreventDeath(battleContext_, target, loss, out int hpAfter_))

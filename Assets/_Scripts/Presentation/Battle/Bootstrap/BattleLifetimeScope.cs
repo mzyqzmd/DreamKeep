@@ -63,7 +63,7 @@ namespace _DreamKeep.Presentation
                 IReadOnlyList<SO_Encounter> encounters = _encounterPool.Select(kind, floor);
                 // 洗牌袋去重：打过的遭遇不再出现，档位池轮完一圈才重置全池随机
                 encounter = run.DrawLedger.DrawEncounter(run.Rng, encounters);
-                if (encounter == null)
+                if (!encounter)
                     throw new InvalidOperationException(
                         $"第 {floor} 层的 {kind} 遭遇池为空（{nameof(SO_EncounterPool)} 未配置该档）");
                 battleContext = BattleSetup.Create(run.Player, encounter, run.Config.StartEnergy, run.Rng);
@@ -140,7 +140,7 @@ namespace _DreamKeep.Presentation
             // 会话必须在容器建好之后才能写入：Configure 期间取不到自己刚注册的场景组件
             builder_.RegisterBuildCallback(resolver_ =>
             {
-                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                HoverTipBinder.InjectAll(resolver_);
                 stage.Open(resolver_.Resolve<UI_ActorRoot>(), resolver_.Resolve<BattleTargetDirector>(), _hudLayers);
                 if (restoring)
                 {

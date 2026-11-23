@@ -6,7 +6,7 @@ namespace _DreamKeep.EngineUtility
 {
     /// <summary>2D 通用音频播放器：两个子节点分别承载 BGM 与 SFX 的 AudioSource，本组件只负责驱动、不承载声源。
     /// SFX 走固定槽位池 + 优先级抢占，BGM 走两条独立声源交叉渐变。
-    /// 只服务 2D 音频（spatialBlend 恒 1），不认识任何业务类型；注册与注入由 Presentation 侧组合根承担。
+    /// 只服务 2D 音频（spatialBlend 恒 0），不认识任何业务类型；注册与注入由 Presentation 侧组合根承担。
     /// 频道音量由表现层设置面板写入两个静态系数，本类按平方律换算成 dB 写进各自 mixer 的暴露参数，挂该组的声源即时生效。</summary>
     public sealed class AudioRoot : MonoBehaviour
     {

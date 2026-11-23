@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Object = UnityEngine.Object;
 using _DreamKeep.CommonPresentation;
-using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
@@ -162,8 +161,7 @@ namespace _DreamKeep.Presentation
         private void OnRewardOffered(BAE_RewardOffered offered_)
         {
             _stage.HideHud(); // 战斗完成：交互层收起，画面上只留奖励面板
-            _progress.SetPhase(ESavePhase.AwaitingReward); // 领奖中读档据此复原，不重打战斗
-            SaveService.Save(); // 唯一检查点：战斗后 RunState + 待领奖励清单落盘，领奖期间不再写盘
+            _progress.CheckpointAwaitingReward(); // 领奖检查点：阶段位与落盘统一走域服务，读档据此复原不重打战斗
             try
             {
                 UI_RewardPanel panel = _popFactory.AcquireRewardPanel();

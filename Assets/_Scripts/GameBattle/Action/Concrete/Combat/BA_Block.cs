@@ -19,7 +19,7 @@ namespace _DreamKeep.GameBattle
                 if (target.IsDead) continue;
 
                 // 修正逐目标求值：同一动作对不同状态的目标结算不同值
-                int amount = StatHook.Resolve(battleContext_, EStatChannel.Block, Source, target, Amount);
+                int amount = StatResolver.ResolveBlock(battleContext_, Source, target, Amount);
                 target.Block += amount;
                 events.Add(new BE_BlockGained(target, amount));
             }

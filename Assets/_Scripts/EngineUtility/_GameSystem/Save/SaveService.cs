@@ -112,7 +112,7 @@ namespace _DreamKeep.EngineUtility
                 if (saveable == null) continue;
                 SaveWriter writer = new();
                 saveable.Capture(writer);
-                string key = saveable.GetType().FullName;
+                string key = saveable.SaveKey;
                 if (file.Entries.ContainsKey(key))
                 {
                     Debug.LogError($"[SaveService] 存档键重复：{key}，后者已跳过");
@@ -156,7 +156,7 @@ namespace _DreamKeep.EngineUtility
             {
                 ISaveable saveable = _saveables[i];
                 if (saveable == null) continue;
-                _pending.Entries.TryGetValue(saveable.GetType().FullName, out JObject bag);
+                _pending.Entries.TryGetValue(saveable.SaveKey, out JObject bag);
                 saveable.Restore(new SaveReader(bag));
             }
 

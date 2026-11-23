@@ -265,7 +265,7 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _relics.Count; i++)
             {
                 SO_Relic relic = i < shelf.Count ? shelf[i] : null;
-                if (relic == null)
+                if (!relic)
                 {
                     _relics[i].MarkSold();
                     continue;
@@ -281,7 +281,7 @@ namespace _DreamKeep.Presentation
             for (int i = 0; i < _potions.Count; i++)
             {
                 SO_Potion potion = i < shelf.Count ? shelf[i] : null;
-                if (potion == null)
+                if (!potion)
                 {
                     _potions[i].MarkSold();
                     continue;

@@ -6,7 +6,8 @@
         "DOTween.Modules",
         "NaughtyAttributes.Core",
         "Unity.Newtonsoft.Json",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "VContainer"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

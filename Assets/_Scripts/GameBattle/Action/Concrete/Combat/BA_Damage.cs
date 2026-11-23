@@ -33,10 +33,8 @@ namespace _DreamKeep.GameBattle
                 if (target.IsDead) continue;
 
                 // 攻击类修正逐目标求值，再由防护类滑溜钳上限；投掷伤害不吃攻击修正但照样受滑溜约束
-                int amount = _applyModifiers
-                    ? StatHook.Resolve(battleContext_, EStatChannel.Damage, Source, target, BaseAmount)
-                    : BaseAmount;
-                amount = SlipperyHook.Clamp(target, amount);
+                int amount = StatResolver.ResolveDamage(battleContext_, EStatChannel.Damage, Source, target,
+                    BaseAmount, _applyModifiers);
                 int blockAbsorbed = Math.Min(target.Block, amount);
                 target.Block -= blockAbsorbed;
                 int hpLoss = amount - blockAbsorbed;

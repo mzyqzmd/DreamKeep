@@ -55,18 +55,18 @@ namespace _DreamKeep.GameBattle
 
         /// <summary>预览玩家打出的卡造成的伤害：来源内定玩家，未瞄准目标时传 null（只算来源侧修正）。</summary>
         public int PreviewCardDamage(Creature target_, int baseAmount_)
-            => SlipperyHook.Clamp(target_,
-                StatHook.Resolve(_battleContext, EStatChannel.Damage, _battleContext.Player.Creature, target_, baseAmount_));
+            => StatResolver.ResolveDamage(_battleContext, EStatChannel.Damage, _battleContext.Player.Creature,
+                target_, baseAmount_, true);
 
         /// <summary>预览玩家打出的卡获得的格挡：先叠加按牌加成（与结算同求值），再走来源侧修正（目标可传 null）。</summary>
         public int PreviewCardBlock(Creature target_, CardModel card_, int baseAmount_)
-            => StatHook.Resolve(_battleContext, EStatChannel.Block, _battleContext.Player.Creature, target_,
+            => StatResolver.ResolveBlock(_battleContext, _battleContext.Player.Creature, target_,
                 baseAmount_ + CardBonusHook.GetBonus(_battleContext.Player.Creature, card_, EStatChannel.Block));
 
         /// <summary>预览敌人意图造成的伤害：目标内定玩家。</summary>
         public int PreviewIntentDamage(Creature source_, int baseAmount_)
-            => SlipperyHook.Clamp(_battleContext.Player.Creature,
-                StatHook.Resolve(_battleContext, EStatChannel.Damage, source_, _battleContext.Player.Creature, baseAmount_));
+            => StatResolver.ResolveDamage(_battleContext, EStatChannel.Damage, source_,
+                _battleContext.Player.Creature, baseAmount_, true);
 
         #endregion
     }

@@ -29,7 +29,8 @@ namespace _DreamKeep.GameRun
         /// <summary>战斗外使用一瓶药水：槽越界、空槽、不可战斗外结算都返回 false，槽位保持不变。</summary>
         public bool UsePotionOutsideBattle(int slotIndex_)
         {
-            SO_Potion potion = PotionAt(slotIndex_);
+            IReadOnlyList<SO_Potion> potions = _run.Player.PotionSlots;
+            SO_Potion potion = slotIndex_ >= 0 && slotIndex_ < potions.Count ? potions[slotIndex_] : null;
             if (potion == null || !potion.UsableOutsideBattle) return false;
             if (!PotionResolver.TryApplyOutsideBattle(potion, _run.Player)) return false;
             _run.Player.TryTakePotion(slotIndex_, out _);
@@ -38,13 +39,6 @@ namespace _DreamKeep.GameRun
 
         /// <summary>战斗外丢弃：取走即算丢掉，槽位刷新由 PotionSlotChanged 通知驱动。</summary>
         public bool DiscardPotionOutsideBattle(int slotIndex_) => _run.Player.TryTakePotion(slotIndex_, out _);
-
-        // 槽位读取与界面共用同一份数据真源，越界给 null
-        private SO_Potion PotionAt(int slotIndex_)
-        {
-            IReadOnlyList<SO_Potion> potions = _run.Player.PotionSlots;
-            return slotIndex_ >= 0 && slotIndex_ < potions.Count ? potions[slotIndex_] : null;
-        }
 
         #endregion
 

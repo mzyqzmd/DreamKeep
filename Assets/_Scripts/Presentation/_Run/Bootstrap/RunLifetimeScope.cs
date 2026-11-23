@@ -63,7 +63,7 @@ namespace _DreamKeep.Presentation
             Debug.Log($"[RunLifetimeScope] 整局随机种子 {seed}");
             // 读档分支：快照静态暂存跨过场景加载，容器 Build 之前先按存档重建整局状态，避免常规构造器重新生成地图与卡组
             ISaveReader pending = SaveService.HasPendingRestore
-                ? SaveService.PendingReaderOf(typeof(RunState).FullName)
+                ? SaveService.PendingReaderOf(RunState.SaveKeyConst)
                 : null;
             RunState run = new(_playerConfig, seed, _mapConfig, _fallbackRelicPool);
             if (pending != null)
@@ -136,9 +136,7 @@ namespace _DreamKeep.Presentation
             // 段内预摆/池化的实例由 BattleLifetimeScope 的构建回调兜底（整局层回调更早跑、那时段还没生成，漏不掉它们）
             builder_.RegisterBuildCallback(resolver_ =>
             {
-                if (popFactory)
-                    foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true))
-                        resolver_.Inject(tip);
+                if (popFactory) HoverTipBinder.InjectAll(resolver_);
                 // 显隐订阅者在本类：首次按偏好设一次，面板失活也能被拉起；之后由 TestModeChanged 直接 SetActive
                 _devPanel = resolver_.Resolve<UI_DevPanel>();
                 if (_devPanel) _devPanel.gameObject.SetActive(GameSettings.TestMode);

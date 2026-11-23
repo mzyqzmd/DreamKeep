@@ -2,23 +2,14 @@ using System;
 using _DreamKeep.CommonPresentation;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VContainer.Unity;
 using _DreamKeep.EngineUtility;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>常驻主菜单编排者（住 Scene_MainMenu 的 GameRoot）：App 侧唯一进出入口，同时是四个常驻弹层面板的唯一编排者。
-    /// 进局＝黑屏 → additive 加载 Scene_Run（装载与场景修补统一走 SceneLoadUtil）→
-    /// 手动 Build 整局容器（autoRun 关；Build 前把常驻音频根与抖动驱动转交给整局组合根，
-    /// Build 回调再把段编排者入口经 BindRunHandlers 注入本类）→
-    /// 藏主菜单 → 经委托进先古之民段（每把起点）并等它装配完成 → 揭幕：黑屏一直盖到段就绪，不会露出空的 Scene_Run；
-    /// 回主菜单＝黑屏 → 经委托触发 Run 侧清理（关会话+卸段）→ 卸载 Scene_Run（段编排者随场景自毁）→ 亮出主菜单 → 揭幕。
-    /// 主菜单四面板（设置/放弃/开发日志/退出）住本场景 Canvas_System，整局内也常驻在场，
-    /// 因此暂停面板的「设置」「放弃」也经本类开，跨场景引用不落序列化。
-    /// 本类与整局组合根同住 Presentation：组合根由本类直接转交常驻服务；
-    /// 段编排者仍只拿委托——它住 Scene_Run，跨场景引用不可序列化。</summary>
+    /// <summary>常驻主菜单编排者（住 Scene_MainMenu 的 GameRoot）：负责主菜单与整局之间的进出场协调。
+    /// 弹层互斥交给 AppOverlayCoordinator、场景装卸与容器构建交给 RunSceneGateway，本类只编排进出局流程与存档时序。</summary>
     public sealed class MainMenuFlow : MonoBehaviour
     {
         [Tooltip("黑屏过渡幕：进局/回主菜单全程盖住画面（同场景常驻，Inspector 拖引用）")] [SerializeField]
@@ -50,14 +41,12 @@ namespace _DreamKeep.Presentation
 
         private Func<ESegmentKind, UniTask> _startSegment; // 进段入口（任务在段装配完成后结束）：整局容器 Build 回调里注入
         private Func<UniTask> _prepareReturnToMenu; // 回主菜单前的 Run 侧清理（归位挂起态+关会话+卸段）
-        private Action _giveUpConfirm; // 放弃确认的当前语义：主菜单=删档、整局内=结束本局，由开面板的调用方给
-        private Scene _runScene; // 在场的整局场景句柄：卸载与防重入用
         private bool _switching; // 进出过渡闸门：黑屏期间不接新入口
         private bool _inRun; // 是否处于整局内：决定进局/回主菜单各自是否可用
-        private bool _quitting; // 退出闸门：确认后黑幕淡入期间不接二次点击
         private AudioRoot _audio; // 常驻音频根：住本对象下的 SFXRoot，不进容器，Awake 自愈
-
         private ScreenShakeDriver _shakeDriver; // 常驻抖动驱动：挂在主相机上，Build 整局容器前转交
+        private AppOverlayCoordinator _overlays;
+        private RunSceneGateway _gateway;
 
         /// <summary>常驻主相机：Run 内 Screen Space-Camera 画布与段装卸器共用。</summary>
         public Camera MainCamera => _camera;
@@ -93,33 +82,27 @@ namespace _DreamKeep.Presentation
             UI_ClickSfx clickSfx = GetComponentInChildren<UI_ClickSfx>(true);
             if (clickSfx) clickSfx.Bind(_audio);
 
-            if (_mainMenuPanel)
-            {
-                _mainMenuPanel.Wire(OnNewGameClicked, OnContinueClicked, OnGiveUpSaveClicked,
-                    ShowSettingPanel, ShowEncyclopediaPanel, ShowDevelopLogPanel, ShowQuitGamePanel);
-                _mainMenuPanel.SetHasSave(SaveService.HasSave); // 启动时按磁盘上的单档切两态
-            }
+            _overlays = new AppOverlayCoordinator(_mainMenuPanel, _settingPanel, _encyclopediaPanel,
+                _giveUpPanel, _developLogPanel, _quitGamePanel);
+            _gateway = new RunSceneGateway(_runSceneName, _camera, _audio, _shakeDriver, nameof(MainMenuFlow));
 
-            // 放弃确认：关闭即收起，确认即转发开面板时给的那份语义
-            if (_giveUpPanel) _giveUpPanel.Wire(OnGiveUpClosed, OnGiveUpConfirmed);
-            if (_quitGamePanel) _quitGamePanel.Wire(OnQuitClosed, OnQuitConfirmed);
+            _overlays.WireMainMenu(OnNewGameClicked, OnContinueClicked, OnGiveUpSaveClicked,
+                ShowSettingPanel, ShowEncyclopediaPanel, ShowDevelopLogPanel, ShowQuitGamePanel);
+            _overlays.SetHasSave(SaveService.HasSave); // 启动时按磁盘上的单档切两态
+
+            _overlays.WireGiveUp(_overlays.CloseGiveUp, _overlays.ConfirmGiveUp);
+            _overlays.WireQuit(_overlays.CloseQuit, OnQuitConfirmed);
             // 主菜单阶段没有整局容器：百科三页的弹层工厂依赖在这里显式装配，进局后由整局容器构建回调再补一次
-            PopFactory popFactory = GetComponent<PopFactory>();
-            if (popFactory)
-            {
-                _encyclopediaPanel.GetComponentInChildren<UI_CardEncyclopediaPanel>(true).Construct(popFactory);
-                _encyclopediaPanel.GetComponentInChildren<UI_RelicEncyclopediaPanel>(true).Construct(popFactory);
-                _encyclopediaPanel.GetComponentInChildren<UI_PotionEncyclopediaPanel>(true).Construct(popFactory);
-            }
+            _overlays.ConstructEncyclopedia(GetComponent<PopFactory>());
 
-            HideOverlays(); // 常驻场景：进 Play 先统一收一遍，避免 Inspector 残留激活态
+            _overlays.HideOverlays(); // 常驻场景：进 Play 先统一收一遍，避免 Inspector 残留激活态
         }
 
         private void OnDestroy()
         {
             _startSegment = null;
             _prepareReturnToMenu = null;
-            _giveUpConfirm = null;
+            _overlays?.ClearCallbacks();
         }
 
         #region 主菜单按钮出口：新建 / 继续 / 放弃存档
@@ -138,7 +121,7 @@ namespace _DreamKeep.Presentation
             if (_switching || _inRun) return;
             if (!SaveService.Load())
             {
-                if (_mainMenuPanel) _mainMenuPanel.SetHasSave(false);
+                _overlays.SetHasSave(false);
                 return;
             }
 
@@ -147,89 +130,37 @@ namespace _DreamKeep.Presentation
         }
 
         // 主菜单的放弃＝删档：确认后留在主菜单并切回无档态
-        private void OnGiveUpSaveClicked() => ShowGiveUpPanel(() =>
+        private void OnGiveUpSaveClicked() => _overlays.ShowGiveUp(() =>
         {
             SaveService.Delete();
-            if (_mainMenuPanel) _mainMenuPanel.SetHasSave(false);
+            _overlays.SetHasSave(false);
         });
 
-        private void ShowDevelopLogPanel()
-        {
-            HideOverlays();
-            if (_developLogPanel) _developLogPanel.Show();
-        }
+        private void ShowDevelopLogPanel() => _overlays.ShowDevelopLog();
 
         /// <summary>打开百科大全：主菜单按钮与整局暂停面板共用同一份常驻面板；开前先收起其余弹层。</summary>
-        public void ShowEncyclopediaPanel()
-        {
-            HideOverlays();
-            if (_encyclopediaPanel) _encyclopediaPanel.Show();
-        }
+        public void ShowEncyclopediaPanel() => _overlays.ShowEncyclopedia();
 
         #endregion
 
         #region 常驻弹层面板：主菜单与整局共用同一份，开一个先收其余
 
         /// <summary>打开设置面板：主菜单按钮与整局暂停面板共用；叠在当前层之上，不关底下面板。</summary>
-        public void ShowSettingPanel()
-        {
-            HideOverlays();
-            if (_settingPanel) _settingPanel.Show();
-        }
+        public void ShowSettingPanel() => _overlays.ShowSetting();
 
         /// <summary>打开放弃确认：confirm_ 是「确认放弃」的当前语义（主菜单=删档、整局内=结束本局）。</summary>
-        public void ShowGiveUpPanel(Action confirm_)
-        {
-            HideOverlays();
-            _giveUpConfirm = confirm_;
-            if (_giveUpPanel) _giveUpPanel.Show();
-        }
-
-        // 五个弹层互斥：开任一个先把其余收起，避免两层全屏遮罩叠着互相吃点击
-        private void HideOverlays()
-        {
-            _giveUpConfirm = null;
-            if (_settingPanel) _settingPanel.Hide();
-            if (_giveUpPanel) _giveUpPanel.Hide();
-            if (_developLogPanel) _developLogPanel.Hide();
-            if (_quitGamePanel) _quitGamePanel.Hide();
-            if (_encyclopediaPanel) _encyclopediaPanel.Hide();
-        }
-
-        private void OnGiveUpClosed()
-        {
-            _giveUpConfirm = null;
-            if (_giveUpPanel) _giveUpPanel.Hide();
-        }
-
-        // 确认即消费掉回调：面板收起后再触发，避免回调里再次开面板（整局内的放弃链会弹结算面板）
-        private void OnGiveUpConfirmed()
-        {
-            Action confirm = _giveUpConfirm;
-            if (_giveUpPanel) _giveUpPanel.Hide();
-            _giveUpConfirm = null;
-            confirm?.Invoke();
-        }
+        public void ShowGiveUpPanel(Action confirm_) => _overlays.ShowGiveUp(confirm_);
 
         #endregion
 
         #region 退出应用：确认 → 渐入黑屏 → 退出
 
-        private void ShowQuitGamePanel()
-        {
-            HideOverlays();
-            if (_quitGamePanel) _quitGamePanel.Show();
-        }
-
-        private void OnQuitClosed()
-        {
-            if (_quitGamePanel) _quitGamePanel.Hide();
-        }
+        private void ShowQuitGamePanel() => _overlays.ShowQuit();
 
         private void OnQuitConfirmed()
         {
-            if (_quitting) return;
-            _quitting = true;
+            if (_overlays.Quitting) return;
+            _overlays.Quitting = true;
             QuitAsync().Forget();
         }
 
@@ -263,14 +194,15 @@ namespace _DreamKeep.Presentation
         // 黑屏内的进局链：任一步失败都停留主菜单（揭幕即主菜单原样），不留半装载的整局场景
         private async UniTask RunEnterCoreAsync()
         {
-            if (!await LoadRunSceneAsync())
+            if (!await _gateway.LoadAsync(destroyCancellationToken))
             {
                 Debug.LogError($"[{nameof(MainMenuFlow)}] 整局场景 {_runSceneName} 加载失败，留在主菜单");
+                await _gateway.UnloadAsync(); // 场景取到但缺 scope 时句柄仍有效，回收掉避免残留
                 return;
             }
 
-            BuildRunScope();
-            if (_mainMenuPanel) _mainMenuPanel.Hide();
+            _gateway.BuildScope();
+            _overlays.HideMainMenu();
             _inRun = true;
             if (_audio) _audio.PlayBgm(_audio.Cues.BgmRun);
             // 新局以先古之民起手；读档按存档当前节点类型重进该段，段装配完成后外层才揭幕
@@ -278,47 +210,6 @@ namespace _DreamKeep.Presentation
             ESegmentKind first = restoredKind >= 0 ? (ESegmentKind)restoredKind : ESegmentKind.Ancient;
             if (_startSegment == null) Debug.LogError($"[{nameof(MainMenuFlow)}] 整局容器未注入进段入口，首段不会加载");
             else await _startSegment(first);
-        }
-
-        // 装载与场景修补统一走 SceneLoadUtil（与段装载同一条序列）；本类只判"整局 scope 是否在场"，
-        // scope 的 Build 仍留在调用方——Build 回调要把段编排者入口注入本类，顺序不能反。
-        private async UniTask<bool> LoadRunSceneAsync()
-        {
-            _runScene = await SceneLoadUtil.LoadPreparedAsync(_runSceneName, _camera, destroyCancellationToken);
-            if (!_runScene.IsValid())
-            {
-                Debug.LogError($"[{nameof(MainMenuFlow)}] 场景 {_runSceneName} 加载失败（不在构建列表或激活后取不到句柄），无法进局");
-                return false;
-            }
-
-            return FindRunScope(_runScene) != null;
-        }
-
-        // Run 场景里唯一 autoRun 关闭的整局 scope：就地手动 Build，Build 回调负责把段编排者入口注入本类
-        private void BuildRunScope()
-        {
-            LifetimeScope runScope = FindRunScope(_runScene);
-            if (runScope == null)
-            {
-                Debug.LogError($"[{nameof(MainMenuFlow)}] 场景 {_runSceneName} 里没有 LifetimeScope，整局容器不会构建");
-                return;
-            }
-
-            // 常驻服务必须在 Build 之前转交：整局容器装配期就会解析音频根与抖动驱动
-            if (runScope is RunLifetimeScope scope) scope.BindPersistentServices(_audio, _shakeDriver);
-            else Debug.LogError($"[{nameof(MainMenuFlow)}] 整局 scope 不是 {nameof(RunLifetimeScope)}，常驻服务无法转交");
-            runScope.Build();
-        }
-
-        private static LifetimeScope FindRunScope(Scene scene_)
-        {
-            foreach (GameObject root in scene_.GetRootGameObjects())
-            {
-                LifetimeScope found = root.GetComponentInChildren<LifetimeScope>(true);
-                if (found != null) return found;
-            }
-
-            return null;
         }
 
         #endregion
@@ -341,31 +232,14 @@ namespace _DreamKeep.Presentation
         private async UniTask ReturnToMenuCoreAsync()
         {
             if (_prepareReturnToMenu != null) await _prepareReturnToMenu();
-            await UnloadRunSceneAsync();
+            await _gateway.UnloadAsync();
             SaveService.Unbind(); // 整局场景已卸载，静态门面不再持有随场景销毁的对象集合
-            HideOverlays(); // 整局内开过的常驻弹层（设置/放弃）随回菜单一并收起
-            if (_mainMenuPanel)
-            {
-                _mainMenuPanel.Show();
-                _mainMenuPanel.SetHasSave(SaveService.HasSave); // 保存并退出留档、终点与放弃删档，两态按磁盘真值刷新
-            }
+            _overlays.HideOverlays(); // 整局内开过的常驻弹层（设置/放弃）随回菜单一并收起
+            _overlays.ShowMainMenu();
+            _overlays.SetHasSave(SaveService.HasSave); // 保存并退出留档、终点与放弃删档，两态按磁盘真值刷新
 
             _inRun = false;
             if (_audio) _audio.PlayBgm(_audio.Cues.BgmMainMenu);
-        }
-
-        // 卸载整局场景：句柄可能已失效（外部卸载），此时 UnloadSceneAsync 返回 null，直接跳过
-        private async UniTask UnloadRunSceneAsync()
-        {
-            try
-            {
-                if (_runScene.IsValid() && _runScene.isLoaded)
-                    await SceneManager.UnloadSceneAsync(_runScene.name).ToUniTask();
-            }
-            finally
-            {
-                _runScene = default;
-            }
         }
 
         #endregion

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
 using _DreamKeep.EngineUtility;
-using _DreamKeep.GameRun;
 using _DreamKeep.RuntimeData;
 
 namespace _DreamKeep.Presentation
@@ -33,17 +32,15 @@ namespace _DreamKeep.Presentation
         [SerializeField] private UI_PausePanel _pausePanel;
 
         private RunState _run;
-        private RunCommandDispatcher _commands;
         private int _lastShownSeconds = -1;
         private Tween _goldTween;
         private int _shownGold;
         private bool _goldInitialized;
 
         [Inject]
-        public void Construct(RunState run_, RunCommandDispatcher commands_)
+        public void Construct(RunState run_)
         {
             _run = run_;
-            _commands = commands_;
 
             // 初值：装配完成时直接读一次，后续靠事件增量刷新
             RefreshHp();
@@ -193,17 +190,10 @@ namespace _DreamKeep.Presentation
 
         #endregion
 
-        #region 计时展示：本类兼任整局计时的泵，仅整秒跳变时重建字符串
+        #region 计时展示：只读整局累计秒数，仅整秒跳变时重建字符串
 
-        // 计时口径：顶栏在场 = 整局计时在跑。全库只有 SegmentSceneManager.PrepareReturnToMenuAsync
-        // 会让顶栏失活，那一刻本局已结束、正回主菜单，停表符合预期；换段与开地图期间顶栏保持激活，照常累计。
-        // 每帧只把增量上报给整局命令入口，累计与写档仍归 RunState。
-        private void Update()
-        {
-            if (_commands == null) return;
-            _commands.Tick(Time.unscaledDeltaTime); // 真实时间口径：不受 timeScale 影响，与原秒表语义一致
-            UpdateTime();
-        }
+        // 计时泵在整局在场的 SegmentSceneManager.Update：本类只展示，不再驱动域计时。
+        private void Update() => UpdateTime();
 
         private void UpdateTime()
         {

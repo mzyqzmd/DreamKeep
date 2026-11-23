@@ -11,6 +11,11 @@ namespace _DreamKeep.RuntimeData
     /// 纯 C# 类，不认识容器与引擎——组合根负责创建与持有。</summary>
     public class RunState : ISaveable
     {
+        /// <summary>整局状态存档袋的稳定键：字面量等于当前类型全名，旧档可读；重命名类时不随反射变化，避免存档静默失联。</summary>
+        public const string SaveKeyConst = "_DreamKeep.RuntimeData.RunState";
+
+        public string SaveKey => SaveKeyConst;
+
         public SO_Player Config { get; }
         public Player Player { get; }
 
@@ -39,6 +44,12 @@ namespace _DreamKeep.RuntimeData
 
         /// <summary>是否处于领奖阶段：清单非空的唯一判据，段组合根、战斗入口与读档降级三处共用，别再各自比 Count。</summary>
         public bool HasPendingRewards => _pendingRewards is { Count: > 0 };
+
+        /// <summary>整局阶段真源：区分战斗中/领奖中/地图上，存档 phase 键与地图挂起态都从它派生。</summary>
+        public ESavePhase Phase { get; private set; } = ESavePhase.OnMap;
+
+        /// <summary>设置阶段位：唯一写入口，由域服务（RunProgressService）调用，表现层不直接写。</summary>
+        public void SetPhase(ESavePhase phase_) => Phase = phase_;
 
         private int _gold;
 
@@ -150,8 +161,8 @@ namespace _DreamKeep.RuntimeData
         /// <summary>整局已用秒数：顶栏读它展示，并随存档写盘（RunStateRestore 的 elapsed）。</summary>
         public double ElapsedSeconds => _elapsedSeconds;
 
-        /// <summary>喂一次增量：唯一调用点是 UI_TopBar.Update（真实时间口径），
-        /// 因此「顶栏在场 = 计时在跑」；顶栏唯一的失活点是回主菜单清理，那一停表正是想要的口径。</summary>
+        /// <summary>喂一次增量：唯一调用点是整局在场的 SegmentSceneManager.Update（真实时间口径），
+        /// 因此「整局场景在场 = 计时在跑」；回主菜单卸载整局场景即停表。</summary>
         public void TickTime(double seconds_) => _elapsedSeconds += seconds_;
 
         #endregion

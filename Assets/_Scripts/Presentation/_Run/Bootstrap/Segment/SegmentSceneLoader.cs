@@ -39,16 +39,7 @@ namespace _DreamKeep.Presentation
             // 段已激活、根可访问：先记账，后面任何早退都要留得下可回收的段
             _currentSegment = scene;
 
-            LifetimeScope segmentScope = null;
-            foreach (GameObject root in scene.GetRootGameObjects())
-            {
-                LifetimeScope found = root.GetComponentInChildren<LifetimeScope>(true);
-                if (found && found != _runScope)
-                {
-                    segmentScope = found;
-                    break;
-                }
-            }
+            LifetimeScope segmentScope = SceneLoadUtil.FindScope(scene, _runScope);
 
             if (segmentScope == null)
             {
@@ -66,18 +57,7 @@ namespace _DreamKeep.Presentation
 
         #region 卸载当前段：场景可能已被别处卸载，此时 UnloadSceneAsync 返回 null，直接跳过
 
-        public async UniTask UnloadCurrentSegmentAsync()
-        {
-            try
-            {
-                if (_currentSegment.IsValid() && _currentSegment.isLoaded)
-                    await SceneManager.UnloadSceneAsync(_currentSegment.name).ToUniTask();
-            }
-            finally
-            {
-                _currentSegment = default;
-            }
-        }
+        public async UniTask UnloadCurrentSegmentAsync() => _currentSegment = await SceneLoadUtil.UnloadAsync(_currentSegment);
 
         #endregion
     }

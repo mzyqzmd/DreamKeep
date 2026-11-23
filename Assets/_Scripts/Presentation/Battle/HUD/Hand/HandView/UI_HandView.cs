@@ -26,9 +26,7 @@ namespace _DreamKeep.Presentation
         private UI_CardBattle _cardPrefab;
 
         [Tooltip("出牌区：自洽的一块区域——松手时以卡牌的锚点（下沿中点）是否落在它自己的矩形内判定，队位以它内部的点为基准")]
-        [FormerlySerializedAs("dropZone")]
-        [SerializeField]
-        private UI_PlayCardZone _dropZone;
+        [SerializeField] private UI_PlayCardZone _dropZone;
 
         [Tooltip("抽牌堆视图：抽牌入场的起飞锚点")] [SerializeField]
         private UI_DrawPile _drawPile;

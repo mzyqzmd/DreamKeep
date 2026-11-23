@@ -50,7 +50,7 @@ namespace _DreamKeep.Presentation
             // 段场景晚于整局容器加载：段内游离的气泡发起器在此兜底注入；重复注入只是重赋依赖，无副作用
             builder_.RegisterBuildCallback(resolver_ =>
             {
-                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                HoverTipBinder.InjectAll(resolver_);
             });
         }
 

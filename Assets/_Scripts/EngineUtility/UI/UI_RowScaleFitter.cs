@@ -81,15 +81,13 @@ namespace _DreamKeep.EngineUtility
             float scaleHeight = rowHeight <= 0f || availableHeight <= 0f ? 1f : availableHeight / rowHeight;
             float scale = Mathf.Clamp01(Mathf.Min(scaleWidth, scaleHeight));
 
+            if (!_fitPerFrame && count == _appliedCount && Mathf.Approximately(scale, _appliedScale)) return;
+
             _appliedCount = count;
             _appliedScale = scale;
             _appliedSpacing = _baseSpacing * scale;
-
             _layout.spacing = _appliedSpacing;
             WriteChildren(scale);
-
-            if (!_fitPerFrame && count == _appliedCount && Mathf.Approximately(scale, _appliedScale)) return;
-
             LayoutRebuilder.MarkLayoutForRebuild(_rect);
         }
 

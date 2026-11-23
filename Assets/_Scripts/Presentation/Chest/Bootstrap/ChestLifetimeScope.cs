@@ -39,7 +39,7 @@ namespace _DreamKeep.Presentation
             // 已被注入过的实例重复跑一遍 [Inject] 只是把依赖再赋值一次，无副作用
             builder_.RegisterBuildCallback(resolver_ =>
             {
-                foreach (UI_HoverTip tip in FindObjectsOfType<UI_HoverTip>(true)) resolver_.Inject(tip);
+                HoverTipBinder.InjectAll(resolver_);
             });
         }
     }

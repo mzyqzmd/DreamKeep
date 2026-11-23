@@ -20,6 +20,8 @@ namespace _DreamKeep.Presentation
         private const string KeyPoints = "ink.points";
         private const string KeyLengths = "ink.lengths";
 
+        public string SaveKey => GetType().FullName;
+
         [Tooltip("墨迹视觉配置（颜色/线宽/采样间距/橡皮半径）")] [SerializeField]
         private SO_MapInkVisual _visual;
 
