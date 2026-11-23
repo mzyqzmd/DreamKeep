@@ -16,7 +16,7 @@ namespace _DreamKeep.Presentation
     /// 每帧驱动三件事：悬停裁决、词条气泡，以及瞄准器的兜底校正与整手数值预览对账（瞄准结果由战斗侧的瞄准
     /// 中间件解析后直接回写瞄准器，不经过这里）。
     /// 三者同挂本节点、都经本类的内部服务面读写这里的状态：UI_HandHover 管悬停与避让、UI_HandAim 管瞄准、
-    /// UI_HandShow 管十一条领域事件的演出。</summary>
+    /// UI_HandShow 管领域事件的演出。</summary>
     [RequireComponent(typeof(UI_HandHover))]
     [RequireComponent(typeof(UI_HandAim))]
     [RequireComponent(typeof(UI_HandShow))]
@@ -89,6 +89,7 @@ namespace _DreamKeep.Presentation
         // 交互状态位：本回合可打、正被拖拽；瞄准状态（哪张牌、箭头是否已显示）长在同节点的瞄准器里，
         // "按下走哪种交互"由包装读自己的卡回答，不经此路
         private bool _cardsPlayable;
+        private int _currentEnergy;
         private UI_CardBattle _draggedCard;
         private bool _selectMode;
         private Action<CardModel> _onCardSelected;
@@ -116,7 +117,7 @@ namespace _DreamKeep.Presentation
 
         // 装配：解析画布相机、建卡池；上行门面只取供出牌命令的那一个（数值预览查询已随瞄准器走）。
         // 画布相机在这时解析（不靠 Awake，避免与容器装配的先后次序打架）；
-        // 十一条领域事件的订阅在演出器、悬停裁决在悬停器、瞄准态的注入在瞄准器，各自在他们的装配处
+        // 领域事件的订阅在演出器、悬停裁决在悬停器、瞄准态的注入在瞄准器，各自在他们的装配处
         [Inject]
         public void Construct(BattleCommandDispatcher commandDispatcher_, IObjectResolver resolver_)
         {
@@ -503,7 +504,28 @@ namespace _DreamKeep.Presentation
             }
 
             ApplyLayout();
-            foreach (UI_CardBattle card in _hand) card.SetPlayableLook(playable_);
+            foreach (UI_CardBattle card in _hand)
+            {
+                card.SetPlayableLook(playable_);
+                ApplyEnergyTo(card);
+            }
+        }
+
+        // 能量对账：缓存当前能量并逐卡刷新费用着色
+        internal void ApplyEnergy(int current_)
+        {
+            _currentEnergy = current_;
+            foreach (UI_CardBattle card in _hand) ApplyEnergyTo(card);
+        }
+
+        // 单点补刷：新抽牌与升级重绑会重置卡面状态，按当前判定补一次
+        internal void ApplyEnergyTo(UI_CardBattle card_) => card_.SetCostEnergyState(ShortOfEnergy(card_));
+
+        // 能量不足判定收口：仅玩家回合、有费用的卡，当前能量不够才成立
+        private bool ShortOfEnergy(UI_CardBattle card_)
+        {
+            int cost = card_.Card.Cost.Value;
+            return _cardsPlayable && cost >= 0 && _currentEnergy < cost;
         }
 
         #endregion

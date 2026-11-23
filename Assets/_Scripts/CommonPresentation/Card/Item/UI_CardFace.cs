@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using _DreamKeep.ConfigData;
+using _DreamKeep.EngineUtility;
 using _DreamKeep.GameBattle;
 using _DreamKeep.RuntimeData;
 using NaughtyAttributes;
@@ -45,6 +46,9 @@ namespace _DreamKeep.CommonPresentation
         [Tooltip("费用低于基础值时的字体颜色（减费提示，高于或等于保持本色）")] [SerializeField]
         private Color _costLowerColor = Color.green;
 
+        [Tooltip("能量不足以支付费用时费用文本的颜色（浅红）")] [SerializeField]
+        private Color _costNoEnergyColor = new(1f, 0.1f, 0.1f);
+
         [Tooltip("不可打时整卡乘的暗灰色")] [SerializeField]
         private Color _unplayableTint = new(0.45f, 0.45f, 0.5f);
 
@@ -57,8 +61,9 @@ namespace _DreamKeep.CommonPresentation
         [Tooltip("数值被修正得更低时的颜色（红）")] [SerializeField]
         private Color _valueReduceColor = new(1f, 0.36f, 0.36f);
 
-        // 预览状态：可打标记与两个数值渲染器（卡面文本款按不可打状态压暗、气泡款恒原色；门面与目标由手牌区每帧推入）
+        // 预览状态：可打标记、费用能量不足标记与两个数值渲染器（卡面文本款按不可打状态压暗、气泡款恒原色；门面与目标由手牌区每帧推入）
         private bool _playable = true;
+        private bool _costShortOfEnergy;
         private CardValueRenderer _faceValueRenderer;
         private CardValueRenderer _tipValueRenderer;
         private readonly StringBuilder _descriptionBuilder = new(); // 描述文本的复用缓冲：每次重排只清空不重建
@@ -146,7 +151,8 @@ namespace _DreamKeep.CommonPresentation
                 }
             }
 
-            // 初始化可打状态
+            // 初始化可打状态与费用能量状态：池化实例先清残留，否则上一张卡的浅红会串到新卡
+            _costShortOfEnergy = false;
             SetPlayableLook(true);
         }
 
@@ -190,7 +196,7 @@ namespace _DreamKeep.CommonPresentation
             // 卡面数值的颜色跟着压暗走（富文本标签色盖得住组件色，必须显式预乘）；气泡款恒原色不动
             Color tint = playable_ ? Color.white : _unplayableTint;
             _faceValueRenderer.SetColors(_valueBoostColor * tint, _valueReduceColor * tint, _costLowerColor * tint);
-            _cost.text = _faceValueRenderer.Render(Card.Cost.BaseValue, Card.Cost.Value, EStatChannel.Cost);
+            RefreshCostText();
 
             RebuildDescription();
             for (int i = 0; i < _faceImages.Length; i++)
@@ -204,6 +210,20 @@ namespace _DreamKeep.CommonPresentation
                 _faceTexts[i].color = playable_ ? baseColor : baseColor * _unplayableTint;
             }
         }
+
+        // 能量不足状态切换：只在状态变化时重绘费用文本，恢复时重走原渲染使升级降费的绿色自然回来
+        public void SetCostEnergyState(bool shortOfEnergy_)
+        {
+            if (_costShortOfEnergy == shortOfEnergy_) return;
+            _costShortOfEnergy = shortOfEnergy_;
+            RefreshCostText();
+        }
+
+        // 费用文本唯一写点：仅玩家回合且有费用的卡在能量不足时走浅红分支，其余交回原有绿/白渲染
+        private void RefreshCostText() =>
+            _cost.text = _costShortOfEnergy && _playable && Card.Cost.Value >= 0
+                ? UiValueText.Tinted(Card.Cost.Value, _costNoEnergyColor)
+                : _faceValueRenderer.Render(Card.Cost.BaseValue, Card.Cost.Value, EStatChannel.Cost);
 
         #endregion
 

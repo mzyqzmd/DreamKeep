@@ -21,6 +21,10 @@ namespace _DreamKeep.EngineUtility
         public static string Lower(int shown_, int base_, Color reduceColor_) =>
             shown_ < base_ ? $"<color=#{ColorUtility.ToHtmlStringRGB(reduceColor_)}>{shown_}</color>" : shown_.ToString();
 
+        /// <summary>用指定颜色给数值着色（外部状态覆盖原有着色时用）。</summary>
+        public static string Tinted(int value_, Color color_) =>
+            $"<color=#{ColorUtility.ToHtmlStringRGB(color_)}>{value_}</color>";
+
         /// <summary>反向双向着色：低于基准标升色、高于标降色、相等保持原色（失去生命这类越低越好的数值用）。</summary>
         public static string Inverse(int shown_, int base_, Color boostColor_, Color reduceColor_)
         {

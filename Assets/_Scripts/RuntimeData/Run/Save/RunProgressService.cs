@@ -35,12 +35,8 @@ namespace _DreamKeep.RuntimeData
         /// <summary>离段：解除挂起，地图恢复可走。</summary>
         public void LeaveSegment() => _run.SetSegmentPending(false);
 
-        /// <summary>段完成回地图：解锁地图并回 OnMap 阶段。段收益在下一次选点时才落盘。</summary>
-        public void MarkOnMap()
-        {
-            _run.SetSegmentPending(false);
-            _run.SetPhase(ESavePhase.OnMap);
-        }
+        /// <summary>段完成回地图：只写 OnMap 阶段（解挂由调用方的 LeaveSegment 负责）。段收益在下一次选点时才落盘。</summary>
+        public void MarkOnMap() => _run.SetPhase(ESavePhase.OnMap);
 
         /// <summary>领奖检查点：掷奖已完成、清单已写入 RunState，这里统一写阶段位并落盘。</summary>
         public void CheckpointAwaitingReward()

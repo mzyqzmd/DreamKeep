@@ -7,7 +7,7 @@ using VContainer;
 
 namespace _DreamKeep.Presentation
 {
-    /// <summary>手牌演出器：与手牌区本体同挂一个节点，订阅全部十一条领域事件，把域侧的决定演成手牌的动作——
+    /// <summary>手牌演出器：与手牌区本体同挂一个节点，订阅领域事件把域侧的决定演成手牌的动作——
     /// 抽牌入场、打出离场、被拒退回、批量弃牌波、离场与遗忘飞行、洗回通告，以及回合开闸/落闸与战斗结束收起。
     /// 它只编排演出与通知牌堆，手牌区的状态、布局与卡池一律经本体的内部服务面代劳；演出与手感的时长幅度都在 Inspector 上可调。</summary>
     public sealed class UI_HandShow : MonoBehaviour
@@ -53,6 +53,7 @@ namespace _DreamKeep.Presentation
             eventDispatcher_.Register<BE_CardErased>(erased_ => ExitToPileAsync(erased_.Card, null));
             eventDispatcher_.Register<BE_CardPlayRejected>(OnCardPlayRejected);
             eventDispatcher_.Register<BE_TurnStarted>(OnTurnStarted);
+            eventDispatcher_.Register<BE_EnergyChanged>(OnEnergyChanged);
             eventDispatcher_.Register<BE_PlayerTurnEnded>(OnPlayerTurnEnded);
             eventDispatcher_.Register<BE_BattleEnded>(OnBattleEnded);
         }
@@ -75,6 +76,7 @@ namespace _DreamKeep.Presentation
             CardModel model = drawn_.Card;
             UI_CardBattle view = _handView.Spawn(model);
             view.SetPlayableLook(_handView.CardsPlayable); // 将来敌方回合塞牌也不会漏刷
+            _handView.ApplyEnergyTo(view);
             _handView.TryEvaluateSlot(view, out Vector3 position, out Quaternion rotation, out float slotScale);
             view.Place(_handView.DrawPile.transform.position, _handView.DrawPile.transform.rotation);
             view.transform.localScale = Vector3.zero;
@@ -115,6 +117,7 @@ namespace _DreamKeep.Presentation
         {
             if (!_handView.TryGetView(upgraded_.Card, out UI_CardBattle view)) return;
             view.Bind(upgraded_.Card);
+            _handView.ApplyEnergyTo(view);
             _handView.ReturnFromSelection(upgraded_.Card);
         }
 
@@ -129,6 +132,9 @@ namespace _DreamKeep.Presentation
         // 玩家回合结束：进入弃牌演出即落闸——手牌下沉置灰、取消瞄准，不再接受拖拽与出牌；
         // 开闸的唯一时机仍是下个玩家回合开始的 BE_TurnStarted，中间整段敌方回合都保持落闸
         private void OnPlayerTurnEnded(BE_PlayerTurnEnded ended_) => _handView.ApplyPlayable(false);
+
+        // 能量变化：逐卡对账费用文本着色，判定收口在手牌区本体
+        private void OnEnergyChanged(BE_EnergyChanged changed_) => _handView.ApplyEnergy(changed_.Current);
 
         // 回合开始：先落可打状态（据此清悬停、重排、刷外观），再对账退回仍挂着等结算的牌，
         // 最后把三堆数字对齐域侧活值兜底——万有一条进堆 / 离堆通知没发到，最迟在这一刻纠正

@@ -68,6 +68,7 @@ MonoBehaviour:
   _ripple: {fileID: 2702022744435552388}
   _upgradeNameColor: {r: 0, g: 1, b: 0, a: 1}
   _costLowerColor: {r: 0, g: 1, b: 0, a: 1}
+  _costNoEnergyColor: {r: 1, g: 0.1, b: 0.1, a: 1}
   _unplayableTint: {r: 0.45, g: 0.45, b: 0.5, a: 1}
   _affixNameColor: {r: 0.9622642, g: 0.893509, b: 0.0127091, a: 1}
   _valueBoostColor: {r: 0, g: 1, b: 0, a: 1}

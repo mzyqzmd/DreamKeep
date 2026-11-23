@@ -153,6 +153,8 @@ namespace _DreamKeep.Presentation
 
         public void SetPlayableLook(bool playable_) => _faces.Current.SetPlayableLook(playable_);
 
+        public void SetCostEnergyState(bool shortOfEnergy_) => _faces.Current.SetCostEnergyState(shortOfEnergy_);
+
         #endregion
 
         #region 数值预览：每帧差分刷新卡面与气泡
