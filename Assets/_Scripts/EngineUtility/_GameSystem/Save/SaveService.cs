@@ -8,7 +8,7 @@ using UnityEngine;
 namespace _DreamKeep.EngineUtility
 {
     /// <summary>本地单档静态门面：只认识 ISaveable 与读写袋，不认识 VContainer 与任何游戏类型。
-    /// 写盘遍历绑定进来的集合逐个 Capture，按实现类类型全名聚合进单文件；读盘先把整份快照静态暂存，
+    /// 写盘遍历绑定进来的集合逐个 Capture，按 ISaveable.SaveKey 稳定键聚合进单文件；读盘先把整份快照静态暂存，
     /// 跨过场景加载与容器装配后再统一 Restore 分发。静态字段在域重载与 Play 启动时重置，不缓存跨场景对象。
     /// 为什么必须是静态：消费方横跨三层生命周期——常驻编排者在整局 scope 建起来之前就要读写档（主菜单的继续/删档），
     /// 组合根在装配期 Bind 与 ApplyRestore，段组合根按 RunState 的待领奖励清单判定领奖恢复；做成实例就得挂 App 级常驻 scope 再往下传两层，

@@ -8,8 +8,9 @@ namespace _DreamKeep.RuntimeData
     public sealed class RunProgressService : ISaveable
     {
         private const string KeyPhase = "phase";
+        private const string SaveKeyConst = "_DreamKeep.RuntimeData.RunProgressService";
 
-        public string SaveKey => GetType().FullName;
+        public string SaveKey => SaveKeyConst;
 
         private readonly RunState _run;
 

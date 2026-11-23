@@ -6,10 +6,10 @@ namespace _DreamKeep.ConfigData
     [CreateAssetMenu(fileName = "SpeedPotion", menuName = "DreamKeep/Data/Potion/速度药水")]
     public sealed class SO_SpeedPotion : SO_Potion
     {
-        [SerializeField] private SO_SpeedPerk _speed;
+        [SerializeField] private SO_Speed _speed;
         [SerializeField] private int _layers = 5;
 
-        public SO_SpeedPerk Speed => _speed;
+        public SO_Speed Speed => _speed;
         public int Layers => _layers;
         public override EPotionTargetType TargetType => EPotionTargetType.Self;
     }

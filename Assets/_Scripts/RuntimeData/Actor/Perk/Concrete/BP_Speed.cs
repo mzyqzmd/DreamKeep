@@ -8,9 +8,9 @@ namespace _DreamKeep.RuntimeData
     {
         private int _syncedLayers;
 
-        private SO_SpeedPerk Config => (SO_SpeedPerk)_data;
+        private SO_Speed Config => (SO_Speed)_data;
 
-        public BP_Speed(SO_SpeedPerk data_) : base(data_) { }
+        public BP_Speed(SO_Speed data_) : base(data_) { }
 
         /// <summary>按层数差增量同步真实敏捷，避免累加时重复挂载。</summary>
         public override void OnMounted(Creature host_)

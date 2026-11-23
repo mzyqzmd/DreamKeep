@@ -63,7 +63,7 @@ namespace _DreamKeep.GameBattle
                         if (radiance.Layers > 0)
                             actions_.Add(new BA_GainEnergy(null, new List<Creature> { host_ }, 1));
                         break;
-                    // 覆甲：回合开始获得等同层数的格挡，随后由基类递减一层
+                    // 覆甲：回合结束获得等同层数的格挡，随后由基类递减一层
                     case BP_Plating plating:
                         if (plating.Layers > 0)
                             actions_.Add(new BA_Block(null, new List<Creature> { host_ }, plating.Layers));

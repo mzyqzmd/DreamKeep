@@ -23,7 +23,7 @@ namespace _DreamKeep.GameBattle
 
         #endregion
 
-        #region 预览落点：表现层提示专用，与结算共用同一份映射
+        #region 预览落点：表现层提示专用，与结算逐条同源、随机目标只点亮不掷骰
 
         /// <summary>预览落点：填充调用方缓冲（先清后填），存活敌人由调用方按槽位排好传入，语义与返回新列表的版本一致。</summary>
         public static void PreviewTargets(CardModel card_, Player player_, int aimSlot_, List<Enemy> aliveEnemies_,

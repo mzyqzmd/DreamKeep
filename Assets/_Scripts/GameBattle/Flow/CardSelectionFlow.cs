@@ -15,7 +15,7 @@ namespace _DreamKeep.GameBattle
         {
             _actionSystem = actionSystem_;
             _dispatcher = dispatcher_;
-            dispatcher_.Register<BE_CardSelectionRequested>(OnRequestedAsync);
+            dispatcher_.RegisterStrict<BE_CardSelectionRequested>(OnRequestedAsync);
         }
 
         #region 等结果并追加效果动作

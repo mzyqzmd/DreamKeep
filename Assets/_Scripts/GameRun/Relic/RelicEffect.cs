@@ -25,7 +25,7 @@ namespace _DreamKeep.GameRun
     {
         protected readonly BattleContext Context;
         protected readonly ActionSystem Actions;
-        protected readonly BattleEventDispatcher Dispatcher;
+        protected readonly RelicDomainEventRegistrar Dispatcher;
         protected readonly RelicTriggerNotifier Notifier;
         protected readonly SO_Relic Relic;
 
@@ -38,7 +38,7 @@ namespace _DreamKeep.GameRun
             Relic = relic_;
             Context = context_;
             Actions = actions_;
-            Dispatcher = dispatcher_;
+            Dispatcher = new RelicDomainEventRegistrar(dispatcher_);
             Notifier = notifier_;
         }
 

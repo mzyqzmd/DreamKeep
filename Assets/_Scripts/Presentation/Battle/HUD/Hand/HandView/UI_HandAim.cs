@@ -25,9 +25,11 @@ namespace _DreamKeep.Presentation
         private bool _registered; // 是否已向中间件登记为当前瞄准客户端
 
         // 瞄准结果的两个同步缓存：由中间件每帧一次性回写（ApplyAimResult）。
-        // 本类只读不写、不自行推导——松手当帧必须能同步读到槽位，故不能等中间件的下一次回写；
-        // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去
+        // 本类不自行推导落点——松手当帧必须能同步读到槽位，故不能等中间件的下一次回写；
+        // 瞄准卡一按下先清成"未指向"，防极快操作下默认值被当成有效目标打出去。
+        // 目标集合拷进本类复用缓冲，不跨帧持有门面内部列表（门面缓冲可能被同帧其他查询覆盖）
         private int _aimSlot = NoAimSlot;
+        private readonly List<Creature> _previewTargetBuffer = new();
         private IReadOnlyList<Creature> _previewTargets;
 
         // 生命周期：本体由 RequireComponent 保证同节点必有
@@ -63,7 +65,9 @@ namespace _DreamKeep.Presentation
         public void ApplyAimResult(int slot_, IReadOnlyList<Creature> targets_)
         {
             _aimSlot = slot_;
-            _previewTargets = targets_;
+            _previewTargetBuffer.Clear();
+            if (targets_ != null) _previewTargetBuffer.AddRange(targets_);
+            _previewTargets = targets_ == null ? null : _previewTargetBuffer;
             RefreshPreviews();
         }
 

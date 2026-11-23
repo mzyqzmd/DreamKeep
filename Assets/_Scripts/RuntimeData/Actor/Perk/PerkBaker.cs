@@ -1,11 +1,12 @@
+using System;
 using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态烘焙器：把状态定义资产烘成运行时实例，可改数值在烘焙期拷进实例；未登记类型静默跳过。</summary>
+    /// <summary>状态烘焙器：把状态定义资产烘成运行时实例，可改数值在烘焙期拷进实例；未登记类型抛异常，杜绝静默失效。</summary>
     public static class PerkBaker
     {
-        #region 按定义烘焙一个运行时状态实例，未登记类型返回 null
+        #region 按定义烘焙一个运行时状态实例，未登记类型抛异常
 
         public static BattlePerk Bake(SO_Perk data_) => data_ switch
         {
@@ -40,7 +41,7 @@ namespace _DreamKeep.RuntimeData
             SO_Radiance radiance => new BP_Radiance(radiance),
             SO_Thorns thorns => new BP_Thorns(thorns),
             SO_Muscle muscle => new BP_Muscle(muscle),
-            SO_SpeedPerk speedPerk => new BP_Speed(speedPerk),
+            SO_Speed speedPerk => new BP_Speed(speedPerk),
             SO_Shackling shackling => new BP_Shackling(shackling),
             SO_Plating plating => new BP_Plating(plating),
             SO_Buffer buffer => new BP_Buffer(buffer),
@@ -49,7 +50,8 @@ namespace _DreamKeep.RuntimeData
             SO_StableSerum stableSerum => new BP_StableSerum(stableSerum),
             SO_Gigantification gigantification => new BP_Gigantification(gigantification),
             SO_Duplication duplication => new BP_Duplication(duplication),
-            _ => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(data_),
+                $"{data_?.GetType().Name ?? "null"} 的状态类型未登记：漏登记会让该状态静默失效"),
         };
 
         #endregion

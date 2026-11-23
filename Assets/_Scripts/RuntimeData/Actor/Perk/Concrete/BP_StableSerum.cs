@@ -2,7 +2,7 @@ using _DreamKeep.ConfigData;
 
 namespace _DreamKeep.RuntimeData
 {
-    /// <summary>状态「稳定血清」运行时实例：层数是剩余回合数，回合末保留整手并递减一层。</summary>
+    /// <summary>状态「稳定血清」运行时实例：层数是剩余回合数，回合末保留整手、回合开始时递减一层。</summary>
     public sealed class BP_StableSerum : BattlePerk
     {
         private SO_StableSerum Config => (SO_StableSerum)_data;

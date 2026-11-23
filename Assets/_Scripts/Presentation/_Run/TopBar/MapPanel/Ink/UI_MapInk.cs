@@ -19,8 +19,9 @@ namespace _DreamKeep.Presentation
         private const int TotalPointCap = 20000; // 笔迹总点数硬上限：存档体积与写盘耗时的护栏
         private const string KeyPoints = "ink.points";
         private const string KeyLengths = "ink.lengths";
+        private const string SaveKeyConst = "_DreamKeep.Presentation.UI_MapInk";
 
-        public string SaveKey => GetType().FullName;
+        public string SaveKey => SaveKeyConst;
 
         [Tooltip("墨迹视觉配置（颜色/线宽/采样间距/橡皮半径）")] [SerializeField]
         private SO_MapInkVisual _visual;

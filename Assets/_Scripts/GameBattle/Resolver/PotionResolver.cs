@@ -172,7 +172,7 @@ namespace _DreamKeep.GameBattle
             return new List<Creature> { alive[aimSlot_] };
         }
 
-        // 施加状态：定义资产先烘成运行时实例，层数写在实例上；未登记类型烘不出实例即跳过
+        // 施加状态：定义资产先烘成运行时实例，层数写在实例上；漏配或未登记类型由 Baker 抛错，下游判空仅作兜底
         private static void AddPerk(List<BattleAction> actions_, Creature source_, List<Creature> targets_,
             SO_Perk data_, int layers_)
         {
