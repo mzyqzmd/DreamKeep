@@ -20,30 +20,32 @@ MonoBehaviour:
   _targetType: 1
   _affixes:
   - rid: 6594183935192989701
+  - rid: 6594184073303031822
   _canUpdate: 1
   _upgrades:
   - rid: 6594183935192989702
-  - rid: 6594183935192989703
+  - rid: 6594184073303031823
   references:
     version: 2
     RefIds:
     - rid: 6594183935192989701
       type: {class: AD_Block, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
-        _amount: 8
+        _amount: 6
     - rid: 6594183935192989702
       type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _value: 3
-        _additive: 1
+        _additive: 2
         _multiplier: 1
-    - rid: 6594183935192989703
-      type: {class: UD_AddAffix, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
-      data:
-        _affix:
-          rid: 6594183935192989704
-    - rid: 6594183935192989704
+    - rid: 6594184073303031822
       type: {class: AD_SelectExhaust, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
       data:
         _scope: 1
         _count: 1
+    - rid: 6594184073303031823
+      type: {class: UD_ModifyValue, ns: _DreamKeep.ConfigData, asm: _DreamKeep.ConfigData}
+      data:
+        _value: 7
+        _additive: 1
+        _multiplier: 1
